@@ -55,7 +55,6 @@
         "db/seed-catalogs.sql",
         "scripts/",
         "BOOK-INGEST-AUDIT.md",
-        "BOOK-INGEST-AUDIT.closed.md",
         "BOOK-INGEST-QUEUE.md",
         ".claude/skills/book-survey/",
         ".claude/skills/class-import/",
@@ -182,14 +181,14 @@
         "SETUP-v2-CHANGES.md",
         "docs/",
         "DOCS-AUDIT.md", "DOCS-AUDIT-2.md",
-        "EFFICIENCY-AUDIT.md", "EFFICIENCY-AUDIT.closed.md",
-        "HEALTH-AUDIT.md", "HEALTH-AUDIT.closed.md",
-        "MACHINE-AUDIT.md", "MACHINE-AUDIT.closed.md",
-        "META-AUDIT.md", "META-AUDIT.closed.md",
-        "REPO-AUDIT.md", "REPO-AUDIT.closed.md",
-        "SHIP-PR-AUDIT.md", "SHIP-PR-AUDIT.closed.md",
-        "SKILL-AUDIT.md", "SKILL-AUDIT.closed.md",
-        "WORKSHOP-UI-AUDIT.md", "WORKSHOP-UI-AUDIT.closed.md"
+        "EFFICIENCY-AUDIT.md",
+        "HEALTH-AUDIT.md",
+        "MACHINE-AUDIT.md",
+        "META-AUDIT.md",
+        "REPO-AUDIT.md",
+        "SHIP-PR-AUDIT.md",
+        "SKILL-AUDIT.md",
+        "WORKSHOP-UI-AUDIT.md"
       ],
       "tables": []
     }

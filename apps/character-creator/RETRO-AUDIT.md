@@ -1,10 +1,13 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **Since 2026-09-16 the closed findings live in `RETRO-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **The `###` headings in this file are NOT findings, and that is the inverse of
 > the trap `audit-menu` records for two other menus.** Every `R` finding here is
@@ -192,33 +195,33 @@ general result.
 
 ## Findings
 
-- **R1** — high — five classes deny a key they already carry (note rot; no data is wrong) — Taken, 2026-09-04 (PR #712) — posture held exactly: prose only, no mechanic, — full text in `RETRO-AUDIT.closed.md` under its own `### R1` heading.
+- **R1** — high — five classes deny a key they already carry (note rot; no data is wrong) — Taken, 2026-09-04 (PR #712) — posture held exactly: prose only, no mechanic, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R1` heading.
 
-- **R2** — high — `demon-goblin` and `monk` keep whole skill packages in prose, and `skills.mos` grants them — Taken, 2026-09-04 (PR #714) — as written, both classes in one `fix-` script, — full text in `RETRO-AUDIT.closed.md` under its own `### R2` heading.
+- **R2** — high — `demon-goblin` and `monk` keep whole skill packages in prose, and `skills.mos` grants them — Taken, 2026-09-04 (PR #714) — as written, both classes in one `fix-` script, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R2` heading.
 
-- **R3** — high — the Warlock permits spell picks its own record forbids — Taken, 2026-09-04 (PR #713) — and the finding was largely WRONG. Taken — full text in `RETRO-AUDIT.closed.md` under its own `### R3` heading.
+- **R3** — high — the Warlock permits spell picks its own record forbids — Taken, 2026-09-04 (PR #713) — and the finding was largely WRONG. Taken — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R3` heading.
 
-- **R4** — high — seven catalog skills say their conditional bonuses cannot be stored, and 29 sibling rows store exactly that — Taken, 2026-09-04 (PR #711) — as written, and the posture held: no flat — full text in `RETRO-AUDIT.closed.md` under its own `### R4` heading.
+- **R4** — high — seven catalog skills say their conditional bonuses cannot be stored, and 29 sibling rows store exactly that — Taken, 2026-09-04 (PR #711) — as written, and the posture held: no flat — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R4` heading.
 
-- **R5** — medium — eight class-referenced weapons carry their damage in prose while `gear.damage` is null — Taken, 2026-09-04 (PR #715) — all thirteen, not the eight. The finding — full text in `RETRO-AUDIT.closed.md` under its own `### R5` heading.
+- **R5** — medium — eight class-referenced weapons carry their damage in prose while `gear.damage` is null — Taken, 2026-09-04 (PR #715) — all thirteen, not the eight. The finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R5` heading.
 
-- **R6** — medium — three classes carry a mechanic the schema gained after they were imported — Taken, 2026-09-04 (PR #716) — and the medium confidence earned its keep: — full text in `RETRO-AUDIT.closed.md` under its own `### R6` heading.
+- **R6** — medium — three classes carry a mechanic the schema gained after they were imported — Taken, 2026-09-04 (PR #716) — and the medium confidence earned its keep: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R6` heading.
 
-- **R7** — medium — two capabilities were built, populated, and wired to nothing — Taken, 2026-09-04 (PR #718) — option (b), the finding's own recommendation. — full text in `RETRO-AUDIT.closed.md` under its own `### R7` heading.
+- **R7** — medium — two capabilities were built, populated, and wired to nothing — Taken, 2026-09-04 (PR #718) — option (b), the finding's own recommendation. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R7` heading.
 
-- **R8** — low — a standing check, and it is not the capability-vs-date diff — Taken, 2026-09-04 (PR #717) — `scripts/retro-check.mjs`, ten capability — full text in `RETRO-AUDIT.closed.md` under its own `### R8` heading.
+- **R8** — low — a standing check, and it is not the capability-vs-date diff — Taken, 2026-09-04 (PR #717) — `scripts/retro-check.mjs`, ten capability — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R8` heading.
 
-- **R9** — medium — the Crazy is missing the +3 Perception its own ability describes — Filed and taken the same day, 2026-09-04, which is why it sits after `R8` — full text in `RETRO-AUDIT.closed.md` under its own `### R9` heading.
+- **R9** — medium — the Crazy is missing the +3 Perception its own ability describes — Filed and taken the same day, 2026-09-04, which is why it sits after `R8` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R9` heading.
 
-- **R10** — high — `R2` shipped a false "not expressible" note, and both classes were left short — Taken, 2026-09-04 (PR #722) — as written. Composed once per option through — full text in `RETRO-AUDIT.closed.md` under its own `### R10` heading.
+- **R10** — high — `R2` shipped a false "not expressible" note, and both classes were left short — Taken, 2026-09-04 (PR #722) — as written. Composed once per option through — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R10` heading.
 
-- **R11** — medium — six more classes carry a capability claim that is false today — The remaining six rows taken, 2026-09-04 (PR #726). R11 is closed. Twelve — full text in `RETRO-AUDIT.closed.md` under its own `### R11` heading.
+- **R11** — medium — six more classes carry a capability claim that is false today — The remaining six rows taken, 2026-09-04 (PR #726). R11 is closed. Twelve — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R11` heading.
 
-- **R12** — high — the ten per-Force Warlocks described the class they replaced — Taken, 2026-09-04 (PR #727) — as written. All ten re-parse at 0 errors, — full text in `RETRO-AUDIT.closed.md` under its own `### R12` heading.
+- **R12** — high — the ten per-Force Warlocks described the class they replaced — Taken, 2026-09-04 (PR #727) — as written. All ten re-parse at 0 errors, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R12` heading.
 
-- **R13** — high — releasing the cross-category control-set claim, and what the release audit corrected — Filed and taken 2026-09-04 (PR #728), on Nate's word. `CLASS-AUDIT`'s — full text in `RETRO-AUDIT.closed.md` under its own `### R13` heading.
+- **R13** — high — releasing the cross-category control-set claim, and what the release audit corrected — Filed and taken 2026-09-04 (PR #728), on Nate's word. `CLASS-AUDIT`'s — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R13` heading.
 
-- **R14** — medium — five more classes carry a related-skill floor only in prose — Taken, 2026-09-05 (PR #729) — as written: five classes, seven notes, and — full text in `RETRO-AUDIT.closed.md` under its own `### R14` heading.
+- **R14** — medium — five more classes carry a related-skill floor only in prose — Taken, 2026-09-05 (PR #729) — as written: five classes, seven notes, and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R14` heading.
 
 ### The scope was wrong by two, and the finding's own query is why
 
@@ -289,7 +292,7 @@ blind to it too, for a third reason. It looks for a record that carries a key
 while its prose denies it, and none of these five denied anything — they were
 simply silent.
 
-- **R15** — medium — the two Ley Line classes carry the same floor, and one live draft breaks — Taken, 2026-09-05 (PR #740) — as written: both classes, both floors, the — full text in `RETRO-AUDIT.closed.md` under its own `### R15` heading.
+- **R15** — medium — the two Ley Line classes carry the same floor, and one live draft breaks — Taken, 2026-09-05 (PR #740) — as written: both classes, both floors, the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R15` heading.
 
 ### The finding was wrong about the one thing that made it separate from R14
 
@@ -375,7 +378,7 @@ finding's own error, caught the same way — by running it.
 *"the two ley line classes are untouched … want 0"* now reads `got 2`. A one-shot
 script is not edited, so the inverse is asserted here, which sorts after it.
 
-- **R18** — medium — the wizard counts related picks against the wrong allowance — Taken, 2026-09-05 (PR #745) — WIDENED, on Nate's word, and the widening is — full text in `RETRO-AUDIT.closed.md` under its own `### R18` heading.
+- **R18** — medium — the wizard counts related picks against the wrong allowance — Taken, 2026-09-05 (PR #745) — WIDENED, on Nate's word, and the widening is — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R18` heading.
 
 ### The finding was right about the bug and wrong about the fix
 
@@ -483,7 +486,7 @@ happens, and the 9 is computed rather than written down.
 byte-for-byte including its `updated_at`; the dev server's whole process tree
 was killed by command line, leaving the other wrangler instance alone.
 
-- **R16** — medium — the check that is supposed to catch the next floor cannot see any of the seven — Taken, 2026-09-05 (PR #741) — as written, and the posture held: test and — full text in `RETRO-AUDIT.closed.md` under its own `### R16` heading.
+- **R16** — medium — the check that is supposed to catch the next floor cannot see any of the seven — Taken, 2026-09-05 (PR #741) — as written, and the posture held: test and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R16` heading.
 
 ### Proved by making it fail, which is the only reason to believe it
 
@@ -531,7 +534,7 @@ Reading `e.note` without a `typeof` guard throws on the strings, and the two
 must not be changed. **This PR removed them**, so that instruction is retired
 where it stands rather than left to mislead.
 
-- **R17** — low — six places say eight classes hold a floor, and twenty-eight do — Taken, 2026-09-05 (PR #742) — the count is dropped, not corrected, which — full text in `RETRO-AUDIT.closed.md` under its own `### R17` heading.
+- **R17** — low — six places say eight classes hold a floor, and twenty-eight do — Taken, 2026-09-05 (PR #742) — the count is dropped, not corrected, which — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R17` heading.
 
 ### It was six sites and a seventh, and two stale numbers rather than one
 
@@ -588,7 +591,7 @@ its line 1 carries the same tally in a `--` comment. A one-shot script is not
 edited and a comment is not data, so the data script above is the correction of
 record and sorts after it.
 
-- **R19** — low — four psionic powers are cited to a list page and carry no stat block — Taken, 2026-09-05 (PR #744) — folded into the spell backfill, as the finding — full text in `RETRO-AUDIT.closed.md` under its own `### R19` heading.
+- **R19** — low — four psionic powers are cited to a list page and carry no stat block — Taken, 2026-09-05 (PR #744) — folded into the spell backfill, as the finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R19` heading.
 
 ### An OCR trap that a careful reader would have stored wrong
 
@@ -612,7 +615,7 @@ prints *"P.P.E.: None/Special."*, and the two Wormwood level-0 entries are
 abilities rather than costed invocations. The readback asserts **three**, not
 zero, so a later sweep does not "fix" them.
 
-- **R20** — low — the catalog and the book disagree about a dozen spell names — Taken, 2026-09-06 (PR #748) - EIGHT of the twelve, on Nate's word: the rows — full text in `RETRO-AUDIT.closed.md` under its own `### R20` heading.
+- **R20** — low — the catalog and the book disagree about a dozen spell names — Taken, 2026-09-06 (PR #748) - EIGHT of the twelve, on Nate's word: the rows — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R20` heading.
 
 ### The mechanism this finding proposed does not work for spells
 
@@ -720,7 +723,7 @@ the fire spell `Heat Object/Boil Water` while its entry on printed 76 prints
 wins - the same rule that governed the citation repair, where every wrong
 citation pointed at a summary list rather than an entry.
 
-- **R21** — medium — `character_items.item_id` stores a number that means nothing outside one database — Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands, — full text in `RETRO-AUDIT.closed.md` under its own `### R21` heading.
+- **R21** — medium — `character_items.item_id` stores a number that means nothing outside one database — Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/RETRO-AUDIT.closed.md` under its own `### R21` heading.
 
 ### The release audit found a defect the plan would have shipped
 

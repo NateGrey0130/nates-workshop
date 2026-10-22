@@ -1,10 +1,13 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-> **Since 2026-09-16 the closed findings live in `REPO-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 **Status: nothing is open on this menu, as of 2026-09-27**, read under every
 finding's heading by the `open-findings-scout` agent that day. The line below is
@@ -209,41 +212,41 @@ finding on them.
 
 ---
 
-- **G1** — high — `main` has no protection of any kind, and a merge here IS a deploy — Taken, 2026-09-03 (PR #621). Posture held: the bypass is gone and nothing is — full text in `REPO-AUDIT.closed.md` under its own `### G1` heading.
+- **G1** — high — `main` has no protection of any kind, and a merge here IS a deploy — Taken, 2026-09-03 (PR #621). Posture held: the bypass is gone and nothing is — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G1` heading.
 
-- **G2** — high — the repo is public, and no file in it records that as a decision — Taken via path B, 2026-09-03 (PR #633). The repo stays public, deliberately, — full text in `REPO-AUDIT.closed.md` under its own `### G2` heading.
+- **G2** — high — the repo is public, and no file in it records that as a decision — Taken via path B, 2026-09-03 (PR #633). The repo stays public, deliberately, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G2` heading.
 
-- **G3** — medium — a public repo with 693 files and no root `README.md` — Taken, 2026-09-03 (PR #623). Posture held: documentation only, one screen, and — full text in `REPO-AUDIT.closed.md` under its own `### G3` heading.
+- **G3** — medium — a public repo with 693 files and no root `README.md` — Taken, 2026-09-03 (PR #623). Posture held: documentation only, one screen, and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G3` heading.
 
-- **G4** — low — branch deletion on merge is discipline, not a setting — Taken, 2026-09-03 (PR #628). `delete_branch_on_merge` is now `true`. — full text in `REPO-AUDIT.closed.md` under its own `### G4` heading.
+- **G4** — low — branch deletion on merge is discipline, not a setting — Taken, 2026-09-03 (PR #628). `delete_branch_on_merge` is now `true`. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G4` heading.
 
-- **G5** — low — three merge methods are enabled and only one is used — Adjusted 2026-09-03, while taking G1 — this finding's premise is wrong. — full text in `REPO-AUDIT.closed.md` under its own `### G5` heading.
+- **G5** — low — three merge methods are enabled and only one is used — Adjusted 2026-09-03, while taking G1 — this finding's premise is wrong. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G5` heading.
 
-- **G6** — medium — Issues, Projects and Wiki are all enabled and all empty — Taken, 2026-09-03 (PR #629). All three disabled — `has_issues`, — full text in `REPO-AUDIT.closed.md` under its own `### G6` heading.
+- **G6** — medium — Issues, Projects and Wiki are all enabled and all empty — Taken, 2026-09-03 (PR #629). All three disabled — `has_issues`, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G6` heading.
 
-- **G7** — medium — the PR convention is excellent, and invisible to GitHub — Taken, 2026-09-03 (PR #624). Posture held: a prompt, no gate, nothing checks — full text in `REPO-AUDIT.closed.md` under its own `### G7` heading.
+- **G7** — medium — the PR convention is excellent, and invisible to GitHub — Taken, 2026-09-03 (PR #624). Posture held: a prompt, no gate, nothing checks — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G7` heading.
 
-- **G8** — high — nothing but a person ever runs the tests, and CI is foreclosed by something upstream of CI — Taken, 2026-09-03 (PR #620). Posture held: reporting only, no required — full text in `REPO-AUDIT.closed.md` under its own `### G8` heading.
+- **G8** — high — nothing but a person ever runs the tests, and CI is foreclosed by something upstream of CI — Taken, 2026-09-03 (PR #620). Posture held: reporting only, no required — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G8` heading.
 
-- **G9** — medium — eleven markdown files at the root, and the canonical way to list them misses one — Closed without being taken, 2026-09-03 (PR #625). This had already been — full text in `REPO-AUDIT.closed.md` under its own `### G9` heading.
+- **G9** — medium — eleven markdown files at the root, and the canonical way to list them misses one — Closed without being taken, 2026-09-03 (PR #625). This had already been — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G9` heading.
 
-- **G10** — medium — 359 run-once scripts in one flat directory, ordered by filename, escalated five `z` deep — Closed without being taken, 2026-09-03 (PR #626). Two independent reasons, — full text in `REPO-AUDIT.closed.md` under its own `### G10` heading.
+- **G10** — medium — 359 run-once scripts in one flat directory, ordered by filename, escalated five `z` deep — Closed without being taken, 2026-09-03 (PR #626). Two independent reasons, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G10` heading.
 
-- **G11** — low — audit menus sit at the root or in an app directory by no stated rule — Adjusted 2026-09-03 — both counts in the first sentence are wrong, and the — full text in `REPO-AUDIT.closed.md` under its own `### G11` heading.
+- **G11** — low — audit menus sit at the root or in an app directory by no stated rule — Adjusted 2026-09-03 — both counts in the first sentence are wrong, and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G11` heading.
 
-- **G12** — medium — `F18` names eleven different things, and the branch names inherit the ambiguity — Taken with `G13`, 2026-09-03 (PR #627). Posture held: convention, — full text in `REPO-AUDIT.closed.md` under its own `### G12` heading.
+- **G12** — medium — `F18` names eleven different things, and the branch names inherit the ambiguity — Taken with `G13`, 2026-09-03 (PR #627). Posture held: convention, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G12` heading.
 
-- **G13** — low — branch names come in at least three shapes — Taken with `G12`, 2026-09-03 (PR #627), exactly as this finding asked — folded — full text in `REPO-AUDIT.closed.md` under its own `### G13` heading.
+- **G13** — low — branch names come in at least three shapes — Taken with `G12`, 2026-09-03 (PR #627), exactly as this finding asked — folded — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G13` heading.
 
-- **G14** — high — the Pages check went red for 65 consecutive merges and nobody saw it — Taken, 2026-09-03 (PR #630). `.github/workflows/deploy-alarm.yml` — a daily — full text in `REPO-AUDIT.closed.md` under its own `### G14` heading.
+- **G14** — high — the Pages check went red for 65 consecutive merges and nobody saw it — Taken, 2026-09-03 (PR #630). `.github/workflows/deploy-alarm.yml` — a daily — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G14` heading.
 
-- **G15** — medium — one of the two deploy paths produces no signal at all — Adjusted 2026-09-03 — the heading is false, and this finding predicted its own — full text in `REPO-AUDIT.closed.md` under its own `### G15` heading.
+- **G15** — medium — one of the two deploy paths produces no signal at all — Adjusted 2026-09-03 — the heading is false, and this finding predicted its own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G15` heading.
 
-- **G16** — low — 1,267 commits, 616 PRs, zero tags — Closed by decision, 2026-09-03 (PR #632) — declined, and recorded. The — full text in `REPO-AUDIT.closed.md` under its own `### G16` heading.
+- **G16** — low — 1,267 commits, 616 PRs, zero tags — Closed by decision, 2026-09-03 (PR #632) — declined, and recorded. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G16` heading.
 
-- **G17** — low — a public repo with no `LICENSE` — Taken, 2026-09-03 (PR #634), unblocked by `G2` choosing to stay public. — full text in `REPO-AUDIT.closed.md` under its own `### G17` heading.
+- **G17** — low — a public repo with no `LICENSE` — Taken, 2026-09-03 (PR #634), unblocked by `G2` choosing to stay public. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G17` heading.
 
-- **G18** — medium — a finding does not say whether its central claim was measured or reasoned to — Taken, 2026-09-03 (PR #640), in the narrower form this finding recommended to — full text in `REPO-AUDIT.closed.md` under its own `### G18` heading.
+- **G18** — medium — a finding does not say whether its central claim was measured or reasoned to — Taken, 2026-09-03 (PR #640), in the narrower form this finding recommended to — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:REPO-AUDIT.closed.md` under its own `### G18` heading.
 
 ## How to take one
 

@@ -1,10 +1,13 @@
 # Character creator — ingestion and tooling audit, 2026-08-26
 
-> **Since 2026-09-16 the closed findings live in `INGESTION-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **Nothing is open on this menu.** `F25` was filed and taken on 2026-09-03;
 > everything before it was closed and re-verified on 2026-09-02. The header
@@ -482,27 +485,27 @@ Status section above. F20 is the one to read first: it is the only finding in
 this file where a row traces to the *wrong* page rather than to none, which is
 the failure the coverage ledger cannot report.
 
-- **F1** — `source_book` is an uncontrolled vocabulary, and three separate mechanisms parse it — Taken, 2026-08-27 (PR: `books-registry`). `scripts/books.json` is committed: — full text in `INGESTION-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — `source_book` is an uncontrolled vocabulary, and three separate mechanisms parse it — Taken, 2026-08-27 (PR: `books-registry`). `scripts/books.json` is committed: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — there is no cache builder for a text-layer book, and six of the eight caches were built by code that no longer exists — Taken, 2026-08-27 (PR: `cache-any-book`). `ocr-book.py` is the one front — full text in `INGESTION-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — there is no cache builder for a text-layer book, and six of the eight caches were built by code that no longer exists — Taken, 2026-08-27 (PR: `cache-any-book`). `ocr-book.py` is the one front — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — a truncated cache is indistinguishable from a complete one, and the guard that exists is fooled by the worse case — Taken, 2026-08-27 (PR: `cache-completeness`). The gate now compares against — full text in `INGESTION-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — a truncated cache is indistinguishable from a complete one, and the guard that exists is fooled by the worse case — Taken, 2026-08-27 (PR: `cache-completeness`). The gate now compares against — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — the printed→PDF offset is recorded nowhere and re-derived at every use — Taken, 2026-08-27 (PR: `recorded-page-offset`). `class-check --field-sources` — full text in `INGESTION-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — the printed→PDF offset is recorded nowhere and re-derived at every use — Taken, 2026-08-27 (PR: `recorded-page-offset`). `class-check --field-sources` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — nothing checks that what shipped can still be traced back to a cached page — Taken, 2026-08-27 (PR: `source-coverage`). `scripts/source-coverage.mjs`, — full text in `INGESTION-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — nothing checks that what shipped can still be traced back to a cached page — Taken, 2026-08-27 (PR: `source-coverage`). `scripts/source-coverage.mjs`, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — the catalog importers already know the page range and throw it away — Adjusted 2026-08-27, after F1 and F5. Two things moved. The sizing tool — full text in `INGESTION-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — the catalog importers already know the page range and throw it away — Adjusted 2026-08-27, after F1 and F5. Two things moved. The sizing tool — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — the extraction calls are the only Claude calls in the repo that are not metered — Taken, 2026-08-27 (PR #347). All three call sites meter now, with the — full text in `INGESTION-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — the extraction calls are the only Claude calls in the repo that are not metered — Taken, 2026-08-27 (PR #347). All three call sites meter now, with the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — `book-reconcile` has no junction, so phase 5's second reader does not exist where the book work happens — Taken, 2026-08-28 (PR #366). The directory junction, as the proposal — full text in `INGESTION-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — `book-reconcile` has no junction, so phase 5's second reader does not exist where the book work happens — Taken, 2026-08-28 (PR #366). The directory junction, as the proposal — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — `CLAUDE.md` still tells sessions the skills do not load, which stopped being true on 2026-08-25 — Taken, 2026-08-27 (PR: `claude-md-skills-load`). `CLAUDE.md`'s heading and — full text in `INGESTION-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — `CLAUDE.md` still tells sessions the skills do not load, which stopped being true on 2026-08-25 — Taken, 2026-08-27 (PR: `claude-md-skills-load`). `CLAUDE.md`'s heading and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — `SURVEY.md` exists for none of the eight cached books — Adjusted 2026-08-27, after F5. The coverage line this proposal wants to — full text in `INGESTION-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — `SURVEY.md` exists for none of the eight cached books — Adjusted 2026-08-27, after F5. The coverage line this proposal wants to — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — slicing a page range out of a PDF is manual, external, and leaves the slices in `Downloads` — Adjusted 2026-08-27, after F4 — and this one is load-bearing. The offset is — full text in `INGESTION-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — slicing a page range out of a PDF is manual, external, and leaves the slices in `Downloads` — Adjusted 2026-08-27, after F4 — and this one is load-bearing. The offset is — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F11` heading.
 
 ### F12 — every extraction re-uploads its PDF and its examples with no cache breakpoint
 
@@ -538,11 +541,11 @@ correctness risk and nothing to gate. Take **F7 first**: with metering in place
 this is a measurable before/after on the next book, and without it, it is a
 change whose benefit cannot be shown.
 
-- **F13** — the diff that decides what gets extracted defaults to the database the repo says is not a mirror — Adjusted 2026-08-27, after F5. `source-coverage.mjs` is a second script — full text in `INGESTION-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — the diff that decides what gets extracted defaults to the database the repo says is not a mirror — Adjusted 2026-08-27, after F5. `source-coverage.mjs` is a second script — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — the sixth skill should be the audit-menu protocol, and it is the only one that qualifies — Adjusted 2026-08-27, after F1-F5. The protocol now has nine precedent — full text in `INGESTION-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — the sixth skill should be the audit-menu protocol, and it is the only one that qualifies — Adjusted 2026-08-27, after F1-F5. The protocol now has nine precedent — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — what should move between skills and scripts, and what should not become a skill — Adjusted 2026-08-27, after F2 and F4 — part (1) is half done, and its — full text in `INGESTION-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — what should move between skills and scripts, and what should not become a skill — Adjusted 2026-08-27, after F2 and F4 — part (1) is half done, and its — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F15` heading.
 
 ### F16 — every class extraction is taught the format by the two oldest and most-corrected classes in the repo, forever
 
@@ -604,9 +607,9 @@ correct one knows what else it is. This is cheap, it is a prompt change with no
 schema and no data, and it is worth taking before the next book rather than
 after it.
 
-- **F17** — every guard in the pipeline is designed to fail silent when the cache is gone, and the cache is unbacked — Adjusted 2026-08-27, after F1-F5 — one premise is now false and one risk — full text in `INGESTION-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — every guard in the pipeline is designed to fail silent when the cache is gone, and the cache is unbacked — Adjusted 2026-08-27, after F1-F5 — one premise is now false and one risk — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — the skill importer is the one confirm path with no page range in it at all — Taken, 2026-08-27 (PR #351). Implemented as written, and its measurements — full text in `INGESTION-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — the skill importer is the one confirm path with no page range in it at all — Taken, 2026-08-27 (PR #351). Implemented as written, and its measurements — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F18` heading.
 
 ### F19 — `COALESCE` protects a NULL, and the value that erases a page range is not NULL
 
@@ -647,11 +650,11 @@ on every confirmed row to defend against a case that has not happened yet.
 Three smoke checks: paged over paged replaces, paged over bare replaces, bare
 over paged leaves the paged value alone.
 
-- **F20** — a stub gets the page of the class that mentioned it, and four rows in production point at the wrong page as a result — Taken, 2026-08-27 (PR #349) — and its headline was false. This finding was — full text in `INGESTION-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — a stub gets the page of the class that mentioned it, and four rows in production point at the wrong page as a result — Taken, 2026-08-27 (PR #349) — and its headline was false. This finding was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F20` heading.
 
-- **F21** — `SURVEY.md` cannot be committed, so the ledger the skills call durable state lives on one machine — Taken, 2026-08-28 (PR #362). As proposed, with F10 folded in. — full text in `INGESTION-AUDIT.closed.md` under its own `### F21` heading.
+- **F21** — `SURVEY.md` cannot be committed, so the ledger the skills call durable state lives on one machine — Taken, 2026-08-28 (PR #362). As proposed, with F10 folded in. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F21` heading.
 
-- **F22** — `occ_group` and `xp_table` are enforced by the test suite and documented nowhere — Taken, 2026-08-28 (PR #365). As proposed. Posture held exactly: — full text in `INGESTION-AUDIT.closed.md` under its own `### F22` heading.
+- **F22** — `occ_group` and `xp_table` are enforced by the test suite and documented nowhere — Taken, 2026-08-28 (PR #365). As proposed. Posture held exactly: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F22` heading.
 
 ### F23 — the first metered extraction is on record, and it reopens the question F12 closed
 
@@ -779,9 +782,9 @@ a hit costs two real extractions back to back. The next real extraction proves
 it either way and now prints which it was, so the evidence arrives with the next
 class rather than needing a call spent on it here.
 
-- **F24** — `bom` is 232 of the untraceable rows, its cache is six pages, and nobody has opened it — Taken, 2026-08-28 (PR #371) — surveyed, and the proposal is rewritten below — full text in `INGESTION-AUDIT.closed.md` under its own `### F24` heading.
+- **F24** — `bom` is 232 of the untraceable rows, its cache is six pages, and nobody has opened it — Taken, 2026-08-28 (PR #371) — surveyed, and the proposal is rewritten below — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F24` heading.
 
-- **F25** — four W.P. rows cite RUE for skills RUE replaced, and the catalog already holds the replacements — Taken, 2026-09-03 (PR #618), as REPOINT rather than retire. Nate's call, on — full text in `INGESTION-AUDIT.closed.md` under its own `### F25` heading.
+- **F25** — four W.P. rows cite RUE for skills RUE replaced, and the catalog already holds the replacements — Taken, 2026-09-03 (PR #618), as REPOINT rather than retire. Nate's call, on — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F25` heading.
 
 ## Adding book N — the runbook
 
@@ -914,7 +917,7 @@ reading the book, and `claude_usage` answers "what did it cost" (F7).
 
 ## Filed by META-AUDIT A16, 2026-09-06
 
-- **F26** — low — the 105 page-less skill rows have never had a number, and the backlog grew rather than shrank — Taken, 2026-09-06 as option (a) — reconcile, then accept and document — with — full text in `INGESTION-AUDIT.closed.md` under its own `### F26` heading.
+- **F26** — low — the 105 page-less skill rows have never had a number, and the backlog grew rather than shrank — Taken, 2026-09-06 as option (a) — reconcile, then accept and document — with — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F26` heading.
 
 ## Filed 2026-09-06, from the catalog's own duplicate suggestions
 
@@ -925,11 +928,11 @@ Reading all 48 is what produced these.
 
 **None is taken by the PR that filed it.**
 
-- **F27** — medium — the `certain` tier's "no false positives" claim is false, and the mechanism is the bracket-stripping the code documents two lines above it — Taken, 2026-09-06. Posture held: this changes which TIER a pair lands in, and — full text in `INGESTION-AUDIT.closed.md` under its own `### F27` heading.
+- **F27** — medium — the `certain` tier's "no false positives" claim is false, and the mechanism is the bracket-stripping the code documents two lines above it — Taken, 2026-09-06. Posture held: this changes which TIER a pair lands in, and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F27` heading.
 
-- **F28** — low — two `Law` rows, and the one 62 classes cite is the one with no book — Taken, 2026-09-06 (`zzzzzz-ingestion-f28-law-canonical.sql`). Posture held: — full text in `INGESTION-AUDIT.closed.md` under its own `### F28` heading.
+- **F28** — low — two `Law` rows, and the one 62 classes cite is the one with no book — Taken, 2026-09-06 (`zzzzzz-ingestion-f28-law-canonical.sql`). Posture held: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F28` heading.
 
-- **F29** — high — `Find duplicates` cannot run on the gear catalog, and never could at this size — Taken, 2026-09-06. Posture held: performance only — identical output on every — full text in `INGESTION-AUDIT.closed.md` under its own `### F29` heading.
+- **F29** — high — `Find duplicates` cannot run on the gear catalog, and never could at this size — Taken, 2026-09-06. Posture held: performance only — identical output on every — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F29` heading.
 
 ## Filed 2026-09-06, from what F29 made visible
 
@@ -947,10 +950,10 @@ The 34 split three ways, and only one of them is a duplicate:
 
 *(The two shapes overlap: 15 pairs are both.)*
 
-- **F30** — medium — `F27`'s rule was built on one instance and gear gives 27 counterexamples — Adjusted 2026-09-06 and RE-SCOPED before being taken, on Nate's word. The — full text in `INGESTION-AUDIT.closed.md` under its own `### F30` heading.
+- **F30** — medium — `F27`'s rule was built on one instance and gear gives 27 counterexamples — Adjusted 2026-09-06 and RE-SCOPED before being taken, on Nate's word. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F30` heading.
 
-- **F31** — medium — `findDuplicates` has no `system` guard, and gear is duplicated across systems on purpose — Taken, 2026-09-06. Posture held: one condition mirroring the guard beside it. — full text in `INGESTION-AUDIT.closed.md` under its own `### F31` heading.
-- **F32** — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description — Taken, 2026-09-06 (`zzzzzz-ingestion-f32-sleeping-bag.sql`). Posture held: one data script, applied to production before — full text in `INGESTION-AUDIT.closed.md` under its own `### F32` heading.
+- **F31** — medium — `findDuplicates` has no `system` guard, and gear is duplicated across systems on purpose — Taken, 2026-09-06. Posture held: one condition mirroring the guard beside it. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F31` heading.
+- **F32** — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description — Taken, 2026-09-06 (`zzzzzz-ingestion-f32-sleeping-bag.sql`). Posture held: one data script, applied to production before — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F32` heading.
 
 ## Filed 2026-09-06, found while measuring F30
 
@@ -958,9 +961,9 @@ Both are `F32`'s shape — a duplicate somebody noticed and wrote into a row's
 `description`, where nothing reads it. **Neither is taken by the PR that filed
 it.**
 
-- **F33** — low — `Gas Mask` and `Gas Mask (human-size)` are the same mask — Taken, 2026-09-06 (`zzzzzz-ingestion-f33-gas-mask.sql`), and it does one thing — full text in `INGESTION-AUDIT.closed.md` under its own `### F33` heading.
+- **F33** — low — `Gas Mask` and `Gas Mask (human-size)` are the same mask — Taken, 2026-09-06 (`zzzzzz-ingestion-f33-gas-mask.sql`), and it does one thing — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F33` heading.
 
-- **F34** — low — `Gas Mask and Air Filter` exists twice, and the note saying so is itself wrong — Adjusted 2026-09-06 and RE-SCOPED before being taken. This finding read the — full text in `INGESTION-AUDIT.closed.md` under its own `### F34` heading.
+- **F34** — low — `Gas Mask and Air Filter` exists twice, and the note saying so is itself wrong — Adjusted 2026-09-06 and RE-SCOPED before being taken. This finding read the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/INGESTION-AUDIT.closed.md` under its own `### F34` heading.
 
 ## Filed 2026-09-19, from F23's own note
 

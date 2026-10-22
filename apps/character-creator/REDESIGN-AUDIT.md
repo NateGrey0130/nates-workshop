@@ -1,10 +1,13 @@
 # REDESIGN-AUDIT.md — what survived the redesign prompt
 
-> **Since 2026-09-16 the closed findings live in `REDESIGN-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **All 15 items are closed**, re-verified on 2026-09-02: `R1`–`R7` and `N1`–`N8`.
 >
@@ -62,19 +65,19 @@ only; and desktop-first with a phone story at the table. The phone story is `bod
 
 ## Findings
 
-- **R1** — high — The sheet offers a **Use** button the pool cannot pay for, then refuses the click — Taken, 2026-08-31 (PR #462). Posture held: dim and disable, never hide. The finding — full text in `REDESIGN-AUDIT.closed.md` under its own `### R1` heading.
+- **R1** — high — The sheet offers a **Use** button the pool cannot pay for, then refuses the click — Taken, 2026-08-31 (PR #462). Posture held: dim and disable, never hide. The finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R1` heading.
 
-- **R2** — high — Current H.P. is unreachable from five of the six tabs — Taken, 2026-08-31 (PR #463). Posture held: one strip, no new grid, no new tab scheme, — full text in `REDESIGN-AUDIT.closed.md` under its own `### R2` heading.
+- **R2** — high — Current H.P. is unreachable from five of the six tabs — Taken, 2026-08-31 (PR #463). Posture held: one strip, no new grid, no new tab scheme, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R2` heading.
 
-- **R3** — medium — The sheet is 900px wide and spends none of a 1440 screen on its longest list — Closed unadopted, 2026-08-31 (PR #464). The posture decided it: the numbers came back — full text in `REDESIGN-AUDIT.closed.md` under its own `### R3` heading.
+- **R3** — medium — The sheet is 900px wide and spends none of a 1440 screen on its longest list — Closed unadopted, 2026-08-31 (PR #464). The posture decided it: the numbers came back — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R3` heading.
 
-- **R4** — medium — Two different reasons a skill row is blocked render identically — Taken, 2026-08-31 (PR #465). Posture held: a muted span appended to the label, the same — full text in `REDESIGN-AUDIT.closed.md` under its own `### R4` heading.
+- **R4** — medium — Two different reasons a skill row is blocked render identically — Taken, 2026-08-31 (PR #465). Posture held: a muted span appended to the label, the same — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R4` heading.
 
-- **R5** — medium — The sheet's skills list has no filter and no count — Taken, 2026-08-31 (PR #466). Posture held: the existing `.pick-filter`, skills only, — full text in `REDESIGN-AUDIT.closed.md` under its own `### R5` heading.
+- **R5** — medium — The sheet's skills list has no filter and no count — Taken, 2026-08-31 (PR #466). Posture held: the existing `.pick-filter`, skills only, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R5` heading.
 
-- **R6** — low — Four of the twenty-two `--accent` uses sit on things you cannot act on — Taken in part, 2026-08-31 (PR #467): two of the four lines. Posture held — no palette — full text in `REDESIGN-AUDIT.closed.md` under its own `### R6` heading.
+- **R6** — low — Four of the twenty-two `--accent` uses sit on things you cannot act on — Taken in part, 2026-08-31 (PR #467): two of the four lines. Posture held — no palette — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R6` heading.
 
-- **R7** — low — Every page in the repo fetches its fonts from a third-party CDN — Merged 2026-09-01 as `e40b6e1`, 07:00 — the note above was written while the hold was — full text in `REDESIGN-AUDIT.closed.md` under its own `### R7` heading.
+- **R7** — low — Every page in the repo fetches its fonts from a third-party CDN — Merged 2026-09-01 as `e40b6e1`, 07:00 — the note above was written while the hold was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### R7` heading.
 
 ## N — opened while taking R1–R7
 
@@ -82,21 +85,21 @@ Defects found *during* the work rather than during the audit, kept out of the PR
 found them because the numbering exists so the decision to take one can be separate.
 **To be addressed after R7 is merged.** Same rules: take one at a time, on a word.
 
-- **N1** — low — The Vitals tab no longer holds the vitals — Taken, 2026-09-01 (PR #470). Posture held: one string changed, `sheet.js:1152`, — full text in `REDESIGN-AUDIT.closed.md` under its own `### N1` heading.
+- **N1** — low — The Vitals tab no longer holds the vitals — Taken, 2026-09-01 (PR #470). Posture held: one string changed, `sheet.js:1152`, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N1` heading.
 
-- **N2** — low — The skill columns are cramped at 273px, but the sheet's width is the wrong lever — Taken, 2026-09-01 (PR #471). Posture held: one tab's width. `.wrap` is untouched at — full text in `REDESIGN-AUDIT.closed.md` under its own `### N2` heading.
+- **N2** — low — The skill columns are cramped at 273px, but the sheet's width is the wrong lever — Taken, 2026-09-01 (PR #471). Posture held: one tab's width. `.wrap` is untouched at — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N2` heading.
 
-- **N3** — low — A finding heading cannot be linked to, and the smoke test and GitHub disagree about why — Taken, 2026-09-01 (PR #473). Posture held: `test/checks/environment.mjs` changed, not one — full text in `REDESIGN-AUDIT.closed.md` under its own `### N3` heading.
+- **N3** — low — A finding heading cannot be linked to, and the smoke test and GitHub disagree about why — Taken, 2026-09-01 (PR #473). Posture held: `test/checks/environment.mjs` changed, not one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N3` heading.
 
-- **N4** — low — The not-applicable wizard step is 1.85:1 and says something worth reading — Taken, 2026-09-01 (PR #472). Posture held: legibility only. The step is still a — full text in `REDESIGN-AUDIT.closed.md` under its own `### N4` heading.
+- **N4** — low — The not-applicable wizard step is 1.85:1 and says something worth reading — Taken, 2026-09-01 (PR #472). Posture held: legibility only. The step is still a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N4` heading.
 
-- **N5** — high — `/shared/fonts/` needs an Access destination before R7 can merge — Done, 2026-09-01 — note written late, PR #476. Posture held exactly: the destination was — full text in `REDESIGN-AUDIT.closed.md` under its own `### N5` heading.
+- **N5** — high — `/shared/fonts/` needs an Access destination before R7 can merge — Done, 2026-09-01 — note written late, PR #476. Posture held exactly: the destination was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N5` heading.
 
-- **N6** — medium — The pick3cut5 public-path derivation cannot see assets referenced from CSS — Taken, 2026-09-01 (PR #469). Posture held: the derivation widened, no bypass widened, — full text in `REDESIGN-AUDIT.closed.md` under its own `### N6` heading.
+- **N6** — medium — The pick3cut5 public-path derivation cannot see assets referenced from CSS — Taken, 2026-09-01 (PR #469). Posture held: the derivation widened, no bypass widened, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N6` heading.
 
-- **N7** — low — `SETUP.md` says one more Access destination fits, and none does — Taken, 2026-09-01 (PR #474). Posture held: one sentence deleted from `SETUP.md`. No test — full text in `REDESIGN-AUDIT.closed.md` under its own `### N7` heading.
+- **N7** — low — `SETUP.md` says one more Access destination fits, and none does — Taken, 2026-09-01 (PR #474). Posture held: one sentence deleted from `SETUP.md`. No test — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N7` heading.
 
-- **N8** — low — The forgotten-two sentence in `SETUP.md` now points at the wrong two — Taken, 2026-09-01 (PR #475). Posture held: the bolded sentence and the pronoun that — full text in `REDESIGN-AUDIT.closed.md` under its own `### N8` heading.
+- **N8** — low — The forgotten-two sentence in `SETUP.md` now points at the wrong two — Taken, 2026-09-01 (PR #475). Posture held: the bolded sentence and the pronoun that — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REDESIGN-AUDIT.closed.md` under its own `### N8` heading.
 
 ## Not carried forward, and why
 

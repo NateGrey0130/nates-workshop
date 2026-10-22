@@ -1,10 +1,13 @@
 # MediaVault — ISBN lookup audit
 
-> **Since 2026-09-16 the closed findings live in `ISBN-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 Research pass on the reported "ISBN lookup and add doesn't work". Findings are
 `F1`…`F10`, a menu to be taken one at a time. **All ten are now closed.** F1 as
@@ -229,25 +232,25 @@ change that fixes the most books outright is **F1**.
 
 ---
 
-- **F1** — The ISBN gate rejects every ISBN-10 ending in `X`, and waves through 11- and 12-digit strings that are not ISBNs — - Taken, 2026-08-26 (PR #312, commit `c001512`): — full text in `ISBN-AUDIT.closed.md` under its own `## F1` heading.
+- **F1** — The ISBN gate rejects every ISBN-10 ending in `X`, and waves through 11- and 12-digit strings that are not ISBNs — - Taken, 2026-08-26 (PR #312, commit `c001512`): — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F1` heading.
 
-- **F2** — A pasted ISBN with an en dash, a leading `ISBN `, or a trailing period is rejected as "Invalid ISBN" — - Taken, 2026-08-26 (PR #313): as proposed, and the normaliser went further than the finding asked: it now — full text in `ISBN-AUDIT.closed.md` under its own `## F2` heading.
+- **F2** — A pasted ISBN with an en dash, a leading `ISBN `, or a trailing period is rejected as "Invalid ISBN" — - Taken, 2026-08-26 (PR #313): as proposed, and the normaliser went further than the finding asked: it now — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F2` heading.
 
-- **F3** — A second lookup in the same modal keeps the previous book's cover, silently — - Taken, 2026-08-26 (PR #313): as proposed, plus `actors` and `producers`, which the finding offered as — full text in `ISBN-AUDIT.closed.md` under its own `## F3` heading.
+- **F3** — A second lookup in the same modal keeps the previous book's cover, silently — - Taken, 2026-08-26 (PR #313): as proposed, plus `actors` and `producers`, which the finding offered as — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F3` heading.
 
-- **F4** — Nothing distinguishes "you mistyped it" from "we don't have it", and a typo with a valid check digit auto-fills the wrong book — - Closed, 2026-08-26 (PR #313): diagnosis only, no code of its own. Its — full text in `ISBN-AUDIT.closed.md` under its own `## F4` heading.
+- **F4** — Nothing distinguishes "you mistyped it" from "we don't have it", and a typo with a valid check digit auto-fills the wrong book — - Closed, 2026-08-26 (PR #313): diagnosis only, no code of its own. Its — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F4` heading.
 
-- **F5** — A successful ISBN lookup fills three fields and adds nothing; the flow the user calls "lookup and add" is six more steps — - Taken, 2026-08-26 (PR #313): the *fuller* option, sharing F9's machinery as the finding advised — an — full text in `ISBN-AUDIT.closed.md` under its own `## F5` heading.
+- **F5** — A successful ISBN lookup fills three fields and adds nothing; the flow the user calls "lookup and add" is six more steps — - Taken, 2026-08-26 (PR #313): the *fuller* option, sharing F9's machinery as the finding advised — an — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F5` heading.
 
-- **F6** — The `isbn` mode drops the cover whenever the *edition* has none, though OpenLibrary has one for the *work* — - Taken, 2026-08-26 (PR #313): as proposed plus a timeout, which was not optional. Written exactly as — full text in `ISBN-AUDIT.closed.md` under its own `## F6` heading.
+- **F6** — The `isbn` mode drops the cover whenever the *edition* has none, though OpenLibrary has one for the *work* — - Taken, 2026-08-26 (PR #313): as proposed plus a timeout, which was not optional. Written exactly as — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F6` heading.
 
-- **F7** — The ISBN is never stored, so a bad lookup can never be corrected and a re-lookup can never be exact — - Taken, 2026-08-26 (PR #323), when both conditions the hold named came — full text in `ISBN-AUDIT.closed.md` under its own `## F7` heading.
+- **F7** — The ISBN is never stored, so a bad lookup can never be corrected and a re-lookup can never be exact — - Taken, 2026-08-26 (PR #323), when both conditions the hold named came — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F7` heading.
 
-- **F8** — Check-digit feedback in the UI *(§1 adjacent item)* — - Taken, 2026-08-26 (PR #313): as proposed, client-side only, with one correction to the wording. The — full text in `ISBN-AUDIT.closed.md` under its own `## F8` heading.
+- **F8** — Check-digit feedback in the UI *(§1 adjacent item)* — - Taken, 2026-08-26 (PR #313): as proposed, client-side only, with one correction to the wording. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F8` heading.
 
-- **F9** — Batch ISBN paste-add *(§1 adjacent item)* — - Taken, 2026-08-26 (PR #313): as proposed. Client-side loop, capped at 100, cancellable, reusing the `isbn` — full text in `ISBN-AUDIT.closed.md` under its own `## F9` heading.
+- **F9** — Batch ISBN paste-add *(§1 adjacent item)* — - Taken, 2026-08-26 (PR #313): as proposed. Client-side loop, capped at 100, cancellable, reusing the `isbn` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F9` heading.
 
-- **F10** — A transient OpenLibrary failure is indistinguishable from a book OpenLibrary does not have — - Taken, 2026-08-26 (PR #320): as proposed, and the "consider" was taken — full text in `ISBN-AUDIT.closed.md` under its own `## F10` heading.
+- **F10** — A transient OpenLibrary failure is indistinguishable from a book OpenLibrary does not have — - Taken, 2026-08-26 (PR #320): as proposed, and the "consider" was taken — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/ISBN-AUDIT.closed.md` under its own `## F10` heading.
 
 ## Ordering, if you want one
 

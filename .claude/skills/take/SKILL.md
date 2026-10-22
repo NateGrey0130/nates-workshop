@@ -71,10 +71,21 @@ find . -name '*AUDIT*.md' -not -path './node_modules/*' -not -path './.cache/*' 
 grep -rn -i '<subject word>' ~/.claude/projects/*/memory/
 ```
 
-The glob is `*AUDIT*.md`, not `*-AUDIT.md`, because a menu's closed findings
-may live beside it in `<MENU>.closed.md` (`BOOK-INGEST-AUDIT.closed.md` since
-2026-09-16) and a decision recorded there is exactly what this grep exists to
-find.
+The glob is `*AUDIT*.md`, not `*-AUDIT.md`, because not every menu's name ends
+in `-AUDIT` (`apps/pick3cut5/AUDIT.md`, `DOCS-AUDIT-2.md`).
+
+**A closed finding's full text is not in the tree**, and a decision recorded
+there is exactly what this grep exists to find. Its menu keeps a one-line stub
+with the title; the text is in git history (`audit-menu` → *Never grep for the
+outcome note*). So grep history too:
+
+```bash
+git grep -n -i '<subject word>' c530a474799d9621ce1b9433dfa6ef1721d0b666 -- '*.closed.md'
+git log --oneline -i -G '<subject word>' -- '*AUDIT*.md'
+```
+
+The first reads the archives deleted on 2026-10-22; the second finds a finding
+stubbed in place since. A hit there is a hit: print it like the others.
 
 **Print every hit with its file and line, or print `no hits` in those words.**
 A `### F29 - high -` heading in another menu naming the same endpoint, or a

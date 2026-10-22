@@ -1,10 +1,13 @@
 # Rebuild audit — what a fresh build of this database actually breaks
 
-> **Since 2026-09-16 the closed findings live in `REBUILD-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **All 20 findings (`F1`–`F20`) are closed**, re-verified on 2026-09-02.
 >
@@ -191,35 +194,35 @@ and only one of them is being asked.
 
 ## Findings
 
-- **F1** — `d1-apply.mjs` honours `-- local-only` under `--remote` only — Taken, 2026-08-28 (PR #385). The premise held: the skip did live inside — full text in `REBUILD-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — `d1-apply.mjs` honours `-- local-only` under `--remote` only — Taken, 2026-08-28 (PR #385). The premise held: the skip did live inside — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — `README.md:769` names one file where 27 now sort after `seed-dev.sql` — Closed as moot, 2026-08-28 (PR #385) — not taken. F1 changed the behaviour — full text in `REBUILD-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — `README.md:769` names one file where 27 now sort after `seed-dev.sql` — Closed as moot, 2026-08-28 (PR #385) — not taken. F1 changed the behaviour — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — nothing pins the rebuild's row *contents*, so this class of regression is invisible — Taken, 2026-08-28 (PR #377). Posture held: report, do not fail. A missing or — full text in `REBUILD-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — nothing pins the rebuild's row *contents*, so this class of regression is invisible — Taken, 2026-08-28 (PR #377). Posture held: report, do not fail. A missing or — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — the citation comparison counted one bucket, so a total loss read as an improvement — Taken, 2026-08-28 (PR #386). Posture held: measurement only, no data change, — full text in `REBUILD-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — the citation comparison counted one bucket, so a total loss read as an improvement — Taken, 2026-08-28 (PR #386). Posture held: measurement only, no data change, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — `restore-gear-missing-from-repo.sql` exports 6 of gear's 18 columns — Taken, 2026-08-28 (PR #379). The premises held — 193 field values across 53 — full text in `REBUILD-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — `restore-gear-missing-from-repo.sql` exports 6 of gear's 18 columns — Taken, 2026-08-28 (PR #379). The premises held — 193 field values across 53 — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — the app writes rows the repo has no mechanism to capture, and 38 psionic powers are bare because of it — Taken, 2026-08-28 (PR #380). Posture held: documentation only. No data — full text in `REBUILD-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — the app writes rows the repo has no mechanism to capture, and 38 psionic powers are bare because of it — Taken, 2026-08-28 (PR #380). Posture held: documentation only. No data — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — `fix-class-skill-names-to-rue.sql` still defeats a later `fix-` script, and the `zz-` remedy creates a duplicate — Taken, 2026-08-28 (PR #383). Both halves — the data script and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — `fix-class-skill-names-to-rue.sql` still defeats a later `fix-` script, and the `zz-` remedy creates a duplicate — Taken, 2026-08-28 (PR #383). Both halves — the data script and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — 22 `catalog_redirects` rows exist only in production — Taken, 2026-08-28 (PR #387) — the reporting half only. The export is still — full text in `REBUILD-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — 22 `catalog_redirects` rows exist only in production — Taken, 2026-08-28 (PR #387) — the reporting half only. The export is still — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — "rebuild from the repo" has never meant "restore production", and nothing says so — Taken, 2026-08-28 (PR #388). Posture held: documentation only. No tooling, — full text in `REBUILD-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — "rebuild from the repo" has never meant "restore production", and nothing says so — Taken, 2026-08-28 (PR #388). Posture held: documentation only. No tooling, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — the fast rebuild harness is worth keeping — Taken, 2026-08-28 (PR #389). Posture held: new tooling, opt-in, no test — full text in `REBUILD-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — the fast rebuild harness is worth keeping — Taken, 2026-08-28 (PR #389). Posture held: new tooling, opt-in, no test — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — a fresh build cites 10 gear slugs that do not exist; production cites 0 — Taken, 2026-08-28 (PR #378). Both halves — the data script and the test — full text in `REBUILD-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — a fresh build cites 10 gear slugs that do not exist; production cites 0 — Taken, 2026-08-28 (PR #378). Both halves — the data script and the test — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — `repo-vs-live.mjs` does not cover `imported_classes` at all — Taken, 2026-08-28 (PR #382). Posture held: report, do not fail. Exit code — full text in `REBUILD-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — `repo-vs-live.mjs` does not cover `imported_classes` at all — Taken, 2026-08-28 (PR #382). Posture held: report, do not fail. Exit code — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — export the 38 divergent psionic powers, the way F5 did for gear — Taken, 2026-08-28 (PR #381). Posture held: a new data script, `zzzz-` tier, — full text in `REBUILD-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — export the 38 divergent psionic powers, the way F5 did for gear — Taken, 2026-08-28 (PR #381). Posture held: a new data script, `zzzz-` tier, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — export the 25 divergent skills, and read them before assuming enrichment — Taken, 2026-08-28 (PR #390). Posture held exactly: investigated first, and — full text in `REBUILD-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — export the 25 divergent skills, and read them before assuming enrichment — Taken, 2026-08-28 (PR #390). Posture held exactly: investigated first, and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — production has 16 psionic powers tagged rifts-only against a decision that says they must not be — Taken, 2026-08-28 (PR #391). THE ONLY FINDING IN THIS AUDIT THAT CHANGED — full text in `REBUILD-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — production has 16 psionic powers tagged rifts-only against a decision that says they must not be — Taken, 2026-08-28 (PR #391). THE ONLY FINDING IN THIS AUDIT THAT CHANGED — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F15` heading.
 
 ### F16 — the `not-cached` bucket is a provenance problem, not a caching problem
 
@@ -429,13 +432,13 @@ row `--remote` on 2026-10-20. The seventeen, each against the reading it fails:
   another skill's entry, Antiquarian's is China 2's *Chinese Antiquarianism*,
   and the rest are class skill lines or a neighbouring skill's text.
 
-- **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `REBUILD-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F18` heading.
 
-- **F19** — the six classes where the REBUILD is ahead of production — Taken, 2026-08-28 (PR #397). Posture held: this changed production, on a — full text in `REBUILD-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — the six classes where the REBUILD is ahead of production — Taken, 2026-08-28 (PR #397). Posture held: this changed production, on a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F19` heading.
 
-- **F20** — five spells missing their Palladium Fantasy P.P.E. variant — Taken, 2026-08-28 (PR #395). `spells` is at zero — the third table to reach — full text in `REBUILD-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — five spells missing their Palladium Fantasy P.P.E. variant — Taken, 2026-08-28 (PR #395). `spells` is at zero — the third table to reach — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/REBUILD-AUDIT.closed.md` under its own `### F20` heading.
 
 **Added 2026-09-25**, after PRs #1352, #1353 and #1354 reconciled every offender
 `repo-vs-live.mjs --offenders` reported (31 fields; the tool printed "The repo

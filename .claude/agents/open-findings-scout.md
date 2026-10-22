@@ -54,13 +54,15 @@ wrong the moment a menu lands somewhere else, and `audit-menu` says so at
 length. The answer is the glob's output, minus the briefs, plus the one it
 cannot see.
 
-## Eighteen of those files are closed findings, and they are not open work
+## A closed finding is a stub, and it is not open work
 
-Since 2026-09-16 a menu's closed findings live beside it in `<MENU>.closed.md`,
-moved there with their headings and notes, and the live file keeps a **one-line
-pointer** where each heading was. So:
+A menu keeps a **one-line pointer stub** where each closed finding's heading
+was (`- **F3** — <title> — <outcome> — full text in …`), and the full text is
+in git history, not the tree: the archives that held it were deleted on
+2026-10-22, and a finding that closes since is stubbed in place. So:
 
-- a `.closed.md` file is a **record**. Nothing in it is open.
+- a stub is a **closed finding**. Nothing it points at is open, and you do not
+  need to read the history it names to report a state.
 - a live menu is now mostly pointers, and a pointer is not a finding. The
   findings that stayed in full are the ones whose sections record no outcome —
   which is a strong signal and **not** a substitute for reading them.

@@ -1,10 +1,13 @@
 # WORKSHOP-UI-AUDIT.md — the interface, across apps
 
-> **Since 2026-09-16 the closed findings live in `WORKSHOP-UI-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:WORKSHOP-UI-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **Nothing is open on this menu, as of 2026-09-10.** Read each finding's own
 > heading for its state; this line does not name them and does not count them.
@@ -77,11 +80,11 @@ landing screens produced, not a survey.
 
 ## Findings
 
-- **W1** — high — MediaVault's bulk bar is 68px wider than a phone, clips its own Apply button, and covers 177px of the library before anyone has selected anything — Taken, 2026-09-10 (PR #915). Posture held: one app stylesheet, no markup change, — full text in `WORKSHOP-UI-AUDIT.closed.md` under its own `### W1` heading.
+- **W1** — high — MediaVault's bulk bar is 68px wider than a phone, clips its own Apply button, and covers 177px of the library before anyone has selected anything — Taken, 2026-09-10 (PR #915). Posture held: one app stylesheet, no markup change, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:WORKSHOP-UI-AUDIT.closed.md` under its own `### W1` heading.
 
-- **W2** — medium — The whole workshop's icon layer is the operating system's emoji font, and the repo contains no icon of its own — Adjusted 2026-09-10 (PR #916). The `Confidence` field above did its job, and the — full text in `WORKSHOP-UI-AUDIT.closed.md` under its own `### W2` heading.
+- **W2** — medium — The whole workshop's icon layer is the operating system's emoji font, and the repo contains no icon of its own — Adjusted 2026-09-10 (PR #916). The `Confidence` field above did its job, and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:WORKSHOP-UI-AUDIT.closed.md` under its own `### W2` heading.
 
-- **W3** — low — The bulk bar takes 42% of a phone viewport while select mode is on — Taken, 2026-09-10 (PR #918). The shape is Nate's, because this finding offered — full text in `WORKSHOP-UI-AUDIT.closed.md` under its own `### W3` heading.
+- **W3** — low — The bulk bar takes 42% of a phone viewport while select mode is on — Taken, 2026-09-10 (PR #918). The shape is Nate's, because this finding offered — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:WORKSHOP-UI-AUDIT.closed.md` under its own `### W3` heading.
 
 ## Not carried forward, and why
 

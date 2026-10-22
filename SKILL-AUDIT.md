@@ -1,10 +1,13 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Since 2026-09-16 the closed findings live in `SKILL-AUDIT.closed.md`**,
-> moved there verbatim with their headings, numbering, notes and `####`
-> children; this file keeps a one-line pointer per finding where its heading
-> was. Every finding of this menu recorded an outcome, so every one moved. The
-> closed file is a record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; every finding of this menu recorded an outcome, so every
+> one moved. A line number this menu cites in the closed file reads against that
+> commit.
 
 > **Work was opened on this menu on 2026-10-14**, under `## Filed from the
 > outstanding-work plan, 2026-10-14` at the foot of the file. Read under the
@@ -194,27 +197,27 @@ them accordingly rather than proposing three skills.
 
 ## Layer 1 — the six skills and their reference files
 
-- **F1** — `frontmatter.md` says it is exhaustive, it is not, and the correction lives only in memory — where it asserts a disclaimer the file does not carry — Taken, 2026-09-02 (PR #541). Posture as proposed: the reference rewritten, — full text in `SKILL-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — `frontmatter.md` says it is exhaustive, it is not, and the correction lives only in memory — where it asserts a disclaimer the file does not carry — Taken, 2026-09-02 (PR #541). Posture as proposed: the reference rewritten, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — `claim-audit`'s find-them command was written the day before the README split, and now misses 60% of what it hunts — Taken, 2026-09-02 (PR #542). Posture as proposed: one command, one table row, — full text in `SKILL-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — `claim-audit`'s find-them command was written the day before the README split, and now misses 60% of what it hunts — Taken, 2026-09-02 (PR #542). Posture as proposed: one command, one table row, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — `claim-audit` opens by calling the README 4,600 lines; it is 973 — Taken, 2026-09-02 (PR #545). Posture as proposed, and one premise of the — full text in `SKILL-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — `claim-audit` opens by calling the README 4,600 lines; it is 973 — Taken, 2026-09-02 (PR #545). Posture as proposed, and one premise of the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — `class-import` quotes two counts that have moved by 5.5× and 2× — Taken, 2026-09-02 (PR #546). Posture as proposed. Both premises held — — full text in `SKILL-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — `class-import` quotes two counts that have moved by 5.5× and 2× — Taken, 2026-09-02 (PR #546). Posture as proposed. Both premises held — — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — `book-survey` says `pf` is the only book with a page-offset exception; `underseas` has one too — Adjusted 2026-09-02 (PR #564). The same claim was still standing in — full text in `SKILL-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — `book-survey` says `pf` is the only book with a page-offset exception; `underseas` has one too — Adjusted 2026-09-02 (PR #564). The same claim was still standing in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — the zero-offset worked example names the one book that is not registered at zero, and states its number in a base the registry does not use — Taken, 2026-09-02 (PR #553). Posture as proposed: rewrite the paragraph plus — full text in `SKILL-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — the zero-offset worked example names the one book that is not registered at zero, and states its number in a base the registry does not use — Taken, 2026-09-02 (PR #553). Posture as proposed: rewrite the paragraph plus — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — `audit-menu`'s file table is wrong about `DOCS-AUDIT.md`, and filing THIS file makes it wrong again — Taken, 2026-09-02 (PR #548). Posture as proposed: correct one cell, add one — full text in `SKILL-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — `audit-menu`'s file table is wrong about `DOCS-AUDIT.md`, and filing THIS file makes it wrong again — Taken, 2026-09-02 (PR #548). Posture as proposed: correct one cell, add one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — `book-survey` is 585 lines read in full on every fire, and about a third of it is worked example — Taken, 2026-09-02 (PR #563). Posture held — no rule moved — and the finding's — full text in `SKILL-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — `book-survey` is 585 lines read in full on every fire, and about a third of it is worked example — Taken, 2026-09-02 (PR #563). Posture held — no rule moved — and the finding's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — the machinery to pin a skill's claims exists and pins exactly one sentence pattern — CLOSED WITHOUT BEING TAKEN, 2026-09-02 (PR #564) — on the finding's own — full text in `SKILL-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — the machinery to pin a skill's claims exists and pins exactly one sentence pattern — CLOSED WITHOUT BEING TAKEN, 2026-09-02 (PR #564) — on the finding's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F9` heading.
 
 ## Layer 2 — the subagent
 
-- **F10** — `book-reconcile` is the oldest instruction in the surface, and its one required output is a page number it is never told how to compute — Taken, 2026-09-02 (PR #554). Posture as proposed: add a section, no change — full text in `SKILL-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — `book-reconcile` is the oldest instruction in the surface, and its one required output is a page number it is never told how to compute — Taken, 2026-09-02 (PR #554). Posture as proposed: add a section, no change — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F10` heading.
 
 ## Layers 3 and 5 — reach: which file is loaded where the work happens
 
@@ -222,43 +225,43 @@ The three findings below are one mechanism seen three times. They are filed
 separately because they have different fixes and different postures, and taking
 one does not take the others.
 
-- **F11** — the skills reach every directory and `CLAUDE.md` does not, and a note shipped this morning says the opposite in writing — Taken, 2026-09-02 (PR #543). Both parts as proposed, posture included: a — full text in `SKILL-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — the skills reach every directory and `CLAUDE.md` does not, and a note shipped this morning says the opposite in writing — Taken, 2026-09-02 (PR #543). Both parts as proposed, posture included: a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — the deliberate gaps in the repo allowlist are granted by wildcard in the directory the book work runs from — Taken in part, 2026-09-02 (PR #555): the documentation half only, as the — full text in `SKILL-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — the deliberate gaps in the repo allowlist are granted by wildcard in the directory the book work runs from — Taken in part, 2026-09-02 (PR #555): the documentation half only, as the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — `book-survey`'s first command is justified by a permission fact that is not true where the skill runs — Taken, 2026-09-02 (PR #549). Posture as proposed: rewrite the parenthetical, — full text in `SKILL-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — `book-survey`'s first command is justified by a permission fact that is not true where the skill runs — Taken, 2026-09-02 (PR #549). Posture as proposed: rewrite the parenthetical, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — `launch.json`'s 8788 warning shipped into the file a Downloads session does not load — Taken, 2026-09-02 (PR #556). Posture as proposed: add two configurations and — full text in `SKILL-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — `launch.json`'s 8788 warning shipped into the file a Downloads session does not load — Taken, 2026-09-02 (PR #556). Posture as proposed: add two configurations and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F14` heading.
 
 ## Layer 4 — memory
 
-- **F15** — a memory reports four findings as open that had merged hours before it was written — Taken, 2026-09-02 (PR #550). Posture as proposed: rewrite the status — full text in `SKILL-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — a memory reports four findings as open that had merged hours before it was written — Taken, 2026-09-02 (PR #550). Posture as proposed: rewrite the status — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F15` heading.
 
-- **F16** — `MEMORY.md` quotes moving counts, in the index that sits beside the memory telling it not to — Taken, 2026-09-02 (PR #551). Posture as proposed: rewrite index lines, delete — full text in `SKILL-AUDIT.closed.md` under its own `### F16` heading.
+- **F16** — `MEMORY.md` quotes moving counts, in the index that sits beside the memory telling it not to — Taken, 2026-09-02 (PR #551). Posture as proposed: rewrite index lines, delete — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F16` heading.
 
-- **F17** — the book-ingestion batch protocol is a real, repeated workflow that exists in memory, an untracked prompt and a queue file, and in no skill — Taken, 2026-09-02 (PR #557). Posture as proposed: a section in an existing — full text in `SKILL-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — the book-ingestion batch protocol is a real, repeated workflow that exists in memory, an untracked prompt and a queue file, and in no skill — Taken, 2026-09-02 (PR #557). Posture as proposed: a section in an existing — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — a memory-only trap contradicts a step `class-import` prints as a command — Taken, 2026-09-02 (PR #558). Posture as proposed: two commands, three lines — full text in `SKILL-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — a memory-only trap contradicts a step `class-import` prints as a command — Taken, 2026-09-02 (PR #558). Posture as proposed: two commands, three lines — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F18` heading.
 
 ## Layer 6 — the prompts
 
-- **F19** — the archive that fixed "the method is not in the repo" was already two briefs short on the day it merged, and one of them is a reusable template — Taken, 2026-09-02 (PR #559). Posture as proposed: copy three files, add one — full text in `SKILL-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — the archive that fixed "the method is not in the repo" was already two briefs short on the day it merged, and one of them is a reusable template — Taken, 2026-09-02 (PR #559). Posture as proposed: copy three files, add one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F19` heading.
 
 ## Cross-layer
 
-- **F20** — a menu header says a skill is wrong; the skill was fixed eleven minutes later and nothing corrected the header — Taken, 2026-09-02 (PR #552). Posture as proposed: append the banner — full text in `SKILL-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — a menu header says a skill is wrong; the skill was fixed eleven minutes later and nothing corrected the header — Taken, 2026-09-02 (PR #552). Posture as proposed: append the banner — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F20` heading.
 
-- **F21** — three skills state the "do not quote a moving number" rule and three skills break it — Taken, 2026-09-02 (PR #560). Posture as proposed: add a section and one table — full text in `SKILL-AUDIT.closed.md` under its own `### F21` heading.
+- **F21** — three skills state the "do not quote a moving number" rule and three skills break it — Taken, 2026-09-02 (PR #560). Posture as proposed: add a section and one table — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F21` heading.
 
 ## Opened while taking a finding
 
-- **F22** — the sheet-list drift check guards the list that never drifted, and not the one that did — Taken, 2026-09-02 (PR #561). Posture as proposed: a check beside the combat — full text in `SKILL-AUDIT.closed.md` under its own `### F22` heading.
+- **F22** — the sheet-list drift check guards the list that never drifted, and not the one that did — Taken, 2026-09-02 (PR #561). Posture as proposed: a check beside the combat — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F22` heading.
 
-- **F23** — no check asks whether the keys published CLASSES write can be rendered at all — Taken, 2026-09-02 (PR #562). Posture as proposed: a check over the repo's own — full text in `SKILL-AUDIT.closed.md` under its own `### F23` heading.
+- **F23** — no check asks whether the keys published CLASSES write can be rendered at all — Taken, 2026-09-02 (PR #562). Posture as proposed: a check over the repo's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F23` heading.
 
-- **F24** — `CLAUDE.md` says Pages is dashboard-or-Chrome work; the Cloudflare MCP plugin reads and writes it directly — Taken, 2026-09-02 (PR #565). Posture as proposed: rewrite the coupled — full text in `SKILL-AUDIT.closed.md` under its own `### F24` heading.
+- **F24** — `CLAUDE.md` says Pages is dashboard-or-Chrome work; the Cloudflare MCP plugin reads and writes it directly — Taken, 2026-09-02 (PR #565). Posture as proposed: rewrite the coupled — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F24` heading.
 
-- **F25** — `zz-` no longer sorts after everything, and the sentence saying it does sits in the section about exactly that failure — Taken in part, 2026-09-02 (PR #567): part (a) only. Part (b) CLOSED by — full text in `SKILL-AUDIT.closed.md` under its own `### F25` heading.
+- **F25** — `zz-` no longer sorts after everything, and the sentence saying it does sits in the section about exactly that failure — Taken in part, 2026-09-02 (PR #567): part (a) only. Part (b) CLOSED by — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F25` heading.
 
 # New skills
 
@@ -266,21 +269,21 @@ Ranked by evidence, most-supported first. `N1`–`N3` are backed by recurring,
 documented pain. `N4`–`N8` are speculative and labelled so; two of them I would
 argue against.
 
-- **N1** — a `verify-ui` skill: how to prove a change in the browser on this machine — WRITTEN, 2026-09-02 (PR #568). `.claude/skills/verify-ui/`, junctioned, — full text in `SKILL-AUDIT.closed.md` under its own `### N1` heading.
+- **N1** — a `verify-ui` skill: how to prove a change in the browser on this machine — WRITTEN, 2026-09-02 (PR #568). `.claude/skills/verify-ui/`, junctioned, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N1` heading.
 
-- **N2** — a `windows-shell` skill: the traps that have corrupted commands and commits here — WRITTEN, 2026-09-02 (PR #568), with the move the proposal insisted on. — full text in `SKILL-AUDIT.closed.md` under its own `### N2` heading.
+- **N2** — a `windows-shell` skill: the traps that have corrupted commands and commits here — WRITTEN, 2026-09-02 (PR #568), with the move the proposal insisted on. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N2` heading.
 
-- **N3** — `pick3cut5`: the Access wall, the Worker, and the deploy a merge does not do — WRITTEN, 2026-09-02 (PR #568). One skill, not three — `media-vault` and — full text in `SKILL-AUDIT.closed.md` under its own `### N3` heading.
+- **N3** — `pick3cut5`: the Access wall, the Worker, and the deploy a merge does not do — WRITTEN, 2026-09-02 (PR #568). One skill, not three — `media-vault` and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N3` heading.
 
-- **N4** — `deploy-verify`: the sweep, the check-runs, and the two deploy paths — DECLINED, 2026-09-02. Nate's call, and it matches the recommendation. The — full text in `SKILL-AUDIT.closed.md` under its own `### N4` heading.
+- **N4** — `deploy-verify`: the sweep, the check-runs, and the two deploy paths — DECLINED, 2026-09-02. Nate's call, and it matches the recommendation. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N4` heading.
 
-- **N5** — `catalog-import`: skills, spells, psionics and gear, as distinct from classes — DECLINED, 2026-09-02, on its own condition: no catalog-only import has gone — full text in `SKILL-AUDIT.closed.md` under its own `### N5` heading.
+- **N5** — `catalog-import`: skills, spells, psionics and gear, as distinct from classes — DECLINED, 2026-09-02, on its own condition: no catalog-only import has gone — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N5` heading.
 
-- **N6** — `write-a-memory`: what belongs in memory rather than a skill — DECLINED as a skill, 2026-09-02 — and its substance already shipped. `F21` — full text in `SKILL-AUDIT.closed.md` under its own `### N6` heading.
+- **N6** — `write-a-memory`: what belongs in memory rather than a skill — DECLINED as a skill, 2026-09-02 — and its substance already shipped. `F21` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N6` heading.
 
-- **N7** — `new-app`: standing up a fourth app in this monorepo — DECLINED, 2026-09-02, on its own condition: there is no third app planned. — full text in `SKILL-AUDIT.closed.md` under its own `### N7` heading.
+- **N7** — `new-app`: standing up a fourth app in this monorepo — DECLINED, 2026-09-02, on its own condition: there is no third app planned. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N7` heading.
 
-- **N8** — `cloudflare-access`: the wall, the bypasses, and what the token cannot reach — DECLINED, 2026-09-02, and the fold happened. `N3`'s `pick3cut5` skill — full text in `SKILL-AUDIT.closed.md` under its own `### N8` heading.
+- **N8** — `cloudflare-access`: the wall, the bypasses, and what the token cannot reach — DECLINED, 2026-09-02, and the fold happened. `N3`'s `pick3cut5` skill — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### N8` heading.
 
 # What was checked and found healthy
 
@@ -331,11 +334,11 @@ new failure"*), agreeing with `N4` below, and that decision stands untouched:
 these three are about agents that already exist and about two sentences
 describing them.
 
-- **F26** — `SETUP.md` and `CLAUDE.md` say a new agent works "the moment its file lands"; the junction is instant and the harness is not — Taken, 2026-09-04 (PR #679). Posture held: documentation only — two sentences, — full text in `SKILL-AUDIT.closed.md` under its own `### F26` heading.
+- **F26** — `SETUP.md` and `CLAUDE.md` say a new agent works "the moment its file lands"; the junction is instant and the harness is not — Taken, 2026-09-04 (PR #679). Posture held: documentation only — two sentences, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F26` heading.
 
-- **F27** — a subagent CAN load a project skill by name, and all five agent files are written as though it cannot — Taken, 2026-09-04 (PR #680). Posture held: opt-in and per agent — frontmatter — full text in `SKILL-AUDIT.closed.md` under its own `### F27` heading.
+- **F27** — a subagent CAN load a project skill by name, and all five agent files are written as though it cannot — Taken, 2026-09-04 (PR #680). Posture held: opt-in and per agent — frontmatter — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F27` heading.
 
-- **F28** — all four agents added in #676 shipped without ever being invoked — Taken, 2026-09-04 (PR #678). Posture held: verification only — all four were — full text in `SKILL-AUDIT.closed.md` under its own `### F28` heading.
+- **F28** — all four agents added in #676 shipped without ever being invoked — Taken, 2026-09-04 (PR #678). Posture held: verification only — all four were — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F28` heading.
 
 ## Opened by taking F28
 
@@ -345,13 +348,13 @@ here so each gets its own word. **Every premise below was re-verified by hand
 after the agent that found it reported it** — an agent's finding is still a claim
 about another file.
 
-- **F29** — four live-instruction files say `main` has no ruleset, and one of them contradicts itself — Taken, 2026-09-04 (PR #682). Posture held: documentation only — four passages — full text in `SKILL-AUDIT.closed.md` under its own `### F29` heading.
+- **F29** — four live-instruction files say `main` has no ruleset, and one of them contradicts itself — Taken, 2026-09-04 (PR #682). Posture held: documentation only — four passages — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F29` heading.
 
-- **F30** — `audit-citations.mjs` silently ignores a finding number that is not an `F` — Taken, 2026-09-04 (PR #684). Posture held: no gate, no exit code, read-only. — full text in `SKILL-AUDIT.closed.md` under its own `### F30` heading.
+- **F30** — `audit-citations.mjs` silently ignores a finding number that is not an `F` — Taken, 2026-09-04 (PR #684). Posture held: no gate, no exit code, read-only. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F30` heading.
 
-- **F31** — the README says `extraction-prompt.mjs` has "Two system prompts"; there is one — Taken, 2026-09-04 (PR #685). Posture held: documentation only — — full text in `SKILL-AUDIT.closed.md` under its own `### F31` heading.
+- **F31** — the README says `extraction-prompt.mjs` has "Two system prompts"; there is one — Taken, 2026-09-04 (PR #685). Posture held: documentation only — — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F31` heading.
 
-- **F32** — `REPO-AUDIT` `G8` deferred a follow-up to "its own finding" and none was ever filed — Taken, 2026-09-04 (PR #686). Posture held: reporting only, matching `G8` — not — full text in `SKILL-AUDIT.closed.md` under its own `### F32` heading.
+- **F32** — `REPO-AUDIT` `G8` deferred a follow-up to "its own finding" and none was ever filed — Taken, 2026-09-04 (PR #686). Posture held: reporting only, matching `G8` — not — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F32` heading.
 
 ## Opened while taking F29 to F32
 
@@ -361,9 +364,9 @@ doing the work rather than out of auditing a finding: one from an error the
 instruction layer led me into, one from an agent reading its own file against
 the skill it had just loaded.
 
-- **F33** — `windows-shell` states the line-ending rule as one exception; `.gitattributes` has four — Taken, 2026-09-04 (PR #689). Posture held: documentation only — one skill, one — full text in `SKILL-AUDIT.closed.md` under its own `### F33` heading.
+- **F33** — `windows-shell` states the line-ending rule as one exception; `.gitattributes` has four — Taken, 2026-09-04 (PR #689). Posture held: documentation only — one skill, one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F33` heading.
 
-- **F34** — `audit-premise-auditor` tells itself every finding has had a bad premise; its own authority says otherwise — Taken, 2026-09-04 (PR #688). Posture held: documentation only — one agent — full text in `SKILL-AUDIT.closed.md` under its own `### F34` heading.
+- **F34** — `audit-premise-auditor` tells itself every finding has had a bad premise; its own authority says otherwise — Taken, 2026-09-04 (PR #688). Posture held: documentation only — one agent — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F34` heading.
 
 ## Opened while taking F33
 
@@ -371,7 +374,7 @@ Filed 2026-09-04. A **fifth** placement on this page; the header says so. `F33`'
 note listed four other copies of the line-ending falsehood and left them, its
 posture being one sentence in one skill. This is the one that matters.
 
-- **F35** — `ship-pr` carries the same false line-ending clause, and the clause was never part of what it was told to say — Taken, 2026-09-04 (PR #693). Posture held: documentation only and subtractive — full text in `SKILL-AUDIT.closed.md` under its own `### F35` heading.
+- **F35** — `ship-pr` carries the same false line-ending clause, and the clause was never part of what it was told to say — Taken, 2026-09-04 (PR #693). Posture held: documentation only and subtractive — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F35` heading.
 
 ## Opened by F32's own CI run
 
@@ -379,27 +382,27 @@ Filed 2026-09-04. A **sixth** placement on this page. Six is past the point wher
 the arrangement helps anybody; consolidating them is worth its own finding and is
 not attempted here.
 
-- **F36** — `F32`'s path filter was justified with a number measured on the wrong machine — Taken, 2026-09-04 (PR #692). Posture held: reporting only, unchanged from — full text in `SKILL-AUDIT.closed.md` under its own `### F36` heading.
+- **F36** — `F32`'s path filter was justified with a number measured on the wrong machine — Taken, 2026-09-04 (PR #692). Posture held: reporting only, unchanged from — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F36` heading.
 
 ## Opened while closing out 2026-09-04
 
 Filed 2026-09-04. A **seventh** placement, and `F39` below is about exactly that.
 
-- **F37** — the memory copy of the line-ending rule, corrected outside the repo — Corrected 2026-09-04, and this finding is filed *with* its outcome because — full text in `SKILL-AUDIT.closed.md` under its own `### F37` heading.
+- **F37** — the memory copy of the line-ending rule, corrected outside the repo — Corrected 2026-09-04, and this finding is filed *with* its outcome because — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F37` heading.
 
-- **F38** — a commentary heading is indistinguishable from a finding, and a scan of this file now counts 37 findings where there are 36 — Taken, 2026-09-04 (PR #695). Posture held: formatting only — three heading — full text in `SKILL-AUDIT.closed.md` under its own `### F38` heading.
+- **F38** — a commentary heading is indistinguishable from a finding, and a scan of this file now counts 37 findings where there are 36 — Taken, 2026-09-04 (PR #695). Posture held: formatting only — three heading — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F38` heading.
 
-- **F39** — the seven section placements on this page, and the case for leaving them — Closed without being taken, 2026-09-04 (PR #696), on Nate's word — and — full text in `SKILL-AUDIT.closed.md` under its own `### F39` heading.
+- **F39** — the seven section placements on this page, and the case for leaving them — Closed without being taken, 2026-09-04 (PR #696), on Nate's word — and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F39` heading.
 
-- **F40** — `audit-menu`'s shape table describes this file's arrangement, and that cell is now wrong — Taken, 2026-09-04 (PR #698). Posture held: documentation only — one table cell — full text in `SKILL-AUDIT.closed.md` under its own `### F40` heading.
+- **F40** — `audit-menu`'s shape table describes this file's arrangement, and that cell is now wrong — Taken, 2026-09-04 (PR #698). Posture held: documentation only — one table cell — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F40` heading.
 
-- **F41** — `book-extract-worker` conflates a page break with a slice boundary, and worked it out unaided — Taken, 2026-09-04 (PR #704). POSTURE WIDENED ON NATE'S EXPLICIT WORD, from — full text in `SKILL-AUDIT.closed.md` under its own `### F41` heading.
+- **F41** — `book-extract-worker` conflates a page break with a slice boundary, and worked it out unaided — Taken, 2026-09-04 (PR #704). POSTURE WIDENED ON NATE'S EXPLICIT WORD, from — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F41` heading.
 
-- **F42** — the shape table narrates arrangement in two rows, and arrangement is not what it is for — Taken, 2026-09-04 (PR #705). Posture held: documentation only and SUBTRACTIVE — full text in `SKILL-AUDIT.closed.md` under its own `### F42` heading.
+- **F42** — the shape table narrates arrangement in two rows, and arrangement is not what it is for — Taken, 2026-09-04 (PR #705). Posture held: documentation only and SUBTRACTIVE — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F42` heading.
 
-- **F43** — both book agents say assuming `+1` is "wrong more often than right"; it is right for ten of sixteen books — Taken, 2026-09-04 (PR #707), as the SUBTRACTIVE variant on Nate's word. The — full text in `SKILL-AUDIT.closed.md` under its own `### F43` heading.
+- **F43** — both book agents say assuming `+1` is "wrong more often than right"; it is right for ten of sixteen books — Taken, 2026-09-04 (PR #707), as the SUBTRACTIVE variant on Nate's word. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F43` heading.
 
-- **F44** — what a worker can learn about page offsets from the two sources it is told to read, and the three places that fails — Taken, 2026-09-11 (PR #957). Documentation only, three files, as the — full text in `SKILL-AUDIT.closed.md` under its own `### F44` heading.
+- **F44** — what a worker can learn about page offsets from the two sources it is told to read, and the three places that fails — Taken, 2026-09-11 (PR #957). Documentation only, three files, as the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SKILL-AUDIT.closed.md` under its own `### F44` heading.
 
 # Counts
 

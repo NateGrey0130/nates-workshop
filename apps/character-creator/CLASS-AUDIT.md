@@ -1,10 +1,13 @@
 # Character creator — class audit, 2026-08-25
 
-> **Since 2026-09-16 the closed findings live in `CLASS-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **All 29 items are closed**, re-verified on 2026-09-02: `F1`–`F20` and `S1`–`S9`.
 >
@@ -38,45 +41,45 @@ R.C.C. was never flagged — those come from the paired O.C.C.
 
 ## Findings
 
-- **F1** — high — Combat Cyborg has no skills, no equipment and no money, and the book prints all three — - Taken, 2026-08-25: `fix-combat-cyborg-full-block.sql`, as sketched — one — full text in `CLASS-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — high — Combat Cyborg has no skills, no equipment and no money, and the book prints all three — - Taken, 2026-08-25: `fix-combat-cyborg-full-block.sql`, as sketched — one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — high — 20 gear rows were retired as "orphans" while nine live classes still cite them in choice groups — - Taken, 2026-08-25: `zzz-resolve-choice-group-gear.sql` (zzz- so a clean — full text in `CLASS-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — high — 20 gear rows were retired as "orphans" while nine live classes still cite them in choice groups — - Taken, 2026-08-25: `zzz-resolve-choice-group-gear.sql` (zzz- so a clean — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — high — Wilderness Scout's bonus block is wrong four ways, and one of them is silently ignored — - Taken, 2026-08-25: `fix-wilderness-scout-bonuses.sql`, as sketched — one — full text in `CLASS-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — high — Wilderness Scout's bonus block is wrong four ways, and one of them is silently ignored — - Taken, 2026-08-25: `fix-wilderness-scout-bonuses.sql`, as sketched — one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — high — the Crazy heals like a Vagabond: 1D6 Hit Points where the book gives 5D6, and the +1D6 P.E. is gone — - Taken, 2026-08-25: `fix-crazy-super-endurance.sql`, as sketched — two — full text in `CLASS-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — high — the Crazy heals like a Vagabond: 1D6 Hit Points where the book gives 5D6, and the +1D6 P.E. is gone — - Taken, 2026-08-25: `fix-crazy-super-endurance.sql`, as sketched — two — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — high — Cyber-Knight's combat block, attribute line and psionics all disagree with RUE — - Taken, 2026-08-26: `fix-rue-cyber-knight-bonuses.sql` — the sketch's — full text in `CLASS-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — high — Cyber-Knight's combat block, attribute line and psionics all disagree with RUE — - Taken, 2026-08-26: `fix-rue-cyber-knight-bonuses.sql` — the sketch's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — high — eight mage classes' P.P.E. and six psychics' I.S.P. drop the book's attribute term — - Taken, 2026-08-26: `fix-rue-pool-attribute-terms.sql` (the `rue-` — full text in `CLASS-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — high — eight mage classes' P.P.E. and six psychics' I.S.P. drop the book's attribute term — - Taken, 2026-08-26: `fix-rue-pool-attribute-terms.sql` (the `rue-` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — medium — Operator has no bonus block at all — - Taken, 2026-08-26: `fix-operator-bonuses.sql`, as sketched — one — full text in `CLASS-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — medium — Operator has no bonus block at all — - Taken, 2026-08-26: `fix-operator-bonuses.sql`, as sketched — one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — medium — dropped Perception bonuses across eleven classes (the key exists and live classes use it) — - Taken, 2026-08-26: `fix-perception-bonuses.sql`, as sketched — the — full text in `CLASS-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — medium — dropped Perception bonuses across eleven classes (the key exists and live classes use it) — - Taken, 2026-08-26: `fix-perception-bonuses.sql`, as sketched — the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — medium — disease saves dropped or misattributed in six classes — - Taken, 2026-08-26: `fix-disease-saves.sql`, as sketched — body-fixer's — full text in `CLASS-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — medium — disease saves dropped or misattributed in six classes — - Taken, 2026-08-26: `fix-disease-saves.sql`, as sketched — body-fixer's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — medium — three fail-open skill restrictions offer skills the book forbids — - Taken, 2026-08-26: `fix-misfiled-excepts.sql`, as sketched — Sensory — full text in `CLASS-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — medium — three fail-open skill restrictions offer skills the book forbids — - Taken, 2026-08-26: `fix-misfiled-excepts.sql`, as sketched — Sensory — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — medium — four choice options resolve to no catalog row, so the pick fails — - Taken, 2026-08-26: `fix-broken-pick-options.sql`, as sketched — the — full text in `CLASS-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — medium — four choice options resolve to no catalog row, so the pick fails — - Taken, 2026-08-26: `fix-broken-pick-options.sql`, as sketched — the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — medium — Valkyrie's racial S.D.C. is an `sdc_base`, so an occupation's S.D.C. is silently lost — - Taken, 2026-08-26: `fix-valkyrie-sdc-pool.sql`, as sketched. The — full text in `CLASS-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — medium — Valkyrie's racial S.D.C. is an `sdc_base`, so an occupation's S.D.C. is silently lost — - Taken, 2026-08-26: `fix-valkyrie-sdc-pool.sql`, as sketched. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — medium — the Dragon Hatchling parent is missing its power schedule and its combat framework — - Taken, 2026-08-26: `fix-rifts-core-dragon-hatchling.sql` — the — full text in `CLASS-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — medium — the Dragon Hatchling parent is missing its power schedule and its combat framework — - Taken, 2026-08-26: `fix-rifts-core-dragon-hatchling.sql` — the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — medium — Juicer's "+2 to disarm" is missing, and three Juicer Uprising sub-classes copied the gap — - Taken, 2026-08-26: `fix-rue-juicer-disarm.sql` (the `rue-` infix so — full text in `CLASS-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — medium — Juicer's "+2 to disarm" is missing, and three Juicer Uprising sub-classes copied the gap — - Taken, 2026-08-26: `fix-rue-juicer-disarm.sql` (the `rue-` infix so — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — medium — Knight (PF) has no bonus block — - Taken, 2026-08-26: `fix-knight-bonuses.sql`, as sketched — one — full text in `CLASS-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — medium — Knight (PF) has no bonus block — - Taken, 2026-08-26: `fix-knight-bonuses.sql`, as sketched — one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F15` heading.
 
-- **F16** — low — five classes are missing printed money, all verified against the page — - Taken, 2026-08-26: `fix-missing-starting-money.sql`, as sketched, with — full text in `CLASS-AUDIT.closed.md` under its own `### F16` heading.
+- **F16** — low — five classes are missing printed money, all verified against the page — - Taken, 2026-08-26: `fix-missing-starting-money.sql`, as sketched, with — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F16` heading.
 
-- **F17** — low — missing attribute requirements in seven classes, and three page ranges end a page early — - Taken, 2026-08-26: `fix-rue-attr-reqs-and-ranges.sql` — smaller than — full text in `CLASS-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — low — missing attribute requirements in seven classes, and three page ranges end a page early — - Taken, 2026-08-26: `fix-rue-attr-reqs-and-ranges.sql` — smaller than — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — low — 39 classes have no page range in `source_book` at all, so the page-break defence cannot run on them — - Taken, 2026-08-26: `fix-source-book-pages.sql` — all forty stamped — full text in `CLASS-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — low — 39 classes have no page range in `source_book` at all, so the page-break defence cannot run on them — - Taken, 2026-08-26: `fix-source-book-pages.sql` — all forty stamped — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F18` heading.
 
-- **F19** — low — Ley Line Walker and Rifter drop their attribute-of-choice bonus — - Taken, 2026-08-26: `fix-walker-rifter-attribute-choice.sql` — the — full text in `CLASS-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — low — Ley Line Walker and Rifter drop their attribute-of-choice bonus — - Taken, 2026-08-26: `fix-walker-rifter-attribute-choice.sql` — the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F19` heading.
 
-- **F20** — low — Vagabond's "+1 save vs possession **and psionic attacks**" lost the psionics half — - Taken, 2026-08-26: rode `fix-missing-starting-money.sql` (F16) as — full text in `CLASS-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — low — Vagabond's "+1 save vs possession **and psionic attacks**" lost the psionics half — - Taken, 2026-08-26: rode `fix-missing-starting-money.sql` (F16) as — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/CLASS-AUDIT.closed.md` under its own `### F20` heading.
 
 ## Verified clean
 

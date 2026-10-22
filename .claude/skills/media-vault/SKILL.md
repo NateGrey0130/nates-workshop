@@ -101,8 +101,9 @@ anywhere else in the repo: read, do not click.
 ## Its three menus, and their prefixes
 
 `ISBN-AUDIT.md` (`F1`–`F10`), `BULK-AUDIT.md` (`B1`–`B9`) and `SHARE-AUDIT.md`
-(`V1`–`V7`) all live under `apps/media-vault/`, each with its closed findings
-beside it in a `.closed.md`. **The share menu numbers `V`, deliberately not
+(`V1`–`V7`) all live under `apps/media-vault/`, each keeping a one-line stub
+per closed finding whose full text is in git history (the menu's header names
+the commit). **The share menu numbers `V`, deliberately not
 `S`** — the character creator's class menu already numbers schema items `S1`–`S9`,
 and a bare `S3` would then name neither.
 

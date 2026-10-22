@@ -142,8 +142,8 @@ check the wrong page, which is the failure the offset section above describes.
 
 **A page the map does not list is not a clean page**, so a proposed row off an
 unlisted page is not verified by that. `+104x10+10` was read off an unlisted
-page for +1D4x10+10 (`BOOK-INGEST-AUDIT.closed.md`, *Read from the ink,
-2026-09-10*), and the cipher inserts a glyph as well as swapping one — `4O0ft`
+page for +1D4x10+10 (*Read from the ink, 2026-09-10*, in
+`git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md`), and the cipher inserts a glyph as well as swapping one — `4O0ft`
 is printed 40ft, so a number that parses cleanly can still be wrong by a factor
 of ten.
 

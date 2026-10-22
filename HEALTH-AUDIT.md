@@ -1,10 +1,13 @@
 # Health audit — process, 2026-09-02
 
-> **Since 2026-09-16 the closed findings live in `HEALTH-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **This menu carries no status header, and that is a decision rather than an
 > oversight.** It is the only one here without one — `F8`, filed in this file,
@@ -92,27 +95,27 @@ lines from their headings, exactly as that file's own trap paragraph warns.
 
 ---
 
-- **F1** — Critical — 6,006 production rows have no backup, no restore path and no runbook, and the repo says so in writing — Taken, 2026-09-02 (PR #519), with F12 folded in as F12 proposed. A — full text in `HEALTH-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — Critical — 6,006 production rows have no backup, no restore path and no runbook, and the repo says so in writing — Taken, 2026-09-02 (PR #519), with F12 folded in as F12 proposed. A — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — High — the deploy check is correct, and it is a thing to remember once per merge, 48 times a day — Taken, 2026-09-02 (PR #517). As proposed, posture included: `scripts/deploy-sweep.mjs` — full text in `HEALTH-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — High — the deploy check is correct, and it is a thing to remember once per merge, 48 times a day — Taken, 2026-09-02 (PR #517). As proposed, posture included: `scripts/deploy-sweep.mjs` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — High — the method that produced this repo is not in this repo — Taken, 2026-09-02 (PR #527). `docs/prompts/`, fifteen briefs plus an index. — full text in `HEALTH-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — High — the method that produced this repo is not in this repo — Taken, 2026-09-02 (PR #527). `docs/prompts/`, fifteen briefs plus an index. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — Medium — the skill about not trusting a count states three wrong ones about itself — Taken, 2026-09-02 (PR #523), with F11 folded in as F11 proposed. Posture — full text in `HEALTH-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — Medium — the skill about not trusting a count states three wrong ones about itself — Taken, 2026-09-02 (PR #523), with F11 folded in as F11 proposed. Posture — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — Medium — `schema-change` quotes a table count that is seven tables stale, because nothing parses a skill — Taken, 2026-09-02 (PR #524). As proposed, posture included: one narrow — full text in `HEALTH-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — Medium — `schema-change` quotes a table count that is seven tables stale, because nothing parses a skill — Taken, 2026-09-02 (PR #524). As proposed, posture included: one narrow — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — Medium — the permission allowlist covers the read-only scripts and not the loop — Taken, 2026-09-02 (PR #518). As proposed, posture included: thirteen — full text in `HEALTH-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — Medium — the permission allowlist covers the read-only scripts and not the loop — Taken, 2026-09-02 (PR #518). As proposed, posture included: thirteen — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — Medium — port 8788 is hardcoded in three places, and three separate audits found it occupied by something else — Taken, 2026-09-02 (PR #526). As proposed: documentation only, no port — full text in `HEALTH-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — Medium — port 8788 is hardcoded in three places, and three separate audits found it occupied by something else — Taken, 2026-09-02 (PR #526). As proposed: documentation only, no port — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — Medium — no menu states its own status, so establishing that there is no open work costs an audit — Taken, 2026-09-02 (PR #531). Posture held: one line per file, no automation, — full text in `HEALTH-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — Medium — no menu states its own status, so establishing that there is no open work costs an audit — Taken, 2026-09-02 (PR #531). Posture held: one line per file, no automation, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — Low — `CLAUDE.md` sends a reader to the wrong file for the migration list — Taken, 2026-09-02 (PR #522). As proposed: one sentence, no restructuring. — full text in `HEALTH-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — Low — `CLAUDE.md` sends a reader to the wrong file for the migration list — Taken, 2026-09-02 (PR #522). As proposed: one sentence, no restructuring. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — Low — the same fact is stated as "four" and as "five" in the same skill — Taken, 2026-09-02 (PR #525), taking the better of the two options offered: — full text in `HEALTH-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — Low — the same fact is stated as "four" and as "five" in the same skill — Taken, 2026-09-02 (PR #525), taking the better of the two options offered: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — Low — two documents are reachable from nothing — Taken, 2026-09-02 (PR #523), folded into F4 as this finding proposed. Both — full text in `HEALTH-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — Low — two documents are reachable from nothing — Taken, 2026-09-02 (PR #523), folded into F4 as this finding proposed. Both — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F11` heading.
 
 ## Bus factor
 
@@ -210,21 +213,21 @@ really about — that nobody has looked — is unaffected.
 
 ---
 
-- **F12** — High — the only real recovery is a 30-day rolling window nobody has written down, and the rebuild that is documented reproduces names but not values — Taken, 2026-09-02 (PR #519), folded into F1 as this finding proposed. The — full text in `HEALTH-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — High — the only real recovery is a 30-day rolling window nobody has written down, and the rebuild that is documented reproduces names but not values — Taken, 2026-09-02 (PR #519), folded into F1 as this finding proposed. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — Medium — a third production secret exists, and the section that enumerates the secrets says there are two — Taken, 2026-09-02 (PR #520). As proposed, posture included — documentation — full text in `HEALTH-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — Medium — a third production secret exists, and the section that enumerates the secrets says there are two — Taken, 2026-09-02 (PR #520). As proposed, posture included — documentation — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — Medium — local wrangler is a full major version ahead of the one that compiles the deploy, and one text check guards one syntax — Taken in part, 2026-09-02 (PR #532). The cheap half only, and the pinned-build — full text in `HEALTH-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — Medium — local wrangler is a full major version ahead of the one that compiles the deploy, and one text check guards one syntax — Taken in part, 2026-09-02 (PR #532). The cheap half only, and the pinned-build — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — Medium — the Access bypass prefix serves the gated landing page to anyone, on any path under it — Taken, 2026-09-02 (PR #528). As proposed, posture included: the hole is — full text in `HEALTH-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — Medium — the Access bypass prefix serves the gated landing page to anyone, on any path under it — Taken, 2026-09-02 (PR #528). As proposed, posture included: the hole is — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F15` heading.
 
-- **F16** — Medium — the component holding the key, the money path and the rate limiters is the one with 2.5% test coverage, no preview and a manual deploy — Taken, 2026-09-02 (PR #529), and fully shipped. The code merged, and the — full text in `HEALTH-AUDIT.closed.md` under its own `### F16` heading.
+- **F16** — Medium — the component holding the key, the money path and the rate limiters is the one with 2.5% test coverage, no preview and a manual deploy — Taken, 2026-09-02 (PR #529), and fully shipped. The code merged, and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F16` heading.
 
-- **F17** — Low — the spend table is a good instrument that nothing looks at — Closed as NOT CODE, 2026-09-02. Nate set a $25 monthly spending limit with — full text in `HEALTH-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — Low — the spend table is a good instrument that nothing looks at — Closed as NOT CODE, 2026-09-02. Nate set a $25 monthly spending limit with — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — Low — the Worker has observability enabled and the Pages half has nothing configured — Taken, 2026-09-02 (PR #535), on the second branch. The low-confidence half — full text in `HEALTH-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — Low — the Worker has observability enabled and the Pages half has nothing configured — Taken, 2026-09-02 (PR #535), on the second branch. The low-confidence half — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F18` heading.
 
-- **F19** — Nit — both wrangler configs point `$schema` at a directory this repo does not have — Taken, 2026-09-02 (PR #533). Pointed at the published URL rather than — full text in `HEALTH-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — Nit — both wrangler configs point `$schema` at a directory this repo does not have — Taken, 2026-09-02 (PR #533). Pointed at the published URL rather than — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F19` heading.
 
 ## What was checked and found healthy — platform
 
@@ -375,12 +378,12 @@ of the plan, or after the waves are done.
 
 ---
 
-- **F20** — Nit — a new script in `scripts/` has a documentation step that exists only in the test — Closed without being taken, 2026-09-02, as already-solved. Nothing was — full text in `HEALTH-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — Nit — a new script in `scripts/` has a documentation step that exists only in the test — Closed without being taken, 2026-09-02, as already-solved. Nothing was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F20` heading.
 
-- **F21** — Medium — the one-command way to copy this database off Cloudflare does not run, and nothing replaces it — Taken, 2026-09-02 (PR #521). `scripts/d1-backup.mjs`, run against production — full text in `HEALTH-AUDIT.closed.md` under its own `### F21` heading.
+- **F21** — Medium — the one-command way to copy this database off Cloudflare does not run, and nothing replaces it — Taken, 2026-09-02 (PR #521). `scripts/d1-backup.mjs`, run against production — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F21` heading.
 
-- **F22** — Low — the `audit-menu` skill says the finding that created it is still open — Taken, 2026-09-02 (PR #534), in the same session it was raised — the wave had — full text in `HEALTH-AUDIT.closed.md` under its own `### F22` heading.
+- **F22** — Low — the `audit-menu` skill says the finding that created it is still open — Taken, 2026-09-02 (PR #534), in the same session it was raised — the wave had — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F22` heading.
 
-- **F23** — Medium — nothing watches the one component a merge does not deploy — Taken, 2026-09-02 (PR #539), in the same session it was filed, on Nate's — full text in `HEALTH-AUDIT.closed.md` under its own `### F23` heading.
+- **F23** — Medium — nothing watches the one component a merge does not deploy — Taken, 2026-09-02 (PR #539), in the same session it was filed, on Nate's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F23` heading.
 
-- **F24** — Medium — a preview build wedged before `clone_repo` and silently held the production deploy behind it for 32 minutes — Taken, 2026-09-02 (PR #566): all three parts. Posture as proposed — — full text in `HEALTH-AUDIT.closed.md` under its own `### F24` heading.
+- **F24** — Medium — a preview build wedged before `clone_repo` and silently held the production deploy behind it for 32 minutes — Taken, 2026-09-02 (PR #566): all three parts. Posture as proposed — — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:HEALTH-AUDIT.closed.md` under its own `### F24` heading.
