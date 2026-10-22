@@ -300,14 +300,9 @@ export async function run() {
       !/^\.play-pool[\s.{]/m.test(css), 'styles.css still styles .play-pool');
 
     // Print hides every input outright, so the <b> is the only thing that can
-    // carry a pool value onto paper. This rule is the whole reason the printed
-    // sheet still has numbers in it.
-    check('print reveals the <b>, or every pool prints blank',
-      /\.vital \.val b \{ display: inline !important; \}/.test(css),
-      'the print block no longer un-hides the pool value');
-    check('and hides the bar and steppers, which are screen affordances',
-      /\.vital \.bar, \.vital \.steppers \{ display: none !important; \}/.test(css),
-      'print still draws the bar or the steppers');
+    // carry a pool value onto paper. That rule, and the one hiding the bar and
+    // steppers, are pinned in 'The printed sheet' below, against the print
+    // block alone.
 
     // Mode is decided in CSS, not by rendering two different widgets.
     check('sheet mode shows the input and hides the <b>',
@@ -871,21 +866,14 @@ export async function run() {
       /\.sheet-grid\.sheet-3 \{[\s\S]*?display: block;/.test(printBlock)
       && !/\.sheet-grid\.sheet-3 \{[\s\S]*?grid-template-columns: 296px/.test(printBlock),
       'print inherits the three-column screen grid');
-    check('and lays itself out for a page instead',
-      /\.sheet-grid\.sheet-3 \{[\s\S]*?columns: 2;/.test(printBlock),
-      'paper has no print layout of its own');
-    check('print releases the column assignments',
-      /grid-column: auto;/.test(printBlock), 'boxes keep their screen columns on paper');
+    // The print layout it has instead (two columns, column assignments and
+    // the prose cap released, the pool value at a paper size) is pinned in
+    // 'The printed sheet' below.
     // Multicol FLOWS one column into the next, so three stacks standing in the
     // way is three columns of boxes inside two columns of page.
     check('and dissolves the stacks so the boxes reach the flow',
       /\.sheet-grid\.sheet-3 > \.sheet-col \{ display: contents; \}/.test(printBlock),
       'the stacks survive into print and the multicol sees three items');
-    check('print releases the prose cap',
-      /\.box\[data-box\] \.box-body \{ max-width: none; \}/.test(printBlock),
-      '66ch is narrower than a page column and runs the sheet long');
-    check('and print keeps the pool value at a paper size',
-      /\.vital \.val \{ font-size: 17px/.test(printBlock), 'a 44px pool value goes to paper');
   }
 
   // ---------- Presentation is a separate file ----------
@@ -1790,14 +1778,12 @@ export async function run() {
     // containment this asserted is no longer where it lives. What the check was
     // FOR is unchanged and is asserted directly instead: whichever block holds
     // it, print must hide that block. Both are named in the same print rule,
-    // so the button cannot reach paper from either.
+    // pinned above as 'print hides everything play mode adds', so the button
+    // cannot reach paper from either.
     check('the percentile lives in the bar that never scrolls away',
       /rollPercentile\(\)/.test(playActionsBody ?? '')
       && !/rollPercentile\(\)/.test(playControlsBody ?? ''),
       'the percentile is back up the page with the things that scroll off');
-    check('and print hides the block it lives in',
-      /@media print \{ #play-controls, #play-roll-bar, \.roll-btn \{ display: none !important; \} \}/.test(css),
-      'the percentile button will reach paper');
 
     // SHIPPED BROKEN ONCE. .skill-table is `table-layout: fixed` with its last
     // numeric column pinned at 40px, so a 44px control in that cell does not

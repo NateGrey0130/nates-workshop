@@ -156,9 +156,10 @@ const catalogDb = (rows, dismissals = []) => ({
     { id: 2, slug: 'weapon-continual-glow', name: 'Continual Glow', applies_to: 'weapon',
       cost: 1200, max_per_item: 3, system: 'palladium-fantasy' },
   ]);
+  // Demoted, and still suggested rather than dropped: the pair is still there
+  // to have a tier.
   check('a same-name pair differing only in applies_to is demoted', glow.length === 1
     && glow[0].tier === 'contains', JSON.stringify(glow.map((p) => p.tier)));
-  check('and it is still SUGGESTED rather than dropped', glow.length === 1);
   check('and the flag says which column did it', glow[0].applies_to_clash === true);
 
   // The string matters as much as the tier. Without it the pair falls through to
@@ -201,6 +202,9 @@ const psiPairs = await findDuplicates(catalogDb([
 const findPair = (x, y) => psiPairs.find((p) =>
   (p.a.name === x && p.b.name === y) || (p.a.name === y && p.b.name === x));
 
+// Demoted, never dropped: the category itself may be the thing that is wrong,
+// so the pair must still be reported, and this check finds it before it reads
+// the tier.
 check('a category clash is demoted out of the confident tiers', (() => {
   const p = findPair('Telekinesis', 'Telekinesis (Super)');
   return p && p.tier === 'contains' && p.category_clash === true;
@@ -213,9 +217,6 @@ check('a real duplicate in one category still reaches certain', (() => {
   const p = findPair('Levitation (psionic)', 'Levitation');
   return p && p.tier === 'certain' && !p.category_clash;
 })());
-// Demoted, never dropped: the category itself may be the thing that is wrong.
-check('a clashing pair is still reported', !!findPair('Telekinesis', 'Telekinesis (Super)'));
-
 check('a missing category on either row is not a clash', await (async () => {
   const pairs = await findDuplicates(catalogDb([
     { id: 1, name: 'Back Pack', category: null },
