@@ -8,6 +8,7 @@
     "            as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
     "            label             the grid has no printed name above it; 'label' names it from its entry's own text",
     "            summary_misprint  the chart prints a value the Roster Book's block does not, and neither is a sum to check; 'printed' is the chart's, 'corrected' the block's as parsed, which is what is played",
+    "            powers_intro      {page, header} of an entry, and 'powers': the names its first run-ins under Known Powers parse as. They head the entry's account of its powers and name none, so their text becomes the entry's powers intro (D1 part powers-intro), each after its subheading, and the card lists no power for them",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -88,6 +89,9 @@
      "printed": "F, A, S and E only", "corrected": null, "checked": "2026-10-21",
      "note": "Roster 27. A battlesuit's four physical codes (AM EX UN UN); Reason, Intuition and Psyche stay Psycho-Man's own."},
     {"match": {"row": "mhsp2:mephisto-mhsp2:power:3"}, "verdict": "text", "checked": "2026-10-21",
-     "read": "\"\"super-powers\"", "printed": "\"super-powers\"", "note": "Roster 3, Other Powers. One opening double mark is printed; the OCR read two."}
+     "read": "\"\"super-powers\"", "printed": "\"super-powers\"", "note": "Roster 3, Other Powers. One opening double mark is printed; the OCR read two."},
+    {"match": {"page": 2, "header": "THE BEYONDER"}, "verdict": "powers_intro", "powers": ["Ability Scores", "Powers"],
+     "checked": "2026-10-21",
+     "note": "Roster 2. Under Known Powers the entry prints two run-ins, ABILITY SCORES (what his Beyond ranks mean in play) and POWERS (what he can do, in general), and no named power. Both are the entry's powers intro, each after its subheading."}
   ]
 }

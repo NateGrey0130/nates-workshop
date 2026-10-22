@@ -624,9 +624,12 @@ def apply_overrides(slug, entries):
                 # two unnamed grids in one entry (MHSP2's Wolfsbane: her wolf and
                 # wolfoid forms) differ only in their ranks
                 and ('codes' not in m or [a['code'] for a in b['abilities']] == m['codes'])]
-        if o['verdict'] == 'table':
+        if o['verdict'] in ('table', 'powers_intro'):
             hits = [(e, None) for e in entries
                     if m['page'] in e['pages'] and (e['header'] or '').upper().startswith(m['header'].upper())]
+        if o['verdict'] == 'powers_intro' and len(hits) == 1 \
+                and [p['name'] for p in hits[0][0]['powers']][:len(o['powers'])] != o['powers']:
+            hits = []                   # the run-ins it names are no longer the entry's first powers
         if len(hits) != 1:
             unmatched.append((o, len(hits)))
             continue
@@ -641,6 +644,15 @@ def apply_overrides(slug, entries):
             b.update({k: o[k] for k in ('health', 'karma', 'resources', 'popularity')})
             b['override'] = {k: o[k] for k in ('verdict', 'field', 'printed', 'corrected') if k in o}
             b['check'] = dict(check(b), known=o['verdict'], ok=True)
+        elif o['verdict'] == 'powers_intro':
+            # run-ins under Known Powers that head the entry's account of its
+            # powers rather than name one (MHSP2's Beyonder, Roster 2: ABILITY
+            # SCORES and POWERS): their text is the entry's powers intro, each
+            # kept after its own subheading, and they are not powers
+            n = len(o['powers'])
+            lead = [e['sections'].get('powers', '')] + ['%s: %s' % (p['name'], p['text']) for p in e['powers'][:n]]
+            e['sections']['powers'] = join_text(lead)
+            e['powers'] = e['powers'][n:]
         elif o['verdict'] == 'table':
             t = o['block']
             block = {'label': t['label'], 'page': m['page'], 'kind': 'table',

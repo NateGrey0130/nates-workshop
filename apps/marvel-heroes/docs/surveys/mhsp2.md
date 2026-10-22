@@ -3,7 +3,7 @@
 Marvel Super Heroes special module. Registry entry: `scripts/msh/books.json`
 -> `mhsp2`. Measured 2026-10-21.
 
-**Rows citing this book:** 374 `msh_book_text` rows over 93 character entries
+**Rows citing this book:** 373 `msh_book_text` rows over 93 character entries
 in production (`DB_MARVEL`, read back 2026-10-21). Characters only: 93 cards
 in `apps/marvel-heroes/data/npcs.json`, built by `python scripts/msh/npcs.py
 mhsp2` from the reader (`scripts/msh/rosterbook.py`, #1921) and the overrides
@@ -209,21 +209,23 @@ them (Rogue 54, Phoenix 90, Karma 111 and the rest), and cannot settle one.
 
 ## The parse and its overrides
 
-`python scripts/msh/roster.py mhsp2` **exits 0** (2026-10-21, row 2b), with
+`python scripts/msh/roster.py mhsp2` **exits 0** (re-run 2026-10-21 by the
+Beyonder's powers row of the Marvel follow-ups plan), with
 `WORKSHOP_MSH_CACHE` on the main checkout's cache:
 
 ```
 mhsp2: 4768 stream lines, 104 entries, 110 stat blocks
   entries with a block: 93; without: 11; members without a block: 0
-  blocks passing every check: 99; known from the overrides: {'misprint': 10, 'as_printed': 1}; FAILING: 0
-  powers: 239 across 85 entries
+  blocks passing every check: 96; known from the overrides: {'misprint': 10, 'as_printed': 1, 'rows': 3}; FAILING: 0
+  powers: 237 across 84 entries
   reference summary: 65 rows, 65 found as an entry (0 of them the chart alone), 2 chart misprints recorded; running notes on 0 entries
 ```
 
 110 blocks are the 90 full ones and the 20 Roster one-line grids. Without the
 overrides file it exits 1 on the eleven blocks below and two Summary rows.
-`scripts/msh/mhsp2-overrides.json` holds 22 overrides, each read off its
-page image on 2026-10-21:
+`scripts/msh/mhsp2-overrides.json` holds 27 overrides, each read off its
+page image on 2026-10-21. Those not listed here are the three `rows`, the
+one `text` verdict and the `powers_intro` below:
 
 - **Ten Karma `misprint`s**, the table above, each with the printed value
   and R+I+P on the ranks' standard numbers.
@@ -243,6 +245,13 @@ page image on 2026-10-21:
   Unlimited, the Original State's block NOT APPLICABLE) and the Puma's
   Health (chart 150, the puma form's; the block prints 36/150 and the reader
   keeps 36).
+- **One `powers_intro`** (the Beyonder, Roster 2): under Known Powers the
+  entry prints two run-ins, ABILITY SCORES and POWERS, that head its account
+  of his powers and name none. The reader read them as two powers; the
+  verdict (a key `roster.apply_overrides` gained for it, which no earlier
+  book uses, and every earlier book's outputs are byte-identical) makes their
+  text the card's `powers-intro` row, each after its subheading. His card
+  lists no power: the page names none.
 
 The chart's "Unlimited" against the Roster's "UNLIMITED" (the Beyonder,
 Eternity, Death) needs no override: `rosterbook.coverage` drops a word that

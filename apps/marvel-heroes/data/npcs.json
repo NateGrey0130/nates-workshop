@@ -41321,17 +41321,10 @@
        "popularity": "NOT APPLICABLE"
       }
      ],
-     "powers": [
-      {
-       "name": "Ability Scores"
-      },
-      {
-       "name": "Powers"
-      }
-     ],
+     "powers": [],
      "members": [],
      "text": [
-      "power",
+      "powers-intro",
       "running"
      ]
     }
