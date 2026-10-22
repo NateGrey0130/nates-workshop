@@ -253,8 +253,10 @@ section('The row form takes its widths from the field type');
     /\.cat-field\[data-type="longtext"\]\[data-help\]/.test(css),
     'longtext + help falls back to span 4');
 
+  // The rule must open its own 700px query: the lazy span used to start at the
+  // first 700px query in the file, 1,500 lines up, and reach this rule from there.
   check('a phone gets the one column this form always had',
-    /@media \(max-width: 700px\) \{[\s\S]*?\.cat-form \{ grid-template-columns: 1fr; \}/.test(css),
+    /@media \(max-width: 700px\) \{\s*\.cat-form \{ grid-template-columns: 1fr; \}/.test(css),
     'twelve columns survive to 390px');
 }
 
