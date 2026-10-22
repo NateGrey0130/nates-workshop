@@ -917,10 +917,8 @@ section('Category skill bonuses');
       eD.length === 0 && wD.length === 1
       && wD[0].startsWith('bonuses.saves.other[0].bonus ') && /not .*shown/.test(wD[0]),
       JSON.stringify({ errors: eD, warnings: wD }));
-    const eN = [], wN = [];
-    validateBonuses({ saves: { other: [{ label: 'vs disease', bonus: 2 }] } }, eN, wN);
-    check('a numeric bonus in saves.other still warns of nothing',
-      eN.length === 0 && wN.length === 0, JSON.stringify({ errors: eN, warnings: wN }));
+    // A numeric bonus still warns of nothing: that is `ok1` at the top of this
+    // block, 'a labelled save validates alongside the keyed ones'.
 
     // Composed side by side, not summed: a race granting +3 vs radiation and an
     // occupation granting +2 vs vacuum grant BOTH. The keyed saves still sum.

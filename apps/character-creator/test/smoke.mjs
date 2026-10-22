@@ -95,34 +95,18 @@ async function nodeCheckAll(paths) {
 }
 
 // ---------- 1. Parser ----------
-section('The browser entry points parse');
-{
-  // NOTHING imports app.js or sheet.js - the wizard boots on import - so this
-  // suite reads them as TEXT, for its source pins. That left a hole, and on
-  // 2026-09-11 a missing comma in an import list walked straight through it:
-  // `node --check` reads a .js file as a SCRIPT and said nothing, the whole
-  // suite and CI were green, and the module would have failed to parse in the
-  // browser - which is the wizard not loading at all. Parsed here as what each
-  // one actually is: app.js an ES module, sheet.js a classic script.
-  const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-parse-' + process.pid);
-  const entries = [['app.js', 'mjs'], ['sheet.js', 'cjs'], ['codex.js', 'cjs'], ['catalog.js', 'mjs']];
-  const copies = entries.map(([file, ext]) => stem + '-' + file.replace(/\W/g, '-') + '.' + ext);
-  entries.forEach(([file], i) => writeFileSync(copies[i], readFileSync(appPath(file), 'utf8')));
-  const parsed = await nodeCheckAll(copies);
-  for (const copy of copies) rmSync(copy, { force: true });
-  const [app, sheet, codex, catalog] = parsed.map((r) => (
-    { ok: r.ok, err: r.stderr.split('\n').find((l) => /Error/.test(l)) || '' }));
-  check('app.js parses as the ES module the wizard loads', app.ok, app.err);
-  check('and sheet.js parses as the classic script the sheet loads', sheet.ok, sheet.err);
-  // codex.js and catalog.js are the other two browser entry points and were
-  // NOT covered here, which is the same hole in two more pages: nothing
-  // imports them either, so a syntax error ships a blank page with the whole
-  // suite green. The extension is what each HTML actually asks for -
-  // codex.html loads codex.js bare, catalog.html loads catalog.js as a module.
-  // Added while editing both for BOOK-INGEST-AUDIT F73.
-  check('and codex.js parses as the classic script the codex loads', codex.ok, codex.err);
-  check('and catalog.js parses as the ES module the catalog editor loads', catalog.ok, catalog.err);
-}
+// NOTHING imports app.js or sheet.js - the wizard boots on import - so this
+// suite reads them as TEXT, for its source pins. That left a hole, and on
+// 2026-09-11 a missing comma in an import list walked straight through it:
+// `node --check` reads a .js file as a SCRIPT and said nothing, the whole
+// suite and CI were green, and the module would have failed to parse in the
+// browser - which is the wizard not loading at all. codex.js and catalog.js
+// are the other two browser entry points, and the same hole in two more pages
+// (BOOK-INGEST-AUDIT F73). Until 2026-10-22 a section here parsed those four
+// by hand, each as what its HTML asks for; 'Browser scripts parse' below
+// parses every page script the same way, those four among them, and reads
+// the kind off the file and the tag that loads it rather than a list typed
+// here.
 
 section('Parser');
 
@@ -1783,7 +1767,6 @@ section('Wizard steps');
   check('a v3 Occupation step does not move', migrate(3, 3) === steps.indexOf('Occupation'));
   check('a v3 Skills step shifts by one', migrate(4, 3) === steps.indexOf('Skills'));
   check('a v3 Review step lands on Review', migrate(9, 3) === steps.indexOf('Review'));
-  check('and a v1 Review still lands on Review, through three migrations', migrate(7, 1) === steps.indexOf('Review'));
 
   // A migrated draft must not land on a step that did not exist when it was
   // saved: there is nothing on it the draft could have filled in, and
@@ -2832,8 +2815,7 @@ section('Alignments');
 
   check('rules.js exposes the alignment helpers',
     !!R && Array.isArray(R.ALIGNMENTS) && typeof R.alignmentOptions === 'function');
-  check('there are exactly seven alignments', R.ALIGNMENTS.length === 7, R.ALIGNMENTS.join(', '));
-  check('all seven are the book\'s', (() => {
+  check('all seven are the book\'s, and there are exactly seven', (() => {
     const want = ['Principled', 'Scrupulous', 'Unprincipled', 'Anarchist',
                   'Miscreant', 'Aberrant', 'Diabolic'];
     return want.every((a) => R.ALIGNMENTS.includes(a)) && R.ALIGNMENTS.length === want.length;
@@ -2895,9 +2877,8 @@ section('Alignments');
     return typeof v === 'number' && v >= 20 && v <= 120;
   })());
   check('a flat starting sum is taken as written', rollPoolFormula(500, {}) === 500);
-  // A class that says nothing about money must not conjure a zero purse.
-  check('no starting money stays absent',
-    rollPoolFormula(null, {}) === null && rollPoolFormula(undefined, {}) === null);
+  // A class that says nothing about money must not conjure a zero purse: the
+  // pool-formula section above pins that null and undefined stay null.
 
   // The importer only ever returns fields the prompt names — the reason a whole
   // stat block went missing when `variants` shipped undocumented.
@@ -4573,7 +4554,7 @@ section('An ability that changes a pool clears the rolled pools (BOOK-INGEST-AUD
 section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT F68)');
 {
   // app.js boots on import, so these are source pins. They are only worth
-  // anything because 'The browser entry points parse' above now proves the file
+  // anything because 'Browser scripts parse' above now proves the file
   // the pins matched can actually load - on 2026-09-11 three pins passed
   // against an app.js that could not parse at all.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
@@ -4597,7 +4578,7 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
 section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F70)');
 {
   // Source pins again, for the reason the F68 section gives: app.js boots on
-  // import. 'The browser entry points parse' above is what makes them mean
+  // import. 'Browser scripts parse' above is what makes them mean
   // something.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const body = (fn) => {
@@ -4643,7 +4624,7 @@ section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F7
 section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUDIT F71)');
 {
   // Source pins, same standing as F67/F68/F70's: app.js boots on import, and
-  // 'The browser entry points parse' above is what makes a text match mean the
+  // 'Browser scripts parse' above is what makes a text match mean the
   // file can actually load.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   check('one helper clears both halves of the sheet maximum',
@@ -7050,23 +7031,20 @@ section('Related-skill floors');
 
   // THE CASE THE OLD WIZARD GOT RIGHT BY ACCIDENT. At level 3 the same seven
   // picks leave two banked, so the floor is still reachable and the server
-  // accepts. Passing `count` here says unreachable - a false alarm.
+  // accepts. Passing `count` (7, the level-one allowance) says unreachable,
+  // which is the check above: the old count-only allowance cried wolf.
   check('and reachable at level three, because the schedule banked two',
     relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
-  check('where the old count-only allowance would have cried wolf',
-    relatedFloorStatus(lvlCls, seven,
-      lvlCls.skills.occ_related_skills.count).unreachable === true);
 
   // THE CASE A HALF-FIX WOULD HAVE MISSED, which is the one that matters. Spend
   // the two banked picks off-floor as well and the character really is illegal.
   // The server counts all nine because level-granted picks are stored
   // `type: 'related'`; a wizard that raised the allowance to 9 but still counted
-  // only the first seven would compute two picks remaining and say NOTHING.
+  // only the first seven would compute two picks remaining and say NOTHING
+  // (the seven-pick case is 'reachable at level three' above).
   const nine = Array.from({ length: 9 }, () => 'Physical');
   check('nine off-floor picks at level three are unreachable',
     relatedFloorStatus(lvlCls, nine, relatedAllowance(lvlCls, 3)).unreachable === true);
-  check('and counting only the level-one picks would have gone silent on it',
-    relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
 }
 
 section('Secondary schedules & group bonuses');

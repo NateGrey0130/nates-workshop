@@ -640,9 +640,9 @@ check('and the other two stay at +3',
   aimed('W.P. Automatic Pistol') === 3
   && aimed('W.P. Automatic and Semi-automatic Rifles') === 3,
   aimed('W.P. Automatic Pistol') + ' / ' + aimed('W.P. Automatic and Semi-automatic Rifles'));
-check('so the Revolver is NOT interchangeable with the others',
-  aimed('W.P. Revolver') !== aimed('W.P. Automatic Pistol'),
-  'if these ever match, the merge that was called off has happened by accident');
+// So the Revolver is NOT interchangeable with the others: 4 is not 3. If the
+// two checks above ever agree, the merge that was called off has happened by
+// accident.
 
 check('these four leak nothing unconditional either',
   bonusesFromSkills(rest, 15) === undefined, JSON.stringify(bonusesFromSkills(rest, 15)));
