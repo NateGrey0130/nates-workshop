@@ -336,7 +336,7 @@ decisions 1 and 5 (2026-10-21) is in the registry: `teams` as recommended
 (Actus, alone on Adventure p.16, is an Entity; Charon and Modgud file under
 ME2 Ragnarok and Roll), and a new `second_blocks` field, read only for a
 grid-booklets book, makes the chapter's Titans and Zeus labelled second
-blocks ("Tormenting Zeus in Hades", "Powerless in Hades") on their Resource
+blocks on their Resource
 Book cards, so the GM picks either; the Titans' three run-in powers there go
 to D1 as the card's powers 9-11, named for the block. Two readings were
 added to `npcs.py`: a minus read as a hyphen beside a dash (the Fenris Wolf's
@@ -344,6 +344,13 @@ Popularity -5) and a header printed with a trailing comma (`MUSPELHEIM
 DEMON,`, read on the page image). Every earlier book's `npcs.json` rows and
 `book-text.sql` were built with `origin/main`'s scripts and the branch's and
 compared byte for byte: identical.
+
+The two second blocks' labels are the book's own words (Nate, 2026-10-21),
+read off the Adventure p.18 render: the Zeus grid sits under the run-in
+"Zeus' Powers.", so it is labelled "Zeus' Powers"; nothing is printed over or
+beside the Titans grid, so it takes the chapter's title, "Hades" (the
+`CHAPTER 8: HADES` banner on p.17; p.18's banner carries no words). The first
+import's labels were made up and are gone.
 
 ## How to reproduce
 

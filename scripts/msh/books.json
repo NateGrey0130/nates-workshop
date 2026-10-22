@@ -1671,8 +1671,8 @@
         {"part": "Adventure Book", "page": 21, "name": "Modgud"}
       ],
       "second_blocks": [
-        {"part": "Adventure Book", "page": 18, "name": "Titans", "label": "Tormenting Zeus in Hades"},
-        {"part": "Adventure Book", "page": 18, "name": "Zeus", "label": "Powerless in Hades"}
+        {"part": "Adventure Book", "page": 18, "name": "Titans", "label": "Hades"},
+        {"part": "Adventure Book", "page": 18, "name": "Zeus", "label": "Zeus' Powers"}
       ],
       "roster_sections": ["Pregenerated Heroes", "The Entities", "The Olympians", "The Asgardians", "The Heliopolitans"],
       "teams": [
