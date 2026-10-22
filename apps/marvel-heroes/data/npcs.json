@@ -46761,44 +46761,28 @@
      ],
      "blocks": [
       {
-       "label": null,
+       "label": "Thomas Fireheart",
        "page": 23,
        "abilities": [
         [
          "F",
          6,
-         "Ty",
-         [
-          30,
-          "Rm"
-         ]
+         "Ty"
         ],
         [
          "A",
          10,
-         "Gd",
-         [
-          50,
-          "Am"
-         ]
+         "Gd"
         ],
         [
          "S",
          10,
-         "Gd",
-         [
-          30,
-          "Rm"
-         ]
+         "Gd"
         ],
         [
          "E",
          10,
-         "Gd",
-         [
-          40,
-          "In"
-         ]
+         "Gd"
         ],
         [
          "R",
@@ -46808,11 +46792,7 @@
         [
          "I",
          10,
-         "Gd",
-         [
-          75,
-          "Mn"
-         ]
+         "Gd"
         ],
         [
          "P",
@@ -46821,10 +46801,63 @@
         ]
        ],
        "rank_only": true,
+       "form": true,
        "health": "36",
        "karma": "60",
        "resources": "INCREDIBLE",
        "popularity": "15"
+      },
+      {
+       "label": "Puma",
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "150",
+       "karma": "60",
+       "resources": "INCREDIBLE",
+       "popularity": "15",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 60
+       }
       }
      ],
      "powers": [

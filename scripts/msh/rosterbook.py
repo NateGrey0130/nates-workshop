@@ -98,8 +98,12 @@ def stat_rows(lines):
 def value(v):
     """A printed Health, Karma, Resources or Popularity: a number, a number and
     another form's in parentheses ('60 (145)'), or a rank word or phrase
-    ('UNLIMITED', 'NOT APPLICABLE', 'CLASS 1000')."""
+    ('UNLIMITED', 'NOT APPLICABLE', 'CLASS 1000'). A number, a slash and a
+    number is the other form's as rank_of reads a slash ('36/150', the Puma's
+    Health, Roster 23), so it comes back as '36 (150)': booklet.block_check
+    holds the second to the slashed ranks, and the chart's 150 is found."""
     v = re.sub(r'[\s_|~.,]+$', '', (v or '').strip())
+    v = re.sub(r'^(-?\d[\d,]*)\s*/\s*(\d[\d,]*)\b', r'\1 (\2)', v)
     m = re.match(r'^(-?\d[\d,]*(?:\s*[\[(]\s*-?\d[\d,]*\s*[\])])?)', v)
     if m:
         return m.group(1)

@@ -210,19 +210,21 @@ them (Rogue 54, Phoenix 90, Karma 111 and the rest), and cannot settle one.
 ## The parse and its overrides
 
 `python scripts/msh/roster.py mhsp2` **exits 0** (re-run 2026-10-21 by the
-Beyonder's powers row of the Marvel follow-ups plan), with
-`WORKSHOP_MSH_CACHE` on the main checkout's cache:
+Puma's form row of the Marvel follow-ups plan), with
+`WORKSHOP_MSH_CACHE` on a copy of the main checkout's cache:
 
 ```
 mhsp2: 4768 stream lines, 104 entries, 110 stat blocks
   entries with a block: 93; without: 11; members without a block: 0
-  blocks passing every check: 96; known from the overrides: {'misprint': 10, 'as_printed': 1, 'rows': 3}; FAILING: 0
+  blocks passing every check: 95; known from the overrides: {'misprint': 10, 'as_printed': 2, 'rows': 3}; FAILING: 0
   powers: 237 across 84 entries
-  reference summary: 65 rows, 65 found as an entry (0 of them the chart alone), 2 chart misprints recorded; running notes on 0 entries
+  reference summary: 65 rows, 65 found as an entry (0 of them the chart alone), 1 chart misprints recorded; running notes on 0 entries
 ```
 
 110 blocks are the 90 full ones and the 20 Roster one-line grids. Without the
-overrides file it exits 1 on the eleven blocks below and two Summary rows.
+overrides file it exits 1 on eleven blocks below (not the Puma's, whose
+override is for the form `npcs.py` makes) and one Summary row.
+`npcs.py` makes the Puma's one block two (below), so the app has 111.
 `scripts/msh/mhsp2-overrides.json` holds 27 overrides, each read off its
 page image on 2026-10-21. Those not listed here are the three `rows`, the
 one `text` verdict and the `powers_intro` below:
@@ -230,6 +232,18 @@ one `text` verdict and the `powers_intro` below:
 - **Ten Karma `misprint`s**, the table above, each with the printed value
   and R+I+P on the ranks' standard numbers.
 - **Wolfsbane's Health `as_printed`** (Roster 9): 50, the wolf form's.
+- **The Puma's Karma `as_printed`** (Roster 23): his block prints each
+  rank and his Health with a slash, the human form's then the puma form's
+  (`TYPICAL/REMARKABLE`, `36/150`), and one Karma, 60. `rosterbook.value`
+  reads 36/150 as `36 (150)`, as `rank_of` reads a slashed rank, so the
+  block checks both Healths and the chart's 150 is found. `npcs.py` makes the
+  block two forms (Nate, 2026-10-21, as MH2's Mimic and MH3's
+  Super-Adaptoid): **Thomas Fireheart** (Health 36, Karma 60) and **Puma**
+  (Health 150, Karma 60). The page names neither form; the first is labelled
+  by the entry's identity line, the second by the name the text gives the
+  form ("while Puma"). The puma form's R+I+P would be 125, printed nowhere;
+  page and chart both print 60, so it keeps 60, under this verdict. No form
+  has a power list of its own.
 - **Nine `label`s** for the one-line grids that print no name over them:
   Wolf form and Wolfoid form (Wolfsbane, 9), Tony Stark (Iron Man, 15),
   Aragorn (Valkyrie, 18), Humanoid form (Beta Ray Bill, 19), Boromir
@@ -239,12 +253,11 @@ one `text` verdict and the `powers_intro` below:
   share a page and an entry, so their overrides match on the seven rank
   codes too (`codes`, a match key `roster.apply_overrides` gained in this
   row; every earlier book's outputs are byte-identical).
-- **Two `summary_misprint`s** (MHSP1's word for a chart value the block
+- **One `summary_misprint`** (MHSP1's word for a chart value the block
   overrules), where the chart and the block print different
   values and neither is a sum to check: the Beyonder's Health (chart
-  Unlimited, the Original State's block NOT APPLICABLE) and the Puma's
-  Health (chart 150, the puma form's; the block prints 36/150 and the reader
-  keeps 36).
+  Unlimited, the Original State's block NOT APPLICABLE). The Puma's Health
+  was the second until the block's 36/150 was read whole (above).
 - **One `powers_intro`** (the Beyonder, Roster 2): under Known Powers the
   entry prints two run-ins, ABILITY SCORES and POWERS, that head its account
   of his powers and name none. The reader read them as two powers; the

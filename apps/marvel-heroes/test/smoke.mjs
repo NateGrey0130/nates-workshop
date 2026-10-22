@@ -889,6 +889,15 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const wb = bookNpc({ character: 'wolfsbane-mhsp2' }).snapshot;
     check('MHSP2: an alter ego\'s or a form\'s one-line block is a form, so Wolfsbane is one NPC with three forms',
       wb?.forms?.map((f) => f.name).join() === 'Wolfsbane,Wolf form,Wolfoid form', JSON.stringify(wb?.forms?.map((f) => f.name)));
+    // The Puma prints both forms in one block, a slash in each rank and in
+    // his Health (Roster 23: TYPICAL/REMARKABLE, 36/150) and one Karma, 60.
+    const puma = bookNpc({ character: 'puma-mhsp2' }).snapshot;
+    const pumaBlocks = m2.find((c) => c.id === 'puma-mhsp2')?.versions[0].blocks || [];
+    check('MHSP2: the Puma\'s slashed block is two forms on his card, Thomas Fireheart (36) and Puma (150), each Karma 60 as printed, one NPC to add',
+      puma?.forms?.map((f) => `${f.name} ${f.health} ${f.karma}`).join() === 'Thomas Fireheart 36 60,Puma 150 60'
+      && pumaBlocks.every((b) => b.abilities.every((a) => a.length === 3))
+      && choices.filter((c) => c.character === 'puma-mhsp2').length === 1,
+      JSON.stringify(puma?.forms?.map((f) => [f.name, f.health, f.karma])));
     check('MHSP2: a one-line block printing four codes is a card but not a GM choice (Psycho-Man\'s suits, Valkyrie\'s Aragorn)',
       choices.filter((c) => c.character === 'psycho-man-mhsp2').length === 1 && choices.filter((c) => c.character === 'valkyrie-mhsp2').length === 1
       && /stat blocks/.test(bookNpc({ character: 'thundersword-mhsp2' }).error || ''));
