@@ -67,6 +67,7 @@
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "  second_blocks   a grid-booklets book: [{part, page, name, label}]: a one_line_grids character that is a second block on the card of that name in another booklet (ME2's Titans and Zeus in Hades), labelled, its run-in powers going to D1 as the card's (scripts/msh/npcs.py)",
+    "  rank_ranges     true: scripts/msh/roster.py's check passes a number anywhere inside its rank's range (apps/marvel-heroes/data/ranks.json min and max), not only the standard number (ME2, Nate 2026-10-21). Absent, a number must be its rank's standard or an override must say why",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -1674,6 +1675,8 @@
         {"part": "Adventure Book", "page": 18, "name": "Titans", "label": "Hades"},
         {"part": "Adventure Book", "page": 18, "name": "Zeus", "label": "Zeus' Powers"}
       ],
+      "rank_ranges": true,
+      "rank_ranges_note": "Nate, 2026-10-21: ME2 prints numbers inside a rank's range and not its standard (25 Ex, 250 Shift Y, 750 Shift Z, 2000 Cl 1000; Resource p.4-16, Adventure p.16), and each Health or Karma adds up with them, so the check takes the range for this book alone. Every earlier book's check stays the standard number's.",
       "roster_sections": ["Pregenerated Heroes", "The Entities", "The Olympians", "The Asgardians", "The Heliopolitans"],
       "teams": [
         ["Adventure Book", 4, "Ragnarok and Roll Heroes"],
