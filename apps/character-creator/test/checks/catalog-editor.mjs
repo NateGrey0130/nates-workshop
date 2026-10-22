@@ -217,11 +217,17 @@ section('The row form takes its widths from the field type');
   const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
   const cat = readFileSync(appPath('catalog.js'), 'utf8');
 
+  // The two rules are read inside the `.cat-form {` block's own braces. A lazy
+  // `[\s\S]*?` from the selector would run on past the closing brace to the
+  // same declaration in any later rule, and both lines passed that way with
+  // the declaration deleted from this block.
+  const formAt = css.indexOf('.cat-form {');
+  const formBlock = formAt === -1 ? '' : css.slice(formAt, css.indexOf('}', formAt));
   check('the form is a grid of columns, not of one column',
-    /\.cat-form \{[\s\S]*?grid-template-columns: repeat\(12, 1fr\);/.test(css),
+    /grid-template-columns: repeat\(12, 1fr\);/.test(formBlock),
     '.cat-form is back to a single implicit column');
   check('and its fields do not stretch to the tallest in the row',
-    /\.cat-form \{[\s\S]*?align-items: start;/.test(css),
+    /align-items: start;/.test(formBlock),
     'a short field stretches down beside a field carrying help text');
 
   // The form reads the type off the config rather than off a second list.
