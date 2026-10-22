@@ -26,6 +26,9 @@
 #   5. git commit -m with a backtick in the command - the shell evaluates the
 #      backticks; one commit message here ran `wrangler d1 execute` and pasted
 #      its help text into the commit. Write the message to a .tmp file and -F it.
+#   6. find rooted at a drive or filesystem root, at a command position - a
+#      whole-disk search never finishes here and outlives the agent that ran
+#      it. Name the directory. (The rule and its incident are below, by `find`.)
 #
 # POSIX sh throughout. The one non-sh dependency is node, used only to parse
 # the JSON envelope, because this machine has no jq and every tool in this repo

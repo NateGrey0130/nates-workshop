@@ -1,8 +1,9 @@
 # CLAUDE.md — nates-workshop
 
-> Pinned by `test/checks/documented-counts.mjs` (the skill table, the count in
-> words, "load from anywhere") and `instruction-paths.mjs` (every absolute path
-> resolves). Rules only. History lives in git, PR bodies and the audit menus.
+> Pinned by `apps/character-creator/test/checks/documented-counts.mjs` (the
+> skill table, the count in words, "load from anywhere") and
+> `instruction-paths.mjs` beside it (every absolute path resolves). Rules only.
+> History lives in git, PR bodies and the audit menus.
 
 Plain HTML/JS/CSS, no build step, no `package.json`. `npx wrangler` resolves
 from the npx cache. **Merging to `main` is the deploy.** `main` refuses direct
@@ -11,19 +12,22 @@ itself: `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
 
 ## Three groups, and which one you are in
 
-Three groups plus what they share, and `process` for what belongs to none of them: **palladium** (character creator and the
-apps split from it), **marvel** (`marvel-heroes`), and **tools** (FilamentForge,
-MediaVault, Pick 3 Cut 5). `groups.json` owns every path and D1 table.
+The groups are **palladium** (character creator and the apps split from it),
+**marvel** (`marvel-heroes`) and **tools** (FilamentForge, MediaVault,
+Pick 3 Cut 5). Two more owners are not groups: **shared** for what every group
+loads, and **process** for what only the checks read. `groups.json` owns every
+path and D1 table.
 
 - `node scripts/groups.mjs <path>` gives the owner of one path.
   `node scripts/groups.mjs --affected origin/main...HEAD` shows what CI will run.
 - One session per group, each in its own worktree:
   `node scripts/group-worktree.mjs <palladium|marvel|tools>`. See the
   `worktree` skill.
-- A **shared** path runs every group's suites. The shared paths are `shared/`,
-  the middleware, `apps/manifest.json`, `functions/api/claude.js`, `SETUP.md`
-  and the workflows. Change a shared path in its own PR, never inside a
-  group's work.
+- A **shared** path runs every group's suites. They include `shared/`,
+  `functions/api/_lib/` and the middleware, `apps/manifest.json`, The Table,
+  the workflows, every root file (`SETUP.md`, `README.md`, `wrangler.jsonc`)
+  and the scripts every group runs; `groups.json` has the whole list. Change a
+  shared path in its own PR, never inside a group's work.
 - Each group has its own D1: `DB` (`db/schema.sql`), `DB_MARVEL`
   (`db/schema-marvel.sql`) and `DB_TOOLS` (`db/schema-tools.sql`). Server code
   reaches only its own binding.
@@ -35,12 +39,15 @@ MediaVault, Pick 3 Cut 5). `groups.json` owns every path and D1 table.
    `main` moved and touched any path you touched, or any shared path, merge
    `origin/main` into your branch and re-run the suites before you push.
 2. Name the branch and title by *Naming* below. Check that the name is free.
-3. D1 changes are applied **before** the merge (`ship-pr`). Nate merges.
+3. D1 changes are applied **before** the merge (`ship-pr`). Nate merges, or a
+   plan driver merging a `READY` row (*Permissions* below).
 
 ## Naming
 
 Branch: `<group>/<type>/<slug>`. group: `pal|msh|tools|shared|proc`, where
-`proc` is `groups.json`'s `process` owner (docs, audit menus, this file). type:
+`proc` is `groups.json`'s `process` owner (`.claude/`, `docs/`, this file and
+most audit menus; `BOOK-INGEST-AUDIT.md` is palladium's and `SETUP.md` is
+shared, so ask `groups.mjs`). type:
 `feat|fix|refactor|data|schema|docs|test|skill|audit`, where `refactor` moves
 code and changes no behaviour. slug: kebab-case, 40 characters at most. A book's slug starts with the book's (`pal/data/triax-ngr-police`),
 because `book-board.mjs` finds book work by that prefix. A finding's slug
@@ -112,7 +119,9 @@ ones, or say in the PR body that you did not.
   never with a hand-typed `wrangler d1 execute`. `skipping auth warm-up` is expected.
 - `npx wrangler d1 info nates-workshop-media` is the health check.
 - `CLOUDFLARE_API_TOKEN` reaches D1 only, not R2 or Pages. Pages, R2 and Access
-  go through the `cloudflare-api` / `cloudflare-bindings` MCP plugin. Read
+  go through the `cloudflare-api` / `cloudflare-bindings` MCP plugin; the
+  `cloudflare-bindings` server announces itself deprecated in favour of
+  `cloudflare-api`, so when it goes, R2 questions go there too. Read
   `docs/cloudflare-credentials.md` **before** any Cloudflare call other than D1,
   and before any Access write.
 - Never enable public access on the R2 bucket.

@@ -1,8 +1,11 @@
 # Nate's Workshop — Deployment Reference
 
-> **Pinned sentences, not a pinned file.** `documented-counts.mjs`,
-> `environment.mjs` and `smoke.mjs` (character creator), `apps/pick3cut5/test/smoke.mjs`
-> and `apps/media-vault/test/smoke.mjs` each read one passage here, and
+> **Pinned sentences, not a pinned file.** Under
+> `apps/character-creator/test/checks/`, `documented-counts.mjs` (the junction
+> loop), `environment.mjs` (the endpoint count) and `server-plumbing.mjs` (the
+> metering sentence) each read one passage here, as do
+> `apps/pick3cut5/test/smoke.mjs` (the bypass table) and
+> `apps/media-vault/test/smoke.mjs` (the candidate count), and
 > `instruction-paths.mjs` resolves every absolute path. Everything else is
 > prose: ask the thing it describes before acting on it. History is in
 > `git log -- SETUP.md` and the audit menus, not here.
@@ -50,7 +53,7 @@ nates-workshop/
 │   ├── schema-tools.sql  The tools' D1 (DB_TOOLS)
 │   └── migrations/       One-shot ALTERs per database, tracked in schema_migrations
 ├── docs/                 Cross-app docs; docs/prompts/ is one-off briefs (hidden from ripgrep)
-├── .claude/              settings.json, hooks/, launch.json, skills/, agents/
+├── .claude/              settings.json, hooks/, launch.json, skills/, agents/, scripts/
 ├── scripts/              d1-apply, q, drift-check, deploy-sweep, groups, the book tools
 ├── workers/
 │   ├── pick3cut5-room/   Durable Object server. NOT deployed by a merge
@@ -293,10 +296,12 @@ GET /accounts/{account_id}/pages/projects/nates-workshop
 
 **Every Claude call in `functions/` writes one row to `claude_usage`** (email,
 endpoint, model, tokens, upstream status), fail-open. The endpoints are `proxy`,
-`campaign-ask`, `cc-npc-sweep` and `cc-extract-class`. The last is written by
-`scripts/extract-class.mjs` from a workstation. The Pick 3 Cut 5 Worker adds
-`pick3cut5-solo` and `pick3cut5-party`. A failed extraction is recorded too,
-because the tokens were spent.
+`campaign-ask`, `msh-campaign-ask`, `cc-npc-sweep` and `cc-extract-class`. The
+last is written by `scripts/extract-class.mjs` from a workstation. The Pick 3
+Cut 5 Worker adds `pick3cut5-solo` and `pick3cut5-party`. A failed extraction
+is recorded too, because the tokens were spent. The check pins the sentence
+and two names, not the list: `grep -rho "endpoint: '[a-z0-9-]*'" functions workers`
+is the list.
 
 ```bash
 node scripts/q.mjs --remote "SELECT endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(cache_write_tokens) AS cache_write, sum(cache_read_tokens) AS cache_read, sum(output_tokens) AS output, min(created_at) AS first, max(created_at) AS last FROM claude_usage GROUP BY endpoint ORDER BY input DESC"
@@ -512,7 +517,7 @@ and change the Access application domain to match.
 | Service | Cost | Limits |
 |---|---|---|
 | Cloudflare Pages + Functions | Free | 100K requests/day |
-| Cloudflare Workers | Free | `pick3cut5-room`, its own request budget |
+| Cloudflare Workers | Free | `pick3cut5-room` and `table-room`, each its own request budget |
 | Cloudflare D1 | Free | 5M row reads/day |
 | Cloudflare R2 | Free | `nates-workshop-media`; free storage allowance, no egress |
 | Cloudflare Access | Free | up to 50 users |
@@ -522,8 +527,8 @@ and change the Access application domain to match.
 ## Troubleshooting
 
 **The Pages half has no server logs; the browser console is the tool.** Only
-`pick3cut5-room` has Workers observability enabled. So a quiet week means only
-that nobody hit anything.
+the two Workers, `pick3cut5-room` and `table-room`, have observability enabled.
+So a quiet week means only that nobody hit anything.
 
 | symptom | cause |
 |---|---|
