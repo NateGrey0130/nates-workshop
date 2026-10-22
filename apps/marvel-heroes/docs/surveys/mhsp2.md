@@ -3,7 +3,7 @@
 Marvel Super Heroes special module. Registry entry: `scripts/msh/books.json`
 -> `mhsp2`. Measured 2026-10-21.
 
-**Rows citing this book:** 374 `msh_book_text` rows over 93 character entries
+**Rows citing this book:** 373 `msh_book_text` rows over 93 character entries
 in production (`DB_MARVEL`, read back 2026-10-21). Characters only: 93 cards
 in `apps/marvel-heroes/data/npcs.json`, built by `python scripts/msh/npcs.py
 mhsp2` from the reader (`scripts/msh/rosterbook.py`, #1921) and the overrides
