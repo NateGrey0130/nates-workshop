@@ -503,7 +503,8 @@ import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
 import { buildProposal, perLevelDiceOf, perLevelRolledDiceOf, perLevelBounds, skillGrantsFor, spellGrantsFor, psionicGrantsFor, xpTableFor,
          thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed }
+         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed,
+         classSkillNumbers, withIqBonus }
   from '../../../functions/api/character-creator/_lib/leveling.js';
 // js/second-form.js and js/morphus.js are imported by checks/second-body.mjs
 // now, not here: all twenty-six of their bindings this suite used were used by
@@ -2772,12 +2773,13 @@ section('Exceptional attribute rolls');
 section('Skill percentages');
 {
   // skillsPayload() lives inside the wizard module and depends on wizard state,
-  // so the rule it applies is restated here against the same derive call the
-  // wizard makes. What is pinned is the arithmetic and the cap.
+  // but the rule it applies is withIqBonus() in js/leveling.js, so that is what
+  // runs here, fed the same derive call the wizard makes. Until 2026-10-22 a
+  // copy of the rule written in this block ran instead, and dropping the cap
+  // from the real one left all ten checks green.
   const CAP = 98;
   const iqOf = (iq) => D.bio({ IQ: iq }, null).iq_skill_bonus_pct || 0;
-  const apply = (pct, iq) => (!pct ? { pct, iq_bonus: 0 }
-    : { pct: Math.min(CAP, pct + iqOf(iq)), iq_bonus: iqOf(iq) });
+  const apply = (pct, iq) => withIqBonus({ pct }, iqOf(iq));
 
   check('an average I.Q. adds nothing', (() => {
     const r = apply(35, 12);
@@ -7135,12 +7137,12 @@ section('Secondary schedules & group bonuses');
   check('a non-numeric bonus is rejected',
     !mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], bonus: "lots" }').ok);
 
-  // The arithmetic the wizard performs. A flat base gave every pick in a group
-  // the same percentage regardless of what the skill itself starts at.
-  const resolve = (catBase, explicit) => {
-    const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
-    return base;
-  };
+  // The arithmetic the wizard performs, classSkillNumbers() in js/leveling.js,
+  // run against a catalog row with the given base. A flat base gave every pick
+  // in a group the same percentage regardless of what the skill itself starts
+  // at. Until 2026-10-22 this was a copy of the rule written here, which
+  // stayed green when the real one's `+` became `-`.
+  const resolve = (catBase, explicit) => classSkillNumbers({ base: catBase }, explicit, {}).base;
   check('a bonus adds to each skill\'s own base', (() => (
     resolve(50, { bonus: 30 }) === 80 && resolve(30, { bonus: 30 }) === 60
   ))());
