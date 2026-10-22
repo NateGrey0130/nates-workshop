@@ -242,17 +242,15 @@ export function run() {
     //
     // `fom` was the case that breaks: a 73-page cache of a 161-page book, built
     // from a truncated PDF, whose manifest therefore said `"pages": 73`. It
-    // PASSED, and half a book read as all of it. These numbers are the real
-    // ones, kept as a fixture because the live cache has since been completed
-    // and can no longer demonstrate the bug.
+    // PASSED (73 >= 73), and half a book read as all of it. These numbers are
+    // the real ones, kept as a fixture because the live cache has since been
+    // completed and can no longer demonstrate the bug.
     const fomAsItWas = {
       cachedPages: 73,
       manifest: { pages: 73, cached_pages: 73, printed_pages: 72, page_offset: 1 },
       registryEntry: { printed_pages: 159, page_offset: 1 },
     };
-    check('the old rule passed a 73-page cache of a 161-page book',
-      fomAsItWas.cachedPages >= fomAsItWas.manifest.pages);
-    check('and the book\'s own last folio catches it',
+    check('the book\'s own last folio catches the 73-page cache of a 161-page book',
       cacheCoverage(fomAsItWas).complete === false
       && cacheCoverage(fomAsItWas).needed === 160);
 

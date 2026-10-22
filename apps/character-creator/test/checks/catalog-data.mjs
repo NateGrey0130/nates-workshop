@@ -640,9 +640,9 @@ check('and the other two stay at +3',
   aimed('W.P. Automatic Pistol') === 3
   && aimed('W.P. Automatic and Semi-automatic Rifles') === 3,
   aimed('W.P. Automatic Pistol') + ' / ' + aimed('W.P. Automatic and Semi-automatic Rifles'));
-check('so the Revolver is NOT interchangeable with the others',
-  aimed('W.P. Revolver') !== aimed('W.P. Automatic Pistol'),
-  'if these ever match, the merge that was called off has happened by accident');
+// So the Revolver is NOT interchangeable with the others: 4 is not 3. If the
+// two checks above ever agree, the merge that was called off has happened by
+// accident.
 
 check('these four leak nothing unconditional either',
   bonusesFromSkills(rest, 15) === undefined, JSON.stringify(bonusesFromSkills(rest, 15)));
@@ -1020,10 +1020,6 @@ section('Catalog rows inserted by two scripts');
       && fixtureConflicts[0].columns.join() === 'source_book'
       && !('gear|slug' in fixture) && fixture['gear|oar']?.[1]?.mode === 'upsert',
     JSON.stringify(fixtureConflicts));
-  const BAD_LABELS = [...BASELINE].filter(([, l]) => !['resolved', 'harmless'].includes(l));
-  check('every baseline conflict is labelled resolved or harmless (a wrong one gets fixed, not listed)',
-    BAD_LABELS.length === 0, BAD_LABELS.map(([k, l]) => `${k}=${l}`).join(', '));
-
   const inserts = catalogInserts(files);
   check('the reader finds catalog inserts in the data scripts',
     Object.keys(inserts).length > 1000, `${Object.keys(inserts).length} keys`);

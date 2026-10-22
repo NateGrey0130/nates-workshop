@@ -234,14 +234,18 @@ section('Access JWT verification');
 
   // Metered BEFORE the reply is parsed. A truncated or refused extraction has
   // already spent the input tokens for a whole page, and a run that cost money
-  // and produced nothing is the run most worth having a number for.
+  // and produced nothing is the run most worth having a number for. The INSERT
+  // is what is positioned, not the first mention of the table: that is a
+  // comment on line 10, so an indexOf on the bare word was always below the
+  // die() and never read the code.
   const meterBeforeParse = (src) => {
-    const at = src.indexOf('recordUsage(');
-    const parseAt = src.indexOf('JSON.parse(upstream.text)');
-    return at !== -1 && parseAt !== -1 && at < parseAt;
+    const at = src.indexOf('INSERT INTO claude_usage');
+    const dieAt = src.indexOf('if (!payload) die(');
+    return at !== -1 && dieAt !== -1 && at < dieAt;
   };
   check('a failed extraction is still recorded, because the tokens were still spent',
-    extractor.indexOf('claude_usage') < extractor.indexOf('if (!payload) die('));
+    meterBeforeParse(extractor),
+    'the claude_usage INSERT in scripts/extract-class.mjs is missing or sits below the non-JSON die()');
 
   // Both places used to say the admin importers were deliberately unlogged,
   // and both now explain that they no longer are. So this pins the CURRENT

@@ -23,17 +23,17 @@ export function run() {
 section('Note search');
 {
   // A bare apostrophe is FTS5 syntax, so `the baron's men` is a syntax error
-  // rather than a search. Every run of word characters becomes one quoted term.
+  // rather than a search. Every run of word characters becomes one quoted term,
+  // so the apostrophe cannot reach FTS5 as syntax: the exact string says so.
   const q = toMatchQuery("the baron's men");
-  check('an apostrophe cannot reach FTS5 as syntax', !/(?<!")'/.test(q), q);
   check('every word becomes a quoted term', q === '"the" AND "baron" AND "s" AND "men"*', q);
 
   // Injection: whatever a person types, the result is quoted terms and nothing
-  // else - no unbalanced quote, no operator, no column filter.
+  // else - no unbalanced quote, no operator, no column filter. Again the exact
+  // string is the pin.
   const nasty = toMatchQuery('foo" OR bar: NEAR(x) *');
   check('an attempted operator is quoted away',
     nasty === '"foo" AND "OR" AND "bar" AND "NEAR" AND "x"*', nasty);
-  check('nothing but terms and the join survives', !/[:()*]/.test(nasty.replace(/"\*$/, '"')), nasty);
 
   check('an empty query is null, not an error', toMatchQuery('') === null);
   check('and so is punctuation alone', toMatchQuery('???') === null);
@@ -133,8 +133,8 @@ section('Mentions');
     JSON.stringify(parseMentions('@Lord Coake was there')) === '["Lord Coake"]');
   check('but a following capital is not dragged in',
     JSON.stringify(parseMentions('@Lord Coake And Then We Left')) === '["Lord Coake"]');
-  check('a lowercase word after a name is not part of it',
-    JSON.stringify(parseMentions('@Kevik met us')) === '["Kevik"]');
+  // That a lowercase word after a name is not part of it is the first check
+  // above: `met` is not in the name.
 
   // Trailing punctuation is how people actually type.
   check('trailing punctuation is trimmed',

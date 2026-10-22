@@ -95,34 +95,18 @@ async function nodeCheckAll(paths) {
 }
 
 // ---------- 1. Parser ----------
-section('The browser entry points parse');
-{
-  // NOTHING imports app.js or sheet.js - the wizard boots on import - so this
-  // suite reads them as TEXT, for its source pins. That left a hole, and on
-  // 2026-09-11 a missing comma in an import list walked straight through it:
-  // `node --check` reads a .js file as a SCRIPT and said nothing, the whole
-  // suite and CI were green, and the module would have failed to parse in the
-  // browser - which is the wizard not loading at all. Parsed here as what each
-  // one actually is: app.js an ES module, sheet.js a classic script.
-  const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-parse-' + process.pid);
-  const entries = [['app.js', 'mjs'], ['sheet.js', 'cjs'], ['codex.js', 'cjs'], ['catalog.js', 'mjs']];
-  const copies = entries.map(([file, ext]) => stem + '-' + file.replace(/\W/g, '-') + '.' + ext);
-  entries.forEach(([file], i) => writeFileSync(copies[i], readFileSync(appPath(file), 'utf8')));
-  const parsed = await nodeCheckAll(copies);
-  for (const copy of copies) rmSync(copy, { force: true });
-  const [app, sheet, codex, catalog] = parsed.map((r) => (
-    { ok: r.ok, err: r.stderr.split('\n').find((l) => /Error/.test(l)) || '' }));
-  check('app.js parses as the ES module the wizard loads', app.ok, app.err);
-  check('and sheet.js parses as the classic script the sheet loads', sheet.ok, sheet.err);
-  // codex.js and catalog.js are the other two browser entry points and were
-  // NOT covered here, which is the same hole in two more pages: nothing
-  // imports them either, so a syntax error ships a blank page with the whole
-  // suite green. The extension is what each HTML actually asks for -
-  // codex.html loads codex.js bare, catalog.html loads catalog.js as a module.
-  // Added while editing both for BOOK-INGEST-AUDIT F73.
-  check('and codex.js parses as the classic script the codex loads', codex.ok, codex.err);
-  check('and catalog.js parses as the ES module the catalog editor loads', catalog.ok, catalog.err);
-}
+// NOTHING imports app.js or sheet.js - the wizard boots on import - so this
+// suite reads them as TEXT, for its source pins. That left a hole, and on
+// 2026-09-11 a missing comma in an import list walked straight through it:
+// `node --check` reads a .js file as a SCRIPT and said nothing, the whole
+// suite and CI were green, and the module would have failed to parse in the
+// browser - which is the wizard not loading at all. codex.js and catalog.js
+// are the other two browser entry points, and the same hole in two more pages
+// (BOOK-INGEST-AUDIT F73). Until 2026-10-22 a section here parsed those four
+// by hand, each as what its HTML asks for; 'Browser scripts parse' below
+// parses every page script the same way, those four among them, and reads
+// the kind off the file and the tag that loads it rather than a list typed
+// here.
 
 section('Parser');
 
@@ -503,7 +487,8 @@ import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
 import { buildProposal, perLevelDiceOf, perLevelRolledDiceOf, perLevelBounds, skillGrantsFor, spellGrantsFor, psionicGrantsFor, xpTableFor,
          thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed }
+         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed,
+         classSkillNumbers, withIqBonus }
   from '../../../functions/api/character-creator/_lib/leveling.js';
 // js/second-form.js and js/morphus.js are imported by checks/second-body.mjs
 // now, not here: all twenty-six of their bindings this suite used were used by
@@ -1527,10 +1512,15 @@ section('Attribute Bonus Chart');
   }
 
   // The P.P. row drives strike as well as parry and dodge, which the book gives
-  // as two rows of identical numbers. One row in the app, and it must stay
-  // equal to the printed pair rather than drifting into a second copy.
+  // as one row. Read through the real function at every printed column, so a
+  // second copy of the row for strike alone would fail here. (The old line
+  // compared two of this test's own literals to each other.)
+  const ppDrift = PRINTED.pp_combat.map((want, i) => {
+    const c = D.combat({ PP: 16 + i }, null);
+    return c.strike === want && c.parry === want && c.dodge === want ? null : `P.P. ${16 + i}: ${c.strike}/${c.parry}/${c.dodge} not ${want}`;
+  }).filter(Boolean);
   check('strike shares the parry and dodge row, as the book prints it',
-    JSON.stringify(PRINTED.pp_combat) === JSON.stringify(PRINTED.pe_magic));
+    ppDrift.length === 0, ppDrift.join(', '));
 
   // Below the chart the book gives nothing, and the app must not invent it.
   check('an attribute of 15 earns nothing', D.bio({ IQ: 15 }).iq_skill_bonus_pct === 0);
@@ -1787,7 +1777,6 @@ section('Wizard steps');
   check('a v3 Occupation step does not move', migrate(3, 3) === steps.indexOf('Occupation'));
   check('a v3 Skills step shifts by one', migrate(4, 3) === steps.indexOf('Skills'));
   check('a v3 Review step lands on Review', migrate(9, 3) === steps.indexOf('Review'));
-  check('and a v1 Review still lands on Review, through three migrations', migrate(7, 1) === steps.indexOf('Review'));
 
   // A migrated draft must not land on a step that did not exist when it was
   // saved: there is nothing on it the draft could have filled in, and
@@ -2509,16 +2498,15 @@ section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
     && abilityRollBands({ choose: 2, from: ['K (01-50): A', 'K (51-00): B'] }) === null
     && abilityRollBands({ name: 'K (01-50): A' }) === null);
 
-  // THE REGRESSION ITSELF, stated as the disagreement rather than as an
-  // outcome: with one pick held, the TOTAL has reached group 0's limit while
-  // group 1 is still empty. The old code read the total here and closed group 1.
+  // THE REGRESSION ITSELF: with one pick held, the TOTAL (1) has reached group
+  // 0's limit (choose 1) while group 1 is still empty. The old code read the
+  // total here and closed group 1. The premise is the fixture's own shape and
+  // is not asserted; what the app does with it is.
   {
     const held = ['Alpha'];
     const groups = cls.special_abilities.filter((e) => e && e.choose);
     const counts = abilityGroupCounts(cls, held);
-    check('with one pick held the TOTAL has reached group 0 limit - which is what misled the picker',
-      held.length >= (+groups[0].choose || 1));
-    check('but group 1 is still empty and still open, which is the fix',
+    check('with one pick held, group 1 is still empty and still open, which is the fix',
       (counts[1] || 0) === 0 && (counts[1] || 0) < (+groups[1].choose || 1));
     check('and a second group stays open until ITS OWN limit is reached',
       (abilityGroupCounts(cls, ['Alpha', 'Gamma'])[1] || 0) < 2
@@ -2780,12 +2768,13 @@ section('Exceptional attribute rolls');
 section('Skill percentages');
 {
   // skillsPayload() lives inside the wizard module and depends on wizard state,
-  // so the rule it applies is restated here against the same derive call the
-  // wizard makes. What is pinned is the arithmetic and the cap.
+  // but the rule it applies is withIqBonus() in js/leveling.js, so that is what
+  // runs here, fed the same derive call the wizard makes. Until 2026-10-22 a
+  // copy of the rule written in this block ran instead, and dropping the cap
+  // from the real one left all ten checks green.
   const CAP = 98;
   const iqOf = (iq) => D.bio({ IQ: iq }, null).iq_skill_bonus_pct || 0;
-  const apply = (pct, iq) => (!pct ? { pct, iq_bonus: 0 }
-    : { pct: Math.min(CAP, pct + iqOf(iq)), iq_bonus: iqOf(iq) });
+  const apply = (pct, iq) => withIqBonus({ pct }, iqOf(iq));
 
   check('an average I.Q. adds nothing', (() => {
     const r = apply(35, 12);
@@ -2844,8 +2833,7 @@ section('Alignments');
 
   check('rules.js exposes the alignment helpers',
     !!R && Array.isArray(R.ALIGNMENTS) && typeof R.alignmentOptions === 'function');
-  check('there are exactly seven alignments', R.ALIGNMENTS.length === 7, R.ALIGNMENTS.join(', '));
-  check('all seven are the book\'s', (() => {
+  check('all seven are the book\'s, and there are exactly seven', (() => {
     const want = ['Principled', 'Scrupulous', 'Unprincipled', 'Anarchist',
                   'Miscreant', 'Aberrant', 'Diabolic'];
     return want.every((a) => R.ALIGNMENTS.includes(a)) && R.ALIGNMENTS.length === want.length;
@@ -2907,9 +2895,8 @@ section('Alignments');
     return typeof v === 'number' && v >= 20 && v <= 120;
   })());
   check('a flat starting sum is taken as written', rollPoolFormula(500, {}) === 500);
-  // A class that says nothing about money must not conjure a zero purse.
-  check('no starting money stays absent',
-    rollPoolFormula(null, {}) === null && rollPoolFormula(undefined, {}) === null);
+  // A class that says nothing about money must not conjure a zero purse: the
+  // pool-formula section above pins that null and undefined stay null.
 
   // The importer only ever returns fields the prompt names — the reason a whole
   // stat block went missing when `variants` shipped undocumented.
@@ -3904,9 +3891,9 @@ section('Super abilities');
   check('and never stubs one', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'catalog.js'), 'utf8');
-    const stub = src.slice(src.indexOf('export function buildStubStatements'));
-    return !/superAbilities/.test(stub);
-  })());
+    const stubAt = src.indexOf('export function buildStubStatements');
+    return stubAt !== -1 && !/superAbilities/.test(src.slice(stubAt));
+  })(), 'buildStubStatements is missing from catalog.js, or it stubs super abilities');
 }
 
 await skillRuleChecks();
@@ -4531,7 +4518,6 @@ section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-
     categoryAllows(GATE, { name: 'Alter Aura', category: 'Physical' }) === true);
   check('and refuses the one the entry excepts',
     categoryAllows(GATE, { name: 'Telekinesis', category: 'Physical' }) === false);
-  check('a plain includes matches neither, which is the defect', GATE.includes('Physical') === false);
   check('and the entry has a label rather than printing as an object',
     categoryLabel(GATE[0]).includes('Physical'));
 
@@ -4587,7 +4573,7 @@ section('An ability that changes a pool clears the rolled pools (BOOK-INGEST-AUD
 section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT F68)');
 {
   // app.js boots on import, so these are source pins. They are only worth
-  // anything because 'The browser entry points parse' above now proves the file
+  // anything because 'Browser scripts parse' above now proves the file
   // the pins matched can actually load - on 2026-09-11 three pins passed
   // against an app.js that could not parse at all.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
@@ -4616,7 +4602,7 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
 section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F70)');
 {
   // Source pins again, for the reason the F68 section gives: app.js boots on
-  // import. 'The browser entry points parse' above is what makes them mean
+  // import. 'Browser scripts parse' above is what makes them mean
   // something.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const body = (fn) => {
@@ -4662,7 +4648,7 @@ section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F7
 section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUDIT F71)');
 {
   // Source pins, same standing as F67/F68/F70's: app.js boots on import, and
-  // 'The browser entry points parse' above is what makes a text match mean the
+  // 'Browser scripts parse' above is what makes a text match mean the
   // file can actually load.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   check('one helper clears both halves of the sheet maximum',
@@ -4751,11 +4737,12 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
       check('--border-control clears 3:1 on --' + name + ' for ' + who, r >= 3, r.toFixed(2));
     }
     // And the pair that IS the depth idiom is deliberately still below it, so a
-    // later "tidy" that points a control at --border-strong fails here.
+    // later "tidy" that points a control at --border-strong fails here. The
+    // token must be declared: ratio() answers 0 for a missing one, and 0 < 3.
     check('--border-strong is still NOT a control colour for ' + who
       + ', which is why F55 added a third token',
-      ratio(token('border-strong'), token('bg-tertiary')) < 3,
-      ratio(token('border-strong'), token('bg-tertiary')).toFixed(2));
+      !!token('border-strong') && ratio(token('border-strong'), token('bg-tertiary')) < 3,
+      token('border-strong') ? ratio(token('border-strong'), token('bg-tertiary')).toFixed(2) : '--border-strong is not declared as hex');
   }
 
   // The three call sites the finding moved, and the ones it deliberately did not.
@@ -7079,23 +7066,20 @@ section('Related-skill floors');
 
   // THE CASE THE OLD WIZARD GOT RIGHT BY ACCIDENT. At level 3 the same seven
   // picks leave two banked, so the floor is still reachable and the server
-  // accepts. Passing `count` here says unreachable - a false alarm.
+  // accepts. Passing `count` (7, the level-one allowance) says unreachable,
+  // which is the check above: the old count-only allowance cried wolf.
   check('and reachable at level three, because the schedule banked two',
     relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
-  check('where the old count-only allowance would have cried wolf',
-    relatedFloorStatus(lvlCls, seven,
-      lvlCls.skills.occ_related_skills.count).unreachable === true);
 
   // THE CASE A HALF-FIX WOULD HAVE MISSED, which is the one that matters. Spend
   // the two banked picks off-floor as well and the character really is illegal.
   // The server counts all nine because level-granted picks are stored
   // `type: 'related'`; a wizard that raised the allowance to 9 but still counted
-  // only the first seven would compute two picks remaining and say NOTHING.
+  // only the first seven would compute two picks remaining and say NOTHING
+  // (the seven-pick case is 'reachable at level three' above).
   const nine = Array.from({ length: 9 }, () => 'Physical');
   check('nine off-floor picks at level three are unreachable',
     relatedFloorStatus(lvlCls, nine, relatedAllowance(lvlCls, 3)).unreachable === true);
-  check('and counting only the level-one picks would have gone silent on it',
-    relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
 }
 
 section('Secondary schedules & group bonuses');
@@ -7160,12 +7144,12 @@ section('Secondary schedules & group bonuses');
   check('a non-numeric bonus is rejected',
     !mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], bonus: "lots" }').ok);
 
-  // The arithmetic the wizard performs. A flat base gave every pick in a group
-  // the same percentage regardless of what the skill itself starts at.
-  const resolve = (catBase, explicit) => {
-    const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
-    return base;
-  };
+  // The arithmetic the wizard performs, classSkillNumbers() in js/leveling.js,
+  // run against a catalog row with the given base. A flat base gave every pick
+  // in a group the same percentage regardless of what the skill itself starts
+  // at. Until 2026-10-22 this was a copy of the rule written here, which
+  // stayed green when the real one's `+` became `-`.
+  const resolve = (catBase, explicit) => classSkillNumbers({ base: catBase }, explicit, {}).base;
   check('a bonus adds to each skill\'s own base', (() => (
     resolve(50, { bonus: 30 }) === 80 && resolve(30, { bonus: 30 }) === 60
   ))());

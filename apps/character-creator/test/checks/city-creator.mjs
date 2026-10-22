@@ -283,10 +283,18 @@ export function run() {
   check('the same city draws the same map', JSON.stringify(layoutMap(walled)) === JSON.stringify(wm));
   const shopOne = walled.shops[0];
   const moved = layoutMap(rerollEntry(walled, shopOne.id));
-  const elsewhere = wm.pins.filter((p) => p.districtId !== wm.pins.find((x) => x.id === shopOne.id).districtId
-    && moved.pins.find((x) => x.id === p.id)?.districtId === p.districtId);
+  // Every pin outside the rerolled shop's district is compared, district and
+  // position both. The filter used to drop any pin whose district had changed
+  // before asserting that none had, which is the one case it was written for.
+  const shopDistrict = wm.pins.find((x) => x.id === shopOne.id).districtId;
+  const elsewhere = wm.pins.filter((p) => p.districtId !== shopDistrict);
+  const strayed = elsewhere.filter((p) => {
+    const after = moved.pins.find((x) => x.id === p.id);
+    return !after || after.districtId !== p.districtId || JSON.stringify(after.at) !== JSON.stringify(p.at);
+  });
   check('rerolling a shop moves no pin in any other district',
-    elsewhere.every((p) => JSON.stringify(moved.pins.find((x) => x.id === p.id).at) === JSON.stringify(p.at)));
+    elsewhere.length > 0 && strayed.length === 0,
+    elsewhere.length ? strayed.map((p) => p.id).join(', ') : 'no pin outside the shop\'s district to compare');
   check('the view is cropped to the city, inside the sheet',
     wm.view[0] >= 0 && wm.view[1] >= 0 && wm.view[2] < wm.size && wm.view[0] + wm.view[2] <= wm.size);
 
@@ -337,13 +345,18 @@ export function run() {
   const unmapped = T.NPC_ROLES.filter((role) => !T.ROLE_OCC[role]);
   check('every NPC role maps to a job O.C.C.', unmapped.length === 0, unmapped.join(', '));
   const owner = a.npcs.find((n) => /^owner of /.test(n.role));
-  const other = a.npcs.find((n) => !/^owner of /.test(n.role));
+  // Seed 4242's fourteen NPCs are all shop owners, so the "rest by their role"
+  // half is read off seed 4243, whose first non-owner is a healer. The NPC
+  // must exist: `!other ||` passed with nothing to compare until 2026-10-22.
+  const b = generateCity(base(), 4243);
+  const other = b.npcs.find((n) => !/^owner of /.test(n.role));
   const ownerReq = rollRequest(a, owner.id);
   check('an NPC goes to the roller as their race with their role\'s job, under their own name',
     ownerReq.class_id === owner.raceId && ownerReq.occ_class_id === T.OWNER_OCC && ownerReq.name === owner.name
       && ownerReq.count === 1, JSON.stringify(ownerReq));
   check('and a shop owner as the owner\'s job, the rest by their role',
-    !other || rollRequest(a, other.id).occ_class_id === T.ROLE_OCC[other.role]);
+    !!other && rollRequest(b, other.id).occ_class_id === T.ROLE_OCC[other.role],
+    other ? `${other.role} -> ${rollRequest(b, other.id).occ_class_id}` : 'seed 4243 has no non-owner NPC');
   const linked = linkSheet(a, owner.id, 4242);
   check('the sheet it makes is linked from that entry and no other',
     linked.npcs.find((n) => n.id === owner.id).sheet_id === 4242 && linked.npcs.filter((n) => n.sheet_id).length === 1);

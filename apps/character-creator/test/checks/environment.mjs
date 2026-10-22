@@ -286,20 +286,9 @@ for (const g of groupDatabases(repoRoot)) {
     'unguarded seed line for: ' + unguarded.join(', '));
 
   // Two sessions on two branches each take the next free number, both pull
-  // requests pass on their own - branches need not be up to date with main to
-  // merge - and main ends up holding two 085s. Nothing else here notices: the
-  // runner applies both, the record stores both filenames. Each group working
-  // concurrently (groups.json) makes that the likely case rather than a rare one,
-  // so the first pull request after such a merge goes red here and names both.
-  const byNumber = new Map();
-  for (const f of migrationFiles) {
-    const n = f.match(/^(\d+)-/)?.[1];
-    if (n) byNumber.set(n, [...(byNumber.get(n) ?? []), f]);
-  }
-  const sharedNumbers = [...byNumber.values()].filter((fs) => fs.length > 1);
-  check(label + 'no two migrations share a number', sharedNumbers.length === 0,
-    sharedNumbers.map((fs) => fs.join(' and ')).join('; ')
-    + ' - renumber the one that merged second, in its own pull request');
+  // requests pass on their own, and main ends up holding two 085s. That is
+  // caught by checks/sequence-numbers.mjs ('no two migrations share a number,
+  // across every group folder'), which reads every group's folder at once.
 }
 
 section('Data script conventions');
@@ -370,16 +359,10 @@ check('no data script carries an eighteenth z', overDeep.length === 0,
   + 'sort after every z tier takes `~NNN-` instead; see the last row of the '
   + 'ordering table in docs/operations.md');
 
-// Not a vacuous check: it was written before any `~` file existed (the first,
-// `~001-men-of-arms-frontmatter.sql`, landed 2026-09-25), so it pins the MECHANISM
-// the paragraph above and operations.md both promise, using the same `.sort()`
-// every consumer calls. If it ever stops being true, the documentation is
-// wrong before any file depends on it.
-const tierProbe = ['add-a-normal-script.sql', 'zz-a-correction.sql',
-  'zzzzzzzzzzzzzzzzz-seventeen-z.sql', '~001-after-every-z.sql'].sort();
-check('a ~NNN- prefix sorts after every z- tier',
-  tierProbe[tierProbe.length - 1] === '~001-after-every-z.sql',
-  'sorted order was ' + JSON.stringify(tierProbe));
+// `~` (0x7E) sorts after `z` (0x7A) in the code-unit order `.sort()` uses, so a
+// `~NNN-` file sorts after every z- tier. That is a property of the character
+// set, not of this repo, and no check here pins it: one did until 2026-10-22,
+// sorting four literals it had typed itself, and could not fail.
 
 // The same two rules across EVERY .sql in the repo, not just the data scripts.
 // db/seed-catalogs.sql carried six em-dashes inside class markdown and is the

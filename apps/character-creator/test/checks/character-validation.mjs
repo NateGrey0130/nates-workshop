@@ -53,6 +53,9 @@ const legal = {
 };
 const vio = (o) => validateCharacter({ ...legal, ...o }).violations.map((v) => v.rule);
 
+// The fixture also proves three negatives that used to be their own checks:
+// vCls's MA requirement of "none" imposes nothing, its secondary pick is not
+// category-restricted, and a class with no floors is never refused for one.
 check('a legal character produces no violations', vio({}).length === 0, JSON.stringify(vio({})));
 check('no class definition skips validation entirely', (() => {
   const r = validateCharacter({ ...legal, cls: null });
@@ -60,8 +63,6 @@ check('no class definition skips validation entirely', (() => {
 })());
 check('an attribute below the minimum is a violation',
   vio({ attributes: { ME: 9 } }).includes('attribute_minimum'));
-check('a requirement of "none" imposes nothing',
-  !vio({ attributes: { ME: 14 } }).includes('attribute_minimum'));
 check('a missing required attribute is caught',
   vio({ attributes: {} }).includes('attribute_missing'));
 check('too many related skills is a violation',
@@ -97,8 +98,6 @@ check('a related skill outside the allowed categories is a violation',
 check('an explicit override makes an out-of-category pick legal',
   !vio({ skills: legal.skills.map((s) => s.name === 'Prowl' ? rel('Prowl', 'Science', { override: true }) : s) })
     .includes('related_category'));
-check('secondary skills are not category-restricted',
-  !vio({}).includes('related_category'));
 
 // A per-category FLOOR, refused server-side (F6). Unlike the count and category
 // rules above it cannot fire on a half-built character: a floor not yet met may
@@ -119,8 +118,6 @@ check('secondary skills are not category-restricted',
     withFloor([rel('Climbing', 'Physical'), rel('Swimming', 'Physical')]).includes('related_minimum'));
   check('a floor with a pick still to spend is NOT a violation',
     !withFloor([rel('Climbing', 'Physical')]).includes('related_minimum'));
-  check('a class with no floors is never refused for one',
-    !vio({}).includes('related_minimum'));
   // The allowance grows on a schedule, and a floor rides along with it rather
   // than fighting it: level 3 grants one more pick, which is a pick the floor
   // can still be met with.
@@ -357,11 +354,8 @@ section('Creation validation');
     const no = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Crush')] });
     return ok.violations.length === 0 && no.violations.some((v) => v.rule === 'power_category');
   })());
-  check('stating only a count is unchanged by any of this', (() => {
-    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Sensitive', 'Healing'] } };
-    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('See'), psi('Mend')] })
-      .violations.length === 0;
-  })());
+  // That stating only a count is unchanged by any of this is 'a plain string
+  // gate is unchanged by that' above: the same class and the same two powers.
   check('a rolled focused psychic must keep to one category', (() => {
     const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 8,
       categories_allowed: ['Healing', 'Physical', 'Sensitive'], from_roll: true } };

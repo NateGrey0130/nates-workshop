@@ -298,8 +298,9 @@ export function run() {
       skillsUnnamed.join(', ') + ' - a session outside the repo root sees only CLAUDE.md');
     const claimed = [...claudeMd.matchAll(/^\| `([a-z0-9-]+)` \| /gm)].map((m) => m[1]).sort();
     check('and CLAUDE.md names no skill that does not exist',
-      claimed.every((c) => skills.includes(c)),
-      claimed.filter((c) => !skills.includes(c)).join(', '));
+      claimed.length > 0 && claimed.every((c) => skills.includes(c)),
+      claimed.length ? claimed.filter((c) => !skills.includes(c)).join(', ')
+        : 'the skill table in CLAUDE.md matched no `| `name` | ` row, so nothing was compared');
     // The list ran to `twelve` and there were ten skills, so it had two spare.
     // Running off the end fails in a way that reads like a stale count in
     // CLAUDE.md - the regex looks for the literal `<no word for this many>` -
@@ -441,9 +442,13 @@ export function run() {
       check('app.js is still a module, as known-limitations.md says it is',
         moduleTag('index.html', 'app\\.js'),
         'index.html no longer loads app.js as type="module" - the split-cost paragraph now overstates the cost');
+      // The negative needs its positive: a page that stopped loading sheet.js at
+      // all would also carry no module tag for it.
+      const loadsSheet = /<script[^>]*\bsrc="sheet\.js"/.test(readFileSync(appPath('sheet.html'), 'utf8'));
       check('and sheet.js is still a classic script, as the same paragraph says',
-        !moduleTag('sheet.html', 'sheet\\.js'),
-        'sheet.html loads sheet.js as a module - the split-cost paragraph now overstates the cost for it too');
+        loadsSheet && !moduleTag('sheet.html', 'sheet\\.js'),
+        loadsSheet ? 'sheet.html loads sheet.js as a module - the split-cost paragraph now overstates the cost for it too'
+          : 'sheet.html no longer loads sheet.js by that name');
     }
   }
 }
