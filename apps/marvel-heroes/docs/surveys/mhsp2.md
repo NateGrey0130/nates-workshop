@@ -68,6 +68,9 @@ their page images. As in MHSP1, the entry carries `parts` with a `cite` each
   Eternity, Death). Nebula's Crew is a sub-heading below Nebula's own entry;
   the Skrulls after the crew are not under it. Kingpin's Organization (26)
   heads five tiers inside the Kingpin's page, not a run of entries.
+  Cards file under `team_names`: the leading "The" dropped, The Bad Guys as
+  Secret Wars II Villains, and Heroes and Others and And of Course both as
+  Secret Wars II Heroes (Nate, 2026-10-21).
 - **The Reference Summary (PDF 67)** is the nearest thing to an index: one
   undivided chart of 65 rows in the Roster Book's order, from the Beyonder to
   the Molecule Man. **Transcribed by eye** from 170 dpi renders and stored as
@@ -234,7 +237,8 @@ page image on 2026-10-21:
   share a page and an entry, so their overrides match on the seven rank
   codes too (`codes`, a match key `roster.apply_overrides` gained in this
   row; every earlier book's outputs are byte-identical).
-- **Two `summary_differs`**, where the chart and the block print different
+- **Two `summary_misprint`s** (MHSP1's word for a chart value the block
+  overrules), where the chart and the block print different
   values and neither is a sum to check: the Beyonder's Health (chart
   Unlimited, the Original State's block NOT APPLICABLE) and the Puma's
   Health (chart 150, the puma form's; the block prints 36/150 and the reader

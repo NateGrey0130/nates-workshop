@@ -879,6 +879,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       m2.length === 93 && team('X-Men') === 9 && team('New Mutants') === 9 && team('Fantastic Four') === 4 && team('Avengers') === 7
       && team('Secret Wars II Villains') === 23 && m2.filter((c) => c.team === 'MHSP2 Secret Wars II').map((c) => c.name).sort().join() === 'Death,Eternity,Mephisto,The Beyonder'
       && !m2.some((c) => /^The /.test(c.team)), `${m2.length} ${[...new Set(m2.map((c) => c.team))]}`);
+    check('MHSP2: Heroes and Others (p.19) and And of Course (p.32) file as Secret Wars II Heroes, as The Bad Guys file as Secret Wars II Villains',
+      team('Secret Wars II Heroes') === 17 && team('Heroes and Others') === 0 && team('And of Course') === 0
+      && !data.npcs.teams.some((t) => t === 'Heroes and Others' || t === 'And of Course'),
+      `${team('Secret Wars II Heroes')} ${team('Heroes and Others')} ${team('And of Course')}`);
     const by = bookNpc({ character: 'the-beyonder-mhsp2', block: 0 }).snapshot;
     check('MHSP2: the Beyonder\'s Original State, printed BEYOND with no number, plays as Beyond',
       abil(by || { abilities: {} }).every((a) => a?.rank === 'beyond' && a.number === null), JSON.stringify(by?.abilities.fighting));
