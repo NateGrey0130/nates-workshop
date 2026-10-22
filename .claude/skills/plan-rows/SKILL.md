@@ -52,6 +52,30 @@ to 16KB in five lines, and every worker and every driver re-read it.
    row peaked at 197k against the worker's 200k stop.
 4. `node scripts/groups.mjs <path>` gives each file's group. A row spanning
    two groups is two rows; a shared path is its own row.
+5. **Size the row's reading set before its brief is written, and split what
+   does not fit.** List what the worker reads before its first edit: the
+   files the fix touches or must read, every skill the brief names with its
+   `reference/` files, and any book pages, renders or OCR cache files. Size
+   the list in bytes with an instrument run that day: `wc -c` on the files,
+   `ls -l` on a directory, a page count times the cache's bytes per page
+   (the `txt` directory's total over its file count). The mechanism: a
+   worker's run is capped at 200k, it starts at about 37k, and what it reads
+   before its first edit fills the rest. **A reading set over 400 KB (about
+   100k tokens) is split at plan time**, never left for the split agent under
+   *Driving the chain*, which stays the fallback for a row that outgrew a
+   brief sized this way. 400 KB is a starting value, to be recalibrated
+   against the peaks real rows report. Measured 2026-10-22: 60 of 204
+   workers hit the cap, and the 48 rows the outstanding-work plan planned
+   ran as 107 briefs.
+6. **A row that reads a book is two rows from the start**: extraction (the
+   pages or renders and the skills, ending at a pushed branch that holds the
+   drafts or data scripts with `class-check` reading `ready`, and no pull
+   request) and shipping (resuming that branch for the survey line, the
+   suites, the `--remote` apply and the pull request). The extraction brief
+   has its worker end by appending `From row <id>: resume <branch> at
+   <commit>` to the shipping row's brief and writing `state.md` with the
+   shipping row as `NEXT:` and its own row as `PUSHED`. Every book row's
+   first worker capped in the 2026-10-20 book-imports plan (ten rows).
 
 Rulings 2 and 3 are Nate's, 2026-10-12.
 
@@ -70,6 +94,7 @@ Reproduce: the exact recipe and what it shows today, or `nothing`.
 Measure with: the instrument that proves the fix, and the reading that counts as fixed.
 Files: the paths the fix is expected to touch.
 Rulings: Nate's that apply, dated, with the option he did NOT take.
+Reading set: the files above, the skills named and any pages, with the total in KB and the instrument that measured it.
 Do not: the neighbouring work this row leaves alone.
 ```
 
@@ -101,8 +126,9 @@ prompt:
 **Nothing else goes in the prompt.** A correction to how workers work is a
 pull request against the agent file; a fact about a row belongs in its brief.
 
-After each return, read `state.md` again and go by it. `MERGED` or `DROPPED`
-with a `NEXT:` line: spawn that row. A report that begins `READY` leaves
+After each return, read `state.md` again and go by it. `MERGED`, `DROPPED`
+or `PUSHED` (an extraction row, *Before a brief is written* 6) with a
+`NEXT:` line: spawn that row. A report that begins `READY` leaves
 `state.md` still naming the worker's own row: a `READY` worker does not write
 it, because the classifier refused that write on three of five rows on
 2026-10-14 (Nate's ruling that day; the option he did not take was leaving
