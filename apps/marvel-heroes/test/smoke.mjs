@@ -1742,6 +1742,14 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const long = n.characters.flatMap((c) => c.versions).filter((v) => v.identity.length > 2);
   check('no identity is longer than two lines, so no paragraph of the book rides in on one',
     long.length === 0, long.map((v) => v.id).join());
+  // A run-in that heads an entry's account of its powers is not a power: the
+  // Beyonder's ABILITY SCORES and POWERS (MHSP2 Roster 2) are its powers intro
+  // (a powers_intro verdict in scripts/msh/mhsp2-overrides.json).
+  const heading = /^(known )?powers?$|^ability scores$|^talents?$|^contacts?$/i;
+  const headed = n.characters.flatMap((c) => c.versions)
+    .flatMap((v) => (v.powers || []).filter((p) => heading.test(p.name)).map((p) => `${v.id}: ${p.name}`));
+  check('no power is named for a heading (Powers, Known Powers, Ability Scores, Talents, Contacts)',
+    headed.length === 0, headed.join(', '));
 
   // Team members given their team's stats (scripts/msh/<slug>-members.json):
   // the tier block with only the ranks their text states, and wherever the
