@@ -185,8 +185,12 @@ and touch nothing else in it.
 
 At most fifteen lines: the row, the outcome, the pull request and branch, what
 was dropped, what is Nate's, and any step here that was wrong or that you had
-no tool for. **That last line is how this file gets corrected**, so do not
-route around a broken step quietly.
+no tool for. **That line is how this file gets corrected**, so do not
+route around a broken step quietly. **Then one more line, always the last:**
+`Peak context: <n>k (hook)` when the run-cap hook's warning fired, with the
+figure it printed (`agent-run-cap: this run holds <n>k of context`), or
+`Peak context: <n>k (own reading)` from your best reading of what this run
+holds. The planner recalibrates its reading budget from these lines.
 
 ## Out of scope
 
