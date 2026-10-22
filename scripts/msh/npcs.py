@@ -410,13 +410,14 @@ def main(slug_arg):
                     book['title'])
 
     entries = roster['entries']
-    # A leading THE is dropped from a header, so the card sorts by the next
-    # word (Nate, 2026-10-21; registry drop_leading_the, MH3's THE THING).
-    # Only a book that sets the field: every earlier book's names stand.
-    if book.get('drop_leading_the'):
-        for e in entries:
-            if e.get('header'):
-                e['header'] = re.sub(r'^THE\s+', '', e['header'], flags=re.I)
+    # A leading THE is dropped from a character's header in every book, so the
+    # card's name and id sort by the next word (Nate, 2026-10-21: MA4's and
+    # MHSP2's The Thing, MA4's The Chosen, MHSP2's The Beyonder and The Watcher,
+    # ME2's The Fenris Wolf, MH3's THE THING). Only an entry with a block is a
+    # character: a team's banner (The Fantastic Four, The Asgardians) stands.
+    for e in entries:
+        if e.get('header') and e.get('blocks'):
+            e['header'] = re.sub(r'^THE\s+', '', e['header'], flags=re.I)
     # A chapter's second grid for a character the Resource Book stats (ME2's
     # Titans tormenting Zeus, and Zeus powerless in Hades; registry
     # second_blocks, Nate 2026-10-21) is a labelled block on that character's

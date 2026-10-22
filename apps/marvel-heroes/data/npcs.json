@@ -23870,12 +23870,12 @@
    "book": "ma4"
   },
   {
-   "id": "the-thing-ma4",
-   "name": "The Thing",
+   "id": "thing-ma4",
+   "name": "Thing",
    "team": "Fantastic Four",
    "versions": [
     {
-     "id": "the-thing-ma4",
+     "id": "thing-ma4",
      "label": null,
      "team": "Fantastic Four",
      "pages": [
@@ -23887,7 +23887,7 @@
      ],
      "blocks": [
       {
-       "label": "The Thing",
+       "label": "Thing",
        "page": 5,
        "abilities": [
         [
@@ -26961,6 +26961,80 @@
    "book": "ma4"
   },
   {
+   "id": "chosen-ma4",
+   "name": "Chosen",
+   "team": "Races and Organizations",
+   "versions": [
+    {
+     "id": "chosen-ma4",
+     "label": null,
+     "team": "Races and Organizations",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "50",
+       "karma": "30",
+       "resources": "EX(20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
    "id": "quon-ma4",
    "name": "Quon",
    "team": "Races and Organizations",
@@ -27121,80 +27195,6 @@
       "background",
       "contacts",
       "power",
-      "running",
-      "talents"
-     ]
-    }
-   ],
-   "appearances": [],
-   "book": "ma4"
-  },
-  {
-   "id": "the-chosen-ma4",
-   "name": "The Chosen",
-   "team": "Races and Organizations",
-   "versions": [
-    {
-     "id": "the-chosen-ma4",
-     "label": null,
-     "team": "Races and Organizations",
-     "pages": [
-      25
-     ],
-     "identity": [],
-     "blocks": [
-      {
-       "label": null,
-       "page": 25,
-       "abilities": [
-        [
-         "F",
-         10,
-         "Gd"
-        ],
-        [
-         "A",
-         10,
-         "Gd"
-        ],
-        [
-         "S",
-         10,
-         "Gd"
-        ],
-        [
-         "E",
-         20,
-         "Ex"
-        ],
-        [
-         "R",
-         10,
-         "Gd"
-        ],
-        [
-         "I",
-         10,
-         "Gd"
-        ],
-        [
-         "P",
-         10,
-         "Gd"
-        ]
-       ],
-       "health": "50",
-       "karma": "30",
-       "resources": "EX(20)",
-       "popularity": "0"
-      }
-     ],
-     "powers": [],
-     "members": [],
-     "text": [
-      "background",
-      "contacts",
-      "powers-intro",
       "running",
       "talents"
      ]
@@ -41120,12 +41120,12 @@
    "book": "mh3"
   },
   {
-   "id": "the-beyonder-mhsp2",
-   "name": "The Beyonder",
+   "id": "beyonder-mhsp2",
+   "name": "Beyonder",
    "team": "MHSP2 Secret Wars II",
    "versions": [
     {
-     "id": "the-beyonder-mhsp2",
+     "id": "beyonder-mhsp2",
      "label": null,
      "team": "MHSP2 Secret Wars II",
      "part": "Roster",
@@ -45815,12 +45815,12 @@
    "book": "mhsp2"
   },
   {
-   "id": "the-thing-mhsp2",
-   "name": "The Thing",
+   "id": "thing-mhsp2",
+   "name": "Thing",
    "team": "Secret Wars II Heroes",
    "versions": [
     {
-     "id": "the-thing-mhsp2",
+     "id": "thing-mhsp2",
      "label": null,
      "team": "Secret Wars II Heroes",
      "part": "Roster",
@@ -46880,92 +46880,6 @@
    "book": "mhsp2"
   },
   {
-   "id": "the-watcher-mhsp2",
-   "name": "The Watcher",
-   "team": "Secret Wars II Heroes",
-   "versions": [
-    {
-     "id": "the-watcher-mhsp2",
-     "label": null,
-     "team": "Secret Wars II Heroes",
-     "part": "Roster",
-     "pages": [
-      23
-     ],
-     "identity": [
-      "Uatu"
-     ],
-     "blocks": [
-      {
-       "label": null,
-       "page": 23,
-       "abilities": [
-        [
-         "F",
-         50,
-         "Am"
-        ],
-        [
-         "A",
-         50,
-         "Am"
-        ],
-        [
-         "S",
-         50,
-         "Am"
-        ],
-        [
-         "E",
-         100,
-         "Un"
-        ],
-        [
-         "R",
-         100,
-         "Un"
-        ],
-        [
-         "I",
-         100,
-         "Un"
-        ],
-        [
-         "P",
-         100,
-         "Un"
-        ]
-       ],
-       "rank_only": true,
-       "health": "250",
-       "karma": "300",
-       "resources": "UNEARTHLY",
-       "popularity": "0"
-      }
-     ],
-     "powers": [
-      {
-       "name": "Mental Powers"
-      },
-      {
-       "name": "Energy Manipulation"
-      },
-      {
-       "name": "Body Armor",
-       "upb": "D1"
-      }
-     ],
-     "members": [],
-     "text": [
-      "power",
-      "running"
-     ]
-    }
-   ],
-   "appearances": [],
-   "book": "mhsp2"
-  },
-  {
    "id": "time-bomb-mhsp2",
    "name": "Time Bomb",
    "team": "Secret Wars II Heroes",
@@ -47039,6 +46953,92 @@
      "members": [],
      "text": [
       "prose",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "watcher-mhsp2",
+   "name": "Watcher",
+   "team": "Secret Wars II Heroes",
+   "versions": [
+    {
+     "id": "watcher-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Heroes",
+     "part": "Roster",
+     "pages": [
+      23
+     ],
+     "identity": [
+      "Uatu"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "rank_only": true,
+       "health": "250",
+       "karma": "300",
+       "resources": "UNEARTHLY",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mental Powers"
+      },
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
       "running"
      ]
     }
@@ -52270,6 +52270,87 @@
    "book": "me2"
   },
   {
+   "id": "fenris-wolf-me2",
+   "name": "Fenris Wolf",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "fenris-wolf-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "280",
+       "karma": "56",
+       "resources": "N.A",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape Change"
+      },
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
    "id": "garm-me2",
    "name": "Garm",
    "team": "Asgardians",
@@ -52346,87 +52427,6 @@
       },
       {
        "name": "Claws"
-      }
-     ],
-     "members": [],
-     "text": [
-      "background",
-      "notes",
-      "power"
-     ]
-    }
-   ],
-   "appearances": [],
-   "book": "me2"
-  },
-  {
-   "id": "the-fenris-wolf-me2",
-   "name": "The Fenris Wolf",
-   "team": "Asgardians",
-   "versions": [
-    {
-     "id": "the-fenris-wolf-me2",
-     "label": null,
-     "team": "Asgardians",
-     "part": "Resource",
-     "pages": [
-      11
-     ],
-     "identity": [],
-     "blocks": [
-      {
-       "label": null,
-       "page": 11,
-       "abilities": [
-        [
-         "F",
-         50,
-         "Am"
-        ],
-        [
-         "A",
-         30,
-         "Rm"
-        ],
-        [
-         "S",
-         100,
-         "Un"
-        ],
-        [
-         "E",
-         100,
-         "Un"
-        ],
-        [
-         "R",
-         6,
-         "Ty"
-        ],
-        [
-         "I",
-         10,
-         "Gd"
-        ],
-        [
-         "P",
-         40,
-         "In"
-        ]
-       ],
-       "health": "280",
-       "karma": "56",
-       "resources": "N.A",
-       "popularity": "-5"
-      }
-     ],
-     "powers": [
-      {
-       "name": "Shape Change"
-      },
-      {
-       "name": "Shrinking",
-       "upb": "S30"
       }
      ],
      "members": [],
