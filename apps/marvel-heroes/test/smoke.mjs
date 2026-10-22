@@ -1005,8 +1005,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${me2.length} ${[...new Set(me2.map((c) => c.team))]}`);
     const zeus = bookNpc({ character: 'zeus-me2', block: 1 });
     check('ME2: the chapter\'s powerless Zeus is a second block on his Resource Book card, a GM choice of its own citing Adventure p.18, not a form',
-      choices.filter((c) => c.character === 'zeus-me2').length === 2 && zeus.snapshot?.health === 151 && zeus.name === 'Zeus - Powerless in Hades'
+      choices.filter((c) => c.character === 'zeus-me2').length === 2 && zeus.snapshot?.health === 151 && zeus.name === 'Zeus - Zeus\' Powers'
       && tagline(zeus.snapshot).startsWith('ME2 Ragnarok and Roll, Adventure p.18;') && bookNpc({ character: 'titans-me2', block: 1 }).snapshot?.health === 350
+      && bookNpc({ character: 'titans-me2', block: 1 }).name === 'Titans - Hades'
       && !me2.some((c) => c.id === 'zeus-me2' && c.versions.length > 1), `${zeus.name} ${zeus.snapshot && tagline(zeus.snapshot)}`);
     const bill = bookNpc({ character: 'beta-ray-bill-me2' }).snapshot;
     check('ME2: Beta Ray Bill\'s humanoid form, a grid of codes only, is a form on his card (330 and 80)',
