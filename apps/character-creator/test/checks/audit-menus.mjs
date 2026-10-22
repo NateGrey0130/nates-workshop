@@ -8,8 +8,10 @@
 // A duplicate number breaks `/take <MENU> <ID>` and every citation of it
 // (`F41` is cited from class notes, data scripts and other menus).
 //
-// A menu and its `.closed.md` split are ONE numbering space: a finding moves
-// between them when it closes, and the number moves with it.
+// A menu and its `.closed.md` split are ONE numbering space: a finding moved
+// between them when it closed, and the number moved with it. The splits went
+// to git history on 2026-10-22; one that reappears in a tree is still grouped
+// with its menu below.
 //
 // What counts as a finding is a heading `## F12 — ...` / `### G7 - ...`: a
 // letter prefix, a number, then a dash. Follow-up headings such as
@@ -20,8 +22,9 @@
 //
 // A closed finding also leaves a one-line pointer stub in its live menu,
 // `- **G1** — <title> — <outcome> — full text in <where>`, and the stub
-// carries the number too, so the archives can go without the number leaving
-// this check. A stub and its `.closed.md` heading are the SAME finding, one
+// carries the number too, which is how a closed finding stays in this check
+// now that the archives are gone, and how a finding stubbed in place does. A
+// stub and a `.closed.md` heading of its number are the SAME finding, one
 // that moved. A stub beside a live heading of that number, or a second stub,
 // is a duplicate. The `— full text in ` is what makes a bullet a stub:
 // `INGESTION-AUDIT.md` opens with a prose list `- **F18** — ...` that

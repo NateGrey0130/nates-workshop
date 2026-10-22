@@ -1,10 +1,13 @@
 # MediaVault — bulk edit and delete: gap analysis
 
-> **Since 2026-09-16 the closed findings live in `BULK-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 A feature menu, taken one at a time. **Read each finding's own note for its
 state** — this header gives none. Findings filed after the original run sit
@@ -170,23 +173,23 @@ Safety first, then capability, then the smaller ones.
 
 ---
 
-- **B1** — Bulk delete is permanent the instant it is confirmed, with no undo — - Taken, 2026-08-26 (PR #319): all seven points as specified — capture — full text in `BULK-AUDIT.closed.md` under its own `## B1` heading.
+- **B1** — Bulk delete is permanent the instant it is confirmed, with no undo — - Taken, 2026-08-26 (PR #319): all seven points as specified — capture — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B1` heading.
 
-- **B2** — A selection is never cleared when the view changes, so Delete can take out items the user cannot see — - Taken, 2026-08-26 (PR #317): the recommended scope-to-the-view option, — full text in `BULK-AUDIT.closed.md` under its own `## B2` heading.
+- **B2** — A selection is never cleared when the view changes, so Delete can take out items the user cannot see — - Taken, 2026-08-26 (PR #317): the recommended scope-to-the-view option, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B2` heading.
 
-- **B3** — The bulk bar follows the user into the Stats view, with a live Delete and no visible way out — - Taken, 2026-08-26 (PR #316): as proposed — leaving the library ends — full text in `BULK-AUDIT.closed.md` under its own `## B3` heading.
+- **B3** — The bulk bar follows the user into the Stats view, with a live Delete and no visible way out — - Taken, 2026-08-26 (PR #316): as proposed — leaving the library ends — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B3` heading.
 
-- **B4** — `format` is already bulk-settable on the server and unreachable in the UI — - Taken, 2026-08-26 (PR #315): as proposed, generalising `bulkChangeType` — full text in `BULK-AUDIT.closed.md` under its own `## B4` heading.
+- **B4** — `format` is already bulk-settable on the server and unreachable in the UI — - Taken, 2026-08-26 (PR #315): as proposed, generalising `bulkChangeType` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B4` heading.
 
-- **B5** — No field beyond `type` and `format` can be bulk-edited, and the current design cannot express a free-text one — - Taken, 2026-08-26 (PR #322): the `{ values }` / `{ text: true }` shape as — full text in `BULK-AUDIT.closed.md` under its own `## B5` heading.
+- **B5** — No field beyond `type` and `format` can be bulk-edited, and the current design cannot express a free-text one — - Taken, 2026-08-26 (PR #322): the `{ values }` / `{ text: true }` shape as — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B5` heading.
 
-- **B6** — Bulk re-lookup / enrich does not exist, and cannot be exact until the source id is stored — - Taken, 2026-08-26: layer 1 as PR #323 (which is F7, taken first and — full text in `BULK-AUDIT.closed.md` under its own `## B6` heading.
+- **B6** — Bulk re-lookup / enrich does not exist, and cannot be exact until the source id is stored — - Taken, 2026-08-26: layer 1 as PR #323 (which is F7, taken first and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B6` heading.
 
-- **B7** — "Select All" reaches past the page and nothing on screen says so — - Taken, 2026-08-26 (PR #318): all three parts as proposed — the button — full text in `BULK-AUDIT.closed.md` under its own `## B7` heading.
+- **B7** — "Select All" reaches past the page and nothing on screen says so — - Taken, 2026-08-26 (PR #318): all three parts as proposed — the button — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B7` heading.
 
-- **B8** — `bulkChangeType` assumes every row it selected was changed, and never reads the count the server returns — - Taken, 2026-08-26 (PR #321): as proposed, and two of this finding's — full text in `BULK-AUDIT.closed.md` under its own `## B8` heading.
+- **B8** — `bulkChangeType` assumes every row it selected was changed, and never reads the count the server returns — - Taken, 2026-08-26 (PR #321): as proposed, and two of this finding's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B8` heading.
 
-- **B9** — Bulk actions on the Stats screen: don't build them — - Declined, 2026-08-26 (PR #325), on Nate's word: *"I don't think B9 adds — full text in `BULK-AUDIT.closed.md` under its own `## B9` heading.
+- **B9** — Bulk actions on the Stats screen: don't build them — - Declined, 2026-08-26 (PR #325), on Nate's word: *"I don't think B9 adds — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/BULK-AUDIT.closed.md` under its own `## B9` heading.
 
 ## Ordering, if you want one
 

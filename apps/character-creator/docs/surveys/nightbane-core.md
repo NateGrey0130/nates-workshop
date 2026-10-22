@@ -528,8 +528,9 @@ the CHECK on `campaigns.system`, and `renderSystem()` — F73 stays open for it.
 **SUPERSEDED 2026-09-14 (PR #1037), and the paragraph above is left as the record
 of the day.** F73's deferred half shipped: `campaigns.system`, `gear.system` and
 `vehicles.system` all admit `nightbane` (migrations through 060), `campaigns.js`
-accepts it, and `renderSystem()` offers it. F73 is closed, in
-`BOOK-INGEST-AUDIT.closed.md`. A Nightbane campaign and character can be created;
+accepts it, and `renderSystem()` offers it. F73 is closed; its text is at
+`git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md`.
+A Nightbane campaign and character can be created;
 until the extraction plan ships, there is nothing to build one from.
 
 **D2 — the four Nightbane skill packages.** `VARIANT_OVERRIDES` deliberately

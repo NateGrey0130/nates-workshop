@@ -1,10 +1,13 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
-> **Since 2026-09-16 the closed findings live in `SHIP-PR-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **Nothing is open on this menu, as of 2026-09-27 (evening).** Work was opened
 > and closed again that day; read under each finding's heading for its state.
@@ -114,25 +117,25 @@ which is the same shape the skill's own pruning section already warns about.
 
 ---
 
-- **F1** — step 9's command answers wrong in three ways, and one of them is silence — Taken, 2026-09-03 (PR #659). As proposed, posture included: one command, one — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — step 9's command answers wrong in three ways, and one of them is silence — Taken, 2026-09-03 (PR #659). As proposed, posture included: one command, one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — the deploy section's premise is false: a third mechanism exists and the skill has never heard of it — Taken, 2026-09-03 (PR #660). As proposed: documentation only, one paragraph — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — the deploy section's premise is false: a third mechanism exists and the skill has never heard of it — Taken, 2026-09-03 (PR #660). As proposed: documentation only, one paragraph — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — the PR body convention is nowhere in the skill, and a taken finding was built on the claim that it is — Taken, 2026-09-03 (PR #661). Nate chose the full version over the decline — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — the PR body convention is nowhere in the skill, and a taken finding was built on the claim that it is — Taken, 2026-09-03 (PR #661). Nate chose the full version over the decline — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — step 4's browser bullet and the Pick 3 Cut 5 bullet predate the two skills that own them — Taken, 2026-09-03 (PR #662). Both halves as written and in opposite — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — step 4's browser bullet and the Pick 3 Cut 5 bullet predate the two skills that own them — Taken, 2026-09-03 (PR #662). Both halves as written and in opposite — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — the `git add -A` pointer is stale, and configuration closed it three days before the skill that carries it was written — Taken, 2026-09-03 (PR #663). Documentation only, two files, no configuration — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — the `git add -A` pointer is stale, and configuration closed it three days before the skill that carries it was written — Taken, 2026-09-03 (PR #663). Documentation only, two files, no configuration — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — step 7 names one merge shape; 137 commits on `main` are not that shape — Taken, 2026-09-03 (PR #664). One clause, documentation only, merge command — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — step 7 names one merge shape; 137 commits on `main` are not that shape — Taken, 2026-09-03 (PR #664). One clause, documentation only, merge command — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — nothing about a stacked PR, and step 7 recommends the flag that kills one — Taken, 2026-09-03 (PR #665). Documentation only, one paragraph in step 7, the — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — nothing about a stacked PR, and step 7 recommends the flag that kills one — Taken, 2026-09-03 (PR #665). Documentation only, one paragraph in step 7, the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — three passages that should be cut or moved, and a rule about which — Taken, 2026-09-03 (PR #666). All three items, the third on Nate's explicit — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — three passages that should be cut or moved, and a rule about which — Taken, 2026-09-03 (PR #666). All three items, the third on Nate's explicit — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — the ordering rule writes to production and never names the copy you hold yourself — Taken, 2026-09-03 (PR #667). In the smallest version, which is the version — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — the ordering rule writes to production and never names the copy you hold yourself — Taken, 2026-09-03 (PR #667). In the smallest version, which is the version — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — no step reads the CI run before merging, and this finding recommends declining — DECLINED, 2026-09-03. Nate's call, and it matches the finding's own — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — no step reads the CI run before merging, and this finding recommends declining — DECLINED, 2026-09-03. Nate's call, and it matches the finding's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F10` heading.
 
 ## Opened while taking a finding
 
@@ -160,13 +163,13 @@ header** and this is a `##` section lead, which that rule did not reach until
 `A17` extended it. **A numberless claim about numbered work is invisible to
 every sweep here**, which is why not writing one is the only defence.
 
-- **F11** — the pass grew the file it audits by roughly 13% — DECLINED, 2026-09-04. Nate's call, and it matches what this finding proposed — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — the pass grew the file it audits by roughly 13% — DECLINED, 2026-09-04. Nate's call, and it matches what this finding proposed — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — filing this menu falsified `audit-menu`'s file table, and this menu's own header did not notice — Taken, 2026-09-04 (PR #672). Documentation only, one file. — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — filing this menu falsified `audit-menu`'s file table, and this menu's own header did not notice — Taken, 2026-09-04 (PR #672). Documentation only, one file. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — the CI smoke job downloads wrangler inside a 120-second timeout, and went red on a documentation-only PR — Taken, 2026-09-04 (PR #670), on the second proposal. One step — — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — the CI smoke job downloads wrangler inside a 120-second timeout, and went red on a documentation-only PR — Taken, 2026-09-04 (PR #670), on the second proposal. One step — — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — a red CI run was merged because the command that read it was piped into `tail` — Taken, 2026-09-04 (PR #671). Documentation only, no gate, and `ship-pr` was — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — a red CI run was merged because the command that read it was piped into `tail` — Taken, 2026-09-04 (PR #671). Documentation only, no gate, and `ship-pr` was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:SHIP-PR-AUDIT.closed.md` under its own `### F14` heading.
 
 ## Opened by the subagent retrospective, 2026-09-22
 

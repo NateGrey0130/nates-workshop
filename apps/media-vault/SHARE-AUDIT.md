@@ -1,10 +1,13 @@
 # MediaVault — sharing one vault, read-only: design menu
 
-> **Since 2026-09-16 the closed findings live in `SHARE-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 A feature menu, findings `V1`…`V7`, to be taken one at a time. **Nothing here is
 built and nothing here is approved as a whole** — taking the shape is not taking
@@ -98,19 +101,19 @@ Everything below was measured on **2026-09-08** unless it says otherwise.
 - **No writes of any kind were made**, to D1, to Access, or to the repo beyond
   this file.
 
-- **V1** — high — `media_shares`, and the six places a new table lands — Taken, 2026-09-08 (PR #841). Posture held: additive. No existing — full text in `SHARE-AUDIT.closed.md` under its own `## V1` heading.
+- **V1** — high — `media_shares`, and the six places a new table lands — Taken, 2026-09-08 (PR #841). Posture held: additive. No existing — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V1` heading.
 
-- **V2** — high — exactly one endpoint reads rows it does not own — Taken, 2026-09-08 (PR #842). Posture held: a structural guarantee, not a — full text in `SHARE-AUDIT.closed.md` under its own `## V2` heading.
+- **V2** — high — exactly one endpoint reads rows it does not own — Taken, 2026-09-08 (PR #842). Posture held: a structural guarantee, not a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V2` heading.
 
-- **V3** — medium — the client asks the server whether it may write — Taken, 2026-09-08 (PR #844). Posture held: the server is the authority; — full text in `SHARE-AUDIT.closed.md` under its own `## V3` heading.
+- **V3** — medium — the client asks the server whether it may write — Taken, 2026-09-08 (PR #844). Posture held: the server is the authority; — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V3` heading.
 
-- **V4** — high — the picker is a mirror, and the server must re-check it — Taken, 2026-09-08 (PR #843). Posture held: fail closed. An address that — full text in `SHARE-AUDIT.closed.md` under its own `## V4` heading.
+- **V4** — high — the picker is a mirror, and the server must re-check it — Taken, 2026-09-08 (PR #843). Posture held: fail closed. An address that — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V4` heading.
 
-- **V5** — medium — a new MediaVault table reds the character creator's suite — Taken, 2026-09-08 (PR #840). Posture held: an existing exemption widened, — full text in `SHARE-AUDIT.closed.md` under its own `## V5` heading.
+- **V5** — medium — a new MediaVault table reds the character creator's suite — Taken, 2026-09-08 (PR #840). Posture held: an existing exemption widened, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V5` heading.
 
-- **V6** — low — SETUP.md gains a twin step, and nothing in CI can watch it — Taken, 2026-09-08 (PR #845). Posture held: documentation only. No check, — full text in `SHARE-AUDIT.closed.md` under its own `## V6` heading.
+- **V6** — low — SETUP.md gains a twin step, and nothing in CI can watch it — Taken, 2026-09-08 (PR #845). Posture held: documentation only. No check, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V6` heading.
 
-- **V7** — low — what a viewer may take away — Taken, 2026-09-08 (PR #846). Posture held: a default, not a — full text in `SHARE-AUDIT.closed.md` under its own `## V7` heading.
+- **V7** — low — what a viewer may take away — Taken, 2026-09-08 (PR #846). Posture held: a default, not a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V7` heading.
 
 ## Deferred deliberately, so nobody looks for a finding
 
@@ -133,4 +136,4 @@ the row while no PR existed, and the PR that first committed this file added it
 to `.claude/skills/audit-menu/SKILL.md`, beside the other `apps/media-vault`
 rows. The row records the `V` prefix and the `##` heading level this file uses.
 
-- **V8** — medium — the allow policy holds seven addresses, the mirror holds an unknown number, and nothing can compare them — Taken as option A, 2026-09-12 (PR #982), on Nate's word. Posture held: one — full text in `SHARE-AUDIT.closed.md` under its own `## V8` heading.
+- **V8** — medium — the allow policy holds seven addresses, the mirror holds an unknown number, and nothing can compare them — Taken as option A, 2026-09-12 (PR #982), on Nate's word. Posture held: one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/media-vault/SHARE-AUDIT.closed.md` under its own `## V8` heading.

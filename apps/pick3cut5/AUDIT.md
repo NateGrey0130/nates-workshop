@@ -818,8 +818,9 @@ hour of a session to exercise three lines was, and these numbers do not move it.
 round cap, so nobody has confirmed it stops at 30 — `T7` says so itself — and
 whether any screen reader exists on this machine is unknown.
 
-**`F13` is a nine-way collision.** A `F13` heading exists in this file and eight
-`.closed.md` files, and `node scripts/audit-citations.mjs --remote F13` silently
+**`F13` is a nine-way collision.** A `F13` heading exists in this file and in
+eight other menus' closed findings (their archives went to git history on
+2026-10-22; each menu's header names the commit), and `node scripts/audit-citations.mjs --remote F13` silently
 resolves the bare number to `BOOK-INGEST-AUDIT` — printing its own disclaimer
 that it never saw any other menu's. Sweep for `pick3cut5/AUDIT F13`.
 

@@ -71,8 +71,8 @@ lands one page off, which is the error the offset section above exists to
 prevent.
 
 **A page the map does not list is not a clean page.** `+104x10+10` was read off
-an unlisted page for +1D4x10+10 (`BOOK-INGEST-AUDIT.closed.md`, *Read from the
-ink, 2026-09-10*), and the cipher inserts a glyph as well as swapping one —
+an unlisted page for +1D4x10+10 (*Read from the ink, 2026-09-10*, in
+`git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md`), and the cipher inserts a glyph as well as swapping one —
 `4O0ft` is printed 40ft.
 
 **Flag it; do not repair it and do not drop the row.** The key ships advisory —

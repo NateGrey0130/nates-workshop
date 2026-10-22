@@ -7,11 +7,14 @@
 > where a reader of `gear` will meet it. It was the only finding on this menu
 > ever taken in halves.
 >
-> **Since 2026-09-16 the closed findings live in `BOOK-INGEST-AUDIT.closed.md`**,
-> moved there verbatim with their headings, numbering and notes; this file keeps
-> a one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 >
 > **This header still states no overall verdict, and that is deliberate.**
 > Several findings here close with a residue rather than a full stop: `F3` names
@@ -68,7 +71,7 @@ existing finding rather than opening a second number for it.
 
 ## Findings
 
-- **F1** — A numeric column is never checked against the page it cites — Taken, 2026-08-31 (PR #420). Posture held: advisory, log-only, exit code — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — A numeric column is never checked against the page it cites — Taken, 2026-08-31 (PR #420). Posture held: advisory, log-only, exit code — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F1` heading.
 
 ### F2 — `skills.base` cannot hold a percentage derived from an attribute
 
@@ -171,73 +174,73 @@ column, the grammar, the fallback or the five places is affected - F18 is one
 2026-09-01 and then. This note's own measurements stand: the column, the grammar,
 the fallback and the five places were never affected.
 
-- **F3** — `gear` has no shape for a vessel, and this batch has 25 of them — Reopened and taken, 2026-09-07 (PR #787) - as the FIRST option, which the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — `gear` has no shape for a vessel, and this batch has 25 of them — Reopened and taken, 2026-09-07 (PR #787) - as the FIRST option, which the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — The language-pick invariant matches on prose, and missed one of three — Taken, 2026-08-31 (PR #421) - as the ALTERNATIVE, because the primary — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — The language-pick invariant matches on prose, and missed one of three — Taken, 2026-08-31 (PR #421) - as the ALTERNATIVE, because the primary — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — `attribute_dice` cannot say an attribute does not exist, and the app fills one in — Taken, 2026-08-31 (PR #423), as proposed. `attribute_dice` accepts the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — `attribute_dice` cannot say an attribute does not exist, and the app fills one in — Taken, 2026-08-31 (PR #423), as proposed. `attribute_dice` accepts the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — `occ_related_skills` cannot express a per-category MINIMUM — Taken, 2026-08-31 (PR #428). Implemented as proposed - `occ_related_skills. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — `occ_related_skills` cannot express a per-category MINIMUM — Taken, 2026-08-31 (PR #428). Implemented as proposed - `occ_related_skills. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — the save list is sixteen fixed fields, and a book bonus outside them vanishes — Taken, 2026-08-31 (PR #426), as proposed. `bonuses.saves.other` is a list of — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — the save list is sixteen fixed fields, and a book bonus outside them vanishes — Taken, 2026-08-31 (PR #426), as proposed. `bonuses.saves.other` is a list of — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — a FIXED attribute value in `attribute_dice` is silently replaced by 3d6 — Taken, 2026-08-31 (PR #422), both halves. A bare integer in — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — a FIXED attribute value in `attribute_dice` is silently replaced by 3d6 — Taken, 2026-08-31 (PR #422), both halves. A bare integer in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — a cross-category `only` pick silently loses the percentage printed beside it — Taken, 2026-08-31 (PR #424), the main proposal - with ONE GUARD THE PROPOSAL — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — a cross-category `only` pick silently loses the percentage printed beside it — Taken, 2026-08-31 (PR #424), the main proposal - with ONE GUARD THE PROPOSAL — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — an R.C.C. and an O.C.C. that are BOTH psychic keep only one block, and the race wins every tie — Taken, 2026-08-31 (PR #429). `mergePsionics` replaces the choice. Powers and — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — an R.C.C. and an O.C.C. that are BOTH psychic keep only one block, and the race wins every tie — Taken, 2026-08-31 (PR #429). `mergePsionics` replaces the choice. Powers and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — a class whose book says it REPLACES the race cannot say so, and `combineClasses` gives the race precedence in four places at once — Taken, 2026-08-31 (PR #430). Implemented as the finding's PRIMARY proposal: — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — a class whose book says it REPLACES the race cannot say so, and `combineClasses` gives the race precedence in four places at once — Taken, 2026-08-31 (PR #430). Implemented as the finding's PRIMARY proposal: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — a class note that records the app's limits ages badly, and nothing sweeps the citers — Taken, 2026-08-31 (PR #432), all three parts, postures as written. Part 1 — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — a class note that records the app's limits ages badly, and nothing sweeps the citers — Taken, 2026-08-31 (PR #432), all three parts, postures as written. Part 1 — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — ten published classes carry a doubled apostrophe in their stored markdown — Taken, 2026-08-31 (PR #433), posture as written - diagnosed first, then a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — ten published classes carry a doubled apostrophe in their stored markdown — Taken, 2026-08-31 (PR #433), posture as written - diagnosed first, then a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — a race and an occupation that BOTH state magic keep only one block, and the occupation wins every time — Taken, 2026-08-31 (PR #434). `mergeMagic`, on F10's rules, sharing its union — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — a race and an occupation that BOTH state magic keep only one block, and the occupation wins every time — Taken, 2026-08-31 (PR #434). `mergeMagic`, on F10's rules, sharing its union — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — the Crazy allows two psionic categories that do not exist, so its three starting picks have no legal pool — Taken, 2026-08-31 (PR #435), as proposed - one class, one data script, no — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — the Crazy allows two psionic categories that do not exist, so its three starting picks have no legal pool — Taken, 2026-08-31 (PR #435), as proposed - one class, one data script, no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F15` heading.
 
-- **F16** — a psionic grant cannot exclude a power, and one class's book does — Taken, 2026-08-31 (PR #436), the PRIMARY proposal, posture as written - no new — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F16` heading.
+- **F16** — a psionic grant cannot exclude a power, and one class's book does — Taken, 2026-08-31 (PR #436), the PRIMARY proposal, posture as written - no new — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F16` heading.
 
-- **F17** — the Crazy's I.S.P. formula is short of both its book and its own note — Taken, 2026-08-31 (PR #437), as a sweep first and then a one-class fix. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — the Crazy's I.S.P. formula is short of both its book and its own note — Taken, 2026-08-31 (PR #437), as a sweep first and then a one-class fix. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — a skill's base percentage is resolved on the SERVER too, and that path never reads `base_formula` — Taken, 2026-09-02 (PR #590). Posture kept: the write path only, no new gate, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — a skill's base percentage is resolved on the SERVER too, and that path never reads `base_formula` — Taken, 2026-09-02 (PR #590). Posture kept: the write path only, no new gate, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F18` heading.
 
-- **F19** — the citation check searches the catalog's category prefix as part of the name, and 213 of its 216 warnings are its own — Adjusted 2026-09-03 — both were read, and only one of them is a data — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — the citation check searches the catalog's category prefix as part of the name, and 213 of its 216 warnings are its own — Adjusted 2026-09-03 — both were read, and only one of them is a data — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F19` heading.
 
-- **F20** — two name matchers, one of them shared and tested, and `drift-check` uses the other — Taken, 2026-09-03 (PR #614). Posture held: advisory only, exit code untouched, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — two name matchers, one of them shared and tested, and `drift-check` uses the other — Taken, 2026-09-03 (PR #614). Posture held: advisory only, exit code untouched, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F20` heading.
 
-- **F21** — `catalog-diff` cannot match a prefixed catalog row from the name its book prints — Taken, 2026-09-03 (PR #617), as proposed, both halves. The de-prefixed — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F21` heading.
+- **F21** — `catalog-diff` cannot match a prefixed catalog row from the name its book prints — Taken, 2026-09-03 (PR #617), as proposed, both halves. The de-prefixed — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F21` heading.
 
-- **F22** — a spell or psionic power with no description is a stub nothing counts, and the codex is the page it shows up on — Taken, 2026-09-06 (PR #774). Leading with the corrections, because the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F22` heading.
+- **F22** — a spell or psionic power with no description is a stub nothing counts, and the codex is the page it shows up on — Taken, 2026-09-06 (PR #774). Leading with the corrections, because the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F22` heading.
 
-- **F23** — an O.C.C. whose skills are ANOTHER O.C.C.'s, and a skill grant that picks CATEGORIES rather than skills — Taken, 2026-09-07 (PR #794), posture as written - a new grant block and a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F23` heading.
+- **F23** — an O.C.C. whose skills are ANOTHER O.C.C.'s, and a skill grant that picks CATEGORIES rather than skills — Taken, 2026-09-07 (PR #794), posture as written - a new grant block and a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F23` heading.
 
-- **F24** — a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not — Taken, 2026-09-07 (PR #789). Part (a) only, as written. (b) and (c) stand — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F24` heading.
+- **F24** — a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not — Taken, 2026-09-07 (PR #789). Part (a) only, as written. (b) and (c) stand — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F24` heading.
 
-- **F25** — a class whose book defines it AS another class, and nothing records that the two must stay identical — Taken, 2026-09-07 (PR #785). Posture honoured: assert, do not model. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F25` heading.
+- **F25** — a class whose book defines it AS another class, and nothing records that the two must stay identical — Taken, 2026-09-07 (PR #785). Posture honoured: assert, do not model. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F25` heading.
 
-- **F26** — one spell, two traditions, two costs, and one row — Taken, 2026-09-08 (PR #815), as the smaller option - `spells.same_spell_as` — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F26` heading.
+- **F26** — one spell, two traditions, two costs, and one row — Taken, 2026-09-08 (PR #815), as the smaller option - `spells.same_spell_as` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F26` heading.
 
-- **F27** — `class-check` does not validate skill names inside an MOS option, and they fail silently — Taken, 2026-09-08 (PR #812). Both of the questions this finding left — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F27` heading.
+- **F27** — `class-check` does not validate skill names inside an MOS option, and they fail silently — Taken, 2026-09-08 (PR #812). Both of the questions this finding left — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F27` heading.
 
-- **F28** — the coverage ledger checks five catalogs and there are six, so no vessel's citation is verified — Taken, 2026-09-08 (PR #813) - filed and taken in one change, on the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F28` heading.
+- **F28** — the coverage ledger checks five catalogs and there are six, so no vessel's citation is verified — Taken, 2026-09-08 (PR #813) - filed and taken in one change, on the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F28` heading.
 
-- **F29** — `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic — Taken, 2026-09-15 (PR #1072). ANSWERED BY READING THE TWO PAGES, AND THE — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F29` heading.
+- **F29** — `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic — Taken, 2026-09-15 (PR #1072). ANSWERED BY READING THE TWO PAGES, AND THE — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F29` heading.
 
-- **F30** — a cached page can be WELDED across the gutter, and nothing detects it — Taken, 2026-09-08 (PR #830). Detect and warn, as proposed. Nothing repairs — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F30` heading.
+- **F30** — a cached page can be WELDED across the gutter, and nothing detects it — Taken, 2026-09-08 (PR #830). Detect and warn, as proposed. Nothing repairs — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F30` heading.
 
-- **F31** — four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill — Taken, 2026-09-08 (PR #834). The mechanism only, on Nate's decision. The — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F31` heading.
+- **F31** — four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill — Taken, 2026-09-08 (PR #834). The mechanism only, on Nate's decision. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F31` heading.
 
-- **F32** — `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently — Taken, 2026-09-08 (PR #824). `attribute_maximums` exists, and the class that — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F32` heading.
+- **F32** — `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently — Taken, 2026-09-08 (PR #824). `attribute_maximums` exists, and the class that — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F32` heading.
 
-- **F33** — the gear catalog holds the same item twice under two slugs, and no single detector finds them — Taken, 2026-09-08 (PR #825). Posture as proposed - reporting, plus a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F33` heading.
+- **F33** — the gear catalog holds the same item twice under two slugs, and no single detector finds them — Taken, 2026-09-08 (PR #825). Posture as proposed - reporting, plus a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F33` heading.
 
-- **F34** — the literacy placeholder is guarded and the LANGUAGE placeholder is not, so the same mistake fails on one and ships on the other — Taken, 2026-09-08 (PR #832). Both halves in one PR, as the finding insists - — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F34` heading.
+- **F34** — the literacy placeholder is guarded and the LANGUAGE placeholder is not, so the same mistake fails on one and ships on the other — Taken, 2026-09-08 (PR #832). Both halves in one PR, as the finding insists - — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F34` heading.
 
-- **F35** — `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about — Taken, 2026-09-08 (PR #823). Documentation only, on one skill file, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F35` heading.
+- **F35** — `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about — Taken, 2026-09-08 (PR #823). Documentation only, on one skill file, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F35` heading.
 
-- **F36** — a text-layer page can be corrupt at the GLYPH level, and the damage is not where the tell is — Taken, 2026-09-08 (PR #833). Both halves - the detector and the rule. It — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F36` heading.
+- **F36** — a text-layer page can be corrupt at the GLYPH level, and the damage is not where the tell is — Taken, 2026-09-08 (PR #833). Both halves - the detector and the rule. It — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F36` heading.
 
 ### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
 
@@ -335,15 +338,15 @@ case for it. <!-- claim-ok: this file's own header, not another file -->
 
 ## Filed while taking F32, 2026-09-08
 
-- **F37** — migration 049 never records itself, so `drift-check --remote` reports a false drift forever — Taken, 2026-09-08 (PR #826). `drift-check --remote` now reports NO — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F37` heading.
+- **F37** — migration 049 never records itself, so `drift-check --remote` reports a false drift forever — Taken, 2026-09-08 (PR #826). `drift-check --remote` now reports NO — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F37` heading.
 
-- **F38** — one real duplicate scores 0.667 against a 0.7 threshold, and the names cannot settle it — CLOSED WITHOUT BEING TAKEN, 2026-09-08 (PR #829). The measurement this — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F38` heading.
+- **F38** — one real duplicate scores 0.667 against a 0.7 threshold, and the names cannot settle it — CLOSED WITHOUT BEING TAKEN, 2026-09-08 (PR #829). The measurement this — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F38` heading.
 
 ## Filed while reviewing the OCR pipeline, 2026-09-08
 
-- **F39** — §0b's DPI paragraph and §0c's framing together read as "a render only helps a text layer", and the case that disproves it is a SCAN — Taken, 2026-09-08 (PR #836). Posture held: documentation only - two prose — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F39` heading.
+- **F39** — §0b's DPI paragraph and §0c's framing together read as "a render only helps a text layer", and the case that disproves it is a SCAN — Taken, 2026-09-08 (PR #836). Posture held: documentation only - two prose — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F39` heading.
 
-- **F40** — a Triax cybernetics row cites printed 153 and the book prints it on 154 — Taken, 2026-09-08 (PR #837). Posture held: a data fix, no schema change and — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F40` heading.
+- **F40** — a Triax cybernetics row cites printed 153 and the book prints it on 154 — Taken, 2026-09-08 (PR #837). Posture held: a data fix, no schema change and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F40` heading.
 
 ### F41 - the 24 gear rows that are really vessels span FIVE books, so the backfill is a book job and not a data script
 
@@ -1031,21 +1034,21 @@ missing vessel row. A verification pass then found three classes giving the
 same retired reason without citing F3 - `cs-commando`, `nb-sorcerer` and
 `nb-psychic` - and the same file rewords them.
 
-- **F42** — high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them — Taken, 2026-09-09 (PR #864). Nate chose RUE, so the values move and the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F42` heading.
+- **F42** — high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them — Taken, 2026-09-09 (PR #864). Nate chose RUE, so the values move and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F42` heading.
 
-- **F43** — two gear rows cite Rifts Ultimate Edition for machines it does not print — Taken, 2026-09-09 (PR #863). Posture held: a merge and a re-citation, no — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F43` heading.
+- **F43** — two gear rows cite Rifts Ultimate Edition for machines it does not print — Taken, 2026-09-09 (PR #863). Posture held: a merge and a re-citation, no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F43` heading.
 
-- **F44** — `findDuplicates` cannot see an acronym written two ways, so two of three real duplicate pairs are invisible — Taken, 2026-09-09 (PR #862). Posture held: `normaliseName` only. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F44` heading.
+- **F44** — `findDuplicates` cannot see an acronym written two ways, so two of three real duplicate pairs are invisible — Taken, 2026-09-09 (PR #862). Posture held: `normaliseName` only. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F44` heading.
 
-- **F45** — six book notes in the registry made a standing claim about live data, and four of the six were false — Taken, 2026-09-09 (PR #865). Posture: correct the notes, and make the shape — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F45` heading.
+- **F45** — six book notes in the registry made a standing claim about live data, and four of the six were false — Taken, 2026-09-09 (PR #865). Posture: correct the notes, and make the shape — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F45` heading.
 
-- **F46** — the web marker has no rule against combat numbers, and four rows held them — Taken, 2026-09-09 (PR #866). Posture held: re-cite what the books support, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F46` heading.
+- **F46** — the web marker has no rule against combat numbers, and four rows held them — Taken, 2026-09-09 (PR #866). Posture held: re-cite what the books support, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F46` heading.
 
-- **F47** — three of the five duplicate pairs were duplicates; the other two were the book naming two things — Taken on Nate's word, 2026-09-09 (PR #867). Five candidate pairs came out of — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F47` heading.
+- **F47** — three of the five duplicate pairs were duplicates; the other two were the book naming two things — Taken on Nate's word, 2026-09-09 (PR #867). Five candidate pairs came out of — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F47` heading.
 
-- **F48** — a literal NUL byte in `catalog-merge.js` made the whole file unreviewable — Taken 2026-08-31 in PR #869, and this note is added 2026-09-15 because it — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F48` heading.
+- **F48** — a literal NUL byte in `catalog-merge.js` made the whole file unreviewable — Taken 2026-08-31 in PR #869, and this note is added 2026-09-15 because it — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F48` heading.
 
-- **F49** — one skill taken THREE TIMES for three different weapons, and a class may grant it once — Taken, 2026-09-10 (PR #909). Posture held: a display and composition change, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F49` heading.
+- **F49** — one skill taken THREE TIMES for three different weapons, and a class may grant it once — Taken, 2026-09-10 (PR #909). Posture held: a display and composition change, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F49` heading.
 
 ### F50 - `equipment_starting` cannot grant a SKILL, and one book's gear choice does
 
@@ -1158,13 +1161,13 @@ reject. Either makes `grants_skill` worth the key it costs. **Reopen on either.*
 
 **Nate's decision, 2026-09-10 (PR #933): leave it held.** Not open - reopen only on the trigger named above.
 
-- **F51** — `race_restrictions` matches a race by ID, and a book bars races by KIND — CLOSED UNDONE, 2026-09-10 (PR #907), which is the outcome this proposal — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F51` heading.
+- **F51** — `race_restrictions` matches a race by ID, and a book bars races by KIND — CLOSED UNDONE, 2026-09-10 (PR #907), which is the outcome this proposal — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F51` heading.
 
-- **F52** — high - a DICE STRING in `bonuses` parses clean, stores, and is silently dropped, and 34 published classes carry one — CLOSED AS FALSIFIED, 2026-09-10 (PR #905). NOT IMPLEMENTED, and that is a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F52` heading.
+- **F52** — high - a DICE STRING in `bonuses` parses clean, stores, and is silently dropped, and 34 published classes carry one — CLOSED AS FALSIFIED, 2026-09-10 (PR #905). NOT IMPLEMENTED, and that is a — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F52` heading.
 
-- **F53** — high - `corrupt_pages` detects glyphs that FAIL to map, and the commoner fault maps to a VALID character — Taken, 2026-09-10 (PR #904). Posture held: warn, do not block. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F53` heading.
+- **F53** — high - `corrupt_pages` detects glyphs that FAIL to map, and the commoner fault maps to a VALID character — Taken, 2026-09-10 (PR #904). Posture held: warn, do not block. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F53` heading.
 
-- **F54** — low - a gear row may not carry both an S.D.C. and a damage die, and a grenade legitimately does — Shipped in PR #897 with `sdc` NULL and the 20 in the `description`, because — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F54` heading.
+- **F54** — low - a gear row may not carry both an S.D.C. and a damage die, and a grenade legitimately does — Shipped in PR #897 with `sdc` NULL and the 20 in the `description`, because — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F54` heading.
 
 ### F55 - low - `gear` has nowhere to record a CREATION cost, and RECOMMENDS BEING DECLINED for now
 
@@ -1234,39 +1237,39 @@ low"*, it is probably the answer to both.
 
 **Nate's decision, 2026-09-10 (PR #933): leave it held**, as the finding itself recommended.
 
-- **F56** — medium - a TOTEM is a 48-entry choice table nine classes share, and it grants SKILLS, which no choice a class can offer is able to carry — Taken, 2026-09-10 (PR #944). As written: a `totems` catalog (migration — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F56` heading.
+- **F56** — medium - a TOTEM is a 48-entry choice table nine classes share, and it grants SKILLS, which no choice a class can offer is able to carry — Taken, 2026-09-10 (PR #944). As written: a `totems` catalog (migration — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F56` heading.
 
-- **F57** — low - a spell pool stated as a LEVEL RANGE admits every tradition's leveled spells, and the Ley Line Walker is offered 167 warlock and ocean spells today — Taken, 2026-09-10 (PR #943) - built fully on Nate's word, which is wider than — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F57` heading.
+- **F57** — low - a spell pool stated as a LEVEL RANGE admits every tradition's leveled spells, and the Ley Line Walker is offered 167 warlock and ocean spells today — Taken, 2026-09-10 (PR #943) - built fully on Nate's word, which is wider than — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F57` heading.
 
-- **F58** — medium - `regression.mjs` kills the bootstrap build at 180 seconds, the build now takes longer, and the failure reads as "cannot build a database" with no reason — Taken, 2026-09-10 (PR #942) - part (b) as written; part (a) declined on — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F58` heading.
+- **F58** — medium - `regression.mjs` kills the bootstrap build at 180 seconds, the build now takes longer, and the failure reads as "cannot build a database" with no reason — Taken, 2026-09-10 (PR #942) - part (b) as written; part (a) declined on — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F58` heading.
 
-- **F59** — low - `spells_per_level_from: true` is read by nothing, and two class notes say a list carries a pick that it does not — Taken, 2026-09-11 (PR #945). As written, both branches of the proposal, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F59` heading.
+- **F59** — low - `spells_per_level_from: true` is read by nothing, and two class notes say a list carries a pick that it does not — Taken, 2026-09-11 (PR #945). As written, both branches of the proposal, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F59` heading.
 
-- **F60** — low - a race's FLAT attribute bonus is lost when an occupation grants DICE to the same attribute, because the wizard rolls the two halves apart — Taken, 2026-09-11 (PR #946). As written - `classBonuses` counts a list's — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F60` heading.
+- **F60** — low - a race's FLAT attribute bonus is lost when an occupation grants DICE to the same attribute, because the wizard rolls the two halves apart — Taken, 2026-09-11 (PR #946). As written - `classBonuses` counts a list's — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F60` heading.
 
-- **F61** — low - a spell pick drawn from a NAMED LIST loses the class's LEVEL CAP, and three Spirit West shamans' books state both — Taken, 2026-09-11 (PR #951). Option A: `spell_levels: — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F61` heading.
+- **F61** — low - a spell pick drawn from a NAMED LIST loses the class's LEVEL CAP, and three Spirit West shamans' books state both — Taken, 2026-09-11 (PR #951). Option A: `spell_levels: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F61` heading.
 
-- **F62** — low - a supernatural P.E. that turns S.D.C. and hit points into M.D.C. has no field, so three classes carry it as prose — Taken, 2026-09-11 (PR #950). Option A as written - an opt-in class flag, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F62` heading.
+- **F62** — low - a supernatural P.E. that turns S.D.C. and hit points into M.D.C. has no field, so three classes carry it as prose — Taken, 2026-09-11 (PR #950). Option A as written - an opt-in class flag, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F62` heading.
 
-- **F63** — low - an ELEMENT choice cannot steer the Elemental Shaman's spells or grant its skill, so the class offers all four elements' spells with a note — Taken, 2026-09-11 (PR #952). Option A, with one departure from its posture: — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F63` heading.
+- **F63** — low - an ELEMENT choice cannot steer the Elemental Shaman's spells or grant its skill, so the class offers all four elements' spells with a note — Taken, 2026-09-11 (PR #952). Option A, with one departure from its posture: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F63` heading.
 
-- **F64** — low - the Spirit Warrior's mega-damage conversion rides on two of its six realms, and a chosen ability cannot carry F62's flag — Taken, 2026-09-11 (PR #954). Option A, in the shape Nate chose after the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F64` heading.
+- **F64** — low - the Spirit Warrior's mega-damage conversion rides on two of its six realms, and a chosen ability cannot carry F62's flag — Taken, 2026-09-11 (PR #954). Option A, in the shape Nate chose after the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F64` heading.
 
-- **F65** — medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced — Taken, 2026-09-11 (PR #955). Option A, code only as the posture says, with — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F65` heading.
+- **F65** — medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced — Taken, 2026-09-11 (PR #955). Option A, code only as the posture says, with — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F65` heading.
 
-- **F66** — low - the sheet's psionic level-up pickers match a category with a plain `includes`, so an object gate entry offers nothing — Taken, 2026-09-11 (PR #958). Option A, code only as the posture says, plus — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F66` heading.
+- **F66** — low - the sheet's psionic level-up pickers match a category with a plain `includes`, so an object gate entry offers nothing — Taken, 2026-09-11 (PR #958). Option A, code only as the posture says, plus — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F66` heading.
 
-- **F67** — low - changing a chosen ability after the pools are rolled leaves them stale, and a character who now converts saves with S.D.C. and hit points — Taken, 2026-09-11 (PR #960). Option A, code only as the posture says, with — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F67` heading.
+- **F67** — low - changing a chosen ability after the pools are rolled leaves them stale, and a character who now converts saves with S.D.C. and hit points — Taken, 2026-09-11 (PR #960). Option A, code only as the posture says, with — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F67` heading.
 
-- **F68** — low - changing a VARIANT or an occupation after the pools are rolled leaves them stale, the same way an ability did — Taken, 2026-09-12 (PR #963). Option A, code only as the posture says - on — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F68` heading.
+- **F68** — low - changing a VARIANT or an occupation after the pools are rolled leaves them stale, the same way an ability did — Taken, 2026-09-12 (PR #963). Option A, code only as the posture says - on — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F68` heading.
 
-- **F69** — medium - an object category gate is refused outright by the create validator, so three classes cannot be saved with their own starting psionics — Taken, 2026-09-11 (PR #962). Option A, code only as the posture says, plus — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F69` heading.
+- **F69** — medium - an object category gate is refused outright by the create validator, so three classes cannot be saved with their own starting psionics — Taken, 2026-09-11 (PR #962). Option A, code only as the posture says, plus — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F69` heading.
 
-- **F70** — low - re-rolling an attribute, or the psionic tier, leaves the pools stale; and a variant that restates attribute_dice leaves the attributes stale — Taken, 2026-09-12 (PR #964). Option A, both halves, code only as the posture — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F70` heading.
+- **F70** — low - re-rolling an attribute, or the psionic tier, leaves the pools stale; and a variant that restates attribute_dice leaves the attributes stale — Taken, 2026-09-12 (PR #964). Option A, both halves, code only as the posture — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F70` heading.
 
-- **F71** — medium - thirteen handlers clear `S.pools` and none clears `S.levelPools`, so a character above level 1 keeps growth rolled off pools that are gone — Taken, 2026-09-12 (PR #966). Option A as written - one helper - and the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F71` heading.
+- **F71** — medium - thirteen handlers clear `S.pools` and none clears `S.levelPools`, so a character above level 1 keeps growth rolled off pools that are gone — Taken, 2026-09-12 (PR #966). Option A as written - one helper - and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F71` heading.
 
-- **F72** — low - the level SPELLS, PSIONICS and SKILL PICKS are keyed by grant index, and nothing re-keys them when the class changes — Adjusted 2026-09-12 (PR #967), before being taken, from — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F72` heading.
+- **F72** — low - the level SPELLS, PSIONICS and SKILL PICKS are keyed by grant index, and nothing re-keys them when the class changes — Adjusted 2026-09-12 (PR #967), before being taken, from — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F72` heading.
 
 ## Nightbane, 2026-09-12 — F73-F78
 
@@ -1289,27 +1292,27 @@ row, creating a Nightbane campaign, and passing a class through the parser.
 which `audit-menu` names as invisible to every sweep here: a taker of F74
 grepping for `F74` never meets the line that is wrong about it.
 
-- **F73** — high - `system` is a two-value enum in three CHECK constraints and in the parser, so a book from a THIRD Palladium game cannot be cited by any catalog row — Taken, 2026-09-12 (PR #996) — and NOT as Option A. Nate chose the route he — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F73` heading.
+- **F73** — high - `system` is a two-value enum in three CHECK constraints and in the parser, so a book from a THIRD Palladium game cannot be cited by any catalog row — Taken, 2026-09-12 (PR #996) — and NOT as Option A. Nate chose the route he — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F73` heading.
 
-- **F84** — high - a restriction written on the choice GROUP instead of on the category is stored, never read, and reported `ready` — TAKEN, 2026-09-14 (PR #1045) - OPTION A, THE PARSER HALF, AS WRITTEN. The — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F84` heading.
+- **F84** — high - a restriction written on the choice GROUP instead of on the category is stored, never read, and reported `ready` — TAKEN, 2026-09-14 (PR #1045) - OPTION A, THE PARSER HALF, AS WRITTEN. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F84` heading.
 
-- **F83** — high - a choice group cannot state a book's own skill percentage, and Heroes Unlimited prints its own for every skill — TAKEN 2026-09-14, AS OPTION C. `skill_system_bases (skill_name, system, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F83` heading.
+- **F83** — high - a choice group cannot state a book's own skill percentage, and Heroes Unlimited prints its own for every skill — TAKEN 2026-09-14, AS OPTION C. `skill_system_bases (skill_name, system, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F83` heading.
 
-- **F82** — high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program — TAKEN 2026-09-14, AS OPTION A. `skills.mos.choose` is honoured end to end. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F82` heading.
+- **F82** — high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program — TAKEN 2026-09-14, AS OPTION A. `skills.mos.choose` is honoured end to end. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F82` heading.
 
-- **F74** — medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose — Taken, 2026-09-15 (PR #1080), at the posture it asked for: RECORD AND STOP. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F74` heading.
+- **F74** — medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose — Taken, 2026-09-15 (PR #1080), at the posture it asked for: RECORD AND STOP. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F74` heading.
 
-- **F75** — low - a Horror Factor a character PROJECTS has no field; the only `horror_factor` here is the save against someone else's — Taken, 2026-09-15 (PR #1081), on Nate's word, and the premise pass overturned — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F75` heading.
+- **F75** — low - a Horror Factor a character PROJECTS has no field; the only `horror_factor` here is the save against someone else's — Taken, 2026-09-15 (PR #1081), on Nate's word, and the premise pass overturned — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F75` heading.
 
-- **F76** — low - a power that costs P.P.E. permanently to ACQUIRE and again to USE fits neither `spells` nor `psionic_powers` — Taken, 2026-09-15. Option B, in four PRs. 1 of 4 is PR #1084 - storage; the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F76` heading.
+- **F76** — low - a power that costs P.P.E. permanently to ACQUIRE and again to USE fits neither `spells` nor `psionic_powers` — Taken, 2026-09-15. Option B, in four PRs. 1 of 4 is PR #1084 - storage; the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F76` heading.
 
-- **F77** — low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line — Taken, 2026-09-15 (PR #1079). DECLINED, which is what it proposed for — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F77` heading.
+- **F77** — low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line — Taken, 2026-09-15 (PR #1079). DECLINED, which is what it proposed for — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F77` heading.
 
-- **F78** — low - a creation-time roll table that permanently modifies the character has no home, and Nightbane ships nineteen of them — Taken, 2026-09-16 (PR #1088). DECLINED, on Nate's word, and the finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F78` heading.
+- **F78** — low - a creation-time roll table that permanently modifies the character has no home, and Nightbane ships nineteen of them — Taken, 2026-09-16 (PR #1088). DECLINED, on Nate's word, and the finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F78` heading.
 
-- **F79** — high - `--probe` classifies a book by character COUNT alone, so a text layer whose glyphs are dropped reads as clean and caches as garbage — Taken, 2026-09-15 (PR #1064) - as C, plus a BETTER A than the one proposed. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F79` heading.
+- **F79** — high - `--probe` classifies a book by character COUNT alone, so a text layer whose glyphs are dropped reads as clean and caches as garbage — Taken, 2026-09-15 (PR #1064) - as C, plus a BETTER A than the one proposed. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F79` heading.
 
-- **F80** — medium - `per_level` is READ on a skill entry and validated on neither branch, and this settles the question F25 left open — Taken, 2026-09-13 (PR #1020), as proposed, in one PR with this filing. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F80` heading.
+- **F80** — medium - `per_level` is READ on a skill entry and validated on neither branch, and this settles the question F25 left open — Taken, 2026-09-13 (PR #1020), as proposed, in one PR with this filing. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F80` heading.
 
 ### F81 - medium - `supersedes_race` does not erase the race's `magic` or `psionics`, and the comment above `magic` says it does
 
@@ -1426,39 +1429,39 @@ also match prose and match a block whose `type` is `none`. **A doc correction
 saying "two classes carry it" was one keystroke from being written.** Read the
 key through `parseClassMarkdown`; `instr` over a markdown column matches the
 commentary as readily as the field.
-- **F85** — medium - the coverage ledger checks five catalogs and there are eight, so 466 cited rows are verified by nothing; and its second table list checks four, which prints a phantom -171 — Taken, 2026-09-15 (PR #1075), as proposed and at the posture it asked for - — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F85` heading.
+- **F85** — medium - the coverage ledger checks five catalogs and there are eight, so 466 cited rows are verified by nothing; and its second table list checks four, which prints a phantom -171 — Taken, 2026-09-15 (PR #1075), as proposed and at the posture it asked for - — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F85` heading.
 
-- **F86** — medium - `repo-vs-live` says "all catalogs" and compares five of eight, and `drift-check`'s citation check reads three — Taken, 2026-09-15 (PR #1076), and its central premise was dead before anybody — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F86` heading.
+- **F86** — medium - `repo-vs-live` says "all catalogs" and compares five of eight, and `drift-check`'s citation check reads three — Taken, 2026-09-15 (PR #1076), and its central premise was dead before anybody — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F86` heading.
 
-- **F87** — high - `unmodelledKeys` reads TOP-LEVEL keys only, so a wrong key one level down is invisible and `class-check` answers `ready` — Taken, 2026-09-15 (PR #1062), at the posture proposed - a report in — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F87` heading.
+- **F87** — high - `unmodelledKeys` reads TOP-LEVEL keys only, so a wrong key one level down is invisible and `class-check` answers `ready` — Taken, 2026-09-15 (PR #1062), at the posture proposed - a report in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F87` heading.
 
-- **F88** — medium - a choice group's own `categories` array is never handed to `validateCategories`, so the entries F84 now insists on are themselves unchecked — Taken, 2026-09-15 (PR #1061), as proposed, at ERRORS. `validateCategories` — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F88` heading.
+- **F88** — medium - a choice group's own `categories` array is never handed to `validateCategories`, so the entries F84 now insists on are themselves unchecked — Taken, 2026-09-15 (PR #1061), as proposed, at ERRORS. `validateCategories` — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F88` heading.
 
-- **F89** — medium - three gear rows carry a citation in production that a clean rebuild does not produce, and the only check that compares the two counts rows — Taken, 2026-09-14 (PR #1058) - and SIX of its premises were wrong. The three — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F89` heading.
+- **F89** — medium - three gear rows carry a citation in production that a clean rebuild does not produce, and the only check that compares the two counts rows — Taken, 2026-09-14 (PR #1058) - and SIX of its premises were wrong. The three — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F89` heading.
 
-- **F90** — medium - nothing refuses a new catalog row on a RETIRED slug, and the check that would have noticed reports a total rather than a row — Taken, 2026-09-14 (PR #1059). Part 1 as proposed; Part 2 adjusted, because its — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F90` heading.
+- **F90** — medium - nothing refuses a new catalog row on a RETIRED slug, and the check that would have noticed reports a total rather than a row — Taken, 2026-09-14 (PR #1059). Part 1 as proposed; Part 2 adjusted, because its — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F90` heading.
 
-- **F91** — medium - a psionic power schedule's `categories` is read into `categoryAllows` and handed to `validateCategories` by nothing — Taken, 2026-09-15 (PR #1066). Shipped as proposed - two — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F91` heading.
+- **F91** — medium - a psionic power schedule's `categories` is read into `categoryAllows` and handed to `validateCategories` by nothing — Taken, 2026-09-15 (PR #1066). Shipped as proposed - two — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F91` heading.
 
-- **F92** — low - a `bonus` on a psionic schedule category is stored and never read, and only `categories_allowed` refuses one — Taken, 2026-09-15 (PR #1073), as written and at ERRORS. The premise pass — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F92` heading.
+- **F92** — low - a `bonus` on a psionic schedule category is stored and never read, and only `categories_allowed` refuses one — Taken, 2026-09-15 (PR #1073), as written and at ERRORS. The premise pass — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F92` heading.
 
-- **F96** — medium - the level-up psionic picker prints `[object Object]` for an object category, and two published classes hit it — Taken, 2026-09-15 (PR #1077), as proposed and display-only. One expression: — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F96` heading.
+- **F96** — medium - the level-up psionic picker prints `[object Object]` for an object category, and two published classes hit it — Taken, 2026-09-15 (PR #1077), as proposed and display-only. One expression: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F96` heading.
 
-- **F93** — medium - the duplicate scorer demotes on `category` and `system`, and `enchantments` is distinguished by neither — Taken, 2026-09-15 (PR #1074). The demotion shipped as proposed - drop to — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F93` heading.
+- **F93** — medium - the duplicate scorer demotes on `category` and `system`, and `enchantments` is distinguished by neither — Taken, 2026-09-15 (PR #1074). The demotion shipped as proposed - drop to — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F93` heading.
 
-- **F94** — high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched — WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F94` heading.
+- **F94** — high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched — WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F94` heading.
 
-- **F95** — medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way — Taken, 2026-09-15 (PR #1078), both halves, each to the side this finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F95` heading.
+- **F95** — medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way — Taken, 2026-09-15 (PR #1078), both halves, each to the side this finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F95` heading.
 
-- **F97** — low - six ordnance rows carry a mega-damage FLAG and no mega-damage NUMBER anywhere — Taken, 2026-09-15 (PR #1082). THE PAGE IS NOT SILENT, so this is the fill — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F97` heading.
+- **F97** — low - six ordnance rows carry a mega-damage FLAG and no mega-damage NUMBER anywhere — Taken, 2026-09-15 (PR #1082). THE PAGE IS NOT SILENT, so this is the fill — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F97` heading.
 
-- **F98** — high - an ability pick is counted against EVERY group at once, so a class with more than one choice group cannot be finished — Taken, 2026-09-15 (PR #1083). Posture held: a wizard bug fix, no schema — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F98` heading.
+- **F98** — high - an ability pick is counted against EVERY group at once, so a class with more than one choice group cannot be finished — Taken, 2026-09-15 (PR #1083). Posture held: a wizard bug fix, no schema — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F98` heading.
 
-- **F99** — medium - two migrations are never recorded on a database built from `db/schema.sql`, because their guard runs before the table it tests for — Taken, 2026-09-16 (PR #1089). Both halves, on Nate's word - the two seed — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F99` heading.
+- **F99** — medium - two migrations are never recorded on a database built from `db/schema.sql`, because their guard runs before the table it tests for — Taken, 2026-09-16 (PR #1089). Both halves, on Nate's word - the two seed — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F99` heading.
 
-- **F100** — medium - four hand-written catalog lists sit beside one declared list, and the ninth catalog needed all four edited by hand — Taken, 2026-09-16 (PR #1090), as its ALTERNATIVE and not its proposal, on — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F100` heading.
+- **F100** — medium - four hand-written catalog lists sit beside one declared list, and the ninth catalog needed all four edited by hand — Taken, 2026-09-16 (PR #1090), as its ALTERNATIVE and not its proposal, on — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F100` heading.
 
-- **F101** — medium - a Nightbane may BUY two Talents every level with permanent P.P.E., and nothing can spend a pool as a currency — Taken, 2026-09-16, on Nate's word - the FULL mechanism, which the finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F101` heading.
+- **F101** — medium - a Nightbane may BUY two Talents every level with permanent P.P.E., and nothing can spend a pool as a currency — Taken, 2026-09-16, on Nate's word - the FULL mechanism, which the finding — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F101` heading.
 
 ## Filed while taking the Nightbane survey's D6, 2026-09-16
 

@@ -193,10 +193,28 @@ taken`, a bare date) and sit under the finding, inside its `Proposal`, in a
 table, or in a retirement section far away. `INGESTION-AUDIT` F14 quotes the
 note's own shape, so every grep reports it taken.
 
-**Closed findings live in `<MENU>.closed.md`**, text and numbering unchanged;
-the live file keeps a one-line pointer where each heading was.
-`ls *.closed.md apps/*/*.closed.md` is the list. A closed file is a record, and
-its findings are not open.
+**A closed finding is a one-line stub in its live menu**, where its heading
+was: `- **F16** — <title> — <outcome> — full text in <where>`. The stub carries
+the number, and `audit-menus.mjs` reads it, so a closed number is still never
+reused. A stub is not open work. Its full text is in git history, not the tree:
+
+- **Closed by 2026-10-22:** the text sits in the menu's old
+  `<MENU>.closed.md` archive, deleted that day, and the stub names
+  `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:<path>`. The menu's
+  header says the same, and a line number a menu cites in an archive reads
+  against that commit.
+- **Closed after 2026-10-22: replace the section with its stub in place,** in
+  the PR that records the outcome or any later one. No archive file, and no
+  move to the end of the menu. Write the outcome note under the heading first,
+  so the text that goes to history carries it. The stub's `<where>` is
+  `` `git log -p -G '^### F16 ' -- <path>` under its own `### F16` heading ``
+  (match the menu's heading level and separator). `-G`, not `-S`: the stub
+  quotes the heading, so a count-based `-S` misses the commit that removed it.
+
+So a subject grep that must reach closed decisions also runs
+`git grep -n -i '<word>' c530a474799d9621ce1b9433dfa6ef1721d0b666 -- '*.closed.md'`
+for the old archives, and `git log -G '<word>' -- '*AUDIT*.md'` for anything
+stubbed since.
 
 **Read the lines under the heading, to the next heading.** Thirty seconds.
 
@@ -320,13 +338,19 @@ places no grep reaches. The rule is for the next menu.
 
 ## And where a closed menu goes: nowhere. It stays
 
-A menu with no open work is **not** archived, moved, folded or deleted
-(Nate's posture, `docs/prompts/meta-audit-prompt.md`, 2026-09-03; `META-AUDIT`
-`A15`). Its path is cited from menus, skills, briefs and memory, and it is still
-the record of what was decided and why. **Do not re-propose:** an index of the
-menus, archiving closed menus, or a retirement section collecting closed items
-away from their headings (a documented trap in `INGESTION-AUDIT`). The cost, a
-tax on every tree-wide grep, is accepted.
+A menu with no open work is **not** moved, folded, renamed or deleted. Its path
+is cited from menus, skills, briefs and memory, and its stubs and header are
+still the record of what was decided and why. Its closed findings become stubs
+like any other's (*Never grep for the outcome note*, above); the file stays.
+
+**Changed 2026-10-22, by Nate.** Until then a closed finding's text was never
+deleted from the tree (his posture, `docs/prompts/meta-audit-prompt.md`,
+2026-09-03; `META-AUDIT` `A15`), and the 2026-09-16 move kept it in sibling
+archive files. He reversed that: the archives went to git history and closures
+stub in place. The menu staying where it is was not reversed. **Do not
+re-propose:** an index of the menus, an archive file for closed findings, or a
+retirement section collecting closed items away from their headings (a
+documented trap in `INGESTION-AUDIT`).
 
 ## A deferral is work. Give it a number or say you are dropping it
 

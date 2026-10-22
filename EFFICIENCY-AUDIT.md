@@ -1,10 +1,13 @@
 # The book-ingestion loop — efficiency audit, 2026-08-25
 
-> **Since 2026-09-16 the closed findings live in `EFFICIENCY-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **All 7 findings (`F1`–`F7`) are closed**, re-verified on 2026-09-02. Every outcome
 > note sits under its own finding, in the ordinary shape. **No trap in this
@@ -96,19 +99,19 @@ gate (the Norse-classes PR: 91 API calls spread over 10h29m of wall clock;
 
 ## Findings, ranked by expected saving
 
-- **F1** — the same PR costs 2–7× more late in a session than early, and the loop runs marathon sessions — - Taken, 2026-08-25: as proposed. book-survey gains step 7 — persist the — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — the same PR costs 2–7× more late in a session than early, and the loop runs marathon sessions — - Taken, 2026-08-25: as proposed. book-survey gains step 7 — persist the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — smoke.mjs rebuilds the world on every run: ~45s × ~200 runs per book ≈ 2.4 hours — - Taken, 2026-08-25: as proposed, but in the harness rather than — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — smoke.mjs rebuilds the world on every run: ~45s × ~200 runs per book ≈ 2.4 hours — - Taken, 2026-08-25: as proposed, but in the harness rather than — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — 1,768 D1 round trips at ~11s each, one question per trip — - Taken, 2026-08-25: as proposed, except the one invocation goes over — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — 1,768 D1 round trips at ~11s each, one question per trip — - Taken, 2026-08-25: as proposed, except the one invocation goes over — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — the README is used as working memory: ~460 reads, 37 of them full — - Taken, 2026-08-25: as proposed. `scripts/readme-section.mjs` prints the — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — the README is used as working memory: ~460 reads, 37 of them full — - Taken, 2026-08-25: as proposed. `scripts/readme-section.mjs` prints the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — the skills are delivered by cat, 73 times, because Downloads sessions cannot see them — - Taken, 2026-08-25: as proposed. The five junctions are live on this — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — the skills are delivered by cat, 73 times, because Downloads sessions cannot see them — - Taken, 2026-08-25: as proposed. The five junctions are live on this — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — mid-PR human gates turn 30-minute PRs into 10-hour PRs — - Taken, 2026-08-25: as proposed. The scan covered the 50 most recent — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — mid-PR human gates turn 30-minute PRs into 10-hour PRs — - Taken, 2026-08-25: as proposed. The scan covered the 50 most recent — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — the starting_money class of error still has no check; buy the guardrail, not just the savings — - Taken, 2026-08-25: as proposed, with one addition the caches forced. The — full text in `EFFICIENCY-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — the starting_money class of error still has no check; buy the guardrail, not just the savings — - Taken, 2026-08-25: as proposed, with one addition the caches forced. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:EFFICIENCY-AUDIT.closed.md` under its own `### F7` heading.
 
 ## Methodology
 

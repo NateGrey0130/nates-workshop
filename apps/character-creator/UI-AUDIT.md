@@ -1,10 +1,13 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **Since 2026-09-16 the closed findings live in `UI-AUDIT.closed.md`**, moved
-> there verbatim with their headings, numbering and notes; this file keeps a
-> one-line pointer per moved finding where its heading was, and holds in full
-> every finding whose own section records no outcome. The closed file is a
-> record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **Nothing is open on this menu, as of 2026-09-27**, read under every
 > finding's heading by the `open-findings-scout` agent that day. The line below
@@ -143,65 +146,65 @@ present in this tree). The print preview could not be rendered — see *Blockage
 
 ## Findings
 
-- **F1** — high — Sheet › Gear: the inventory remove button is clipped off-screen at phone width — Taken, 2026-08-31 (PR #439). Implemented as written: `overflow-x: auto` on — full text in `UI-AUDIT.closed.md` under its own `### F1` heading.
+- **F1** — high — Sheet › Gear: the inventory remove button is clipped off-screen at phone width — Taken, 2026-08-31 (PR #439). Implemented as written: `overflow-x: auto` on — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F1` heading.
 
-- **F2** — high — One attribute-minimum rule, three different behaviours, and the middle one's copy is false — Taken, 2026-08-31 (PR #441). Posture as written: copy and documentation only. — full text in `UI-AUDIT.closed.md` under its own `### F2` heading.
+- **F2** — high — One attribute-minimum rule, three different behaviours, and the middle one's copy is false — Taken, 2026-08-31 (PR #441). Posture as written: copy and documentation only. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F2` heading.
 
-- **F3** — high — Race step: 120 unfiltered class cards, and the primary button 12 screens down — Taken, 2026-08-31 (PR #442). Implemented as written: `Picker.inputHtml` above — full text in `UI-AUDIT.closed.md` under its own `### F3` heading.
+- **F3** — high — Race step: 120 unfiltered class cards, and the primary button 12 screens down — Taken, 2026-08-31 (PR #442). Implemented as written: `Picker.inputHtml` above — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F3` heading.
 
-- **F4** — high — "Help me choose" returns all 120 classes, 38 of which match nothing, on a longer page — Taken, 2026-08-31 (PR #443). Implemented as written. The three questions and — full text in `UI-AUDIT.closed.md` under its own `### F4` heading.
+- **F4** — high — "Help me choose" returns all 120 classes, 38 of which match nothing, on a longer page — Taken, 2026-08-31 (PR #443). Implemented as written. The three questions and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F4` heading.
 
-- **F5** — high — The wizard cannot be completed with a keyboard: every choice is a non-focusable `<div>` — Closed, 2026-08-31 (PR #446) — the remaining three sites. F5 is now fully — full text in `UI-AUDIT.closed.md` under its own `### F5` heading.
+- **F5** — high — The wizard cannot be completed with a keyboard: every choice is a non-focusable `<div>` — Closed, 2026-08-31 (PR #446) — the remaining three sites. F5 is now fully — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F5` heading.
 
-- **F6** — high — `--text-muted` fails contrast on every background in the system, at 9–13px — Taken, 2026-08-31 (PR #451), with a scope Nate chose over the one proposed — full text in `UI-AUDIT.closed.md` under its own `### F6` heading.
+- **F6** — high — `--text-muted` fails contrast on every background in the system, at 9–13px — Taken, 2026-08-31 (PR #451), with a scope Nate chose over the one proposed — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F6` heading.
 
-- **F7** — medium — Half the sheet's tabs are outside the visible tab strip at phone width — Taken, 2026-08-31 (PR #440). Implemented as written, at the breakpoint written, — full text in `UI-AUDIT.closed.md` under its own `### F7` heading.
+- **F7** — medium — Half the sheet's tabs are outside the visible tab strip at phone width — Taken, 2026-08-31 (PR #440). Implemented as written, at the breakpoint written, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F7` heading.
 
-- **F8** — medium — Required-looking skill picks can be skipped in silence, and only an admin screen ever says so — Taken, 2026-09-01 (PR #455). Warn, do not block — posture said back — full text in `UI-AUDIT.closed.md` under its own `### F8` heading.
+- **F8** — medium — Required-looking skill picks can be skipped in silence, and only an admin screen ever says so — Taken, 2026-09-01 (PR #455). Warn, do not block — posture said back — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F8` heading.
 
-- **F9** — medium — A refused save leaves an orphan campaign, and the landing page cannot tell the two apart — Taken, 2026-09-01 (PR #457). Display only, as the finding scopes it. Each — full text in `UI-AUDIT.closed.md` under its own `### F9` heading.
+- **F9** — medium — A refused save leaves an orphan campaign, and the landing page cannot tell the two apart — Taken, 2026-09-01 (PR #457). Display only, as the finding scopes it. Each — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F9` heading.
 
-- **F10** — medium — `.panel-inset` is used 16 times and defined nowhere — Taken, 2026-08-31 (PR #452). Both numbers hold: 16 uses (12 in `app.js`, 4 in — full text in `UI-AUDIT.closed.md` under its own `### F10` heading.
+- **F10** — medium — `.panel-inset` is used 16 times and defined nowhere — Taken, 2026-08-31 (PR #452). Both numbers hold: 16 uses (12 in `app.js`, 4 in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F10` heading.
 
-- **F11** — medium — Three different tab bars do the same job in one app — Taken, 2026-09-01 (PR #454). The table is accurate — three components, — full text in `UI-AUDIT.closed.md` under its own `### F11` heading.
+- **F11** — medium — Three different tab bars do the same job in one app — Taken, 2026-09-01 (PR #454). The table is accurate — three components, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F11` heading.
 
-- **F12** — medium — The Details step's ~20 fields have no programmatic label — Taken, 2026-08-31 (PR #448). Scope as written: the Details step only. The — full text in `UI-AUDIT.closed.md` under its own `### F12` heading.
+- **F12** — medium — The Details step's ~20 fields have no programmatic label — Taken, 2026-08-31 (PR #448). Scope as written: the Details step only. The — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F12` heading.
 
-- **F13** — medium — Discarding an unfinished build is one unconfirmed click — Taken, 2026-09-01 (PR #455). All of it holds — `app.js` had zero — full text in `UI-AUDIT.closed.md` under its own `### F13` heading.
+- **F13** — medium — Discarding an unfinished build is one unconfirmed click — Taken, 2026-09-01 (PR #455). All of it holds — `app.js` had zero — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F13` heading.
 
-- **F14** — medium — `@mentions` render as plain text, contradicting the instruction directly above them — Taken, 2026-09-01 (PR #454), after F5 and F11 as the finding instructs. — full text in `UI-AUDIT.closed.md` under its own `### F14` heading.
+- **F14** — medium — `@mentions` render as plain text, contradicting the instruction directly above them — Taken, 2026-09-01 (PR #454), after F5 and F11 as the finding instructs. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F14` heading.
 
-- **F15** — medium — The catalog tab grid is hardcoded to 4 columns for 5 catalogs, and its tablet rule targets a class nothing uses — Taken, 2026-08-31 (PR #452), and it had a trap the finding did not see. — full text in `UI-AUDIT.closed.md` under its own `### F15` heading.
+- **F15** — medium — The catalog tab grid is hardcoded to 4 columns for 5 catalogs, and its tablet rule targets a class nothing uses — Taken, 2026-08-31 (PR #452), and it had a trap the finding did not see. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F15` heading.
 
-- **F16** — medium — No `:focus-visible` and no `prefers-reduced-motion`, while a sibling app has both done well — Taken, 2026-08-31 (PR #444). Copied verbatim from `apps/pick3cut5/styles.css`, — full text in `UI-AUDIT.closed.md` under its own `### F16` heading.
+- **F16** — medium — No `:focus-visible` and no `prefers-reduced-motion`, while a sibling app has both done well — Taken, 2026-08-31 (PR #444). Copied verbatim from `apps/pick3cut5/styles.css`, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F16` heading.
 
-- **F17** — medium — Print: a long table splits across pages with no repeated header, and I could not render a preview — Closed as moot, 2026-09-01 (PR #459) — which is what this finding asks for. — full text in `UI-AUDIT.closed.md` under its own `### F17` heading.
+- **F17** — medium — Print: a long table splits across pages with no repeated header, and I could not render a preview — Closed as moot, 2026-09-01 (PR #459) — which is what this finding asks for. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F17` heading.
 
-- **F18** — low — Catalog rows print raw JSON at the reader — Taken, 2026-09-01 (PR #456). Confirmed on the live page — the first skills — full text in `UI-AUDIT.closed.md` under its own `### F18` heading.
+- **F18** — low — Catalog rows print raw JSON at the reader — Taken, 2026-09-01 (PR #456). Confirmed on the live page — the first skills — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F18` heading.
 
-- **F19** — low — Why a step is skipped is available only on hover — Taken, 2026-08-31 (PR #450). Both halves, in one edit, with the proposal's own — full text in `UI-AUDIT.closed.md` under its own `### F19` heading.
+- **F19** — low — Why a step is skipped is available only on hover — Taken, 2026-08-31 (PR #450). Both halves, in one edit, with the proposal's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F19` heading.
 
-- **F20** — low — `var(--warn, …)` names a token that does not exist, so the fallback is permanent — Taken, 2026-09-01 (PR #453), with the foreground moved as Nate chose. — full text in `UI-AUDIT.closed.md` under its own `### F20` heading.
+- **F20** — low — `var(--warn, …)` names a token that does not exist, so the fallback is permanent — Taken, 2026-09-01 (PR #453), with the foreground moved as Nate chose. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F20` heading.
 
-- **F21** — low — The catalog is 345 rows of ragged inline text with no pagination — Taken, 2026-09-01 (PR #456), and the proposal is half of the fix. The other — full text in `UI-AUDIT.closed.md` under its own `### F21` heading.
+- **F21** — low — The catalog is 345 rows of ragged inline text with no pagination — Taken, 2026-09-01 (PR #456), and the proposal is half of the fix. The other — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F21` heading.
 
-- **F22** — low — 21 bare `✕` buttons with no accessible name — Taken, 2026-08-31 (PR #447). Both renderers, `aria-label` and `title`, and the — full text in `UI-AUDIT.closed.md` under its own `### F22` heading.
+- **F22** — low — 21 bare `✕` buttons with no accessible name — Taken, 2026-08-31 (PR #447). Both renderers, `aria-label` and `title`, and the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F22` heading.
 
-- **F23** — low — Filtering one skill column to nothing leaves a 5,606px empty column beside the other — Taken, 2026-08-31 (PR #452). `align-items: start` added to `.cols`. — full text in `UI-AUDIT.closed.md` under its own `### F23` heading.
+- **F23** — low — Filtering one skill column to nothing leaves a 5,606px empty column beside the other — Taken, 2026-08-31 (PR #452). `align-items: start` added to `.cols`. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F23` heading.
 
-- **F24** — low — No `<h1>` on any page, and heading order skips levels — Taken, 2026-08-31 (PR #449). Five one-line edits, and the visual claim holds: — full text in `UI-AUDIT.closed.md` under its own `### F24` heading.
+- **F24** — low — No `<h1>` on any page, and heading order skips levels — Taken, 2026-08-31 (PR #449). Five one-line edits, and the visual claim holds: — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F24` heading.
 
-- **F25** — low — The app stylesheet's header comment describes three pages; there are five — Taken, 2026-08-31 (PR #452). The comment now names all five pages and says — full text in `UI-AUDIT.closed.md` under its own `### F25` heading.
+- **F25** — low — The app stylesheet's header comment describes three pages; there are five — Taken, 2026-08-31 (PR #452). The comment now names all five pages and says — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F25` heading.
 
-- **F26** — low — One draft per person means you cannot park a build and start another — Taken, 2026-09-01 (PR #455). Documentation only, as proposed. One line — full text in `UI-AUDIT.closed.md` under its own `### F26` heading.
+- **F26** — low — One draft per person means you cannot park a build and start another — Taken, 2026-09-01 (PR #455). Documentation only, as proposed. One line — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F26` heading.
 
-- **F27** — low — Back-link depth differs on all five pages — Taken, 2026-09-01 (PR #458) — the first half. The second half is moot, and — full text in `UI-AUDIT.closed.md` under its own `### F27` heading.
+- **F27** — low — Back-link depth differs on all five pages — Taken, 2026-09-01 (PR #458) — the first half. The second half is moot, and — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F27` heading.
 
-- **F28** — medium — White on `--accent` is 3.11:1, and it is every primary button — Taken, 2026-09-01 (PR #453), app-local, exactly as proposed. — full text in `UI-AUDIT.closed.md` under its own `### F28` heading.
+- **F28** — medium — White on `--accent` is 3.11:1, and it is every primary button — Taken, 2026-09-01 (PR #453), app-local, exactly as proposed. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F28` heading.
 
-- **F29** — low — The skills list is a div wearing a table's clothes, and its header cannot repeat in print — Taken, 2026-09-01 (PR #460), as written. All three skills lists are real — full text in `UI-AUDIT.closed.md` under its own `### F29` heading.
+- **F29** — low — The skills list is a div wearing a table's clothes, and its header cannot repeat in print — Taken, 2026-09-01 (PR #460), as written. All three skills lists are real — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F29` heading.
 
-- **F30** — medium — The banked-picks picker offers every skill for every slot when one banked pick is secondary, and the server permits only one — Taken, 2026-09-03 (PR #657), as proposed. Posture held exactly: UI only — no — full text in `UI-AUDIT.closed.md` under its own `### F30` heading.
+- **F30** — medium — The banked-picks picker offers every skill for every slot when one banked pick is secondary, and the server permits only one — Taken, 2026-09-03 (PR #657), as proposed. Posture held exactly: UI only — no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F30` heading.
 
 ## Verified clean
 
@@ -343,13 +346,13 @@ finding about the deferral; these are the work. Both were re-measured on
 
 **Neither is taken by the PR that filed it**, per `audit-menu`.
 
-- **F31** — low — two of the six pages still skip a heading level, and `app.js` skips inside a page — Taken, 2026-09-06, with the posture WIDENED on Nate's word — markup plus the — full text in `UI-AUDIT.closed.md` under its own `### F31` heading.
+- **F31** — low — two of the six pages still skip a heading level, and `app.js` skips inside a page — Taken, 2026-09-06, with the posture WIDENED on Nate's word — markup plus the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F31` heading.
 
-- **F32** — low — `prefers-reduced-motion` is absent from the character creator, and present in the sibling app — Taken, 2026-09-06 (`UI-AUDIT` `F32`). Posture held: one media block in one app — full text in `UI-AUDIT.closed.md` under its own `### F32` heading.
+- **F32** — low — `prefers-reduced-motion` is absent from the character creator, and present in the sibling app — Taken, 2026-09-06 (`UI-AUDIT` `F32`). Posture held: one media block in one app — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F32` heading.
 
 ## Filed while taking BOOK-INGEST-AUDIT F32, 2026-09-08
 
-- **F33** — medium — an unmet class minimum has never rendered red, because `.err` loses to `.attr-note` — Taken, 2026-09-08 (PR #827). Presentation only, as proposed - nothing about — full text in `UI-AUDIT.closed.md` under its own `### F33` heading.
+- **F33** — medium — an unmet class minimum has never rendered red, because `.err` loses to `.attr-note` — Taken, 2026-09-08 (PR #827). Presentation only, as proposed - nothing about — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F33` heading.
 
 ## Filed by an Impeccable design critique, 2026-09-09
 
@@ -404,13 +407,13 @@ menu it expects to land on would have closed itself.**
 
 ---
 
-- **F34** — high — Every primary button drops to 1.17:1 on hover, and this file recorded the mechanism while it was still harmless — Taken, 2026-09-10 (PR #893). Posture held: shared stylesheet, all four apps, no — full text in `UI-AUDIT.closed.md` under its own `### F34` heading.
+- **F34** — high — Every primary button drops to 1.17:1 on hover, and this file recorded the mechanism while it was still harmless — Taken, 2026-09-10 (PR #893). Posture held: shared stylesheet, all four apps, no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F34` heading.
 
-- **F35** — high — One `font` shorthand takes the wizard stepper out of its own typography, and deletes six of ten steps at phone width — Taken, 2026-09-10 (PR #894). Posture held: one declaration removed from one app — full text in `UI-AUDIT.closed.md` under its own `### F35` heading.
+- **F35** — high — One `font` shorthand takes the wizard stepper out of its own typography, and deletes six of ten steps at phone width — Taken, 2026-09-10 (PR #894). Posture held: one declaration removed from one app — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F35` heading.
 
-- **F36** — medium — The focus ring and the reduced-motion block were each scoped to one app on purpose, and the promotion neither of them made was never given a number — Taken, 2026-09-10 (PR #911). Posture held: shared stylesheet, no component change, — full text in `UI-AUDIT.closed.md` under its own `### F36` heading.
+- **F36** — medium — The focus ring and the reduced-motion block were each scoped to one app on purpose, and the promotion neither of them made was never given a number — Taken, 2026-09-10 (PR #911). Posture held: shared stylesheet, no component change, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F36` heading.
 
-- **F37** — medium — The shared focus ring cannot reach a text control in any app, because `:where()` makes it the weakest selector in the cascade — Taken, 2026-09-10 (PR #913). Posture held: shared stylesheet only, no app edits, no — full text in `UI-AUDIT.closed.md` under its own `### F37` heading.
+- **F37** — medium — The shared focus ring cannot reach a text control in any app, because `:where()` makes it the weakest selector in the cascade — Taken, 2026-09-10 (PR #913). Posture held: shared stylesheet only, no app edits, no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F37` heading.
 
 ## Filed by an Impeccable design critique, 2026-09-10
 
@@ -434,35 +437,35 @@ the six page shells are clean, one real finding (`F51`, 10.5px group headings), 
 false positives — and markup built in JS is invisible to it, which is nearly all of
 this app, so "clean" describes the shells and not the rendered UI.
 
-- **F38** — high — Typed sheet edits are discarded by any action that redraws the sheet — Taken, 2026-09-10 (PR #920). Posture held: no schema, no new route, the same — full text in `UI-AUDIT.closed.md` under its own `### F38` heading.
+- **F38** — high — Typed sheet edits are discarded by any action that redraws the sheet — Taken, 2026-09-10 (PR #920). Posture held: no schema, no new route, the same — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F38` heading.
 
-- **F39** — high — The character creator has no home: the roster lives on wizard step 1, and a draft hides it — Taken, 2026-09-10 (PR #921). Posture held: no schema; one query parameter on an — full text in `UI-AUDIT.closed.md` under its own `### F39` heading.
+- **F39** — high — The character creator has no home: the roster lives on wizard step 1, and a draft hides it — Taken, 2026-09-10 (PR #921). Posture held: no schema; one query parameter on an — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F39` heading.
 
-- **F40** — medium — Play mode cannot put a hit on armour or a vessel location — Taken, 2026-09-10 (PR #927). Posture held: extends one route; no schema — confirmed — full text in `UI-AUDIT.closed.md` under its own `### F40` heading.
+- **F40** — medium — Play mode cannot put a hit on armour or a vessel location — Taken, 2026-09-10 (PR #927). Posture held: extends one route; no schema — confirmed — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F40` heading.
 
-- **F41** — medium — A weapon card's Strike ignores the weapon's own bonuses — Taken, 2026-09-10 (PR #926). Posture held: opt-in on every roll, never automatic. — full text in `UI-AUDIT.closed.md` under its own `### F41` heading.
+- **F41** — medium — A weapon card's Strike ignores the weapon's own bonuses — Taken, 2026-09-10 (PR #926). Posture held: opt-in on every roll, never automatic. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F41` heading.
 
-- **F42** — medium — A pending level-up is invisible until someone logs XP — Taken, 2026-09-10 (PR #922). Posture held: extends one GET; no schema. The premise — full text in `UI-AUDIT.closed.md` under its own `### F42` heading.
+- **F42** — medium — A pending level-up is invisible until someone logs XP — Taken, 2026-09-10 (PR #922). Posture held: extends one GET; no schema. The premise — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F42` heading.
 
-- **F43** — medium — The Skills step is 13,978px of checkboxes — Taken, 2026-09-10 (PR #923), and WIDENED — the finding blamed the wrong part of the — full text in `UI-AUDIT.closed.md` under its own `### F43` heading.
+- **F43** — medium — The Skills step is 13,978px of checkboxes — Taken, 2026-09-10 (PR #923), and WIDENED — the finding blamed the wrong part of the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F43` heading.
 
-- **F44** — medium — Play mode has no fast path: fixed amounts, no keys, one visible roll — Taken, 2026-09-10 (PR #924), in one PR with `F45` and `F50` — all three change — full text in `UI-AUDIT.closed.md` under its own `### F44` heading.
+- **F44** — medium — Play mode has no fast path: fixed amounts, no keys, one visible roll — Taken, 2026-09-10 (PR #924), in one PR with `F45` and `F50` — all three change — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F44` heading.
 
-- **F45** — low — Drawing a carried weapon means leaving play mode — Taken, 2026-09-10 (PR #924, with `F44` and `F50`). Posture held: the Gear tab's own — full text in `UI-AUDIT.closed.md` under its own `### F45` heading.
+- **F45** — low — Drawing a carried weapon means leaving play mode — Taken, 2026-09-10 (PR #924, with `F44` and `F50`). Posture held: the Gear tab's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F45` heading.
 
-- **F46** — medium — The campaign dashboard is read-only, so running a session means a tab per character — Taken, 2026-09-10 (PR #930). Posture held: GM-only controls, existing routes only. — full text in `UI-AUDIT.closed.md` under its own `### F46` heading.
+- **F46** — medium — The campaign dashboard is read-only, so running a session means a tab per character — Taken, 2026-09-10 (PR #930). Posture held: GM-only controls, existing routes only. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F46` heading.
 
-- **F47** — low — The party stash takes free text only, so claimed loot can never be a weapon card — Taken, 2026-09-10 (PR #928). Posture held: UI only; the endpoint already takes the id. — full text in `UI-AUDIT.closed.md` under its own `### F47` heading.
+- **F47** — low — The party stash takes free text only, so claimed loot can never be a weapon card — Taken, 2026-09-10 (PR #928). Posture held: UI only; the endpoint already takes the id. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F47` heading.
 
-- **F48** — low — The codex has no Skills or Classes — Taken, 2026-09-10 (PR #929). Posture held: read-only; no schema. Two sections on each — full text in `UI-AUDIT.closed.md` under its own `### F48` heading.
+- **F48** — low — The codex has no Skills or Classes — Taken, 2026-09-10 (PR #929). Posture held: read-only; no schema. Two sections on each — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F48` heading.
 
-- **F49** — low — The related-skills allowance sentence contradicts itself — Taken, 2026-09-10 (PR #925, with `F51`). Posture held: copy only. One correction to — full text in `UI-AUDIT.closed.md` under its own `### F49` heading.
+- **F49** — low — The related-skills allowance sentence contradicts itself — Taken, 2026-09-10 (PR #925, with `F51`). Posture held: copy only. One correction to — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F49` heading.
 
-- **F50** — low — On a phone, play mode's controls push every tab down, and Rest is a small target below the fold — Taken, 2026-09-10 (PR #924, with `F44` and `F45`). Posture held: CSS and one — full text in `UI-AUDIT.closed.md` under its own `### F50` heading.
+- **F50** — low — On a phone, play mode's controls push every tab down, and Rest is a small target below the fold — Taken, 2026-09-10 (PR #924, with `F44` and `F45`). Posture held: CSS and one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F50` heading.
 
-- **F51** — low — Three small accessibility and legibility gaps — Taken, 2026-09-10 (PR #925, with `F49`). Posture held: markup, CSS and a comment — — full text in `UI-AUDIT.closed.md` under its own `### F51` heading.
+- **F51** — low — Three small accessibility and legibility gaps — Taken, 2026-09-10 (PR #925, with `F49`). Posture held: markup, CSS and a comment — — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F51` heading.
 
-- **F52** — low — Rest rates are remembered per device, so a new phone starts blank — Taken, 2026-09-10 (PR #931). Posture held: a schema change — one nullable column, — full text in `UI-AUDIT.closed.md` under its own `### F52` heading.
+- **F52** — low — Rest rates are remembered per device, so a new phone starts blank — Taken, 2026-09-10 (PR #931). Posture held: a schema change — one nullable column, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F52` heading.
 
 ## Opened by the F2 remainder, 2026-09-12
 
@@ -470,11 +473,11 @@ this app, so "clean" describes the shells and not the rendered UI.
 remains open and unstarted."* Checking what that remainder is worth today turned
 up something else: a live false sentence in a doc `F2` never touched.
 
-- **F53** — medium - `race-and-occupation.md` says a missed attribute minimum is never a refusal, and it has blocked the save since before that sentence was written — Taken, 2026-09-12 (PR #969). Option A, as written. — full text in `UI-AUDIT.closed.md` under its own `### F53` heading.
+- **F53** — medium - `race-and-occupation.md` says a missed attribute minimum is never a refusal, and it has blocked the save since before that sentence was written — Taken, 2026-09-12 (PR #969). Option A, as written. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F53` heading.
 
-- **F54** — low - the two attribute-minimum gates disagree by design, and reconciling them reverses a written decision whichever way it goes — Taken as option A, 2026-09-12 (PR #981), on Nate's word. Both steps block. — full text in `UI-AUDIT.closed.md` under its own `### F54` heading.
+- **F54** — low - the two attribute-minimum gates disagree by design, and reconciling them reverses a written decision whichever way it goes — Taken as option A, 2026-09-12 (PR #981), on Nate's word. Both steps block. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F54` heading.
 
-- **F55** — medium - `--border` never cleared 3:1, and since N4 it carries a STATE as well as decorating a panel — Taken, 2026-09-12 (PR #972). Option A. — full text in `UI-AUDIT.closed.md` under its own `### F55` heading.
+- **F55** — medium - `--border` never cleared 3:1, and since N4 it carries a STATE as well as decorating a panel — Taken, 2026-09-12 (PR #972). Option A. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:apps/character-creator/UI-AUDIT.closed.md` under its own `### F55` heading.
 
 ### F56 - low - F17's print-ink remainder, re-measured: half of it is moot and the rest has no way to be printed
 

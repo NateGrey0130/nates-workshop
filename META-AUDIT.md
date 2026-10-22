@@ -1,10 +1,13 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **Since 2026-09-16 the closed findings live in `META-AUDIT.closed.md`**,
-> moved there verbatim with their headings, numbering and notes; this file
-> keeps a one-line pointer per moved finding where its heading was, and holds
-> in full every finding whose own section records no outcome. The closed file
-> is a record like this one, and the `*AUDIT*.md` glob reaches both.
+> **The closed findings are in git history, at
+> `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md`.**
+> They were moved to that file verbatim on 2026-09-16, with their headings,
+> numbering and notes, and the file was deleted on 2026-10-22. This file keeps a
+> one-line pointer per closed finding where its heading was, and each pointer
+> names that command; it holds in full every finding whose own section records
+> no outcome. A line number this menu cites in the closed file reads against
+> that commit.
 
 > **Nothing is open on this menu, as of 2026-09-27**, read under every
 > finding's heading by the `open-findings-scout` agent that day. The line below
@@ -513,29 +516,29 @@ because nobody grepped. `A8`.
 
 # Findings
 
-- **A1** — medium — an index of the menus is the artifact `G9` declined, and the one place it exists has a 0-for-4 record — DECLINED, 2026-09-03 (PR #652), on Nate's word and on this finding's own — full text in `META-AUDIT.closed.md` under its own `### A1` heading.
+- **A1** — medium — an index of the menus is the artifact `G9` declined, and the one place it exists has a 0-for-4 record — DECLINED, 2026-09-03 (PR #652), on Nate's word and on this finding's own — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A1` heading.
 
-- **A2** — medium — the skill's shape table carries a file list nothing can keep right; the two commands that produce it are already on the page — Taken, 2026-09-03 (PR #647), with `A7` folded in as `A7` itself directs. — full text in `META-AUDIT.closed.md` under its own `### A2` heading.
+- **A2** — medium — the skill's shape table carries a file list nothing can keep right; the two commands that produce it are already on the page — Taken, 2026-09-03 (PR #647), with `A7` folded in as `A7` itself directs. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A2` heading.
 
-- **A3** — medium — `BOOK-INGEST-AUDIT`'s status header says `F3` is open; it closed four minutes before the file's next commit — Taken, 2026-09-03 (PR #643). Posture held: the header only — no finding, no — full text in `META-AUDIT.closed.md` under its own `### A3` heading.
+- **A3** — medium — `BOOK-INGEST-AUDIT`'s status header says `F3` is open; it closed four minutes before the file's next commit — Taken, 2026-09-03 (PR #643). Posture held: the header only — no finding, no — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A3` heading.
 
-- **A4** — low — `HEALTH-AUDIT` is the only menu with no status header, and the reason exists only in a commit message — Taken, 2026-09-03 (PR #645). Posture held exactly: one paragraph recording the — full text in `META-AUDIT.closed.md` under its own `### A4` heading.
+- **A4** — low — `HEALTH-AUDIT` is the only menu with no status header, and the reason exists only in a commit message — Taken, 2026-09-03 (PR #645). Posture held exactly: one paragraph recording the — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A4` heading.
 
-- **A5** — medium — `SETUP-v2-CHANGES` records a live defect as "filed for a separate PR"; it was never filed and never fixed — Taken, 2026-09-03 (PR #644). Posture held: file, do not fix — no test was — full text in `META-AUDIT.closed.md` under its own `### A5` heading.
+- **A5** — medium — `SETUP-v2-CHANGES` records a live defect as "filed for a separate PR"; it was never filed and never fixed — Taken, 2026-09-03 (PR #644). Posture held: file, do not fix — no test was — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A5` heading.
 
-- **A6** — low — the memory store indexes 12 of 18 menus, and two of the four open items are in the six it misses — Taken, 2026-09-03 (PR #650). Posture held: corrections to existing memories, — full text in `META-AUDIT.closed.md` under its own `### A6` heading.
+- **A6** — low — the memory store indexes 12 of 18 menus, and two of the four open items are in the six it misses — Taken, 2026-09-03 (PR #650). Posture held: corrections to existing memories, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A6` heading.
 
-- **A7** — low — the glob returns a brief, and it is worth one clause rather than a fix — Taken, 2026-09-03 (PR #647), inside `A2` exactly as this finding directed. — full text in `META-AUDIT.closed.md` under its own `### A7` heading.
+- **A7** — low — the glob returns a brief, and it is worth one clause rather than a fix — Taken, 2026-09-03 (PR #647), inside `A2` exactly as this finding directed. — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A7` heading.
 
-- **A8** — high — `G18` shipped a rule that two menus had been following at 100% coverage the day before, and calls it "a convention that starts today" — Taken, 2026-09-03 (PR #648), both edits. Posture held: documentation only, two — full text in `META-AUDIT.closed.md` under its own `### A8` heading.
+- **A8** — high — `G18` shipped a rule that two menus had been following at 100% coverage the day before, and calls it "a convention that starts today" — Taken, 2026-09-03 (PR #648), both edits. Posture held: documentation only, two — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A8` heading.
 
-- **A9** — high — the research discipline is re-derived in every brief, in five wordings, and the skill owns none of it — Taken, 2026-09-03 (PR #649), as written. Posture held: documentation only, one — full text in `META-AUDIT.closed.md` under its own `### A9` heading.
+- **A9** — high — the research discipline is re-derived in every brief, in five wordings, and the skill owns none of it — Taken, 2026-09-03 (PR #649), as written. Posture held: documentation only, one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A9` heading.
 
-- **A10** — medium — the self-check pass already exists, it caught two findings before Nate read them, and nothing asks for it — Taken, 2026-09-03 (PR #651), as written. Posture held: a convention for a new — full text in `META-AUDIT.closed.md` under its own `### A10` heading.
+- **A10** — medium — the self-check pass already exists, it caught two findings before Nate read them, and nothing asks for it — Taken, 2026-09-03 (PR #651), as written. Posture held: a convention for a new — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A10` heading.
 
-- **A11** — medium — "has this been decided?" is not in the skill, it is a thirty-second grep, and it is the only check that reaches the errors re-measurement cannot — Taken, 2026-09-03 (PR #642), as written. Posture held: documentation only, one — full text in `META-AUDIT.closed.md` under its own `### A11` heading.
+- **A11** — medium — "has this been decided?" is not in the skill, it is a thirty-second grep, and it is the only check that reaches the errors re-measurement cannot — Taken, 2026-09-03 (PR #642), as written. Posture held: documentation only, one — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A11` heading.
 
-- **A12** — low — the brief archive is two short again, and the menu with the worst error rate has no brief anywhere — Taken, 2026-09-03 (PR #646), as proposed. Posture held: two files copied, — full text in `META-AUDIT.closed.md` under its own `### A12` heading.
+- **A12** — low — the brief archive is two short again, and the menu with the worst error rate has no brief anywhere — Taken, 2026-09-03 (PR #646), as proposed. Posture held: two files copied, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A12` heading.
 
 ## Retrofit — the open findings, labelled and re-verified
 
@@ -777,11 +780,11 @@ fraction *28 of 36* and both figures were wrong. The count does not reproduce,
 from here rather than corrected, because the claim that matters is *the rule
 holds* and a ratio in a preamble is the moving number this pass is about.
 
-- **A13** — medium — nothing bounds what a status header may carry, and the menu that audited the headers now has a stale one — Taken, 2026-09-04 (PR #703). Posture held: documentation only, one section in — full text in `META-AUDIT.closed.md` under its own `### A13` heading.
+- **A13** — medium — nothing bounds what a status header may carry, and the menu that audited the headers now has a stale one — Taken, 2026-09-04 (PR #703). Posture held: documentation only, one section in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A13` heading.
 
-- **A14** — low — the prefix census says eleven menus use `F`; twelve do, and the count is the part that rots — Taken, 2026-09-04 (PR #701). Posture held: documentation only, subtractive, — full text in `META-AUDIT.closed.md` under its own `### A14` heading.
+- **A14** — low — the prefix census says eleven menus use `F`; twelve do, and the count is the part that rots — Taken, 2026-09-04 (PR #701). Posture held: documentation only, subtractive, — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A14` heading.
 
-- **A15** — low — nothing says where a closed menu goes, and seventeen of nineteen are closed — Taken, 2026-09-04 (PR #702), on Nate's instruction to take all three. Posture — full text in `META-AUDIT.closed.md` under its own `### A15` heading.
+- **A15** — low — nothing says where a closed menu goes, and seventeen of nineteen are closed — Taken, 2026-09-04 (PR #702), on Nate's instruction to take all three. Posture — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A15` heading.
 
 ### The hand-over pass on these three, per `A10`
 
@@ -890,9 +893,9 @@ this pass found, and it is stated plainly rather than padded with marginal
 findings.** Three findings follow, and two of them name work that is genuinely
 lost rather than merely untidy.
 
-- **A16** — medium — a finding may hand work to "a separate finding" without filing one, and three such deferrals are still standing — Taken, 2026-09-06. Posture held: documentation only, one new section in — full text in `META-AUDIT.closed.md` under its own `### A16` heading.
+- **A16** — medium — a finding may hand work to "a separate finding" without filing one, and three such deferrals are still standing — Taken, 2026-09-06. Posture held: documentation only, one new section in — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A16` heading.
 
-- **A17** — medium — the sweep that catches a stale cross-finding claim is defeated by the prefix ambiguity this repo has already measured, and three claims are stale behind it — Adjusted 2026-09-06, and RE-SCOPED before being taken. The central inference — full text in `META-AUDIT.closed.md` under its own `### A17` heading.
+- **A17** — medium — the sweep that catches a stale cross-finding claim is defeated by the prefix ambiguity this repo has already measured, and three claims are stale behind it — Adjusted 2026-09-06, and RE-SCOPED before being taken. The central inference — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:META-AUDIT.closed.md` under its own `### A17` heading.
 
 ### A18 — low — the open set, measured once, and the one bit a durable header still gets wrong
 
