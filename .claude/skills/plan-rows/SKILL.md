@@ -83,10 +83,33 @@ changes:** `From row <id> (#<pr>): <the fact>`. A worker does this for
 something a later row needs; the planner does it for a ruling that arrives
 late. Anything else goes in the pull request's *What this left*.
 
+## Starting the driver
+
+The planning session starts the first driver itself, once the briefs and
+`state.md` are written and Nate has approved the plan, with
+`mcp__ccd_session__start_session` (load it with `ToolSearch` if it is
+deferred): initiation `user_asked` (his approval of the plan is the ask),
+context `fresh`, `use_worktree` false, `prompt` the one line
+`Load plan-rows and drive <plan> from its state.md.`, a `background` of one
+or two sentences naming the plan (the call requires one), and `model`
+`claude-sonnet-5-5`. The Sonnet driver is a trial (Nate, 2026-10-22; the
+option he did not take was keeping the driver on Opus), judged against the
+0.72M per merge the Opus drivers measured that day: a driver's context is
+almost all session start, and it reads reports, never code. Each driver of
+the first plan run this way says in its closing message its model and the
+number of rows it merged, so the next retrospective can read its spend per
+merge off the transcript against that figure. The hand-off at a driver's
+budget line (below) passes the same `model`. The worker's model is what
+`.claude/agents/pr-worker.md`'s frontmatter says; this changes nothing there.
+**A refusal of the `start_session` call is a stop**: say so to Nate. It is
+not a reason to type the prompt into a session by hand, or to drive the
+chain from the planning session.
+
 ## Driving the chain
 
-The driver is a session, started from one line that Nate types or the driver
-before it sends (below): `Load plan-rows and drive <plan> from its state.md.`
+The driver is a session, started from one line that the planning session
+(above), Nate or the driver before it sends (below):
+`Load plan-rows and drive <plan> from its state.md.`
 It reads `state.md` and each worker's report, never a brief or the code: a
 driver that opens a brief or a book cache is planning in the context every
 later row pays for. One row is one spawn, in the foreground:
@@ -211,8 +234,9 @@ is …, past 200k`), or as the post-merge line (`session-budget: a PR just
 merged and this session holds …`) once the figure it prints is 150k or more.
 Then the driver finishes the row in hand, replaces `state.md` whole, and
 starts the next driver with `mcp__ccd_session__start_session` (load it with
-`ToolSearch` if it is deferred): initiation `user_asked`, context `fresh`, no
-worktree, and the one-line prompt above with the plan's name in it. Nate is
+`ToolSearch` if it is deferred): initiation `user_asked`, context `fresh`,
+`use_worktree` false, the one-line prompt above with the plan's name in it,
+and the same `model` it was started with (*Starting the driver*). Nate is
 not asked, and the new driver needs no word from him: the allow rule above
 is what lets it merge. Then the old driver's closing message. Below 150k the
 post-merge line is nothing: it fires from 100k today (PR #1854 raises it to
