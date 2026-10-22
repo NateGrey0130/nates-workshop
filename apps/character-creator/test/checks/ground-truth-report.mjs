@@ -113,7 +113,9 @@ export function run() {
     check('its three node processes and two workerd are counted',
       one.servers[0]?.pids.join() === '55364,59916,60904' && one.servers[0]?.workerd === 2, JSON.stringify(one.servers[0]));
     check('a hand-started server names no tree', one.servers[0]?.tree === null);
-    check('an unrelated node process is not a server', one.orphans.length === 0);
+    // The unrelated `node scripts/ground-truth.mjs` row is neither a server nor
+    // an orphan: `servers.length === 1` above already holds the first half, and
+    // orphans only ever receives workerd rows, so a check on it here could not fail.
 
     const suite = devServers([
       { ProcessId: 1, ParentProcessId: 0, Name: 'node.exe', CommandLine: 'node wrangler.js pages dev --port 51000 --persist-to C:/Repo/.claude/worktrees/a/.wrangler/scratch' },

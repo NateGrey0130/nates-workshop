@@ -183,16 +183,23 @@ section('A spell can burn P.P.E. out of the caster\'s base (BOOK-INGEST-AUDIT F1
   const route = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters',
     '[id]', 'ppe-burn.js'), 'utf8').replace(/\/\/.*$/gm, '');
   check('the burn route rolls the catalog dice itself', /evalDice\(row\.ppe_permanent\)/.test(route));
+  // The body is read as `b.<field>`; an empty match list means the variable
+  // was renamed and `.every` would be vacuous, so the list must be non-empty.
+  const bodyReads = route.match(/\bb\??\.(\w+)/g) || [];
   check('and reads nothing from the request but the spell name',
-    (route.match(/\bb\??\.(\w+)/g) || []).every((m) => /name$/.test(m)), (route.match(/\bb\??\.(\w+)/g) || []).join(', '));
+    bodyReads.length > 0 && bodyReads.every((m) => /name$/.test(m)),
+    bodyReads.length ? bodyReads.join(', ') : 'no `b.<field>` read found in ppe-burn.js');
   check('and only for a spell the character holds', /type === 'spell'/.test(route) && /not a spell this character knows/.test(route));
 
   const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   const burnFn = sheetSrc.slice(sheetSrc.indexOf('async function burnPpe('), sheetSrc.indexOf('async function usePower('));
   check('the sheet posts only the spell name to the burn route', /jsonReq\('POST', \{ name: p\.name \}\)/.test(burnFn), burnFn.slice(0, 200));
   check('and asks before burning, it being permanent', /confirm\(/.test(burnFn));
-  const useFn = sheetSrc.slice(sheetSrc.indexOf('async function usePower('), sheetSrc.indexOf('async function usePower(') + 3000);
-  check('and the use button never burns - the two are separate presses', !/ppe-burn|burnPpe/.test(useFn));
+  const useAt = sheetSrc.indexOf('async function usePower(');
+  const useFn = useAt === -1 ? '' : sheetSrc.slice(useAt, useAt + 3000);
+  check('and the use button never burns - the two are separate presses',
+    useAt !== -1 && !/ppe-burn|burnPpe/.test(useFn),
+    useAt === -1 ? 'sheet.js has no `async function usePower(`' : 'usePower reaches the burn route');
   // The power row is a three-column grid, so a FOURTH child wrapped onto its own line and
   // stretched across the name column - measured at 467px on a desktop sheet before this.
   // The two buttons share the last cell instead.
