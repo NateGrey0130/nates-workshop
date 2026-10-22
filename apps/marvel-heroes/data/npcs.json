@@ -252,10 +252,9 @@
   "West Coast Avengers",
   "Power Pack",
   "Defenders",
-  "Heroes and Others",
+  "Secret Wars II Heroes",
   "Secret Wars II Villains",
   "Nebula's Crew",
-  "And of Course",
   "Ragnarok and Roll Heroes",
   "Entities",
   "ME2 Ragnarok and Roll",
@@ -45690,12 +45689,12 @@
   {
    "id": "beta-ray-bill-mhsp2",
    "name": "Beta Ray Bill",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "beta-ray-bill-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       19
@@ -45825,12 +45824,12 @@
   {
    "id": "the-thing-mhsp2",
    "name": "The Thing",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "the-thing-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       19
@@ -45906,12 +45905,12 @@
   {
    "id": "thor-mhsp2",
    "name": "Thor",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "thor-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       19
@@ -45989,12 +45988,12 @@
   {
    "id": "dazzler-mhsp2",
    "name": "Dazzler",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "dazzler-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       20
@@ -46069,12 +46068,12 @@
   {
    "id": "iron-fist-mhsp2",
    "name": "Iron Fist",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "iron-fist-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       20
@@ -46152,12 +46151,12 @@
   {
    "id": "power-man-mhsp2",
    "name": "Power Man",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "power-man-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       20
@@ -46233,12 +46232,12 @@
   {
    "id": "cloak-mhsp2",
    "name": "Cloak",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "cloak-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       21
@@ -46319,12 +46318,12 @@
   {
    "id": "dagger-mhsp2",
    "name": "Dagger",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "dagger-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       21
@@ -46404,12 +46403,12 @@
   {
    "id": "spider-man-mhsp2",
    "name": "Spider-Man",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "spider-man-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       21
@@ -46492,12 +46491,12 @@
   {
    "id": "daredevil-mhsp2",
    "name": "Daredevil",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "daredevil-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       22
@@ -46578,12 +46577,12 @@
   {
    "id": "firelord-mhsp2",
    "name": "Firelord",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "firelord-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       22
@@ -46674,12 +46673,12 @@
   {
    "id": "lila-cheney-mhsp2",
    "name": "Lila Cheney",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "lila-cheney-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       22
@@ -46754,12 +46753,12 @@
   {
    "id": "puma-mhsp2",
    "name": "Puma",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "puma-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       23
@@ -46857,12 +46856,12 @@
   {
    "id": "the-watcher-mhsp2",
    "name": "The Watcher",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "the-watcher-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       23
@@ -46943,12 +46942,12 @@
   {
    "id": "time-bomb-mhsp2",
    "name": "Time Bomb",
-   "team": "Heroes and Others",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "time-bomb-mhsp2",
      "label": null,
-     "team": "Heroes and Others",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       23
@@ -49679,12 +49678,12 @@
   {
    "id": "molecule-man-mhsp2",
    "name": "Molecule Man",
-   "team": "And of Course",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "molecule-man-mhsp2",
      "label": null,
-     "team": "And of Course",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       32
@@ -49764,12 +49763,12 @@
   {
    "id": "volcana-mhsp2",
    "name": "Volcana",
-   "team": "And of Course",
+   "team": "Secret Wars II Heroes",
    "versions": [
     {
      "id": "volcana-mhsp2",
      "label": null,
-     "team": "And of Course",
+     "team": "Secret Wars II Heroes",
      "part": "Roster",
      "pages": [
       32

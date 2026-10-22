@@ -1460,9 +1460,11 @@
         "The Avengers": "Avengers",
         "The Fantastic Four": "Fantastic Four",
         "The West Coast Avengers": "West Coast Avengers",
-        "The Bad Guys": "Secret Wars II Villains"
+        "Heroes and Others": "Secret Wars II Heroes",
+        "The Bad Guys": "Secret Wars II Villains",
+        "And of Course": "Secret Wars II Heroes"
       },
-      "team_names_note": "Nate, 2026-10-21: drop the leading The, so these join the groups other books already file under, and name The Bad Guys as MHSP1 names its villains (not taken: every banner as printed). The four entries under no banner file under the book's title (not taken: a cosmic-cast team).",
+      "team_names_note": "Nate, 2026-10-21: drop the leading The, so these join the groups other books already file under, and name The Bad Guys as MHSP1 names its villains (not taken: every banner as printed). Nate, 2026-10-21, a second ruling: Heroes and Others (p.19) and And of Course (p.32) both file as Secret Wars II Heroes, on the same reasoning as The Bad Guys (not taken: keep them as printed). The four entries under no banner file under the book's title (not taken: a cosmic-cast team).",
       "one_line_tiers": ["Aragorn", "Boromir", "Typical Skrull Warrior", "GENERAL ZEDRAO", "HENCHMEN", "ENFORCERS", "HIT MEN", "UNDERCOVER AGENTS", "MIDDLE MANAGEMENT", "Earth-sized Version", "Giant-Sized Version"],
       "reference_summary": {
         "pdf": 67,
