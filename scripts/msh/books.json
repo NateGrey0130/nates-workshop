@@ -64,6 +64,7 @@
     "  moves           a cover-panels book: [part, printed page, col, y from, y to, after col, after y in TSV pixels]: the lines of that column between those heights go on after the last line of the other column ending above that height (MH3's Super-Adaptoid, its text set round its portrait)",
     "  card_grids      a cover-panels book: [{part, page or null, entry, label}]: a one-line grid inside that card's text, a second block on it with that label (MH3's She-Hulk and Thing, their human forms)",
     "  drop_leading_the  true: scripts/msh/npcs.py drops a leading THE from each header, so the card's name and id sort by the next word (Nate, 2026-10-21; MH3's THE THING is Thing). Absent, a header is named as printed",
+    "  card_names      {name the card would be built with: card name}: scripts/msh/npcs.py names that card, and its id and its version's id follow the new name; for two books' different people who print one name (MA1's and MH1's Ariel, Nate 2026-10-21). Each must find exactly one entry with no parenthesis in its header. Absent, a card is named as built",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "  second_blocks   a grid-booklets book: [{part, page, name, label}]: a one_line_grids character that is a second block on the card of that name in another booklet (ME2's Titans and Zeus in Hades), labelled, its run-in powers going to D1 as the card's (scripts/msh/npcs.py)",
@@ -489,7 +490,9 @@
         ["Wolverine", [12]],
         ["Yashida, Mariko", [70]]
       ],
-      "contents_errata_note": "Every other Contents entry through printed 82 was checked the same way and agrees: X-Men 4, X-Factor 13, New Mutants 17, Hellions 27, Brotherhood 30, Freedom Force 32, Fallen Angels 36, Morlocks 39, Soviet Super-Soldiers 43, Gladiators 45, Alliance of Evil 47, Mutant Force 49, Very Important People and Villains 62. Maps (96) is not checked."
+      "contents_errata_note": "Every other Contents entry through printed 82 was checked the same way and agrees: X-Men 4, X-Factor 13, New Mutants 17, Hellions 27, Brotherhood 30, Freedom Force 32, Fallen Angels 36, Morlocks 39, Soviet Super-Soldiers 43, Gladiators 45, Alliance of Evil 47, Mutant Force 49, Very Important People and Villains 62. Maps (96) is not checked.",
+      "card_names": {"Ariel": "Ariel (Fallen Angel)"},
+      "card_names_note": "Nate, 2026-10-21: MA1's Ariel (p.36, a Fallen Angel) and MH1's (inside back cover, Kitty Pryde) are different people who print one name, so each card's name says which (not taken: relabel MH1's only)."
     },
     "mhsp1": {
       "title": "MHSP1 Secret Wars",
@@ -1166,6 +1169,8 @@
         ["Inside back cover", null, "Ariel"],
         ["Inside back cover", null, "Lockheed the Dragon"]
       ],
+      "card_names": {"Ariel": "Ariel (Kitty Pryde)"},
+      "card_names_note": "Nate, 2026-10-21: as MA1's card_names; MH1's Ariel is Kitty Pryde (inside back cover), MA1's a Fallen Angel. The teams list below names her as the book prints her.",
       "not_characters": ["Lockheed RS-150 Blackbird"],
       "no_health": ["Fluffy", "Augie Hickman"],
       "teams": {"X-Men": ["Colossus", "Nightcrawler", "Rogue", "Storm", "Ariel", "Wolverine", "Lockheed the Dragon", "Professor X"]},

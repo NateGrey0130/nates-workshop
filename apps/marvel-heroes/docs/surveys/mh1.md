@@ -280,9 +280,11 @@ Nine MH1 characters share a name with a card from another book. By the rule
   Professor X and Wolverine; Lockheed is "Lockheed the Dragon" in MA1 and
   "Lockheed" in MHSP1;
 - **Ariel is a different person.** MA1's Ariel is a Fallen Angel. MH1's is
-  Kitty Pryde (her identity line names her), so the GM's list will show two
-  Ariels who are not the same character. The book's name stands, and each
-  card's identity line and book tell them apart.
+  Kitty Pryde (her identity line names her), so the two cards are named for
+  who each is (Nate, 2026-10-21; registry `card_names`): **Ariel (Kitty
+  Pryde)**, id `ariel-kitty-pryde-mh1`, and MA1's **Ariel (Fallen Angel)**,
+  id `ariel-fallen-angel`. The parenthesis is part of the name, not a
+  version label. The ids were `ariel-mh1` and `ariel` before.
 - MA1 has the Blob, Quicksilver, the Scarlet Witch and the Toad; MH1's are
   robots named "False ..." and keep that name.
 - MA1 has five Sentinel cards (Mark I to V, X-, Alpha, Omega); MH1's is the
@@ -327,7 +329,8 @@ as Lockheed's `?` does.
    to leave Karma unset where the book prints none, and to play the `?` as
    Shift 0, as MHSP1's override did. Applied for Lockheed in
    `scripts/msh/mh1-overrides.json` (2026-10-21), on Nate's 2026-09-28 ruling
-   for the same printed value in MHSP1; the robots' dashes are still open.
+   for the same printed value in MHSP1. The robots' dashes were ruled the
+   same day, as the paragraph above says: Shift 0, Karma unset.
 5. **The Robot Wolverine's "Remarkable (20 points)"**: an override with
    printed and corrected (30), or `as_printed`? The recommendation is the
    override, read off printed 5.

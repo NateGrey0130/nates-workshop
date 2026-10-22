@@ -5603,12 +5603,12 @@
    "book": "ma1"
   },
   {
-   "id": "ariel",
-   "name": "Ariel",
+   "id": "ariel-fallen-angel",
+   "name": "Ariel (Fallen Angel)",
    "team": "Fallen Angels",
    "versions": [
     {
-     "id": "ariel",
+     "id": "ariel-fallen-angel",
      "label": null,
      "team": "Fallen Angels",
      "pages": [
@@ -37243,12 +37243,12 @@
    "book": "mh1"
   },
   {
-   "id": "ariel-mh1",
-   "name": "Ariel",
+   "id": "ariel-kitty-pryde-mh1",
+   "name": "Ariel (Kitty Pryde)",
    "team": "X-Men",
    "versions": [
     {
-     "id": "ariel-mh1",
+     "id": "ariel-kitty-pryde-mh1",
      "label": null,
      "team": "X-Men",
      "part": "Inside back cover",
