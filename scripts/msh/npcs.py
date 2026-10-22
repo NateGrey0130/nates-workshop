@@ -383,6 +383,25 @@ def main(slug_arg):
             name = re.sub(r'(?<=\s)(Of|The|And|In|Von)\b', lambda m: m.group(0).lower(), name)
         return name
 
+    # A card the registry names (card_names: {name as built: card name}): two
+    # books' different people who print one name (MA1's Ariel, a Fallen Angel,
+    # and MH1's, Kitty Pryde; Nate, 2026-10-21). The parenthesis is part of the
+    # name, not a version label, so the card's and its version's ids follow it.
+    # Only a header with no parenthesis of its own is renamed, and each name
+    # must find exactly one entry, so a stale field stops the build.
+    card_names = book.get('card_names', {})
+
+    def built_name(e):
+        return name_of(e) if booklet else display(e['header'])
+
+    def card_name(e):
+        return card_names.get(built_name(e), built_name(e))
+
+    for old in card_names:
+        hits = [e for e in roster['entries'] if e.get('blocks') and e.get('header') and built_name(e) == old]
+        if len(hits) != 1 or variant(hits[0]['header']):
+            raise SystemExit('%s: card_names %r finds %d entries, not 1 with no parenthesis' % (slug_arg, old, len(hits)))
+
     no_health = {norm(n) for n in book.get('no_health', [])} if panels else set()
     no_karma = {norm(n) for n in book.get('no_karma', [])} if panels else set()
 
@@ -432,7 +451,7 @@ def main(slug_arg):
     for name_key, group in by_name.items():
         versions = []
         for e in group:
-            eslug = ident(name_of(e)) if booklet else ident(roman(e['header']))
+            eslug = ident(card_name(e)) if booklet or built_name(e) in card_names else ident(roman(e['header']))
             # an alter ego's one-line block makes every block of the entry a
             # form (She-Hulk and Jennifer Walters); Klaw's sound creatures are
             # beings of their own, a tier (registry one_line_tiers)
@@ -590,8 +609,9 @@ def main(slug_arg):
                 'blocks': blocks, 'powers': pw, 'members': members,
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
             })
-        cid = ident(name_of(group[0])) if booklet else ident(base_name(group[0]['header']))
-        chars.append({'id': cid, 'name': name_of(group[0]) if booklet else display(group[0]['header']),
+        renamed = built_name(group[0]) in card_names
+        cid = ident(card_name(group[0])) if booklet or renamed else ident(base_name(group[0]['header']))
+        chars.append({'id': cid, 'name': card_name(group[0]),
                       'team': versions[0]['team'],
                       **({'side': versions[0]['side']} if booklet and versions[0].get('side') else {}),
                       **({'summary_only': True} if booklet and group[0]['kind'] == 'summary' else {}),

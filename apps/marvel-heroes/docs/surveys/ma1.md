@@ -4,8 +4,10 @@ Marvel Super Heroes Advanced Set, Official Guidebook to Mutants, Kim Eastland,
 1986. Registry entry: `scripts/msh/books.json` -> `ma1`. Measured 2026-09-28.
 
 **Rows citing this book:** 929 `msh_book_text` rows over 209 entries in
-production (`DB_MARVEL`, read back 2026-09-29):
-- 902 over 189 character entries
+production (`DB_MARVEL`, read back 2026-10-21):
+- 902 over 189 character entries (Ariel's five moved from `ariel` to
+  `ariel-fallen-angel` on 2026-10-21, when her card became Ariel (Fallen
+  Angel) to tell her from MH1's Ariel, Kitty Pryde; registry `card_names`)
 - 27 over 20 items (the adventure's 46 rows were deleted 2026-09-29, when
   adventures left the app)
 

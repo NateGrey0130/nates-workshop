@@ -911,8 +911,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const mh1 = data.npcs.characters.filter((c) => c.book === 'mh1');
     const xmen = mh1.filter((c) => c.team === 'X-Men').map((c) => c.name).sort().join();
     check('MH1: 25 characters, the eight X-Men filed with MA1\'s X-Men and the rest under the book\'s title',
-      mh1.length === 25 && xmen === 'Ariel,Colossus,Lockheed the Dragon,Nightcrawler,Professor X,Rogue,Storm,Wolverine'
+      mh1.length === 25 && xmen === 'Ariel (Kitty Pryde),Colossus,Lockheed the Dragon,Nightcrawler,Professor X,Rogue,Storm,Wolverine'
       && mh1.every((c) => c.team === 'X-Men' || c.team === 'MH1 The Breeder Bombs'), `${mh1.length} ${xmen}`);
+    // two different people who print one name (registry card_names, Nate
+    // 2026-10-21): each card says which, the parenthesis part of the name
+    const ariels = data.npcs.characters.filter((c) => /^Ariel\b/.test(c.name))
+      .map((c) => [c.book, c.id, c.name, c.versions.map((v) => `${v.id}/${v.label}`).join()].join(' ')).sort().join(' | ');
+    check('MA1\'s and MH1\'s Ariels are two cards named for who each is, the parenthesis in the name and no version label',
+      ariels === 'ma1 ariel-fallen-angel Ariel (Fallen Angel) ariel-fallen-angel/null | mh1 ariel-kitty-pryde-mh1 Ariel (Kitty Pryde) ariel-kitty-pryde-mh1/null', ariels);
     const block = (id) => mh1.find((c) => c.id === id)?.versions[0].blocks[0];
     const derived = ['fluffy-mh1', 'augie-hickman-mh1'].map((id) => [block(id), bookNpc({ character: id }).snapshot]);
     check('MH1: Fluffy and Augie Hickman print no Health, so theirs is derived from their ranks (80, 26) and flagged so',
