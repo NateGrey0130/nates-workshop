@@ -63,7 +63,6 @@
     "  lost_headers    a cover-panels book: [part, printed page or null, identity line, NAME]: a card header no word of the TSV holds (MH3's Human Torch); a header line with the name goes in above that identity line",
     "  moves           a cover-panels book: [part, printed page, col, y from, y to, after col, after y in TSV pixels]: the lines of that column between those heights go on after the last line of the other column ending above that height (MH3's Super-Adaptoid, its text set round its portrait)",
     "  card_grids      a cover-panels book: [{part, page or null, entry, label}]: a one-line grid inside that card's text, a second block on it with that label (MH3's She-Hulk and Thing, their human forms)",
-    "  drop_leading_the  true: scripts/msh/npcs.py drops a leading THE from each header, so the card's name and id sort by the next word (Nate, 2026-10-21; MH3's THE THING is Thing). Absent, a header is named as printed",
     "  card_names      {name the card would be built with: card name}: scripts/msh/npcs.py names that card, and its id and its version's id follow the new name; for two books' different people who print one name (MA1's and MH1's Ariel, Nate 2026-10-21). Each must find exactly one entry with no parenthesis in its header. Absent, a card is named as built",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
@@ -1380,9 +1379,7 @@
       "teams": {"Fantastic Four": ["Mr. Fantastic", "Invisible Girl", "Human Torch", "She-Hulk", "Thing"], "Friends of the FF": ["Franklin Richards", "Alicia Masters"], "Skrulls": ["Sally Flack", "Captain Sk'yll", "Skrull Soldiers"]},
       "teams_note": "Nate, 2026-10-21 (survey mh3.md decision 1): the five heroes on the cover panels are the Fantastic Four, Franklin Richards and Alicia Masters the Friends of the FF, and Sally Flack, Captain Sk'yll and the Skrull Soldiers the Skrulls, each an existing filter group; every other character files under the book's title (not taken: MH2's ruling, its Skrulls under the book's title).",
       "no_karma": ["Miss Locke", "Mr. Chambers"],
-      "no_karma_note": "Printed 13 (PDF 15): Miss Locke's and Mr. Chambers' full blocks print Karma: none. Nate, 2026-10-21 (survey mh3.md decision 4): Karma derived as R+I+P, 30 and 32, flagged karma_derived; the Super-Adaptoid's printed varies (printed 15) is kept as printed and nothing is derived for it (not taken: all three unset).",
-      "drop_leading_the": true,
-      "drop_leading_the_note": "Nate, 2026-10-21: a leading The is dropped from a character's name so it sorts by the next word; MH3's THE THING (inside back cover) is the Thing's card, named Thing."
+      "no_karma_note": "Printed 13 (PDF 15): Miss Locke's and Mr. Chambers' full blocks print Karma: none. Nate, 2026-10-21 (survey mh3.md decision 4): Karma derived as R+I+P, 30 and 32, flagged karma_derived; the Super-Adaptoid's printed varies (printed 15) is kept as printed and nothing is derived for it (not taken: all three unset)."
     },
     "mhsp2": {
       "title": "MHSP2 Secret Wars II",

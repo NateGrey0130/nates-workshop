@@ -792,9 +792,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   check('and the forms test reads only labels that say so', data.npcs.characters.flatMap((c) => c.versions).filter(isForms).length > 0);
   // MA4 (scripts/msh/codegrids.py): a second grid for a human form, a partial
   // grid, and N/A ranks, each as the book prints them (survey: ma4.md)
-  const thing = bookNpc({ character: 'the-thing-ma4' });
-  check('MA4\'s The Thing is one NPC with forms: his rocky grid and his Human Form (p.5)',
-    thing.snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'The Thing 200,Human Form 50', JSON.stringify(thing.snapshot?.forms));
+  const thing = bookNpc({ character: 'thing-ma4' });
+  check('MA4\'s Thing is one NPC with forms: his rocky grid and his Human Form (p.5)',
+    thing.snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Thing 200,Human Form 50', JSON.stringify(thing.snapshot?.forms));
   check('MA4\'s Guardsman plays his corrected Health, 130 (printed 90, p.20)', bookNpc({ character: 'guardsman-ma4' }).snapshot?.health === 130);
   const destroyer = bookNpc({ character: 'destroyer-ma4' }).snapshot;
   check('MA4\'s Destroyer plays its N/A Reason and Intuition as Shift 0, which its printed Karma 100 agrees with (p.47)',
@@ -877,13 +877,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const team = (t) => m2.filter((c) => c.team === t).length;
     check('MHSP2: 93 characters; the banners lose their "The" and join the groups other books file under, The Bad Guys are Secret Wars II Villains, and the four under no banner file under the book',
       m2.length === 93 && team('X-Men') === 9 && team('New Mutants') === 9 && team('Fantastic Four') === 4 && team('Avengers') === 7
-      && team('Secret Wars II Villains') === 23 && m2.filter((c) => c.team === 'MHSP2 Secret Wars II').map((c) => c.name).sort().join() === 'Death,Eternity,Mephisto,The Beyonder'
+      && team('Secret Wars II Villains') === 23 && m2.filter((c) => c.team === 'MHSP2 Secret Wars II').map((c) => c.name).sort().join() === 'Beyonder,Death,Eternity,Mephisto'
       && !m2.some((c) => /^The /.test(c.team)), `${m2.length} ${[...new Set(m2.map((c) => c.team))]}`);
     check('MHSP2: Heroes and Others (p.19) and And of Course (p.32) file as Secret Wars II Heroes, as The Bad Guys file as Secret Wars II Villains',
       team('Secret Wars II Heroes') === 17 && team('Heroes and Others') === 0 && team('And of Course') === 0
       && !data.npcs.teams.some((t) => t === 'Heroes and Others' || t === 'And of Course'),
       `${team('Secret Wars II Heroes')} ${team('Heroes and Others')} ${team('And of Course')}`);
-    const by = bookNpc({ character: 'the-beyonder-mhsp2', block: 0 }).snapshot;
+    const by = bookNpc({ character: 'beyonder-mhsp2', block: 0 }).snapshot;
     check('MHSP2: the Beyonder\'s Original State, printed BEYOND with no number, plays as Beyond',
       abil(by || { abilities: {} }).every((a) => a?.rank === 'beyond' && a.number === null), JSON.stringify(by?.abilities.fighting));
     const wb = bookNpc({ character: 'wolfsbane-mhsp2' }).snapshot;
@@ -1023,7 +1023,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       chim?.abilities.agility.rank === 'unearthly' && chim.abilities.endurance.rank === 'unearthly' && chim.health === 950, JSON.stringify(chim?.abilities.agility));
     const death = bookNpc({ character: 'death-me2' }).snapshot;
     check('ME2: Death\'s "Health: 20,000" is 20000, his "Karma: Unlimited" is unset, and the Fenris Wolf\'s Popularity, read as a hyphen and a dash, is -5',
-      death?.health === 20000 && death.karma === null && bookNpc({ character: 'the-fenris-wolf-me2' }).snapshot?.abilities.popularity.number === -5,
+      death?.health === 20000 && death.karma === null && bookNpc({ character: 'fenris-wolf-me2' }).snapshot?.abilities.popularity.number === -5,
       `${death?.health} ${death?.karma}`);
   }
 
@@ -1822,6 +1822,11 @@ section('Every book in one file: each row names a book the registry has, and onl
     check(`${name}: only the registry's first book keeps plain ids; every later book's end in -<book>`,
       bad.length === 0, bad.map((r) => r.id).join());
   }
+  // npcs.py drops a leading The from a character's name in every book, so the
+  // card sorts by the next word (Nate, 2026-10-21: Thing, Beyonder, Watcher,
+  // Chosen, Fenris Wolf). A team's name is not a card's and keeps its The.
+  const leadingThe = rows.npcs.filter((c) => /^the\s/i.test(c.name) || /^the-/.test(c.id));
+  check('npcs: no character\'s name or id starts with The', leadingThe.length === 0, leadingThe.map((c) => c.id).join());
 
   // What a second book does to the code that reads these files, before one
   // exists: a copy of MA1's Nightcrawler as another book's.
