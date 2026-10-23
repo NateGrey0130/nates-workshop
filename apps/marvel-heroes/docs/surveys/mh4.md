@@ -3,8 +3,8 @@
 Marvel Super Heroes adventure module, Bruce Nesmith, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh4`. Measured 2026-10-23.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, and the data PR updates this line.
+**Rows citing this book:** 66 `msh_book_text` rows over 15 character entries
+in production (`DB_MARVEL`, read back 2026-10-23).
 
 This is the fourth module of the series MH1, MH2 and MH3 come from, and it
 goes through `scripts/msh/` only. **It is laid out as the three before it
@@ -365,7 +365,8 @@ the page image (`npcs.pair_quotes`), with a lost one a `text` override.
 
 ## Decisions this survey leaves open
 
-For Nate. Each has a recommendation.
+For Nate. Each has a recommendation. **The data PR applied all nine as
+recommended, unanswered**: #1954 and #1955 merged without a ruling on them.
 
 1. **What `team` means.** There are no team sections, and the four heroes are
    lone wolves by the book's own account. The recommendation: every card
