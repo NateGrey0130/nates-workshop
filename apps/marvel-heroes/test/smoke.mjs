@@ -1874,6 +1874,28 @@ section('Every book in one file: each row names a book the registry has, and onl
   const leadingThe = rows.npcs.filter((c) => /^the\s/i.test(c.name) || /^the-/.test(c.id));
   check('npcs: no character\'s name or id starts with The', leadingThe.length === 0, leadingThe.map((c) => c.id).join());
 
+  // Each book's checks further down run only while npcs.json has its rows
+  // (`if (data.npcs.characters.some((c) => c.book === ...))`), so a book whose
+  // rows vanished would skip them and pass. Whether a book is imported is
+  // recorded apart from the data: its survey's Rows line, which the survey PR
+  // writes as 0 and the data PR sets to the rows read back from production. A
+  // book that counts rows there must have characters here. No book is items
+  // only today; one that is would fail this, and this is the rule to change.
+  const surveys = join(appDir, 'docs', 'surveys');
+  const imported = [];
+  const noRowsLine = [];
+  for (const slug of order) {
+    const survey = join(surveys, `${slug}.md`);
+    if (!existsSync(survey)) continue;
+    const m = /^\*\*Rows citing this book:\*\* (\d[\d,]*) `msh_book_text` rows/m.exec(readFileSync(survey, 'utf8'));
+    if (!m) noRowsLine.push(slug);
+    else if (Number(m[1].replace(/,/g, '')) > 0) imported.push(slug);
+  }
+  check('every Marvel survey carries a Rows line with a count', noRowsLine.length === 0, noRowsLine.join());
+  const vanished = imported.filter((slug) => !rows.npcs.some((c) => c.book === slug));
+  check(`npcs: every book whose survey counts rows in production has characters (${imported.length})`,
+    imported.length > 0 && vanished.length === 0, vanished.join());
+
   // What a second book does to the code that reads these files, before one
   // exists: a copy of MA1's Nightcrawler as another book's.
   const { makeCodex, dataFiles } = await import(new URL('../js/codex.js', import.meta.url));
