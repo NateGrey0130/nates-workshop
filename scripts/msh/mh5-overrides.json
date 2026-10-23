@@ -26,6 +26,9 @@
      "note": "Printed 16, the card: Fighting Excellent, Agility Excellent, Strength Good, Endurance Excellent, so F+A+S+E is 20 + 20 + 10 + 20 = 70, and the card prints Health 90 (read on the page image). Karma 22 = Ty 6 + Ty 6 + Gd 10 as printed. The card sheet (PDF 20) prints Strength Excellent and no Endurance row, so it does not settle the 90 either. The block's Resources is printed under a second Reason: label (registry second_reason). Survey mh5.md decision 4 (recommended, applied unanswered)."},
     {"match": {"row": "mh5:improved-synthetic-hulks-mh5:prose"}, "verdict": "text", "checked": "2026-10-23",
      "read": "have Incredible *: body armor", "printed": "have Incredible body armor",
-     "note": "Printed 9, Chapter 5 Battle 1, the line under the improved synthetic Hulks' grid: a number pencilled in the scan's right margin beside Incredible (40, in a hand, not the book's type) is read as *: (seen on the page image)."}
+     "note": "Printed 9, Chapter 5 Battle 1, the line under the improved synthetic Hulks' grid: a number pencilled in the scan's right margin beside Incredible (40, in a hand, not the book's type) is read as *: (seen on the page image)."},
+    {"match": {"row": "mh5:northstar-mh5:background"}, "verdict": "text", "checked": "2026-10-23",
+     "read": "egotistical, | Northstar", "printed": "egotistical, Northstar",
+     "note": "Printed 16, Northstar's Background: a faint speck in the margin at the end of the line that ends egotistical, is read as a bar before the next line's first word. The page prints nothing there (seen on a 200 dpi crop of PDF 17)."}
   ]
 }

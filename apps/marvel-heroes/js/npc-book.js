@@ -81,10 +81,15 @@ export function makeBookNpc(data) {
   };
 
   function block(b) {
-    const fix = b.override && b.override.verdict === 'misprint' ? b.override : null;
+    // A block's further misprints are in its override's `also`, and play as
+    // the first does (MH5's Justin Hammer: Health 28 and Karma 26 both).
+    const fixes = b.override && b.override.verdict === 'misprint'
+      ? [b.override, ...(b.override.also || []).filter((x) => x.verdict === 'misprint')] : [];
+    const fixOf = (field) => fixes.find((x) => x.field === field) || null;
     const abilities = {};
     b.abilities.forEach(([letter, n, code], i) => {
-      const corrected = fix && fix.field === letter && typeof fix.corrected === 'object' ? fix.corrected.number : n;
+      const fix = fixOf(letter);
+      const corrected = fix && typeof fix.corrected === 'object' ? fix.corrected.number : n;
       abilities[KEYS[i]] = ability(corrected, corrected === n ? code : null);
     });
     // Resources prints as a rank and a number, "Pr (4)"; the number is the
@@ -98,8 +103,8 @@ export function makeBookNpc(data) {
     abilities.popularity = { rank: null, name: b.popularity || '0', number: popN };
     const printedH = int(b.health);
     const printedK = int(b.karma);
-    const health = fix && fix.field === 'health' ? fix.corrected : printedH;
-    const karma = fix && fix.field === 'karma' ? fix.corrected : printedK;
+    const health = fixOf('health') ? fixOf('health').corrected : printedH;
+    const karma = fixOf('karma') ? fixOf('karma').corrected : printedK;
     return { abilities, health, karma };
   }
 
