@@ -63,6 +63,12 @@
     "  lost_headers    a cover-panels book: [part, printed page or null, identity line, NAME]: a card header no word of the TSV holds (MH3's Human Torch); a header line with the name goes in above that identity line",
     "  moves           a cover-panels book: [part, printed page, col, y from, y to, after col, after y in TSV pixels]: the lines of that column between those heights go on after the last line of the other column ending above that height (MH3's Super-Adaptoid, its text set round its portrait)",
     "  card_grids      a cover-panels book: [{part, page or null, entry, label}]: a one-line grid inside that card's text, a second block on it with that label (MH3's She-Hulk and Thing, their human forms)",
+    "  prose_cards     a cover-panels book: [{part, page, name}]: a full block set inside a chapter's prose (MH4's Kingpin, printed 5), headed by its name in title case on a line of its own, which the header test does not take; read as a card from that line to the next header or one-line grid",
+    "  unnamed_grids   a cover-panels book: [{part, page, name}], in page order: a one-line grid with no name line above it that is a character of its own, named by what the page's prose calls it (MH4's Reggie and Cyber-Sergeants). form_grids is for one that is a form of a card",
+    "  split_headers   a cover-panels book: [part, printed page or null, as read, NAME]: a card header Tesseract read as two words (MH4's TASKMASTE R, split at the trademark sign), matched once by its cleaned text and joined",
+    "  repeat_grids    a cover-panels book: [{part, page, name, of}]: a one-line grid that repeats another entry's grid (MH4's 2 Minions on printed 12 and 13, Modok's Minions'); scripts/msh/coverpanels.py checks its codes, Health and Karma against that entry's and it is not an entry (survey mh4.md decision 6)",
+    "  section_labels (cover-panels) a label beyond Powers, Talents and Background is a section too (MH4's Important People and Equipment), keyed in lower case with underscores (important_people); a run-in under Equipment is read as a power is and carries section: equipment. A count before a one-line grid's name (2 Panthers) and a Special: value on its Health line (Health: 60 Special: Claws, the Special a power named as printed) are read without a field",
+    "  panel_foot      a cover-panels book: true where a panel's columns run below the foot a folio page keeps (95.5% of the height), so scripts/msh/coverpanels.py reads the lines there too (MH4; MH1-3 print nothing there)",
     "  card_names      {name the card would be built with: card name}: scripts/msh/npcs.py names that card, and its id and its version's id follow the new name; for two books' different people who print one name (MA1's and MH1's Ariel, Nate 2026-10-21). Each must find exactly one entry with no parenthesis in its header. Absent, a card is named as built",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
@@ -1741,6 +1747,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-23: a small Chapter N line over a title in display lettering, which Tesseract reads in part (the chapter lines) or not at all (the titles). Printed 1 has no banner, only the title art and the heading INTRODUCTION, so Introduction is this registry name for it. Each chapter is set as Campaign, Battle and Aftermath subsections in the order the chapter needs them (Chapter 1, 2 and 4 open on Campaign and print a second Campaign after Battle; Chapter 3, 5 and 6 open on Battle; Chapter 5 has no Campaign), and every chapter ends on a Karma table, numbered 2-5 and 7-9 (Table 1 is Chapter 1 Random Crowd Actions and Table 6 is Chapter 5 Danger Room Effects). The cards are on printed 15-16, after Chapter 7, unbannered, and on the two inside cover panels; the Kingpin full block is inside Chapter 2 Campaign on printed 5.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [{"part": "Adventure Book", "pages": [15, 16]}],
       "panels": ["Inside front cover", "Inside back cover"],
       "cards": [
@@ -1763,7 +1770,30 @@
         {"part": "Adventure Book", "page": 10, "names": ["Modok's Minions", "Cyber-Sergeants"]},
         {"part": "Adventure Book", "page": 12, "names": ["2 Minions"]},
         {"part": "Adventure Book", "page": 13, "names": ["2 Minions"]}
-      ]
+      ],
+      "opponent_names": "title",
+      "panel_foot": true,
+      "panel_foot_note": "Inside front cover (PDF 2) and inside back cover (PDF 19): the panels print no folio, and their columns run below the foot a folio page keeps (y 3053 of 3197 at 300 dpi): Daredevil's Incredible temporarily. (y 3081) ends his first column, and on the back cover Iron Fist's ance FEAT roll or be stunned for 1-10 turns., Black Widow's bracelets contains a 100-foot-long hooked wire. and her the Avengers. end the three columns (y 3061-3072). Without them BILLY CLUB: and CHI: at the top of the second column follow an open sentence and are read as the previous power's text. MH1-3's panels hold no word below that foot. Measured on the TSV 2026-10-23.",
+      "opponents_note": "Every grid's name is in title case on the line above it (MH2's form), with a count before four of them (1 White Tiger, 2 Panthers, 1 Leopard, 2 Minions twice), which is not part of the name: survey mh4.md decision 5 (recommended; Nate had not answered on #1954), the cats as cards under the book's title, named without the counts. Four grids print a Special: value on the Health line (Claws on the cats', Martial Arts on the Flying Tigers'), read as the grid's one power named as printed: decision 7 (recommended, unanswered). The eight grids printing no Karma keep it unset, as MH2's and MH3's without a ruling do: decision 8 (recommended, unanswered). Read on the page images 2026-10-23.",
+      "prose_cards": [
+        {"part": "Adventure Book", "page": 5, "name": "The Kingpin"}
+      ],
+      "prose_cards_note": "Printed 5 (PDF 7), Chapter 2 Campaign: the Kingpin's full block is set inside the chapter's prose, in the first column, headed by The Kingpin in title case (x 146, y 1973 at 300 dpi) over his two identity lines; its Health row follows Psyche with no gap and the gap comes before Karma. His powers go on at the top of the second column (body armor., WALKING STICK.) to the BATTLE banner at y 1520, which ends the card. Survey mh4.md decision 4 (recommended; Nate had not answered on #1954): a card (not taken: left in the chapter's text). Read on the TSV and the page image 2026-10-23.",
+      "unnamed_grids": [
+        {"part": "Adventure Book", "page": 3, "name": "Reggie"},
+        {"part": "Adventure Book", "page": 10, "name": "Cyber-Sergeants"}
+      ],
+      "unnamed_grids_note": "Printed 3 (PDF 5), Chapter 1 Campaign: Reggie's grid follows the paragraph that opens REGGIE., a run-in in capitals, with no name line of its own. Printed 10 (PDF 12), Chapter 5 Battle: the cyber-sergeants' grid sits inside the room paragraph headed 3) CYBER-SERGEANTS QUARTERS. Each is named by what its text calls it: survey mh4.md decision 9 (recommended; Nate had not answered on #1954). Read on the page images 2026-10-23.",
+      "split_headers": [
+        ["Adventure Book", 16, "TASKMASTE R", "TASKMASTER"]
+      ],
+      "split_headers_note": "Printed 16 (PDF 18): TASKMASTER's header reads as TASKMASTE (x 910-1358, y 1095, 300 dpi) and R with the trademark sign (x 1365, y 1098), two words 7 px apart; the page image prints one word under the portrait. Measured on the TSV 2026-10-23.",
+      "repeat_grids": [
+        {"part": "Adventure Book", "page": 12, "name": "2 Minions", "of": "Modok's Minions"},
+        {"part": "Adventure Book", "page": 13, "name": "2 Minions", "of": "Modok's Minions"}
+      ],
+      "repeat_grids_note": "Printed 12 and 13 (PDF 14 and 15), Chapter 6: each 2 Minions grid repeats Modok's Minions' grid on printed 10 code for code, Gd Ty Ty Gd Pr Ty Pr, Health 32, under its own room's text (rifles on 12, blaster pistols on 13). Survey mh4.md decision 6 (recommended; Nate had not answered on #1954): one card, Modok's Minions, the two grids checked against it and not entries (not taken: three cards).",
+      "teams_note": "No team sections, and no teams here: every card files under the book's title, MH4 Lone Wolves, as the rule for such a book says. Survey mh4.md decision 1 (recommended; Nate had not answered on #1954; not taken: Power Man and Iron Fist under a new Heroes for Hire group). Decision 3 (characters only, as the five books of 2026-10-21) is why the entry has no item_pages."
     }
   }
 }
