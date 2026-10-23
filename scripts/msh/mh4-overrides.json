@@ -15,7 +15,7 @@
      "printed": 120, "corrected": 40, "checked": "2026-10-23",
      "note": "Printed 5, Chapter 2 Campaign, the block in the first column: Reason Good, Intuition Excellent, Psyche Good, so R+I+P is 10 + 20 + 10 = 40, and the block prints Karma 120 (read on the page image). Health 100 = Rm 30 + Gd 10 + Ex 20 + In 40 as printed. Survey mh4.md decision 2 (recommended; Nate had not answered on #1954): a misprint override with both values (not taken: as_printed, reading 120 as Karma he has accumulated in play)."},
     {"match": {"row": "mh4:punisher-mh4:equipment:1"}, "verdict": "text", "checked": "2026-10-23",
-     "read": "range 3, damage Pistol", "printed": "range 3, damage 10 Pistol",
-     "note": "Printed 16, the Punisher's GUNS. The Browning auto-rifle's damage 10 is set on a line of its own, and the parse lost it."}
+     "read": "range 3, damage\nPistol", "printed": "range 3, damage 10\nPistol",
+     "note": "Printed 16, the Punisher's GUNS. The Browning auto-rifle's damage 10 is set on a line of its own, and the parse lost it. The row keeps a line per gun (coverpanels.gear_text), so the fragment spans the break before the Pistol's line."}
   ]
 }

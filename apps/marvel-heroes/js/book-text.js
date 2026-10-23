@@ -35,6 +35,9 @@ export function bookMissingNote(r) {
 }
 
 const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// A body keeps a line break where the book prints a list a line an item (MH4's
+// Punisher's GUNS., coverpanels.gear_text); no other row carries one.
+const bodyHtml = (s) => escHtml(s).replace(/\n/g, '<br>');
 
 // How each part reads on the card. A named part - a power, a member, a
 // location's part (the Danger Room's Missiles), a section's run-in - keeps its
@@ -54,12 +57,12 @@ export function renderParts(parts) {
     if (p.part === 'equipment' && p.name) {
       const head = gearHead ? '' : `<p><strong>${PART_HEAD.equipment}:</strong></p>`;
       gearHead = true;
-      return `${head}<p><strong>${escHtml(p.name)}:</strong> ${escHtml(p.body)}</p>`;
+      return `${head}<p><strong>${escHtml(p.name)}:</strong> ${bodyHtml(p.body)}</p>`;
     }
     if (NAMED.has(p.part)) {
-      return `<p><strong>${escHtml(p.name || '')}:</strong> ${escHtml(p.body)}</p>`;
+      return `<p><strong>${escHtml(p.name || '')}:</strong> ${bodyHtml(p.body)}</p>`;
     }
     const head = PART_HEAD[p.part];
-    return head ? `<p><strong>${head}:</strong> ${escHtml(p.body)}</p>` : `<p>${escHtml(p.body)}</p>`;
+    return head ? `<p><strong>${head}:</strong> ${bodyHtml(p.body)}</p>` : `<p>${bodyHtml(p.body)}</p>`;
   }).join('');
 }

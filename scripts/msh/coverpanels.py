@@ -86,7 +86,9 @@ byte):
     (Important People, Equipment), keyed in lower case with underscores. A
     run-in under Equipment (the Punisher's GUNS., GRENADES., KNIFE., VAN.) is
     read as a run-in power is and carries `section: "equipment"`; a card may
-    print no Talents (Iron Fist's).
+    print no Talents (Iron Fist's). One that prints a list (GUNS.: an intro
+    ending in a colon, then a gun a line) keeps a line break per item
+    (gear_text).
   - `split_headers`: a header Tesseract read as two words (TASKMASTE R, split
     at the trademark sign), joined by the registry.
   - `unnamed_grids`: a one-line grid with no name line above it that is a
@@ -142,6 +144,9 @@ MIXED_HEAD = re.compile(r"^([A-Z][A-Z'-]+(?: (?:and|or|of|the) [A-Z][A-Z'-]+)+)\
 # or capitals going on into their sentence ("FLIGHT is at good speed.")
 RUNIN_POWER = re.compile(r"^([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)*)(?:\s*([:.])\s+|\s+(?=[a-z]))(.*)$")
 SENTENCE_END = ('.', ':', ')', '"', '\u201d', '!')
+# an item of a list under an Equipment run-in: a name, a colon and a number
+# ("M16 assault rifle: 10 shots, range 7, damage 20", MH4's Punisher)
+GEAR_ITEM = re.compile(r'^[A-Z][^:]{0,40}:\s+\d')
 APOSTROPHES = re.compile('(?<=[A-Za-z])[’�](?=s\\b)')
 
 # a one-line grid's name line with a count in front of it (MH4's "1 White
@@ -476,6 +481,30 @@ def cards(book, slug, part, first, last, ranks, reader):
     grids = [g for g in book['card_grids'] if g['part'] == part and (g['page'] is None or first <= g['page'] <= last)] \
         if 'card_grids' in book else None
     return read_cards(book, slug, part, lines, grids, ranks, reader)
+
+
+def gear_text(lines):
+    """An Equipment run-in's lines joined as roster.join_text joins them,
+    except where the run-in prints a list: an intro ending in a colon, then
+    one item a line (GEAR_ITEM). Each item, and the prose after the last, then
+    starts a line of its own. A line that is no item and opens in lower case
+    or a digit is the item above it wrapping ("damage 25"); the first that
+    opens in capitals ends the list."""
+    lines = [t for t in lines if t.strip()]
+    if len(lines) < 2 or not lines[0].rstrip().endswith(':') or not GEAR_ITEM.match(lines[1]):
+        return roster.join_text(lines)
+    groups, listing = [[lines[0]]], True
+    for t in lines[1:]:
+        if listing and GEAR_ITEM.match(t):
+            groups.append([t])
+        elif listing and not t.strip()[:1].isupper():
+            groups[-1].append(t)
+        elif listing:
+            groups.append([t])
+            listing = False
+        else:
+            groups[-1].append(t)
+    return '\n'.join(roster.join_text(g) for g in groups)
 
 
 def prose_card(book, slug, part, page, name, ranks, reader):
@@ -885,7 +914,7 @@ def parse(book, slug):
     for e in entries:
         e.pop('_sec', None)
         for p in e['powers']:
-            p['text'] = booklet.quotes(roster.join_text(p['text']))
+            p['text'] = booklet.quotes(gear_text(p['text']) if p.get('section') == 'equipment' else roster.join_text(p['text']))
         e['sections'] = {k: booklet.quotes(roster.join_text(v)) if isinstance(v, list) else v for k, v in e['sections'].items()}
         e['prose'] = booklet.quotes(roster.join_text(e['prose']))
     # a form grid (registry `form_grids`, MH2's Mimic once he has copied the
