@@ -203,7 +203,9 @@ def letter_xs(line, fused):
         else:
             return None
     toks = [re.sub(r'[^A-Za-z]', '', w['t']) for w in words]
-    ok = len(out) == 7 and toks[:2] == ['F', 'A'] and toks[-1] == 'P' and len(words) == 6
+    # the fused pair may be the last two letters (MH5's Humanoids, printed
+    # 12: "F A S E R IP")
+    ok = len(out) == 7 and toks[:2] == ['F', 'A'] and toks[-1] in ('P', 'IP') and len(words) == 6
     return out if ok else None
 
 
@@ -252,6 +254,8 @@ def stream(book, slug, part, first, last, split_at_rules):
         booklet.mend_fused, booklet.rules = orig, orig_rules
     if panel and book.get('panel_foot'):
         lines = foot_lines(book, slug, part, lines)
+    if panel and book.get('panel_head'):
+        lines = head_lines(book, slug, part, lines)
     cuts = {(p, page): y for p, page, y in book.get('drop_above', [])}
     # a box in a page's corner that is not a card's text (registry
     # `drop_corner`, [part, printed page, x, y]: every word right of x and
@@ -326,6 +330,39 @@ def foot_lines(book, slug, part, lines):
     return out
 
 
+def head_lines(book, slug, part, lines):
+    """A panel's lines above the head booklet.stream_of keeps (registry
+    `panel_head`): a page with a running head starts its text below 3% of its
+    height, and a panel prints none, so a header at the top of a column can
+    sit above it (MH5's six: SHAMAN, SNOWBIRD and SASQUATCH on the inside
+    front cover, PUCK, HEATHER and AURORA on the inside back, each at y 50-56
+    of 3197). Each such line goes before the first line of its column, read
+    as stream_of reads one, so it is a header over its card."""
+    pdf = next(p for p in book['parts'] if p['name'] == part)['pdf'][0]
+    words, (W, H) = roster.read_words(os.path.join(roster.CACHE, 'books', slug, 'tsv', 'p%03d.tsv' % pdf))
+    body = [w for w in words if 0.03 * H < w['y'] and w['y'] + w['h'] < 0.955 * H]
+    head = [w for w in words if w['y'] <= 0.03 * H]
+    if not body or not head:
+        return lines
+    body_h = statistics.median(w['h'] for w in body if any(c.isalpha() for c in w['t']))
+    edges = [0] + roster.gutters(body, W, 3) + [W]
+    out = list(lines)
+    for c in range(3):
+        col = [w for w in head if edges[c] <= w['x'] + w['w'] / 2 < edges[c + 1]]
+        for l in reversed(roster.lines_of(col)):
+            if sum(ch.isalnum() for ch in l['text']) < 3 or l['conf'] < 45:
+                continue
+            at = [n for n, x in enumerate(out) if x['pdf'] == pdf and x['col'] == c + 1]
+            if not at:
+                continue
+            first = out[at[0]]
+            l.update(pdf=pdf, printed=first['printed'], part=part, band=first['band'], col=c + 1, body_h=body_h,
+                     col_x0=edges[c], col_x1=edges[c + 1],
+                     words=[w for w in col if l['y0'] <= w['y'] + w['h'] / 2 <= l['y1']])
+            out.insert(at[0], l)
+    return out
+
+
 def mend(book, slug, part, first, last, out):
     """The registry's line fixes, each read off the page image, and each an
     error if it no longer finds its line (a re-OCR moved it):
@@ -340,6 +377,11 @@ def mend(book, slug, part, first, last, out):
                    last line of the other column ending above that height (a
                    card set round its portrait: the Super-Adaptoid's text goes
                    on at the top of printed 15's third column)
+      speck_lines  [part, page, as read, as printed]: a line that carries a
+                   speck of the scan read as a mark (MH5's Raider Armor,
+                   printed 14: "Remarkable speed. -", a 2 x 3 px dot after
+                   the sentence's end, which held the sentence open so the
+                   next run-in, BODY ARMOR., was read as its text)
       split_headers [part, page, as read, NAME]: a header Tesseract read as
                    two words (MH4's TASKMASTER, "TASKMASTE" and "R" with the
                    trademark sign 7 px apart), matched once by its cleaned
@@ -352,6 +394,11 @@ def mend(book, slug, part, first, last, out):
             raise SystemExit('%s: split_headers finds %r %d times on %s p.%s, not once' % (slug, old, len(hits), part, page))
         sign = re.search('[' + booklet.TM + ']*$', out[hits[0]]['text'].rstrip()).group(0)
         out[hits[0]] = dict(out[hits[0]], text=new + sign)
+    for p, page, old, new in [d for d in book.get('speck_lines', []) if here(d)]:
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and l['text'].strip() == old]
+        if len(hits) != 1:
+            raise SystemExit('%s: speck_lines finds %r %d times on %s p.%s, not once' % (slug, old, len(hits), part, page))
+        out[hits[0]] = dict(out[hits[0]], text=new)
     for p, page, text in [d for d in book.get('drop_lines', []) if here(d)]:
         hits = [l for l in out if l['printed'] == page and l['text'].strip() == text]
         if len(hits) != 1:
@@ -400,6 +447,41 @@ def wrapped_alternates(block, block_lines, ranks):
         hit = ranks.get(w.group(1))
         if hit and 'alt' not in a:
             a['alt'] = {'number': hit[1], 'code': hit[0]}
+
+
+def second_reason(block, block_lines, header, slug):
+    """A block that prints Reason: a second time, after Karma, where
+    Resources: belongs (registry `second_reason`: MH5's Northstar, printed 16,
+    "Reason: EXCELLENT" between Karma and Popularity). That value is its
+    Resources, and the block keeps the label as printed (`printed_labels`)."""
+    seen = [n for n, l in enumerate(block_lines) if (booklet.STAT_LINE.match(l['text']) or [None, ''])[1] == 'Reason']
+    karma = [n for n, l in enumerate(block_lines) if (booklet.STAT_LINE.match(l['text']) or [None, ''])[1] == 'Karma']
+    if len(seen) != 2 or not karma or not seen[0] < karma[0] < seen[1] or block['resources'] is not None:
+        raise SystemExit('%s: second_reason finds no Reason: after Karma: in %s' % (slug, header))
+    block['resources'] = booklet.value(booklet.STAT_LINE.match(block_lines[seen[1]]['text']).group(2))
+    block['printed_labels'] = {'resources': 'Reason'}
+
+
+def round_alternates(block, block_lines, ranks):
+    """A rank set's alternate in round brackets (registry `round_alternates`:
+    MH5's Sasquatch, whose bracketed ranks are his bestial form): on the line
+    under its row ("Strength: GOOD" / "(MONSTROUS)"), or opened after the rank
+    and wrapped mid-word onto the next line ("Agility: GOOD (REMARK-" /
+    "ABLE)"). full_grid reads the first as nothing and the second as a note
+    ("REMARK-"); each is the row's alternate, and the note goes."""
+    for prev, l in zip(block_lines, block_lines[1:]):
+        m = booklet.STAT_LINE.match(prev['text'])
+        if not (m and m.group(1) in booklet.ABILITY_LABELS):
+            continue
+        a = block['abilities'][booklet.ABILITY_LABELS.index(m.group(1))]
+        under = re.match(r'^\(\s*([A-Z]+)\s*\)$', l['text'].strip())
+        wrap = re.match(r'^[A-Z]+\s*\(\s*([A-Z]+)-$', m.group(2).strip())
+        tail = re.match(r'^([A-Z]+)\)$', l['text'].strip())
+        word = under.group(1) if under else wrap.group(1) + tail.group(1) if wrap and tail else None
+        hit = ranks.get(word) if word else None
+        if hit and 'alt' not in a:
+            a['alt'] = {'number': hit[1], 'code': hit[0]}
+            a.pop('note', None)
 
 
 def marked_ranks(block, ranks):
@@ -507,7 +589,7 @@ def gear_text(lines):
     return '\n'.join(roster.join_text(g) for g in groups)
 
 
-def prose_card(book, slug, part, page, name, ranks, reader):
+def prose_card(book, slug, part, page, name, ranks, reader, spec=None):
     """A full block set inside a chapter's prose (registry `prose_cards`:
     MH4's Kingpin, printed 5, Chapter 2's Campaign). Its header is its name
     in title case on a line of its own, which booklet.is_header does not
@@ -515,35 +597,104 @@ def prose_card(book, slug, part, page, name, ranks, reader):
     The card is read as a panel's are, from that line to the line that ends
     it: the next header (the BATTLE banner) or a one-line grid's letter row,
     through a column break (the Kingpin's powers go on at the top of the
-    second column)."""
+    second column).
+
+    MH5's Kimara (printed 10, Chapter 5 Battle 2) is set otherwise, and the
+    prose_cards entry says how (`spec`):
+      header_lines 2   the name is two lines in capitals ("KIMARA," / "THE
+                       CLOUDSTALKER(tm)"), matched joined to the registry name
+      colonless        its rank rows print no colon ("Fighting MONSTROUS"),
+                       read as if they did
+      no_powers_line   it prints no Powers: line: the colon run-ins after the
+                       block (BODY ARMOR:, REGENERATION:) are its powers, and
+                       the card ends at the first indented line, where the
+                       chapter's prose resumes"""
+    spec = spec or {}
     lines = stream(book, slug, part, page, page, split_at_rules=False)
-    at = [n for n, l in enumerate(lines) if l['text'].strip() == name
-          and any(re.match(r'^\W{0,2}Fighting\s*[:;.]', x['text']) for x in lines[n + 1:n + 4])]
+    span = spec.get('header_lines', 1)
+    if spec.get('colonless'):
+        rows = re.compile(r'^(%s) +([A-Z]{4,})$' % '|'.join(booklet.ABILITY_LABELS))
+        lines = [dict(l, text=rows.sub(r'\1: \2', l['text'].strip())) for l in lines]
+    if span == 1:
+        at = [n for n, l in enumerate(lines) if l['text'].strip() == name
+              and any(re.match(r'^\W{0,2}Fighting\s*[:;.]', x['text']) for x in lines[n + 1:n + 4])]
+    else:
+        at = [n for n in range(len(lines) - span) if all(roster.is_caps(l['text']) for l in lines[n:n + span])
+              and roster.norm(booklet.clean_name(' '.join(l['text'].strip() for l in lines[n:n + span]))) == roster.norm(name)
+              and any(re.match(r'^\W{0,2}Fighting\s*[:;.]', x['text']) for x in lines[n + span:n + span + 3])]
     if len(at) != 1:
         raise SystemExit('%s: prose_cards finds %r over a block %d times on %s p.%s, not once' % (slug, name, len(at), part, page))
     i = at[0]
-    end = next((n for n in range(i + 4, len(lines)) if booklet.is_header(lines[n]) or letter_xs(lines[n], True) is not None),
+    head = dict(lines[i], named_header=True)
+    if span > 1:
+        head = dict(head, text=name, y1=lines[i + span - 1]['y1'])
+    end = next((n for n in range(i + 3 + span, len(lines)) if booklet.is_header(lines[n]) or letter_xs(lines[n], True) is not None),
                len(lines))
-    return read_cards(book, slug, part, [dict(lines[i], named_header=True)] + lines[i + 1:end], None, ranks, reader)
+    if spec.get('no_powers_line'):
+        # the block's rows sit at its left edge; the first line set in from it
+        # after the block opens the chapter's next paragraph
+        base = left_x(lines[i + span])
+        k = next(n for n in range(i + span, end) if re.match(r'^(Karma|Health)\s*:', lines[n]['text']))
+        end = next((n for n in range(k + 1, end) if left_x(lines[n]) > base + 20), end)
+    entries = read_cards(book, slug, part, [head] + lines[i + span:end], None, ranks, reader,
+                         runin_powers=bool(spec.get('no_powers_line')))
+    for e in entries if spec.get('no_powers_line') else []:
+        # the card prints no Powers: line, so no Powers section
+        if e['sections'].get('powers') == []:
+            del e['sections']['powers']
+    return entries
 
 
-def read_cards(book, slug, part, lines, grids, ranks, reader):
+def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False):
     """The entries in a run of card lines: a header, its block, its text.
-    `grids` is the registry's card_grids for the run, or None."""
+    `grids` is the registry's card_grids for the run, or None. With
+    `runin_powers` (a prose card that prints no Powers: line, MH5's Kimara)
+    the lines after the block are read as under Powers:."""
     entries, cur = [], None
     title = book.get('opponent_names') == 'title'
     section = section_line(book)
     i = 0
+    sets = [s for s in book.get('power_form_sets', []) if s['part'] == part]
+    cuts = [c for c in book.get('cut_grids', []) if c['part'] == part and any(l['printed'] == c['page'] for l in lines)]
+    inner = {(roster.norm(s['entry']), roster.norm(s['power'])): {roster.norm(h) for h in s['heads']}
+             for s in book.get('inner_runins', [])}
     while i < len(lines):
         line = lines[i]
         text = line['text'].strip()
+        spec = [s for s in sets if cur and cur['_sec'] == 'powers' and cur['powers'] and text == s['intro']
+                and roster.norm(s['entry']) == roster.norm(cur['header'])]
+        if spec:
+            # a power's list of forms, each a name over four rank rows, F A S
+            # and E (registry `power_form_sets`: MH5's Snowbird, EXAMPLES: /
+            # WHITE OWL (Wings,Claws) / Fighting: EXCELLENT ...): the power's
+            # text, a line each as printed, and never a block
+            got, k = [text], i + 1
+            while k + 4 < len(lines) and re.match(r'^[A-Z][A-Z ]+\(', lines[k]['text'].strip()) \
+                    and all((booklet.STAT_LINE.match(lines[k + n]['text']) or [None, ''])[1] == booklet.ABILITY_LABELS[n - 1]
+                            for n in range(1, 5)):
+                got += [lines[k + n]['text'].strip() for n in range(5)]
+                k += 5
+            if len(got) != 1 + 5 * spec[0]['sets']:
+                raise SystemExit('%s: power_form_sets reads %d sets under %s in %s, not %d'
+                                 % (slug, (len(got) - 1) // 5, text, cur['header'], spec[0]['sets']))
+            mine = cur['powers'][-1]
+            mine['text'] = ['\n'.join([roster.join_text(mine['text'])] + got)]
+            sets.remove(spec[0])
+            if k < len(lines):
+                lines = lines[:k] + [dict(lines[k], after_sets=True)] + lines[k + 1:]
+            i = k
+            continue
         block, nxt = booklet.full_grid(lines, i, ranks, reader)
+        if block and book.get('round_alternates'):
+            round_alternates(block, lines[i:nxt + 1], ranks)
         if block:
             if cur is None:
                 raise SystemExit('%s: a block with no header above it, %s PDF %d' % (slug, part, line['pdf']))
             for k in roster.LABELS:
                 if block[k.lower()] is None:
                     block[k.lower()] = raw_value(lines[i:nxt], k)
+            if roster.norm(cur['header']) in {roster.norm(n) for n in book.get('second_reason', [])}:
+                second_reason(block, lines[i:nxt], cur['header'], slug)
             crop_dashes(block, lines, i, nxt, ranks, reader)
             wrapped_alternates(block, lines[i:nxt], ranks)
             marked_ranks(block, ranks)
@@ -557,7 +708,25 @@ def read_cards(book, slug, part, lines, grids, ranks, reader):
                 block['check'].update(unprinted=unprinted, ok=False)
             cur['blocks'].append(block)
             cur['_sec'] = 'after-grid'
+            if runin_powers:
+                cur['_sec'] = 'powers'
+                cur['sections'].setdefault('powers', [])
             i = nxt
+            continue
+        cut = [c for c in cuts if cur and roster.norm(c['entry']) == roster.norm(cur['header']) and c['page'] == line['printed']]
+        if cut and letter_xs(line, title) is not None:
+            # a one-line grid inside a card that is an entry of its own
+            # (registry `cut_grids`: MH5's Humanoids, in the Leader's
+            # HUMANOIDS. power): opponents() reads it, through `unnamed_grids`,
+            # with the paragraph under it, and the card skips all of that to
+            # its next run-in or section
+            k = i + 2
+            while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
+                k += 1
+            while k < len(lines) and not (booklet.POWER_HEAD.match(lines[k]['text']) or section.match(lines[k]['text'])):
+                k += 1
+            cuts.remove(cut[0])
+            i = k
             continue
         if grids is not None and letter_xs(line, title) is not None:
             # a one-line grid inside a card (registry `card_grids`): She-Hulk's
@@ -603,6 +772,11 @@ def read_cards(book, slug, part, lines, grids, ranks, reader):
             # the same way and carry their section
             mine = [p for p in cur['powers'] if (p.get('section') or 'powers') == sec]
             pm = booklet.POWER_HEAD.match(text) or COLON_HEAD.match(text) or WHOLE_HEAD.match(text) or MIXED_HEAD.match(text)
+            # a run-in inside a power's text, no power of its own (registry
+            # `inner_runins`: MH5's Melter, whose MELTING DEVICE. prints its
+            # four settings as METAL:, STONE:, WOOD: and FLESH:)
+            if pm and mine and roster.norm(pm.group(1)) in inner.get((roster.norm(cur['header']), roster.norm(mine[-1]['name'])), ()):
+                pm = None
             prev = lines[i - 1]['text'].rstrip() if i else ''
             if pm and mine and not prev.endswith(SENTENCE_END):
                 # a line between the last power's text and this head that
@@ -614,7 +788,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader):
             # a name in capitals inside the Powers: prose ("... such as
             # ANNIHILUS and / NICHOLAS SCRATCH. These powers", MH3's Franklin
             # Richards) is no power: a first power opens the section or a line
-            if pm and (not mine and not cur['sections'][sec] or prev.endswith(SENTENCE_END)):
+            if pm and (not mine and not cur['sections'][sec] or prev.endswith(SENTENCE_END) or line.get('after_sets')):
                 power = {'name': booklet.power_name(pm.group(1)), 'text': []}
                 if sec != 'powers':
                     power['section'] = sec
@@ -628,6 +802,12 @@ def read_cards(book, slug, part, lines, grids, ranks, reader):
             sink = cur['prose']
         sink.append(text)
         i += 1
+    if sets:
+        raise SystemExit('%s: power_form_sets names %s on %s, found in no power'
+                         % (slug, ', '.join(s['entry'] for s in sets), part))
+    if cuts:
+        raise SystemExit('%s: cut_grids names %s on %s, found in no card'
+                         % (slug, ', '.join(c['name'] for c in cuts), part))
     if grids:
         # card_grids names a grid no letter row in that card was read as
         raise SystemExit('%s: card_grids names %s on %s that no one-line grid in the card matched'
@@ -658,6 +838,11 @@ def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
     for n in range(7):
         t = ''.join(codes.get(n, []))
         word = re.sub(r'[^A-Za-z]', '', t)
+        # a code that carries a digit, where the registry spells it so (MH5's
+        # C1, Class 1000, on Kimara's powered grid): read with the digit
+        alnum = re.sub(r'[^A-Za-z0-9]', '', t)
+        if alnum != word and alnum.upper() in ranks:
+            word = alnum
         if not word and t and DASH.match(t):
             abilities.append({'letter': roster.ABILITIES[n], 'number': None, 'code': None, 'printed_code': '-'})
             continue
@@ -669,8 +854,11 @@ def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
              'abilities': abilities, 'rank_only': True}
     k = i + 2
     stats, note = [], []
-    while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
-        stats.append(lines[k]['text'])
+    # "Total Health: 1300" under a grid (MH5's Kimara, fully powered) is its
+    # Health; no earlier book prints the words (MH1-4's caches, 2026-10-23)
+    total = lambda t: re.sub(r'^Total\s+(?=Health\s*:)', '', t)
+    while k < len(lines) and booklet.STAT_LINE.match(total(lines[k]['text'])):
+        stats.append(total(lines[k]['text']))
         k += 1
         # a Special: value on the Health line (MH4's "Health: 60 Special:
         # Claws"): the Health is the number, and opponents() reads the Special
@@ -735,10 +923,15 @@ def opponents(book, slug, part, page, ranks):
             # ("If he succeeds, his abilities and powers become:")
             form = forms.pop(0)
             head = (i, form['entry'], None)
+        gap = 2
         if head is None and unnamed:
             # the grid follows its paragraph (MH4's "REGGIE." run-in, the
             # "3) CYBER-SERGEANTS QUARTERS." room): the registry names it
-            head = (i, unnamed.pop(0)['name'], None)
+            u = unnamed.pop(0)
+            head = (i, u['name'], None)
+            # its text may open further under it than a grid's row gap
+            # (`first_gap`, in body lines: MH5's Humanoids, printed 12)
+            gap = u.get('first_gap', gap)
         if head is None:
             raise SystemExit('%s: a one-line grid with no name above it, %s p.%d' % (slug, part, page))
         j, name, desc = head
@@ -782,7 +975,7 @@ def opponents(book, slug, part, page, ranks):
             if title and k + 1 < len(lines) and is_row(lines[k + 1]) and is_name(l):
                 break                   # the next grid's name line (MH4's "2 Panthers" under the White Tiger's)
             if carry is None and l['col'] == line['col'] and where == (line['pdf'], line['band']):
-                if l['y0'] - last['y0'] >= (2 if k == first_k else 1.3) * pitch and not named:
+                if l['y0'] - last['y0'] >= (gap if k == first_k else 1.3) * pitch and not named:
                     break
                 if (title or runin) and k != first_k and left_x(l) > base_x + 20 and not named:
                     break
@@ -881,7 +1074,8 @@ def parse(book, slug):
                     key=lambda r: r[1] + parts[r[0]]['offset'])
     entries = []
     for part, first, last, name in ranges:
-        entries += prose_card(book, slug, part, first, name, ranks, reader) if name else cards(book, slug, part, first, last, ranks, reader)
+        spec = next((c for c in book.get('prose_cards', []) if c['name'] == name), None) if name else None
+        entries += prose_card(book, slug, part, first, name, ranks, reader, spec) if name else cards(book, slug, part, first, last, ranks, reader)
     skip = {roster.norm(n) for n in book.get('not_characters', [])}
     dropped = [e for e in entries if roster.norm(e['header']) in skip]
     if len(dropped) != len(skip):
@@ -976,6 +1170,9 @@ def coverage(book, entries):
         # a Powers: section that is the word none (MH4's Punisher) names no
         # power; an Equipment: run-in (his GUNS.) is not a Powers: run-in
         none = re.match(r'^none\.?$', (e['sections'].get('powers') or '').strip(), re.I)
+        # a card whose Powers: is a sentence and names no power (registry
+        # `powers_prose`: MH5's Justin Hammer, who has none), each by name
+        none = none or roster.norm(e['header']) in {roster.norm(n) for n in book.get('powers_prose', [])}
         if title and e['kind'] == 'entry' and e['sections'].get('powers') and not none \
                 and not [p for p in e['powers'] if not p.get('section')]:
             lines.append('  POWERS: TEXT AND NO RUN-IN POWER: %s' % e['header'])
@@ -1006,7 +1203,9 @@ def coverage(book, entries):
     no_health = {roster.norm(n) for n in book.get('no_health', [])}
     for e in entries:
         for b in e['blocks']:
-            h = roster.as_int(b['health'].split('[')[0]) if b['health'] else None
+            # a bracketed second form's Health, square or round ("70 (185)",
+            # MH5's Sasquatch), is not the first Health
+            h = roster.as_int(re.split(r'[\[(]', b['health'])[0]) if b['health'] else None
             if (h is None) != (b.get('kind') == 'line' and roster.norm(e['header']) in no_health):
                 lines.append('  HEALTH %r: %s' % (b['health'], e['header']))
                 bad = True

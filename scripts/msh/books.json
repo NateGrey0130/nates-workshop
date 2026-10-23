@@ -1829,6 +1829,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-23: a small Chapter N: line over a title in display lettering, which Tesseract reads for Chapter 1 and 2 and not at all for 3-6. Printed 1 is the title page (the title, the credits and the introduction, no banner), so Introduction is this registry name for it. The chapters are set as Campaign, Battle and Aftermath subsections and end on a Karma list; Chapter 5 prints Campaign 1, Battle 1, Campaign 2, Battle 2 and one Aftermath over two pages (9-10), and Chapter 6 (11) prints none of them. The cards are on printed 12-16, after Chapter 6, unbannered, and on the two inside cover panels; Kimara's full block is inside Chapter 5's Battle 2 on printed 10, and the gatefold card sheet repeats eight of the cards.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [{"part": "Adventure Book", "pages": [12, 16]}],
       "panels": ["Inside front cover", "Inside back cover"],
       "cards": [
@@ -1858,6 +1859,26 @@
         {"part": "Adventure Book", "page": 9, "names": ["Improved Synthetic Hulks"]},
         {"part": "Adventure Book", "page": 12, "names": ["Humanoids"]}
       ],
+      "opponent_names": "title",
+      "panel_foot": true,
+      "panel_head": true,
+      "unnamed_grids": [
+        {"part": "Adventure Book", "page": 5, "name": "Synthetic Hulk"},
+        {"part": "Adventure Book", "page": 7, "name": "Hammer's Mercenaries"},
+        {"part": "Adventure Book", "page": 9, "name": "Improved Synthetic Hulks"},
+        {"part": "Adventure Book", "page": 12, "name": "Humanoids", "first_gap": 2.5}
+      ],
+      "cut_grids": [{"part": "Adventure Book", "page": 12, "entry": "The Leader", "name": "Humanoids"}],
+      "prose_cards": [
+        {"part": "Adventure Book", "page": 10, "name": "Kimara, the Cloudstalker", "header_lines": 2, "colonless": true, "no_powers_line": true}
+      ],
+      "form_grids": [{"part": "Adventure Book", "page": 10, "entry": "Kimara, the Cloudstalker", "label": "Fully Powered"}],
+      "round_alternates": true,
+      "powers_prose": ["Justin Hammer"],
+      "second_reason": ["Northstar"],
+      "inner_runins": [{"entry": "Melter", "power": "Melting Device", "heads": ["METAL", "STONE", "WOOD", "FLESH"]}],
+      "speck_lines": [["Adventure Book", 14, "Remarkable speed. -", "Remarkable speed."]],
+      "power_form_sets": [{"part": "Inside front cover", "entry": "Snowbird", "intro": "EXAMPLES:", "sets": 2}],
       "opponents_note": "No grid in this book prints a name line: each follows a sentence of the chapter's prose that ends in a colon (the synthetic Hulk, printed 5, Chapter 2 Battle; Hammer's five mercenaries, printed 7, Chapter 3 Battle, the one grid printing a Karma, on its Health line; the improved synthetic Hulks, printed 9, Chapter 5 Battle 1, which the same sentence says two of are replicas of Sasquatch with the same statistics; and the Leader's Humanoids, printed 12, inside the Leader's card under HUMANOIDS., which the card says this module does not use). Each is named here by what its prose calls it: survey mh5.md decisions 5-7. A second grid on printed 10 is Kimara's fully powered form, under its card, with Total Health: on its Health line. Read on the page images 2026-10-23.",
       "teams_note": "No team sections. Survey mh5.md decision 1 recommends Alpha Flight as a team for its eight members (Shaman, Snowbird, Sasquatch, Puck, Heather, Aurora, Northstar and Marrina), as MH1-3 file their heroes under their team, and every other card under the book's title, MH5 Cat's Paw. Decision 3 (characters only, as the books of 2026-10-21) is why the entry has no item_pages."
     }
