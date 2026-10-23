@@ -1794,6 +1794,72 @@
       ],
       "repeat_grids_note": "Printed 12 and 13 (PDF 14 and 15), Chapter 6: each 2 Minions grid repeats Modok's Minions' grid on printed 10 code for code, Gd Ty Ty Gd Pr Ty Pr, Health 32, under its own room's text (rifles on 12, blaster pistols on 13). Survey mh4.md decision 6 (recommended; Nate had not answered on #1954): one card, Modok's Minions, the two grids checked against it and not entries (not taken: three cards).",
       "teams_note": "No team sections, and no teams here: every card files under the book's title, MH4 Lone Wolves, as the rule for such a book says. Survey mh4.md decision 1 (recommended; Nate had not answered on #1954; not taken: Power Man and Iron Fist under a new Heroes for Hire group). Decision 3 (characters only, as the five books of 2026-10-21) is why the entry has no item_pages."
+    },
+    "mh5": {
+      "title": "MH5 Cat's Paw",
+      "short": "MH5",
+      "code": "TSR6857",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6857 MH-5 Cat's Paw Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "bec1a5d95eab3cbcb31c1d2b31974db104d4cb7829d494aad9f30f3d53638b79",
+      "pdf_pages": 23,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 17], "offset": 1},
+        {"name": "Inside front cover", "cite": "Inside front cover", "pdf": [18, 18], "offset": null},
+        {"name": "Inside back cover", "cite": "Inside back cover", "pdf": [19, 19], "offset": null},
+        {"name": "Card sheet (backs)", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Card sheet (fronts)", "cite": null, "pdf": [21, 21], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [22, 22], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [23, 23], "offset": null}
+      ],
+      "offset_evidence": "2026-10-23, scripts/msh/survey.py tsv_folio: 6 pages vote printed = PDF - 1 (PDF 11-16) and no page votes otherwise. Folios 1-15 were read on the page images of PDF 2-16, each at the foot of its page in a faint small type Tesseract reads only on PDF 11-16 (printed 1, the title page, prints none; printed 2 and 9 were read on crops of PDF 3 and 10). PDF 17 is printed 16: its foot prints the product code 6857XXX1501 where a folio would be, as MH4's printed 16 does. PDF 1 and 22 are the outside of the cover (600 x 773 pt against the booklet's 594 x 767). PDF 18 and 19 are the cover's inside panels (printed 1 says the inside cover describes the heroes), which print no folio; which of the two is the front panel the scan does not show, and they are named here in PDF order (survey mh5.md decision 2). PDF 20 and 21 are the gatefold's cut-out character cards, backs (stat lines, set sideways) and fronts (portraits). PDF 23 is the map sheet, one PDF page (2345 x 1493 pt).",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Talents", "Background"],
+      "rank_aliases": {"FEEBLE": "feeble", "POOR": "poor", "TYPICAL": "typical", "Typical": "typical", "GOOD": "good", "EXCELLENT": "excellent", "REMARKABLE": "remarkable", "INCREDIBLE": "incredible", "AMAZING": "amazing", "MONSTROUS": "monstrous", "UNEARTHLY": "unearthly", "Fb": "feeble", "Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent", "Rm": "remarkable", "Am": "amazing", "Mn": "monstrous", "Un": "unearthly", "C1": "class-1000"},
+      "sections": [
+        ["Introduction", null, 1, "Adventure Book"],
+        ["Chapter 1: The Haunting of Harris House", null, 2, "Adventure Book"],
+        ["Chapter 2: Enter...The Hulk?", null, 4, "Adventure Book"],
+        ["Chapter 3: When the Hammer Falls", null, 6, "Adventure Book"],
+        ["Chapter 4: White Water, White Death", null, 8, "Adventure Book"],
+        ["Chapter 5: Ice Station Gamma", null, 9, "Adventure Book"],
+        ["Chapter 6: Endings", null, 11, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-23: a small Chapter N: line over a title in display lettering, which Tesseract reads for Chapter 1 and 2 and not at all for 3-6. Printed 1 is the title page (the title, the credits and the introduction, no banner), so Introduction is this registry name for it. The chapters are set as Campaign, Battle and Aftermath subsections and end on a Karma list; Chapter 5 prints Campaign 1, Battle 1, Campaign 2, Battle 2 and one Aftermath over two pages (9-10), and Chapter 6 (11) prints none of them. The cards are on printed 12-16, after Chapter 6, unbannered, and on the two inside cover panels; Kimara's full block is inside Chapter 5's Battle 2 on printed 10, and the gatefold card sheet repeats eight of the cards.",
+      "columns": 3,
+      "character_ranges": [{"part": "Adventure Book", "pages": [12, 16]}],
+      "panels": ["Inside front cover", "Inside back cover"],
+      "cards": [
+        ["Adventure Book", 10, "Kimara, the Cloudstalker"],
+        ["Adventure Book", 12, "The Leader"],
+        ["Adventure Book", 12, "Cascade"],
+        ["Adventure Book", 13, "Constrictor"],
+        ["Adventure Book", 13, "Sabertooth"],
+        ["Adventure Book", 13, "Justin Hammer"],
+        ["Adventure Book", 14, "Mauler"],
+        ["Adventure Book", 14, "Raider Armor"],
+        ["Adventure Book", 15, "Melter"],
+        ["Adventure Book", 15, "Blizzard"],
+        ["Adventure Book", 16, "Marrina"],
+        ["Adventure Book", 16, "Northstar"],
+        ["Inside front cover", null, "Shaman"],
+        ["Inside front cover", null, "Snowbird"],
+        ["Inside front cover", null, "Sasquatch"],
+        ["Inside back cover", null, "Puck"],
+        ["Inside back cover", null, "Heather"],
+        ["Inside back cover", null, "Aurora"],
+        ["Inside back cover", null, "Gary Cody"]
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 5, "names": ["Synthetic Hulk"]},
+        {"part": "Adventure Book", "page": 7, "names": ["Hammer's Mercenaries"]},
+        {"part": "Adventure Book", "page": 9, "names": ["Improved Synthetic Hulks"]},
+        {"part": "Adventure Book", "page": 12, "names": ["Humanoids"]}
+      ],
+      "opponents_note": "No grid in this book prints a name line: each follows a sentence of the chapter's prose that ends in a colon (the synthetic Hulk, printed 5, Chapter 2 Battle; Hammer's five mercenaries, printed 7, Chapter 3 Battle, the one grid printing a Karma, on its Health line; the improved synthetic Hulks, printed 9, Chapter 5 Battle 1, which the same sentence says two of are replicas of Sasquatch with the same statistics; and the Leader's Humanoids, printed 12, inside the Leader's card under HUMANOIDS., which the card says this module does not use). Each is named here by what its prose calls it: survey mh5.md decisions 5-7. A second grid on printed 10 is Kimara's fully powered form, under its card, with Total Health: on its Health line. Read on the page images 2026-10-23.",
+      "teams_note": "No team sections. Survey mh5.md decision 1 recommends Alpha Flight as a team for its eight members (Shaman, Snowbird, Sasquatch, Puck, Heather, Aurora, Northstar and Marrina), as MH1-3 file their heroes under their team, and every other card under the book's title, MH5 Cat's Paw. Decision 3 (characters only, as the books of 2026-10-21) is why the entry has no item_pages."
     }
   }
 }
