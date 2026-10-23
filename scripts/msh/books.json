@@ -1829,6 +1829,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-23: a small Chapter N: line over a title in display lettering, which Tesseract reads for Chapter 1 and 2 and not at all for 3-6. Printed 1 is the title page (the title, the credits and the introduction, no banner), so Introduction is this registry name for it. The chapters are set as Campaign, Battle and Aftermath subsections and end on a Karma list; Chapter 5 prints Campaign 1, Battle 1, Campaign 2, Battle 2 and one Aftermath over two pages (9-10), and Chapter 6 (11) prints none of them. The cards are on printed 12-16, after Chapter 6, unbannered, and on the two inside cover panels; Kimara's full block is inside Chapter 5's Battle 2 on printed 10, and the gatefold card sheet repeats eight of the cards.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [{"part": "Adventure Book", "pages": [12, 16]}],
       "panels": ["Inside front cover", "Inside back cover"],
       "cards": [
@@ -1858,8 +1859,41 @@
         {"part": "Adventure Book", "page": 9, "names": ["Improved Synthetic Hulks"]},
         {"part": "Adventure Book", "page": 12, "names": ["Humanoids"]}
       ],
+      "opponent_names": "title",
+      "panel_foot": true,
+      "panel_foot_note": "Inside front cover (PDF 18) and inside back cover (PDF 19): Snowbird's and Gary Cody's last two lines sit below the 95.5% foot a folio page keeps, as MH4's panels' do, so scripts/msh/coverpanels.py reads the lines there too (survey mh5.md, Which reader fits). Measured on the TSV 2026-10-23.",
+      "panel_head": true,
+      "panel_head_note": "The panels are cropped close at the top too: every header at the top of a panel column boxes at y 50-56 of 3197 (1.6-1.8%), above the 3% head band booklet.stream_of keeps for a page with a running head, so SHAMAN, SNOWBIRD and SASQUATCH (PDF 18) and PUCK, HEATHER and AURORA (PDF 19) were cut though Tesseract reads each at confidence 90-92. With panel_head, coverpanels.head_lines puts each such line before the first line of its column. Measured on the TSV 2026-10-23.",
+      "unnamed_grids": [
+        {"part": "Adventure Book", "page": 5, "name": "Synthetic Hulk"},
+        {"part": "Adventure Book", "page": 7, "name": "Hammer's Mercenaries"},
+        {"part": "Adventure Book", "page": 9, "name": "Improved Synthetic Hulks"},
+        {"part": "Adventure Book", "page": 12, "name": "Humanoids", "first_gap": 2.5}
+      ],
+      "unnamed_grids_note": "The four one-line grids with no name line, each named by what its prose calls it (opponents_note; survey mh5.md decisions 5-7). first_gap, in body lines, is how far under the grid its text may open: the Humanoids' sentence on printed 12 is two body lines below the Health line, past the gap that ends a grid's text, so without it the entry has no text. Measured on the TSV 2026-10-23.",
+      "cut_grids": [{"part": "Adventure Book", "page": 12, "entry": "The Leader", "name": "Humanoids"}],
+      "cut_grids_note": "Printed 12: the Humanoids' grid is set inside the Leader's card, under his HUMANOIDS. power. cut_grids [{part, page, entry, name}] takes that grid, and the sentence under it, out of the card: the card skips to its next run-in or section, and the grid is read as the unnamed_grids entry of that name (survey mh5.md decision 7, recommended, applied unanswered).",
+      "prose_cards": [
+        {"part": "Adventure Book", "page": 10, "name": "Kimara, the Cloudstalker", "header_lines": 2, "colonless": true, "no_powers_line": true}
+      ],
+      "prose_cards_note": "Printed 10 (PDF 11), Chapter 5 Battle 2: Kimara's full block is set inside the chapter's prose, as MH4's Kingpin is, but otherwise. header_lines 2: the name is two lines in capitals (KIMARA, / THE CLOUDSTALKER and the trademark sign), matched joined to this name. colonless: its rank rows print no colon (Fighting MONSTROUS) and are read as if they did. no_powers_line: it prints no Powers: line, so its colon run-ins (BODY ARMOR:, REGENERATION:) are its powers and the card ends at the first indented line, where the chapter's prose resumes. Survey mh5.md decision 9: the name as printed. Read on the page image 2026-10-23.",
+      "form_grids": [{"part": "Adventure Book", "page": 10, "entry": "Kimara, the Cloudstalker", "label": "Fully Powered"}],
+      "form_grids_note": "Printed 10: the second grid under Kimara's card is her fully powered form, printing Total Health: on its Health line and C1 (Class 1000, in rank_aliases) for one code; it is a second block on her card, labelled Fully Powered. Read on the page image 2026-10-23.",
+      "round_alternates": true,
+      "round_alternates_note": "Inside front cover: Sasquatch's bestial-form ranks are printed in round brackets, two on the line under their row ((MONSTROUS), (AMAZING)) and one opened after its rank and wrapped mid-word (GOOD (REMARK- / ABLE)). With round_alternates true coverpanels.round_alternates reads each as the row's alternate, so the bracketed Health (185 = Remarkable, Remarkable, Monstrous and Amazing) checks. MH1-4 print square brackets, read by wrapped_alternates, and leave this unset. Read on the page image 2026-10-23.",
+      "powers_prose": ["Justin Hammer"],
+      "powers_prose_note": "Cards whose Powers: is a sentence naming no power (printed 13, Justin Hammer has none), exempt by name from the check that a Powers: section with text has a run-in power, as a Powers: of none already is; the check stays as it was for every other card and book.",
+      "second_reason": ["Northstar"],
+      "second_reason_note": "Printed 16: Northstar's block prints Reason: a second time, between Karma and Popularity, where Resources belongs (Reason: EXCELLENT). That value is read as his Resources and the block keeps the label as printed (printed_labels). Read on the page image 2026-10-23.",
+      "inner_runins": [{"entry": "Melter", "power": "Melting Device", "heads": ["METAL", "STONE", "WOOD", "FLESH"]}],
+      "inner_runins_note": "Printed 15: Melter's MELTING DEVICE. prints its four settings as colon run-ins (METAL:, STONE:, WOOD:, FLESH:). inner_runins [{entry, power, heads}] keeps each inside that power's text rather than as a power of its own, as the Raider's RAIDER #1: to #3: stay inside WEAPONS: (survey mh5.md decision 11, recommended, applied unanswered).",
+      "speck_lines": [["Adventure Book", 14, "Remarkable speed. -", "Remarkable speed."]],
+      "speck_lines_note": "[part, printed page, as read, as printed]: a line carrying a speck of the scan read as a mark. Printed 14, Raider Armor: a 2 x 3 px dot after the sentence's end is read as -, which held the sentence open so the next run-in, BODY ARMOR., was read as FLIGHT.'s text. Matched once whole and replaced. Seen on the page image 2026-10-23.",
+      "power_form_sets": [{"part": "Inside front cover", "entry": "Snowbird", "intro": "EXAMPLES:", "sets": 2}],
+      "power_form_sets_note": "Inside front cover: Snowbird's EXAMPLES: prints two of her animal forms, each a name over four rank rows (F, A, S and E only). power_form_sets [{part, entry, intro, sets}] reads the sets as that power's text, a line each as printed, never as a block, and the run-in powers after them (FLIGHT., POSTCOGNITION., LIMITATION.) as her powers; it stops if it reads a count other than sets. Read on the page image 2026-10-23.",
+      "teams": {"Alpha Flight": ["Shaman", "Snowbird", "Sasquatch", "Puck", "Heather", "Aurora", "Northstar", "Marrina"]},
       "opponents_note": "No grid in this book prints a name line: each follows a sentence of the chapter's prose that ends in a colon (the synthetic Hulk, printed 5, Chapter 2 Battle; Hammer's five mercenaries, printed 7, Chapter 3 Battle, the one grid printing a Karma, on its Health line; the improved synthetic Hulks, printed 9, Chapter 5 Battle 1, which the same sentence says two of are replicas of Sasquatch with the same statistics; and the Leader's Humanoids, printed 12, inside the Leader's card under HUMANOIDS., which the card says this module does not use). Each is named here by what its prose calls it: survey mh5.md decisions 5-7. A second grid on printed 10 is Kimara's fully powered form, under its card, with Total Health: on its Health line. Read on the page images 2026-10-23.",
-      "teams_note": "No team sections. Survey mh5.md decision 1 recommends Alpha Flight as a team for its eight members (Shaman, Snowbird, Sasquatch, Puck, Heather, Aurora, Northstar and Marrina), as MH1-3 file their heroes under their team, and every other card under the book's title, MH5 Cat's Paw. Decision 3 (characters only, as the books of 2026-10-21) is why the entry has no item_pages."
+      "teams_note": "No team sections. Survey mh5.md decision 1 (recommended, applied unanswered; Nate 2026-10-23: ingest the whole book): Alpha Flight for its eight members (Shaman, Snowbird, Sasquatch, Puck, Heather, Aurora, Northstar and Marrina), as MH1-3 file their heroes under their team, and every other card, Gary Cody the former liaison included, under the book's title, MH5 Cat's Paw. Decision 3 (characters only, as the books of 2026-10-21) is why the entry has no item_pages."
     }
   }
 }
