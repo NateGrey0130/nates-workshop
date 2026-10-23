@@ -997,6 +997,52 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${bookNpc({ character: 'miss-locke-mh3' }).snapshot?.karma} ${bookNpc({ character: 'mr-chambers-mh3' }).snapshot?.karma} ${blk('super-adaptoid-mh3')?.karma}`);
   }
 
+  // MH4 is laid out as MH1-MH3 are (scripts/msh/coverpanels.py,
+  // mh4-overrides.json), with the survey's nine decisions applied as it
+  // recommends (mh4.md; #1954 and #1955 merged without a ruling on them) and
+  // Nate's ruling that a leading The is dropped.
+  if (data.npcs.characters.some((c) => c.book === 'mh4')) {
+    const mh4 = data.npcs.characters.filter((c) => c.book === 'mh4');
+    check('MH4: 18 characters, every one under the book\'s title (no teams), each id ending -mh4, the Kingpin as Kingpin and no name starting The',
+      mh4.length === 18 && mh4.every((c) => c.team === 'MH4 Lone Wolves' && c.id.endsWith('-mh4'))
+      && mh4.some((c) => c.id === 'kingpin-mh4' && c.name === 'Kingpin') && !mh4.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh4.length} ${[...new Set(mh4.map((c) => c.team))]}`);
+    const blk = (id) => mh4.find((c) => c.id === id)?.versions[0].blocks[0];
+    const modok = blk('modok-mh4');
+    const fisk = blk('kingpin-mh4');
+    check('MH4: Modok\'s Health, printed 30, plays as his ranks\' 28 and keeps the printed 30; the Kingpin\'s Karma, printed 120, plays as 40 and keeps 120',
+      modok?.health === '30' && modok.override?.verdict === 'misprint' && modok.override.printed === 30 && modok.override.corrected === 28
+      && bookNpc({ character: 'modok-mh4' }).snapshot?.health === 28
+      && fisk?.karma === '120' && fisk.override?.verdict === 'misprint' && fisk.override.printed === 120 && fisk.override.corrected === 40
+      && bookNpc({ character: 'kingpin-mh4' }).snapshot?.karma === 40,
+      `${JSON.stringify(modok?.override)} ${bookNpc({ character: 'modok-mh4' }).snapshot?.health} ${JSON.stringify(fisk?.override)} ${bookNpc({ character: 'kingpin-mh4' }).snapshot?.karma}`);
+    const ver = (id) => mh4.find((c) => c.id === id)?.versions[0];
+    const gear = ['Guns', 'Grenades', 'Knife', 'Van'];
+    check('MH4: the Punisher\'s Equipment run-ins are not powers (no powers, no Powers none. row) and his and the Taskmaster\'s Equipment is text',
+      ver('punisher-mh4')?.powers.length === 0 && ver('punisher-mh4').text.join() === 'background,equipment,talents'
+      && ver('taskmaster-mh4')?.text.includes('equipment')
+      && !mh4.some((c) => c.versions.some((v) => v.powers.some((p) => gear.includes(p.name)))),
+      `${JSON.stringify(ver('punisher-mh4')?.powers)} ${ver('punisher-mh4')?.text}`);
+    check('MH4: the five cards that print Important People carry it as text',
+      mh4.filter((c) => c.versions[0].text.includes('important-people')).map((c) => c.id).sort().join()
+        === 'black-widow-mh4,daredevil-mh4,iron-fist-mh4,kingpin-mh4,power-man-mh4',
+      mh4.filter((c) => c.versions[0].text.includes('important-people')).map((c) => c.id).join());
+    const grids = ['reggie-mh4', 'white-tiger-mh4', 'panthers-mh4', 'leopard-mh4', 'flying-tigers-mh4', 'modok-s-minions-mh4', 'cyber-sergeants-mh4'];
+    check('MH4: of the seven one-line grids only Reggie prints a Karma (14); the other six stay unset and none is derived',
+      bookNpc({ character: 'reggie-mh4' }).snapshot?.karma === 14 && blk('reggie-mh4')?.karma === '14'
+      && grids.slice(1).every((id) => blk(id)?.karma === null && bookNpc({ character: id }).snapshot?.karma === null)
+      && grids.every((id) => blk(id)?.kind === 'line' && !blk(id).karma_derived),
+      grids.map((id) => `${id} ${blk(id)?.karma}`).join(' | '));
+    check('MH4: the three cats and the Flying Tigers keep their one Special power, with no text row for its empty body',
+      ['white-tiger-mh4', 'panthers-mh4', 'leopard-mh4', 'flying-tigers-mh4'].map((id) => `${ver(id)?.powers.map((p) => p.name).join()} ${ver(id)?.text.includes('power')}`).join()
+        === 'Claws false,Claws false,Claws false,Martial Arts false');
+    check('MH4: a cover-panel card cites its panel with no page, and the Kingpin his Adventure page',
+      tagline(bookNpc({ character: 'daredevil-mh4' }).snapshot).startsWith('MH4 Lone Wolves, Inside front cover;')
+      && tagline(bookNpc({ character: 'iron-fist-mh4' }).snapshot).startsWith('MH4 Lone Wolves, Inside back cover;')
+      && tagline(bookNpc({ character: 'kingpin-mh4' }).snapshot).startsWith('MH4 Lone Wolves, Adventure p.5;'),
+      tagline(bookNpc({ character: 'kingpin-mh4' }).snapshot));
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
@@ -1900,6 +1946,10 @@ section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'
   check('and so does a section\'s run-in and a location\'s part',
     renderParts([{ part: 'section', name: 'Karma', body: 'k' }, { part: 'part', name: 'Traps', body: 't' }])
       === '<p><strong>Karma:</strong> k</p><p><strong>Traps:</strong> t</p>');
+  check('MH4\'s Equipment: a paragraph under the heading, or named run-ins under it once',
+    renderParts([{ part: 'equipment', name: null, body: 'e' }]) === '<p><strong>Equipment:</strong> e</p>'
+    && renderParts([{ part: 'equipment', name: 'Guns', body: 'g' }, { part: 'equipment', name: 'Van', body: 'v' }])
+      === '<p><strong>Equipment:</strong></p><p><strong>Guns:</strong> g</p><p><strong>Van:</strong> v</p>');
 
   // Every part npcs.py writes for a character has a place in the endpoint's
   // order, and every section it writes by name (its `for part in (...)` lists)

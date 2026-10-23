@@ -53,6 +53,11 @@
    "book": "ME2 Ragnarok and Roll",
    "code": "TSR6880",
    "pages": "Adventure 4-7, 16-21; Resource 2-16"
+  },
+  {
+   "book": "MH4 Lone Wolves",
+   "code": "TSR6859",
+   "pages": "Adventure 3-16; Inside front cover; Inside back cover"
   }
  ],
  "books": [
@@ -201,6 +206,20 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mh4",
+   "short": "MH4",
+   "title": "MH4 Lone Wolves",
+   "pages": [
+    3,
+    16
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
   }
  ],
  "teams": [
@@ -260,7 +279,8 @@
   "ME2 Ragnarok and Roll",
   "Olympians",
   "Asgardians",
-  "Heliopolitans"
+  "Heliopolitans",
+  "MH4 Lone Wolves"
  ],
  "characters": [
   {
@@ -53865,6 +53885,1490 @@
    ],
    "appearances": [],
    "book": "me2"
+  },
+  {
+   "id": "daredevil-mh4",
+   "name": "Daredevil",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "daredevil-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Matt Murdock, lawyer",
+      "Altered Human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "91",
+       "resources": "GOOD",
+       "popularity": "42"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Blind"
+      },
+      {
+       "name": "Senses"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Billy Club"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "important-people",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "power-man-mh4",
+   "name": "Power Man",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "power-man-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Luke Cage, detective",
+      "Altered Human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "POOR",
+       "popularity": "18"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Thick Skin"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "important-people",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "reggie-mh4",
+   "name": "Reggie",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "reggie-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "14",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "kingpin-mh4",
+   "name": "Kingpin",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "kingpin-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Wilson Fisk, criminal mastermind",
+      "hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "120",
+       "resources": "INCREDIBLE",
+       "popularity": "31",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 120,
+        "corrected": 40
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wrestling"
+      },
+      {
+       "name": "Martial Arts"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Walking Stick"
+      },
+      {
+       "name": "Stickpin"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "important-people",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "leopard-mh4",
+   "name": "Leopard",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "leopard-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "panthers-mh4",
+   "name": "Panthers",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "panthers-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "white-tiger-mh4",
+   "name": "White Tiger",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "white-tiger-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "flying-tigers-mh4",
+   "name": "Flying Tigers",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "flying-tigers-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Martial Arts"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "cyber-sergeants-mh4",
+   "name": "Cyber-Sergeants",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "cyber-sergeants-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "modok-s-minions-mh4",
+   "name": "Modok's Minions",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "modok-s-minions-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "kraven-the-hunter-mh4",
+   "name": "Kraven the Hunter",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "kraven-the-hunter-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Sergei Kravin, hunter and criminal",
+      "altered human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "66",
+       "resources": "TYPICAL",
+       "popularity": "33"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Running"
+      },
+      {
+       "name": "Nerve Punch"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "modok-mh4",
+   "name": "Modok",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "modok-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "formerly George Tarleton, scientist",
+      "altered human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "30",
+       "karma": "110",
+       "resources": "INCREDIBLE",
+       "popularity": "2",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 30,
+        "corrected": 28
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Psionic Blast"
+      },
+      {
+       "name": "Heat",
+       "upb": "EE6"
+      },
+      {
+       "name": "Forcefield"
+      },
+      {
+       "name": "Mindscan"
+      },
+      {
+       "name": "Multitasking"
+      },
+      {
+       "name": "Hover-Chair"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "sabertooth-mh4",
+   "name": "Sabertooth",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "sabertooth-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "(real name unknown), assassin",
+      "origin unknown"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Extraordinary Senses"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "punisher-mh4",
+   "name": "Punisher",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "punisher-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "(real name unknown), criminal",
+      "hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "32",
+       "resources": "POOR",
+       "popularity": "7"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "taskmaster-mh4",
+   "name": "Taskmaster",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "taskmaster-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "(real name unknown), criminal",
+      "origin unknown"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "150",
+       "karma": "56",
+       "resources": "GOOD",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Photographic Reflexes"
+      },
+      {
+       "name": "Prediction Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "vermin-mh4",
+   "name": "Vermin",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "vermin-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "(real name unknown), wanderer",
+      "altered human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "12",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Running"
+      },
+      {
+       "name": "Extraordinary Senses"
+      },
+      {
+       "name": "Animal Communication/control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "black-widow-mh4",
+   "name": "Black Widow",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "black-widow-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Natasha Romanova, former Russian spy",
+      "hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "60",
+       "resources": "TYPICAL",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wrist Bracelets"
+      },
+      {
+       "name": "Belt"
+      },
+      {
+       "name": "Suction Cups"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "important-people",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
+  },
+  {
+   "id": "iron-fist-mh4",
+   "name": "Iron Fist",
+   "team": "MH4 Lone Wolves",
+   "versions": [
+    {
+     "id": "iron-fist-mh4",
+     "label": null,
+     "team": "MH4 Lone Wolves",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Daniel Rand, detective",
+      "Altered Human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "100",
+       "resources": "POOR",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Iron Fist"
+      },
+      {
+       "name": "Chi"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "important-people",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh4"
   }
  ]
 }
