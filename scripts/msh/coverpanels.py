@@ -129,8 +129,8 @@ RUN_IN_HEAD = re.compile(r"^[A-Z][A-Z'.-]+\b[^:]*:")
 # (MH2's Captain America and Captain Marvel: "UNIQUE WEAPON: Captain America"),
 # and one that fills its line, its text starting on the next (MH2's Wasp:
 # "ANIMAL COMMUNICATION AND CONTROL.")
-COLON_HEAD = re.compile(r"^([A-Z][A-Z0-9'’ /&-]{1,40}[A-Z0-9]):\s+(.*)$")
-WHOLE_HEAD = re.compile(r"^([A-Z][A-Z0-9'’ /&-]{1,40}[A-Z0-9])[.:]()$")
+COLON_HEAD = re.compile(r"^([A-Z][A-Z0-9'\u2019 /&-]{1,40}[A-Z0-9]):\s+(.*)$")
+WHOLE_HEAD = re.compile(r"^([A-Z][A-Z0-9'\u2019 /&-]{1,40}[A-Z0-9])[.:]()$")
 # a one-line grid's name in title case, alone on the line above the letters,
 # with an optional qualifier in brackets and an optional colon (MH2:
 # "Aliens (humanoid)", "Skrulls:", "Kang's Minions"); registry
@@ -147,7 +147,7 @@ SENTENCE_END = ('.', ':', ')', '"', '\u201d', '!')
 # an item of a list under an Equipment run-in: a name, a colon and a number
 # ("M16 assault rifle: 10 shots, range 7, damage 20", MH4's Punisher)
 GEAR_ITEM = re.compile(r'^[A-Z][^:]{0,40}:\s+\d')
-APOSTROPHES = re.compile('(?<=[A-Za-z])[’�](?=s\\b)')
+APOSTROPHES = re.compile('(?<=[A-Za-z])[\u2019\ufffd](?=s\\b)')
 
 # a one-line grid's name line with a count in front of it (MH4's "1 White
 # Tiger", "2 Panthers", "2 Minions"): the name is the rest
