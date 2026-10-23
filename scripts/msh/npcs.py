@@ -517,6 +517,11 @@ def main(slug_arg):
                     # Resources or Popularity); MA1's file is kept as it was
                     **{k: (None if (booklet or coded or panels) and b[k] is None else ascii_fold(minus(b[k]) if grid or coded else b[k]))
                        for k in ('health', 'karma', 'resources', 'popularity')},
+                    # a value printed under another field's label (MH5's
+                    # Northstar prints his Resources under a second Reason:,
+                    # coverpanels.second_reason): the block keeps the label
+                    # as printed. No earlier book's block carries one.
+                    **({'printed_labels': b['printed_labels']} if b.get('printed_labels') else {}),
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': 'partial' if rbook and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),

@@ -195,6 +195,20 @@
     ]
    ],
    "total": 18
+  },
+  {
+   "slug": "mh5",
+   "title": "MH5 Cat's Paw",
+   "code": "TSR6857",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     23
+    ]
+   ],
+   "total": 23
   }
  ]
 }

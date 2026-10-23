@@ -58,6 +58,11 @@
    "book": "MH4 Lone Wolves",
    "code": "TSR6859",
    "pages": "Adventure 3-16; Inside front cover; Inside back cover"
+  },
+  {
+   "book": "MH5 Cat's Paw",
+   "code": "TSR6857",
+   "pages": "Adventure 5-16; Inside front cover; Inside back cover"
   }
  ],
  "books": [
@@ -220,6 +225,20 @@
     "Inside front cover",
     "Inside back cover"
    ]
+  },
+  {
+   "slug": "mh5",
+   "short": "MH5",
+   "title": "MH5 Cat's Paw",
+   "pages": [
+    5,
+    16
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
   }
  ],
  "teams": [
@@ -280,7 +299,9 @@
   "Olympians",
   "Asgardians",
   "Heliopolitans",
-  "MH4 Lone Wolves"
+  "MH4 Lone Wolves",
+  "MH5 Cat's Paw",
+  "Alpha Flight"
  ],
  "characters": [
   {
@@ -55369,6 +55390,1986 @@
    ],
    "appearances": [],
    "book": "mh4"
+  },
+  {
+   "id": "synthetic-hulk-mh5",
+   "name": "Synthetic Hulk",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "synthetic-hulk-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "180",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "hammer-s-mercenaries-mh5",
+   "name": "Hammer's Mercenaries",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "hammer-s-mercenaries-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "14",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "improved-synthetic-hulks-mh5",
+   "name": "Improved Synthetic Hulks",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "improved-synthetic-hulks-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "200",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "kimara-the-cloudstalker-mh5",
+   "name": "Kimara, the Cloudstalker",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "kimara-the-cloudstalker-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Kimara, the Cloudstalker",
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "350",
+       "karma": "110",
+       "resources": null,
+       "popularity": null
+      },
+      {
+       "label": "Fully Powered",
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "1300",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "cascade-mh5",
+   "name": "Cascade",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "cascade-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Ross Kinkaid, engineer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Blast"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Electrical Conductor"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "humanoids-mh5",
+   "name": "Humanoids",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "humanoids-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "leader-mh5",
+   "name": "Leader",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "leader-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Samuel Sterns, criminal mastermind"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "125",
+       "resources": "REMARKABLE",
+       "popularity": "5",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 125,
+        "corrected": 120
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Increased Mental Capacities"
+      },
+      {
+       "name": "Humanoids"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "constrictor-mh5",
+   "name": "Constrictor",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "constrictor-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Frank Schlichting, hoodium"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": "26",
+       "resources": "GOOD",
+       "popularity": "3",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 26,
+        "corrected": 24
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Adamantium Cables"
+      },
+      {
+       "name": "Limitations"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "justin-hammer-mh5",
+   "name": "Justin Hammer",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "justin-hammer-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "criminal businessman"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "26",
+       "resources": "INCREDIBLE",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 28,
+        "corrected": 30,
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": 26,
+          "corrected": 36
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "sabertooth-mh5",
+   "name": "Sabertooth",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "sabertooth-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "(real name unknown), assassin",
+      "origin unknown"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Extraordinary Senses"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "mauler-mh5",
+   "name": "Mauler",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "mauler-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Brendan Doyle, mercenary"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "36",
+       "resources": "GOOD",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Laser Cannon"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Electric Touch"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "raider-armor-mh5",
+   "name": "Raider Armor",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "raider-armor-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "22",
+       "resources": "GOOD",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "blizzard-mh5",
+   "name": "Blizzard",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "blizzard-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Gregor Shapanka, scientist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "44",
+       "resources": "GOOD",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Gloves"
+      },
+      {
+       "name": "Backpack"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "melter-mh5",
+   "name": "Melter",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "melter-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Bruno Horgan, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "40",
+       "resources": "GOOD",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Melting Device"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "marrina-mh5",
+   "name": "Marrina",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "marrina-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Marrina Smallwood, alien monster"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "26",
+       "resources": "Typical",
+       "popularity": "5",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 80,
+        "corrected": 90
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Amphibious Nature"
+      },
+      {
+       "name": "Blinding Touch"
+      },
+      {
+       "name": "Bestial Nature"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "northstar-mh5",
+   "name": "Northstar",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "northstar-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Jean-Paul Beaubier, champion skier"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "22",
+       "resources": "EXCELLENT",
+       "popularity": "40",
+       "printed_labels": {
+        "resources": "Reason"
+       },
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 90,
+        "corrected": 70
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Multiple Attacks"
+      },
+      {
+       "name": "Lightburst"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "sasquatch-mh5",
+   "name": "Sasquatch",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "sasquatch-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Dr. Walter Langkowski,",
+      "Physics Professor"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "S",
+         10,
+         "Gd",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "E",
+         20,
+         "Ex",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70 (185)",
+       "karma": "70",
+       "resources": "GOOD",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Bestial Form"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Bestial Rage"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "shaman-mh5",
+   "name": "Shaman",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "shaman-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Michael Twoyoungmen,",
+      "physician and mystic"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": "110",
+       "resources": "EXCELLENT",
+       "popularity": "25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mystic Pouch"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "snowbird-mh5",
+   "name": "Snowbird",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "snowbird-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Narya, demigoddess"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "131",
+       "resources": "TYPICAL",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapechange"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Postcognition",
+       "upb": "M23"
+      },
+      {
+       "name": "Limitation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "aurora-mh5",
+   "name": "Aurora",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "aurora-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Jean-Marie Beaubier, Teacher"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Lightburst"
+      },
+      {
+       "name": "Split Personality"
+      },
+      {
+       "name": "Non-Detection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "gary-cody-mh5",
+   "name": "Gary Cody",
+   "team": "MH5 Cat's Paw",
+   "versions": [
+    {
+     "id": "gary-cody-mh5",
+     "label": null,
+     "team": "MH5 Cat's Paw",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Former Government Liaison"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "26",
+       "resources": "TYPICAL",
+       "popularity": "6"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "heather-mh5",
+   "name": "Heather",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "heather-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Heather MacNeil Hudson"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": "40",
+       "resources": "POOR",
+       "popularity": "4"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
+  },
+  {
+   "id": "puck-mh5",
+   "name": "Puck",
+   "team": "Alpha Flight",
+   "versions": [
+    {
+     "id": "puck-mh5",
+     "label": null,
+     "team": "Alpha Flight",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Eugene Judd, Bouncer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "36",
+       "resources": "TYPICAL",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gymnastic Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh5"
   }
  ]
 }
