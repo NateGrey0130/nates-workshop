@@ -3,9 +3,9 @@
 Marvel Super Heroes adventure module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh5`. Measured 2026-10-23.
 
-**Rows citing this book:** none yet (survey only; no data imported).
+**Rows citing this book:** 0 `msh_book_text` rows (survey only; no data
+imported).
 
-**DRAFT until the Marvel smoke suite has run on this branch (2026-10-23).**
 Everything here was measured and read on the page images, the trial parse
 included.
 
