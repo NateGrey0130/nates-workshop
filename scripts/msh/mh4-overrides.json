@@ -1,0 +1,17 @@
+{
+  "about": [
+    "Hand decisions about MH4 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card or one-line grid; page is the printed Adventure page, or null for a card on a cover panel (which prints no page)",
+    "  verdict   misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the ranks give",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 15, "header": "Modok"}, "verdict": "misprint", "field": "health",
+     "printed": 30, "corrected": 28, "checked": "2026-10-23",
+     "note": "Printed 15, the card: Fighting Feeble, Agility Feeble, Strength Poor, Endurance Excellent, so F+A+S+E is 2 + 2 + 4 + 20 = 28, and the card prints Health 30 (read on the page image). Karma 110 = Am 50 + Gd 10 + Am 50 as printed. Survey mh4.md decision 2 (recommended; Nate had not answered on #1954): a misprint override with both values, the Codex showing 30 and the GM tools playing 28 (not taken: as_printed)."},
+    {"match": {"page": 5, "header": "The Kingpin"}, "verdict": "misprint", "field": "karma",
+     "printed": 120, "corrected": 40, "checked": "2026-10-23",
+     "note": "Printed 5, Chapter 2 Campaign, the block in the first column: Reason Good, Intuition Excellent, Psyche Good, so R+I+P is 10 + 20 + 10 = 40, and the block prints Karma 120 (read on the page image). Health 100 = Rm 30 + Gd 10 + Ex 20 + In 40 as printed. Survey mh4.md decision 2 (recommended; Nate had not answered on #1954): a misprint override with both values (not taken: as_printed, reading 120 as Karma he has accumulated in play)."}
+  ]
+}
