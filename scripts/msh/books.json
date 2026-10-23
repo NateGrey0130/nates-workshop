@@ -1707,6 +1707,63 @@
           ["Doc Strange", ["10 Gd", "20 Ex", "6 Ty", "30 Rm", "10 Gd", "75 Mn", "100 Un"], 66, 185, ["Magic", "Alter Appearance-Am", "Astral Projection-Un", "Levitation-In", "Shield-Am", "Telepathy-Un", "Conjure-Am", "Forcebeam-Am", "Dimension Open-Mn", "Sleep Gas-Mn", "Cloak of Lev", "Eye", "Orb"]]
         ]
       }
+    },
+    "mh4": {
+      "title": "MH4 Lone Wolves",
+      "short": "MH4",
+      "code": "TSR6859",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6859 MH-4 Lone Wolves Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "972c763b8219d2c0647d2ec8f038c34eecea37f2614b9871e8aa92109b27d5c5",
+      "pdf_pages": 21,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Inside front cover", "cite": "Inside front cover", "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 18], "offset": 2},
+        {"name": "Inside back cover", "cite": "Inside back cover", "pdf": [19, 19], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [21, 21], "offset": null}
+      ],
+      "offset_evidence": "2026-10-23, scripts/msh/survey.py tsv_folio: 7 pages vote printed = PDF - 2 (PDF 12-18); PDF 3-11 cast no vote, and the one other vote, PDF 21 (k=17), is the map sheet. Folios 1-16 were read on the page images of PDF 3-18, each at the foot of its page (printed 1 prints its folio under the credits and the copyright line). PDF 2 and 19 are the two inside panels of the loose folding cover, which carry the cards of the four heroes and no folio, outside the booklet numbering on either side; PDF 21 is the map sheet, one PDF page of four panels (the Fisk Building, the jungle lair, Modok warehouse and the street map).",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Talents", "Important People", "Equipment", "Background"],
+      "rank_aliases": {"FEEBLE": "feeble", "POOR": "poor", "TYPICAL": "typical", "GOOD": "good", "EXCELLENT": "excellent", "REMARKABLE": "remarkable", "INCREDIBLE": "incredible", "AMAZING": "amazing", "MONSTROUS": "monstrous", "Fb": "feeble", "Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent"},
+      "sections": [
+        ["Introduction", null, 1, "Adventure Book"],
+        ["Chapter 1: I Smell a Rat", null, 2, "Adventure Book"],
+        ["Chapter 2: Jungle Stalk!", null, 4, "Adventure Book"],
+        ["Chapter 3: Lion's Den", null, 6, "Adventure Book"],
+        ["Chapter 4: King of the Jungle", null, 8, "Adventure Book"],
+        ["Chapter 5: A Hard Taskmaster", null, 10, "Adventure Book"],
+        ["Chapter 6: Cornered Prey", null, 12, "Adventure Book"],
+        ["Chapter 7: It's About Time...", null, 14, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-23: a small Chapter N line over a title in display lettering, which Tesseract reads in part (the chapter lines) or not at all (the titles). Printed 1 has no banner, only the title art and the heading INTRODUCTION, so Introduction is this registry name for it. Each chapter is set as Campaign, Battle and Aftermath subsections in the order the chapter needs them (Chapter 1, 2 and 4 open on Campaign and print a second Campaign after Battle; Chapter 3, 5 and 6 open on Battle; Chapter 5 has no Campaign), and every chapter ends on a Karma table, numbered 2-5 and 7-9 (Table 1 is Chapter 1 Random Crowd Actions and Table 6 is Chapter 5 Danger Room Effects). The cards are on printed 15-16, after Chapter 7, unbannered, and on the two inside cover panels; the Kingpin full block is inside Chapter 2 Campaign on printed 5.",
+      "columns": 3,
+      "character_ranges": [{"part": "Adventure Book", "pages": [15, 16]}],
+      "panels": ["Inside front cover", "Inside back cover"],
+      "cards": [
+        ["Inside front cover", null, "Daredevil"],
+        ["Inside front cover", null, "Power Man"],
+        ["Adventure Book", 5, "The Kingpin"],
+        ["Adventure Book", 15, "Kraven the Hunter"],
+        ["Adventure Book", 15, "Modok"],
+        ["Adventure Book", 15, "Sabertooth"],
+        ["Adventure Book", 16, "Vermin"],
+        ["Adventure Book", 16, "Taskmaster"],
+        ["Adventure Book", 16, "Punisher"],
+        ["Inside back cover", null, "Iron Fist"],
+        ["Inside back cover", null, "Black Widow"]
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 3, "names": ["Reggie"]},
+        {"part": "Adventure Book", "page": 6, "names": ["1 White Tiger", "2 Panthers", "1 Leopard"]},
+        {"part": "Adventure Book", "page": 9, "names": ["Flying Tigers"]},
+        {"part": "Adventure Book", "page": 10, "names": ["Modok's Minions", "Cyber-Sergeants"]},
+        {"part": "Adventure Book", "page": 12, "names": ["2 Minions"]},
+        {"part": "Adventure Book", "page": 13, "names": ["2 Minions"]}
+      ]
     }
   }
 }
