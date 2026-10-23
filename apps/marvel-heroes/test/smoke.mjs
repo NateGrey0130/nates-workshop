@@ -1043,6 +1043,61 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'kingpin-mh4' }).snapshot));
   }
 
+  // MH5 is laid out as MH1-MH4 are (scripts/msh/coverpanels.py,
+  // mh5-overrides.json), with the survey's eleven decisions applied as it
+  // recommends (mh5.md; merged without a ruling on them) and Nate's ruling
+  // that a leading The is dropped.
+  if (data.npcs.characters.some((c) => c.book === 'mh5')) {
+    const mh5 = data.npcs.characters.filter((c) => c.book === 'mh5');
+    const team = (t) => mh5.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    check('MH5: 23 characters, eight as Alpha Flight and the rest (Gary Cody too) under the book\'s title, each id ending -mh5, the Leader as Leader and no name starting The',
+      mh5.length === 23 && mh5.every((c) => c.id.endsWith('-mh5'))
+      && team('Alpha Flight') === 'Aurora,Heather,Marrina,Northstar,Puck,Sasquatch,Shaman,Snowbird'
+      && mh5.filter((c) => c.team === 'MH5 Cat\'s Paw').length === 15 && mh5.find((c) => c.id === 'gary-cody-mh5')?.team === 'MH5 Cat\'s Paw'
+      && mh5.some((c) => c.id === 'leader-mh5' && c.name === 'Leader') && !mh5.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh5.length} ${[...new Set(mh5.map((c) => c.team))]}`);
+    const blk = (id, i = 0) => mh5.find((c) => c.id === id)?.versions[0].blocks[i];
+    const ver = (id) => mh5.find((c) => c.id === id)?.versions[0];
+    const played = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    const fixes = ['leader-mh5', 'constrictor-mh5', 'justin-hammer-mh5', 'marrina-mh5', 'northstar-mh5'].map((id) => {
+      const o = blk(id)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${o?.printed}>${o?.corrected}${(o?.also || []).map((x) => ` +${x.verdict} ${x.field} ${x.printed}>${x.corrected}`).join('')} plays ${played(id)}`;
+    });
+    check('MH5: the five misprints keep the printed value and play the ranks\' (the Leader\'s Karma 125 as 120, the Constrictor\'s 26 as 24, Justin Hammer\'s Health 28 as 30 and Karma 26 as 36, Marrina\'s Health 80 as 90, Northstar\'s 90 as 70)',
+      fixes.join(' | ') === [
+        'leader-mh5 misprint karma 125>120 plays 56/120',
+        'constrictor-mh5 misprint karma 26>24 plays 50/24',
+        'justin-hammer-mh5 misprint health 28>30 +misprint karma 26>36 plays 30/36',
+        'marrina-mh5 misprint health 80>90 plays 90/26',
+        'northstar-mh5 misprint health 90>70 plays 70/22',
+      ].join(' | ')
+      && mh5.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.override))).length === 5,
+      fixes.join(' | '));
+    check('MH5: Northstar\'s Resources, printed under a second Reason: label, keeps that label, and no other MH5 block carries one',
+      JSON.stringify(blk('northstar-mh5')?.printed_labels) === '{"resources":"Reason"}' && blk('northstar-mh5')?.resources
+      && mh5.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.printed_labels))).map((c) => c.id).join() === 'northstar-mh5',
+      JSON.stringify(blk('northstar-mh5')?.printed_labels));
+    const lines = [['synthetic-hulk-mh5', 0], ['hammer-s-mercenaries-mh5', 0], ['improved-synthetic-hulks-mh5', 0], ['humanoids-mh5', 0], ['kimara-the-cloudstalker-mh5', 1]];
+    check('MH5: of the five one-line grids only Hammer\'s Mercenaries print a Karma (14); the other four stay unset and none is derived',
+      bookNpc({ character: 'hammer-s-mercenaries-mh5' }).snapshot?.karma === 14 && blk('hammer-s-mercenaries-mh5')?.karma === '14'
+      && lines.filter((_, n) => n !== 1).every(([id, i]) => blk(id, i)?.karma === null && (i > 0 || bookNpc({ character: id }).snapshot?.karma === null))
+      && lines.every(([id, i]) => blk(id, i)?.kind === 'line' && !blk(id, i).karma_derived),
+      lines.map(([id, i]) => `${id} ${blk(id, i)?.kind} ${blk(id, i)?.karma}`).join(' | '));
+    const kim = bookNpc({ character: 'kimara-the-cloudstalker-mh5' }).snapshot;
+    check('MH5: Kimara\'s fully powered grid is a second form on her card (350 and 1300), and she and Hammer\'s Mercenaries write no prose row',
+      kim?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Kimara, the Cloudstalker 350,Fully Powered 1300'
+      && choices.filter((c) => c.character === 'kimara-the-cloudstalker-mh5').length === 1
+      && ver('kimara-the-cloudstalker-mh5')?.text.join() === 'power' && ver('hammer-s-mercenaries-mh5')?.text.length === 0,
+      `${JSON.stringify(kim?.forms?.map((f) => [f.name, f.health]))} ${ver('kimara-the-cloudstalker-mh5')?.text} ${ver('hammer-s-mercenaries-mh5')?.text}`);
+    check('MH5: the Melter\'s settings are inside his one power, Melting Device, not powers of their own',
+      ver('melter-mh5')?.powers.map((p) => p.name).join() === 'Melting Device', JSON.stringify(ver('melter-mh5')?.powers.map((p) => p.name)));
+    check('MH5: a cover-panel card cites its panel with no page, and the Leader his Adventure page',
+      tagline(bookNpc({ character: 'sasquatch-mh5' }).snapshot).startsWith('MH5 Cat\'s Paw, Inside front cover;')
+      && tagline(bookNpc({ character: 'gary-cody-mh5' }).snapshot).startsWith('MH5 Cat\'s Paw, Inside back cover;')
+      && tagline(bookNpc({ character: 'leader-mh5' }).snapshot).startsWith('MH5 Cat\'s Paw, Adventure p.12;'),
+      tagline(bookNpc({ character: 'leader-mh5' }).snapshot));
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
@@ -1742,6 +1797,14 @@ section('The codex: every section loads, searches, filters and keeps its address
       const lines = npcs.stats(chim).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`);
       check('Notable NPCs: a block\'s further misprint reads as the first does, and an in-range number is no note (ME2\'s Chimaera)',
         lines.length === 2 && lines.filter((l) => /^Misprint: .* is printed 100 ShX; the book's own ranks give 100 Un$/.test(l)).length === 2,
+        JSON.stringify(lines));
+    }
+    // MH5's Justin Hammer: a further misprint printed as a plain number
+    const hammer = npcs.byKey.get('justin-hammer-mh5');
+    if (hammer) {
+      const lines = npcs.stats(hammer).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`);
+      check('Notable NPCs: a further misprint printed as a number reads as a misprint too (MH5\'s Justin Hammer, Health 28 and Karma 26)',
+        lines.join(' | ') === 'Misprint: Health is printed 28; the book\'s own ranks give 30 | Misprint: Karma is printed 26; the book\'s own ranks give 36',
         JSON.stringify(lines));
     }
   }

@@ -322,8 +322,9 @@ export const SECTIONS = [
           for (const x of (o && o.also) || []) {
             const xf = FIELD[x.field] || x.field;
             // a rank printed with its number (ME2: the Chimaera's second misprinted
-            // code) says so as the first does
-            if (typeof x.printed === 'object' && x.verdict === 'misprint') {
+            // code) says so as the first does, and so does a number (MH5: Justin
+            // Hammer's Karma, printed 26 beside his misprinted Health)
+            if (x.verdict === 'misprint') {
               out.push(['Misprint', `${xf} is printed ${show(x.printed)}; the book's own ranks give ${show(x.corrected)}`]);
             } else if (typeof x.printed === 'object') {
               out.push(['As printed', `${xf} is printed ${show(x.printed)}, inside the rank's range`]);
