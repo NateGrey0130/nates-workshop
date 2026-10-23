@@ -5,9 +5,9 @@ Marvel Super Heroes adventure module, Jeff Grubb, 1984. Registry entry:
 
 **Rows citing this book:** none yet (survey only; no data imported).
 
-**DRAFT, stopped mid-row (2026-10-23).** Everything above *Which reader fits*
-was measured and read on the page images. The trial parse is begun, not
-finished, and the Marvel smoke suite has not been run on this branch.
+**DRAFT until the Marvel smoke suite has run on this branch (2026-10-23).**
+Everything here was measured and read on the page images, the trial parse
+included.
 
 The fifth module of the MH series, through `scripts/msh/` only. Characters
 only (decision 3): the adventure, items and places are not imported.
@@ -146,18 +146,117 @@ read as a double quote after Hulk.
 
 ## Which reader fits
 
-**Not finished.** `cover-panels` (`scripts/msh/coverpanels.py`), at
-`origin/main` `348f92d8`, on a scratch copy with this entry plus
-`"layout": "cover-panels"` and `"opponent_names": "title"`, exits 1 at once:
-`a block with no header above it, Inside front cover PDF 18`. The stream it
-builds for that panel begins at Shaman's identity line: the header line
-SHAMAN is not in it (cause not yet found). Nothing after that was run.
+**`cover-panels` (`scripts/msh/coverpanels.py`), with things taught to it.**
+Measured, not argued: a scratch copy of `scripts/msh/` at `ca75b7d2` (this
+branch; its scripts are `origin/main` `348f92d8`'s) with this entry plus
+`"layout": "cover-panels"` and `"opponent_names": "title"`, run on a copy of
+the cache under its own `WORKSHOP_MSH_CACHE`. The stock reader exits 1 at
+once: `a block with no header above it, Inside front cover PDF 18`.
 
-Known so far for the parser row: the panel header; Kimara as a card in a
-chapter in capitals with colonless rows; four grids with no name line
-(`unnamed_grids`); Kimara's powered grid (`form_grids`); the Humanoids grid
-inside a card; Northstar's second `Reason:`; `C1`; the card sheet (no reader
-should read PDF 20-21).
+**Why SHAMAN is missing.** `booklet.stream_of` keeps a page's words between
+3% and 95.5% of its height (`0.03 * H < y`), a band written for pages with
+a running head and a folio. This scan crops the panels close: every header
+at the top of a panel column boxes at y 50-56 of 3197 (1.6-1.8%), so all six
+are cut, though Tesseract reads each one cleanly (confidence 90-92): SHAMAN,
+SNOWBIRD and SASQUATCH on PDF 18, PUCK, HEATHER and AURORA on PDF 19. Only
+GARY CODY, mid-column, survives. Without them Shaman's stream starts at his
+identity line, and Snowbird's and Sasquatch's blocks fall to the card above.
+The foot is cut the same way: Snowbird's and Gary Cody's last two lines sit
+below 95.5%, which MH4's `panel_foot` already restores (four lines; tried).
+
+With registry-only workarounds in the scratch copy (`lost_headers` for the
+six, `panel_foot`, `unnamed_grids` for the four nameless grids, `prose_cards`
+and `form_grids` for Kimara) and five trial-only patches (named below),
+`roster.py mh5` reads every entry and exits 1 on the checklist:
+
+- **23 entries, 25 blocks; 18 pass, 7 fail.** Five fail on the six misprinted
+  values above (the Leader, Constrictor, Justin Hammer, Marrina, Northstar);
+  Snowbird and Sasquatch are the reader's (below). Kimara's block passes, and
+  its powered grid holds at 1300 once `C1` is read.
+- **The panel headers** (above): six `lost_headers` place them, or the reader
+  keeps a panel's head band as `panel_foot` keeps its foot.
+- **The Humanoids grid stops the reader** (`unnamed_grids names 1 grid(s) on
+  Adventure Book p.12 that no unnamed grid matched`): its letter row reads
+  `F A S E R IP`, and `letter_xs` takes a fused pair only when the last word
+  is `P`. Patched in the trial. Once read it is an entry, but its letter row,
+  codes, Health and the sentence under it stay inside the Leader's HUMANOIDS
+  power text, and its own entry has no text: the sentence is two body lines
+  below the Health line, past the gap that ends a grid's text.
+- **Kimara is not found** (`prose_cards finds 'Kimara, the Cloudstalker' over
+  a block 0 times`): its header is two lines in capitals (`KIMARA,` / `THE
+  CLOUDSTALKER` and the trademark sign), which `stream()` does not join off
+  the panels, and its rank rows print no colon (`Fighting MONSTROUS`), which
+  neither `prose_card` nor `booklet.full_grid` reads. Both patched in the
+  trial. Then the block passes, but the card prints no Resources, Popularity
+  or `Powers:` line, so its two run-ins, which end in a colon (`BODY ARMOR:`,
+  `REGENERATION:`), and the chapter's paragraph after them all land in the
+  card's prose, which runs on to the powered grid's letter row.
+- **Kimara's powered grid:** `C1` is read as `C` (the code is cut to its
+  letters) and `Total Health:` is no stat line, so the grid has an unread
+  Endurance and no Health. Both patched in the trial (`C1` is already in
+  `rank_aliases`).
+- **Snowbird's forms:** her `EXAMPLES:` run-in prints two four-row sets (F A
+  S E only, each under a form's name). The first is read as a second full
+  block with R, I and P unread and no Health (`HEALTH None: SNOWBIRD`, and
+  `BLOCKS: 20 full ... the checklist has 19`); the second is lost; `EXAMPLES`
+  is read as a power; and her FLIGHT., POSTCOGNITION. and LIMITATION. after
+  the sets land in the card's prose, not its powers.
+- **Sasquatch's alternates** are in round brackets, two on the line under
+  their row (`(MONSTROUS)`, `(AMAZING)`) and one wrapped mid-word after its
+  rank (`GOOD (REMARK-` / `ABLE)`). `wrapped_alternates` reads only a square
+  bracket on a line of its own, so no alternate is read and the bracketed
+  Health fails (`HEALTH '70 (185)': SASQUATCH`). Read as printed, Remarkable,
+  Remarkable, Monstrous and Amazing give 185.
+- **Justin Hammer's `Powers:` is a sentence with no run-in**:
+  `POWERS: TEXT AND NO RUN-IN POWER: JUSTIN HAMMER`. Only `none` is exempt.
+- **Northstar's second `Reason:`** (where Resources belongs) leaves his
+  Resources unset; no check reports it.
+- **The Raider's BODY ARMOR.** is read into FLIGHT.'s text: a speck after the
+  sentence's end (2 x 3 px, read as `-`; seen on the page image) leaves the
+  sentence open, so the head is taken as text.
+- **Not the reader's:** a handwritten mark in the scan's margin beside the
+  improved synthetic Hulks' text (a pencilled number, seen on the page
+  image) is read as `*:` into their prose (a `text` verdict); and Melter's
+  MELTING DEVICE. prints four settings as colon run-ins (`METAL:`, `STONE:`,
+  `WOOD:`, `FLESH:`), read as four powers of their own, while the Raider's
+  `RAIDER #1:` to `#3:` stay inside WEAPONS: (decision 11).
+- The card sheet (PDF 20-21) is in no range and reaches no entry, as it
+  should (decision 8).
+
+The other readers do not fit, for MH1-4's reasons (mh4.md, *Which reader
+fits*): this book prints rank words and no ability numbers, and its cards are
+on the cover's panels.
+
+So the parser row is next. What it needs, all in `coverpanels.py` behind the
+registry, with MH1-4's `roster.json`, `book-text.sql` and `npcs.json` rows
+proved byte-identical before and after. Twelve things:
+
+1. **A panel's head band**: a header above 3% of a panel's height (or six
+   `lost_headers`, the registry's way, if the parser row prefers it).
+2. **A fused `IP` at the end of a letter row.**
+3. **A two-line header in capitals on a prose card** (Kimara's).
+4. **Rank rows with no colon** on a prose card.
+5. **A prose card with no `Powers:` line**: its colon run-ins read as its
+   powers, and the card ended before the chapter's prose resumes.
+6. **`C1` in a grid's codes, and `Total Health:`** as its Health.
+7. **Four-row form sets inside a power** (Snowbird's two), and the run-in
+   powers after them.
+8. **Round-bracket alternates**, on the line under a row and wrapped
+   mid-word after it (Sasquatch's).
+9. **A `Powers:` sentence with no run-in** (Justin Hammer's), without
+   loosening the check for the books that need it.
+10. **A second `Reason:` read as Resources** (Northstar's), as printed with
+    the correction kept, or as an override.
+11. **A speck after a sentence's end** not holding it open (the Raider's).
+12. **A grid inside a card that is an entry of its own** (the Humanoids):
+    cut from the Leader's power text, with the sentence under it as its text.
+
+Registry and overrides, no reader change: `panel_foot`, the four
+`unnamed_grids`, Kimara's `prose_cards` and `form_grids`, five `misprint`
+overrides (six values), and the `text` verdict for the margin mark.
+
+This survey sets no `layout`, as MH1-4's did not: that is the parser's
+choice.
 
 ## Decisions this survey leaves open
 
@@ -183,6 +282,9 @@ Each applied as recommended, unanswered, if Nate does not rule.
 9. **Names:** leading The dropped (Leader); Raider Armor as printed;
    Kimara, the Cloudstalker as printed.
 10. **Karma on the grids that print none:** left unset (recommended).
+11. **Melter's four settings** kept inside MELTING DEVICE as its text, as the
+    Raider's three weapons stay inside WEAPONS (recommended), or four powers
+    of their own, as the stock reader reads them.
 
 ## How to reproduce
 
