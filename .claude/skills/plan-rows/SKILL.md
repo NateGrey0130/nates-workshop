@@ -248,5 +248,8 @@ start (2026-10-18). Continue to the 200k line.
 
 The closing message carries each row's outcome and pull request, every row
 that was split and into what, every line a worker marked as Nate's, and
-`node scripts/deploy-sweep.mjs`. Worktrees a run leaves behind are removed
-through the `worktree` skill's scan.
+`node scripts/deploy-sweep.mjs`. It also carries each row's `Peak context:`
+line, copied from the worker's report beside the row's pull request; the
+planner of the next plan reads those lines before choosing its reading
+budget (*Before a brief is written*). Worktrees a run leaves behind are
+removed through the `worktree` skill's scan.
