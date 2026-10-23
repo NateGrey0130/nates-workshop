@@ -177,6 +177,20 @@
     ]
    ],
    "total": 40
+  },
+  {
+   "slug": "mh4",
+   "title": "MH4 Lone Wolves",
+   "code": "TSR6859",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     18
+    ]
+   ],
+   "total": 18
   }
  ]
 }

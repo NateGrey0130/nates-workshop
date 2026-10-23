@@ -26,7 +26,10 @@ export const ENTRY = /^[a-z0-9]+(?:-[a-z0-9]+){0,12}$/;
 // (scripts/msh/extras.py), so the number is the order. A character's are not:
 // its powers as printed, then the sections in the order they follow the
 // powers, then members and cross-references. A part missing here sorts first.
-export const PART_ORDER = ['powers-intro', 'power', 'talents', 'contacts', 'background', 'notes', 'special', 'running', 'prose', 'member', 'appearance'];
+// MH4's Equipment follows the powers as the Taskmaster's card prints it
+// (printed 16; the Punisher's, beside it, prints it after Talents), and its
+// Important People follow Talents on every card that prints them.
+export const PART_ORDER = ['powers-intro', 'power', 'equipment', 'talents', 'important-people', 'contacts', 'background', 'notes', 'special', 'running', 'prose', 'member', 'appearance'];
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {

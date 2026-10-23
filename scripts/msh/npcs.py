@@ -406,7 +406,8 @@ def main(slug_arg):
     no_karma = {norm(n) for n in book.get('no_karma', [])} if panels else set()
 
     def team_of_panel_card(e):
-        return next((t for t, names in book['teams'].items() if norm(display(e['header'])) in {norm(n) for n in names}),
+        # MH4 prints no teams (mh4.md decision 1): every card files under the book
+        return next((t for t, names in book.get('teams', {}).items() if norm(display(e['header'])) in {norm(n) for n in names}),
                     book['title'])
 
     entries = roster['entries']
@@ -539,7 +540,15 @@ def main(slug_arg):
             pw = []
             # a Summary-only character has no page; its running note has its own
             page0 = e['pages'][0] if e['pages'] else None
-            for n, p in enumerate(e['powers'], 1):
+            # MH4's Punisher prints his gear as run-ins under Equipment (GUNS.,
+            # VAN.), and coverpanels.py hands them over with the powers, each
+            # marked section: equipment. They are not powers: no card power, no
+            # UPB link, and their text goes to D1 as named, numbered rows of an
+            # equipment part. No earlier book's power carries a section.
+            gear = [p for p in e['powers'] if p.get('section') == 'equipment']
+            for n, p in enumerate(gear, 1):
+                text_row(eslug, 'equipment', n, p['name'], page0, p['text'])
+            for n, p in enumerate([p for p in e['powers'] if p.get('section') != 'equipment'], 1):
                 pname, prank = p['name'], None
                 # ME1's chart prints a power with its rank ("Healing-Un",
                 # "Flight-Cl 3000"): the name links to the UPB and the rank is the
@@ -550,17 +559,25 @@ def main(slug_arg):
                 code = upb.get(norm(pname))
                 pw.append({'name': ascii_fold(pname), **({'rank': prank} if prank else {}), **({'upb': code} if code else {})})
                 text_row(eslug, 'power', n, pname, page0, p['text'])
-            for part in ('talents', 'contacts', 'running', 'background', 'notes') + (('special',) if panels else ()):
+            # MH4's cards print Important People and Equipment sections (the
+            # registry's section_labels; the reader keys them important_people
+            # and equipment). No earlier cover-panels book's card has either.
+            for part in ('talents', 'contacts', 'running', 'background', 'notes') + (('special', 'important-people', 'equipment') if panels else ()):
                 text_row(eslug, part, None, None, e['running']['page'] if part == 'running' and e.get('running') else page0,
-                         e['sections'].get(part, ''))
-            if e['sections'].get('powers'):
+                         e['sections'].get(part.replace('-', '_'), ''))
+            # a Powers line that is only "none." on a card with no powers and
+            # Equipment run-ins (MH4's Punisher) is not a row: the card's empty
+            # powers list says it. Gated on the gear: fourteen earlier cards
+            # (MA1, MA4, MH3) print Powers: none. and keep their row as built
+            bare = bool(gear) and not pw and norm(e['sections'].get('powers')) == 'none'
+            if e['sections'].get('powers') and not bare:
                 text_row(eslug, 'powers-intro', None, None, page0, e['sections']['powers'])
             # A form grid's own text (coverpanels.py keeps it on the block): its
             # run-in powers, numbered on after the card's and named for the
             # form, on the grid's page. Its Powers: line only lists those
             # names, so it is not a row. Any other text would have no key of
             # its own here, so the build stops on it rather than drop it.
-            n = len(e['powers'])
+            n = len(pw)
             for b in (e['blocks'] if form_grid else []):
                 t = b.get('text')
                 if not t:

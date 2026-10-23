@@ -39,11 +39,23 @@ const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<'
 // How each part reads on the card. A named part - a power, a member, a
 // location's part (the Danger Room's Missiles), a section's run-in - keeps its
 // printed name as a run-in head, as the book sets it.
-export const PART_HEAD = { talents: 'Talents', contacts: 'Contacts', background: 'Background', notes: 'Notes', special: 'Special', running: 'Running the character' };
+export const PART_HEAD = {
+  talents: 'Talents', contacts: 'Contacts', background: 'Background', notes: 'Notes', special: 'Special', running: 'Running the character',
+  'important-people': 'Important People', equipment: 'Equipment',
+};
 const NAMED = new Set(['power', 'member', 'part', 'section']);
 
+// Equipment is set two ways (MH4 printed 16): the Taskmaster's is one
+// paragraph under the heading, a row with no name; the Punisher's is named
+// run-ins (GUNS., VAN.) under it, rows with names, which get the heading once.
 export function renderParts(parts) {
+  let gearHead = false;
   return parts.map((p) => {
+    if (p.part === 'equipment' && p.name) {
+      const head = gearHead ? '' : `<p><strong>${PART_HEAD.equipment}:</strong></p>`;
+      gearHead = true;
+      return `${head}<p><strong>${escHtml(p.name)}:</strong> ${escHtml(p.body)}</p>`;
+    }
     if (NAMED.has(p.part)) {
       return `<p><strong>${escHtml(p.name || '')}:</strong> ${escHtml(p.body)}</p>`;
     }
