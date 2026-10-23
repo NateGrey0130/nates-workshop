@@ -1972,6 +1972,9 @@ section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'
     renderParts([{ part: 'equipment', name: null, body: 'e' }]) === '<p><strong>Equipment:</strong> e</p>'
     && renderParts([{ part: 'equipment', name: 'Guns', body: 'g' }, { part: 'equipment', name: 'Van', body: 'v' }])
       === '<p><strong>Equipment:</strong></p><p><strong>Guns:</strong> g</p><p><strong>Van:</strong> v</p>');
+  check('a line break in a body is a <br>, set after escaping (MH4\'s GUNS., a gun a line)',
+    renderParts([{ part: 'equipment', name: 'Guns', body: 'guns:\nM16 <x>: 10\nPistol & 6' }])
+      === '<p><strong>Equipment:</strong></p><p><strong>Guns:</strong> guns:<br>M16 &lt;x&gt;: 10<br>Pistol &amp; 6</p>');
 
   // Every part npcs.py writes for a character has a place in the endpoint's
   // order, and every section it writes by name (its `for part in (...)` lists)
