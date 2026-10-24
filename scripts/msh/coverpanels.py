@@ -155,6 +155,14 @@ COUNTED_NAME = re.compile(r'^(\d+) ([A-Z].*)$')
 # a Special: value printed on a one-line grid's Health line (MH4's "Health: 60
 # Special: Claws"): the Health is the number before it
 HEALTH_SPECIAL = re.compile(r'^(Health\s*:\s*\d[\d,]*)\s+(Special\s*:\s*(.*?))\s*$')
+# any label and its rank on a one-line grid's Health line (registry
+# `health_labels`: MH6's Flame Wing, printed 8, "Health: 120 Flame Breath: In"):
+# the Health is the number, and the label is the grid's one power, its rank
+# as the power's text
+HEALTH_LABEL = re.compile(r"^(Health\s*:\s*\d[\d,]*)\s+([A-Z][A-Za-z' -]*?)\s*:\s*(.*?)\s*$")
+# a card's story run-in, its name, an apostrophe and Story. (registry
+# `story_runins`: MH6's "Thor's Story."), and the text after it
+STORY_RUNIN = re.compile("^(.+?)['\u2019\ufffd]s Story\\.\\s*(.*)$")
 
 
 def section_line(book):
@@ -252,7 +260,9 @@ def stream(book, slug, part, first, last, split_at_rules):
         lines = booklet.stream_of(offsets(book), slug, part, first, last, split_at_rules)
     finally:
         booklet.mend_fused, booklet.rules = orig, orig_rules
-    if panel and book.get('panel_foot'):
+    if panel:
+        # foot_lines stops a book without `panel_foot` whose panel has text
+        # below the foot, which would be lost
         lines = foot_lines(book, slug, part, lines)
     if panel and book.get('panel_head'):
         lines = head_lines(book, slug, part, lines)
@@ -304,7 +314,9 @@ def foot_lines(book, slug, part, lines):
     height, and a panel prints no folio, so its columns run lower (MH4's
     inside front cover: "Incredible temporarily." at 96.4%). Each such line
     goes on after the last line of its column, read as stream_of reads one.
-    MH1-3's panels hold no word there (measured on the TSV 2026-10-23)."""
+    MH1-3's panels hold no word there (measured on the TSV 2026-10-23), and a
+    book without `panel_foot` whose panel does stops here, as does one without
+    `foot_baseline` whose foot words share a line above the cut."""
     pdf = next(p for p in book['parts'] if p['name'] == part)['pdf'][0]
     words, (W, H) = roster.read_words(os.path.join(roster.CACHE, 'books', slug, 'tsv', 'p%03d.tsv' % pdf))
     body = [w for w in words if 0.03 * H < w['y'] and w['y'] + w['h'] < 0.955 * H]
@@ -322,10 +334,31 @@ def foot_lines(book, slug, part, lines):
             at = [n for n, x in enumerate(out) if x['pdf'] == pdf and x['col'] == c + 1]
             if not at:
                 continue
+            if not book.get('panel_foot'):
+                raise SystemExit('%s: %s prints %r below the foot, and the registry has no panel_foot' % (slug, part, l['text']))
             last = out[at[-1]]
             l.update(pdf=pdf, printed=last['printed'], part=part, band=last['band'], col=c + 1, body_h=body_h,
                      col_x0=edges[c], col_x1=edges[c + 1],
                      words=[w for w in col if l['y0'] <= w['y'] + w['h'] / 2 <= l['y1']])
+            # a line that straddles the foot (registry `foot_baseline`: MH6's
+            # Geirrodur, Inside cover 3, whose last line's first words sit
+            # above the cut and its last six below): the words below go on
+            # the end of the line they share a baseline with, not as a line
+            # of their own after the column's last. The words below the cut
+            # are not all after those above it (Geirrodur's "can", between
+            # "he" and "win."), so the line is rebuilt from its words by x
+            same = [n for n in at if abs(out[n]['y1'] - l['y1']) <= 0.5 * body_h]
+            if same and not book.get('foot_baseline'):
+                raise SystemExit('%s: %s: %r shares a baseline with %r above the foot, and the registry has no foot_baseline'
+                                 % (slug, part, l['text'], out[same[-1]]['text']))
+            if same:
+                x = out[same[-1]]
+                if x['text'].strip() != ' '.join(w['t'] for w in sorted(x['words'], key=lambda w: w['x'])):
+                    raise SystemExit('%s: foot_baseline: %r is not its words in order, %s' % (slug, x['text'], part))
+                ws = sorted(x['words'] + l['words'], key=lambda w: w['x'])
+                out[same[-1]] = dict(x, text=' '.join(w['t'] for w in ws), words=ws,
+                                     y0=min(x['y0'], l['y0']), y1=max(x['y1'], l['y1']), x1=max(x['x1'], l['x1']))
+                continue
             out.insert(at[-1] + 1, l)
     return out
 
@@ -693,6 +726,17 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             for k in roster.LABELS:
                 if block[k.lower()] is None:
                     block[k.lower()] = raw_value(lines[i:nxt], k)
+            # a value printed on art, which neither the TSV nor the block's
+            # crop reads (registry `lost_values` [part, page, card, label,
+            # value]: MH6's Ulik, whose Popularity 20 sits on his portrait),
+            # as read off the page image; an error once the value reads
+            for lv in [v for v in book.get('lost_values', []) if v[0] == part and v[1] == line['printed']
+                       and roster.norm(v[2]) == roster.norm(cur['header'])]:
+                key = lv[3].lower()
+                if printed_value(block[key], ranks):
+                    raise SystemExit('%s: lost_values: %s %s reads %r, no longer lost' % (slug, lv[2], lv[3], block[key]))
+                block[key] = lv[4]
+                block.setdefault('read_off_image', []).append(key)
             if roster.norm(cur['header']) in {roster.norm(n) for n in book.get('second_reason', [])}:
                 second_reason(block, lines[i:nxt], cur['header'], slug)
             crop_dashes(block, lines, i, nxt, ranks, reader)
@@ -755,6 +799,17 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
         if line['printed'] and line['printed'] not in cur['pages']:
             cur['pages'].append(line['printed'])
         m = section.match(text)
+        # a story run-in, the card's own name and Story. (registry
+        # `story_runins`: MH6's "Thor's Story.", "Loki's Story."), is the
+        # card's background
+        st = STORY_RUNIN.match(text) if book.get('story_runins') else None
+        if st and roster.norm(st.group(1)) == roster.norm(cur['header']):
+            cur['_sec'] = 'background'
+            cur['sections'].setdefault('background', [])
+            if st.group(2):
+                cur['sections']['background'].append(st.group(2))
+            i += 1
+            continue
         if m:
             key = m.group(1).lower().replace(' ', '_')
             cur['_sec'] = key
@@ -818,7 +873,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     return entries
 
 
-def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
+def line_block(lines, i, title, ranks, part, page, slug, name, notes=False, labels=False):
     """A one-line grid's block, from its letter row at lines[i]: each code is
     the word under its letter, by x, and the stat lines after the codes row
     are its Health and Karma. Returns (block, index after the stat lines).
@@ -862,7 +917,7 @@ def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
         k += 1
         # a Special: value on the Health line (MH4's "Health: 60 Special:
         # Claws"): the Health is the number, and opponents() reads the Special
-        hs = HEALTH_SPECIAL.match(stats[-1])
+        hs = HEALTH_SPECIAL.match(stats[-1]) or (HEALTH_LABEL.match(stats[-1]) if labels else None)
         if hs:
             stats[-1] = hs.group(1)
         # a stat line that opens a bracket and does not close it (registry
@@ -882,9 +937,35 @@ def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
     return block, k
 
 
+def code_row_letters(lines, ranks, title):
+    """A letter row Tesseract could not read, over a code row it read cleanly
+    (registry `code_row_letters`: MH6's Flame Wing, printed 8, whose F A S E R
+    I P reads as six words that are not the letters). Where a line that is no
+    letter row has, under it, seven words that are each a rank code the
+    registry spells and then a Health: line, it is read as the letter row,
+    each letter at its code's x."""
+    codes = {k for k in ranks if len(k) <= 2}
+    out = list(lines)
+    for n in range(len(out) - 2):
+        l, c, h = out[n], out[n + 1], out[n + 2]
+        if letter_xs(l, title) is not None or not 4 <= len(l['words']) <= 8 or any(len(w['t']) > 3 for w in l['words']):
+            continue
+        cw = sorted(c['words'], key=lambda w: w['x'])
+        if len(cw) != 7 or not all(re.sub(r'[^A-Za-z0-9]', '', w['t']).upper() in codes for w in cw) \
+                or not re.match(r'^Health\s*:', h['text'].strip()) or (l['pdf'], l['col']) != (c['pdf'], c['col']):
+            continue
+        out[n] = dict(l, text='F A S E R I P', words=[dict(w, t=ch) for w, ch in zip(cw, 'FASERIP')],
+                      letters_from_codes=l['text'])
+    return out
+
+
 def opponents(book, slug, part, page, ranks):
     """The one-line grids on one chapter page, each an entry of its own."""
     lines = stream(book, slug, part, page, page, split_at_rules=False)
+    # MH6 (registry `health_labels`): any label on a grid's Health line
+    labels = bool(book.get('health_labels'))
+    if book.get('code_row_letters'):
+        lines = code_row_letters(lines, ranks, book.get('opponent_names') == 'title')
     # MH2 (registry "opponent_names": "title"): names in title case, a grid
     # with no name that is a form of a card (registry `form_grids`), run-in
     # powers after the Powers: line, and paragraphs that open indented
@@ -937,9 +1018,9 @@ def opponents(book, slug, part, page, ranks):
         j, name, desc = head
         note = []
         if runin:
-            block, k, note = line_block(lines, i, title, ranks, part, page, slug, name, notes=True)
+            block, k, note = line_block(lines, i, title, ranks, part, page, slug, name, notes=True, labels=labels)
         else:
-            block, k = line_block(lines, i, title, ranks, part, page, slug, name)
+            block, k = line_block(lines, i, title, ranks, part, page, slug, name, labels=labels)
         # the text: the Powers: or Special: line and the paragraph it opens,
         # or the paragraph right under the grid; it ends at a paragraph break.
         # The first line may sit a grid's row gap under a grid with no Health
@@ -1028,7 +1109,12 @@ def opponents(book, slug, part, page, ranks):
         # printed (survey mh4.md decision 7); line_block kept the Health
         for x in range(i + 2, k):
             hs = HEALTH_SPECIAL.match(lines[x]['text'])
-            if hs:
+            hl = HEALTH_LABEL.match(lines[x]['text']) if labels else None
+            if hl:
+                # registry `health_labels` (MH6): the power is named by the
+                # label, its rank as its text ("Flame Breath: In")
+                powers.append({'name': hl.group(2).strip(), 'text': [hl.group(3)] if hl.group(3) else []})
+            elif hs:
                 powers.append({'name': hs.group(3).strip(), 'text': []})
         sections, prose = {}, [desc] if desc else []
         prose += note
@@ -1048,6 +1134,32 @@ def opponents(book, slug, part, page, ranks):
     if unnamed:
         raise SystemExit('%s: unnamed_grids names %d grid(s) on %s p.%d that no unnamed grid matched' % (slug, len(unnamed), part, page))
     return entries
+
+
+def carried_grid(g, ranks, slug):
+    """A one-line grid the page stream cannot read, carried in the registry
+    (`carried_grids`, {part, page, name, codes, health, label}: MH6's grids
+    printed under the MAGIC VIEWER red pattern, survey mh6.md decision 4),
+    as read by eye off a contrast-stretched render of the page. It is an
+    opponent entry with the grid as its block and no text; `label` is the
+    Health line's one label and rank (["Body Armor", "Mn"]), the grid's one
+    power, named by the label with the rank as its text. The block says
+    `carried`, and is held to the same arithmetic as a grid the stream reads."""
+    if len(g['codes']) != 7:
+        raise SystemExit('%s: carried_grids: %s has %d codes, not 7' % (slug, g['name'], len(g['codes'])))
+    abilities = []
+    for n, c in enumerate(g['codes']):
+        hit = ranks.get(c.upper())
+        if not hit:
+            raise SystemExit('%s: carried_grids: %s prints %r, no rank the registry spells' % (slug, g['name'], c))
+        abilities.append({'letter': roster.ABILITIES[n], 'number': hit[1], 'code': hit[0], 'printed_code': c})
+    block = {'label': None, 'kind': 'line', 'page': g['page'], 'part': g['part'], 'abilities': abilities,
+             'rank_only': True, 'carried': True,
+             'health': str(g['health']), 'karma': None, 'resources': None, 'popularity': None}
+    block['check'] = check(block)
+    powers = [{'name': g['label'][0], 'text': [t for t in g['label'][1:2] if t]}] if g.get('label') else []
+    return {'kind': 'opponent', 'header': g['name'], 'part': g['part'], 'pages': [g['page']], 'identity': [],
+            'blocks': [block], 'sections': {}, 'powers': powers, 'members': [], 'prose': [], '_sec': None}
 
 
 def check(block):
@@ -1076,6 +1188,10 @@ def parse(book, slug):
     for part, first, last, name in ranges:
         spec = next((c for c in book.get('prose_cards', []) if c['name'] == name), None) if name else None
         entries += prose_card(book, slug, part, first, name, ranks, reader, spec) if name else cards(book, slug, part, first, last, ranks, reader)
+    for lv in book.get('lost_values', []):
+        if not any(roster.norm(e['header']) == roster.norm(lv[2]) and lv[3].lower() in b.get('read_off_image', [])
+                   for e in entries for b in e['blocks']):
+            raise SystemExit('%s: lost_values names %s %s, found in no block' % (slug, lv[2], lv[3]))
     skip = {roster.norm(n) for n in book.get('not_characters', [])}
     dropped = [e for e in entries if roster.norm(e['header']) in skip]
     if len(dropped) != len(skip):
@@ -1085,6 +1201,13 @@ def parse(book, slug):
     pages += [(f['part'], f['page']) for f in book.get('form_grids', []) if (f['part'], f['page']) not in pages]
     for part, page in pages:
         entries += opponents(book, slug, part, page, ranks)
+    for g in book.get('carried_grids', []):
+        if any(e['kind'] == 'opponent' and (e['part'], e['pages']) == (g['part'], [g['page']])
+               and roster.norm(e['header']) == roster.norm(g['name']) for e in entries):
+            # the stream reads the grid after all (a re-OCR): carry it no more
+            raise SystemExit('%s: carried_grids carries %s on %s p.%s, which the page stream reads too'
+                             % (slug, g['name'], g['part'], g['page']))
+        entries.append(carried_grid(g, ranks, slug))
     # a grid that repeats another entry's (registry `repeat_grids`: MH4's two
     # "2 Minions" grids, printed 12 and 13, Modok's Minions' grid again under
     # two more rooms) is checked against it, code for code, Health and Karma,
@@ -1092,7 +1215,12 @@ def parse(book, slug):
     for r in book.get('repeat_grids', []):
         hits = [e for e in entries if e['kind'] == 'opponent' and (e['part'], e['pages']) == (r['part'], [r['page']])
                 and roster.norm(e['header']) == roster.norm(bare_name(r['name']))]
-        of = [e for e in entries if e['kind'] == 'opponent' and roster.norm(e['header']) == roster.norm(r['of'])]
+        # the repeat itself is never its own original: a repeat printed under
+        # its original's name (MH6's Moltens, printed 16 of printed 3) would
+        # otherwise find two. Where the names differ (MH4's "2 Minions" of
+        # Modok's Minions) the repeat was never in this list, so nothing moves.
+        of = [e for e in entries if e['kind'] == 'opponent' and roster.norm(e['header']) == roster.norm(r['of'])
+              and not (len(hits) == 1 and e is hits[0])]
         if len(hits) != 1 or len(of) != 1:
             raise SystemExit('%s: repeat_grids finds %s %d times on %s p.%s and %s %d times, not once each'
                              % (slug, r['name'], len(hits), r['part'], r['page'], r['of'], len(of)))
@@ -1199,6 +1327,18 @@ def coverage(book, entries):
             m = re.search(r"[a-z,] ([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)+)\. [A-Z]", p['text'])
             if e['kind'] == 'entry' and m:
                 lines.append('  POWERS: A HEAD AFTER AN OPEN SENTENCE IN %s\'s %s: %s' % (e['header'], p['name'], m.group(1)))
+                bad = True
+    # a story or Talents run-in left inside a section's or a power's text
+    # (MH6's "Thor's Story.", "Talents.", read by registry `story_runins` and
+    # `section_labels`): a card's story or talents read as the text before
+    # it. Held for every book, whatever its registry says, so a rule turned
+    # off or a header the stream cut wrong (MH6 without `faint_rules`) shows
+    for e in entries:
+        for k, t in list(e['sections'].items()) + [(p['name'], p['text']) for p in e['powers']]:
+            t = t if isinstance(t, str) else ' '.join(t)
+            m = re.search(r"(?:^|[.!?] )((?:[A-Z][\w-]*(?: [A-Z][\w-]*)*\Ws Story|Talents)\.)(?: |$)", t)
+            if m:
+                lines.append('  A RUN-IN INSIDE %s\'s %s: %s' % (e['header'], k, m.group(1)))
                 bad = True
     no_health = {roster.norm(n) for n in book.get('no_health', [])}
     for e in entries:
