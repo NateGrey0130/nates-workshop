@@ -1,0 +1,13 @@
+{
+  "about": [
+    "Hand decisions about MH6 stat blocks and text, applied by scripts/msh/roster.py and scripts/msh/npcs.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache. MH6 prints no misprint (survey mh6.md, Stat blocks), so every entry here is a text verdict.",
+    "  verdict   text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops.",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"row": "mh6:executioner-mh6:power:4"}, "verdict": "text", "checked": "2026-10-23",
+     "read": "weapon, \"made of", "printed": "weapon, made of",
+     "note": "Inside cover 4 (PDF 21), the Executioner's MAGICAL AXE., the line at the top of column 2: a grey speck of the scan in the margin before made is read as a double quote. The page prints no quote there and none closes later in the power (seen on a 300 dpi crop of PDF 21)."}
+  ]
+}

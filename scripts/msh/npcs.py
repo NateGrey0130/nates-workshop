@@ -441,7 +441,7 @@ def main(slug_arg):
     for e in statted:
         by_name.setdefault(norm(name_of(e) if booklet else base_name(e['header'])), []).append(e)
 
-    chars, rows = [], []
+    chars, rows, card_part = [], [], {}
 
     def text_row(entry_slug, part, n, name, page, body):
         body = ascii_fold(body).strip()
@@ -522,6 +522,13 @@ def main(slug_arg):
                     # coverpanels.second_reason): the block keeps the label
                     # as printed. No earlier book's block carries one.
                     **({'printed_labels': b['printed_labels']} if b.get('printed_labels') else {}),
+                    # a grid the registry carries because the page's OCR cannot
+                    # read it (MH6's red-pattern grids, coverpanels carried_grids),
+                    # and a value read off the image where the OCR lost it (MH6's
+                    # Ulik's Popularity, lost_values): the block says so, so the
+                    # Codex can mark it. No earlier book's block carries either.
+                    **({'carried': True} if panels and b.get('carried') else {}),
+                    **({'read_off_image': b['read_off_image']} if panels and b.get('read_off_image') else {}),
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': 'partial' if rbook and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),
@@ -634,6 +641,7 @@ def main(slug_arg):
             })
         renamed = built_name(group[0]) in card_names
         cid = ident(card_name(group[0])) if booklet or renamed else ident(base_name(group[0]['header']))
+        card_part[cid] = group[0].get('part')
         chars.append({'id': cid, 'name': card_name(group[0]),
                       'team': versions[0]['team'],
                       **({'side': versions[0]['side']} if booklet and versions[0].get('side') else {}),
@@ -739,7 +747,13 @@ def main(slug_arg):
     # and a cover-panels book in the PDF's order: the inside front cover, the
     # Adventure Book, the inside back cover
     booklet_rank = {p['cite']: n for n, p in enumerate(book.get('parts', []))} if grid or panels else {}
-    chars.sort(key=lambda c: (booklet_rank.get(c['versions'][0].get('part'), 0),
+    # MH6's three card panels share one cite (Inside cover), so a cite's rank
+    # is its last panel's and Thor (Inside cover 1) would sort after the
+    # Adventure Book: a card sorts by its panel's own part. MH1-5's cites are
+    # each one part's, so the two ranks agree there.
+    part_rank = {p['name']: n for n, p in enumerate(book.get('parts', []))} if panels else {}
+    chars.sort(key=lambda c: (part_rank[card_part[c['id']]] if card_part.get(c['id']) in part_rank
+                              else booklet_rank.get(c['versions'][0].get('part'), 0),
                               min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
     text_fixes(rows, slug_arg)
@@ -764,9 +778,16 @@ def main(slug_arg):
     def panel_listing(r):
         # a cover-panels book (MH1): the Adventure Book's span, its cards' pages
         # and its opponents' together, and the panels, which print no page
+        # MH6 reads no booklet page as a card page (character_ranges empty):
+        # the span is its opponents', in their part. Its three card panels
+        # cite alike (Inside cover), so a cite is listed once.
         spans = [p for x in r['character_ranges'] for p in x['pages']] + [o['page'] for o in r['opponents']]
-        return {'pages': [min(spans), max(spans)], 'part': part_cite(r, r['character_ranges'][0]['part']),
-                'panels': [part_cite(r, p) for p in r['panels']]}
+        first = (r['character_ranges'] or r['opponents'])[0]['part']
+        cites = []
+        for p in r['panels']:
+            if part_cite(r, p) not in cites:
+                cites.append(part_cite(r, p))
+        return {'pages': [min(spans), max(spans)], 'part': part_cite(r, first), 'panels': cites}
 
     def source_pages(r):
         if r.get('layout') == 'cover-panels':
