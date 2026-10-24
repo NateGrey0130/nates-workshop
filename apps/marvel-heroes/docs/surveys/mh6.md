@@ -3,11 +3,8 @@
 Marvel Super Heroes solo adventure module, Bruce Nesmith, 1985. Registry
 entry: `scripts/msh/books.json` -> `mh6`. Measured 2026-10-23.
 
-**Rows citing this book:** none yet (survey only; no data imported).
-
-**DRAFT (2026-10-23).** Everything here was measured and read on the page
-images, and the trial parse is in *Which reader fits*. The Marvel smoke
-suite has not been run on this branch.
+**Rows citing this book:** 0 `msh_book_text` rows (survey only; no data
+imported).
 
 The sixth module of the MH series, through `scripts/msh/` only. Characters
 only (decision 3): the adventure, items and places are not imported.
