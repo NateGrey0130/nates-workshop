@@ -213,6 +213,24 @@
     ]
    ],
    "total": 23
+  },
+  {
+   "slug": "mh6",
+   "title": "MH6 Thunder Over Jotunheim",
+   "code": "TSR6862",
+   "status": "imported",
+   "date": "2026-10-23",
+   "added": [
+    [
+     "Characters",
+     30
+    ],
+    [
+     "Rows of the book's text",
+     44
+    ]
+   ],
+   "total": 30
   }
  ]
 }

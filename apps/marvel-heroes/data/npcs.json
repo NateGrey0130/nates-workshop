@@ -63,6 +63,11 @@
    "book": "MH5 Cat's Paw",
    "code": "TSR6857",
    "pages": "Adventure 5-16; Inside front cover; Inside back cover"
+  },
+  {
+   "book": "MH6 Thunder Over Jotunheim",
+   "code": "TSR6862",
+   "pages": "Adventure 3-15; Inside cover"
   }
  ],
  "books": [
@@ -239,6 +244,19 @@
     "Inside front cover",
     "Inside back cover"
    ]
+  },
+  {
+   "slug": "mh6",
+   "short": "MH6",
+   "title": "MH6 Thunder Over Jotunheim",
+   "pages": [
+    3,
+    15
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside cover"
+   ]
   }
  ],
  "teams": [
@@ -301,7 +319,8 @@
   "Heliopolitans",
   "MH4 Lone Wolves",
   "MH5 Cat's Paw",
-  "Alpha Flight"
+  "Alpha Flight",
+  "MH6 Thunder Over Jotunheim"
  ],
  "characters": [
   {
@@ -57370,6 +57389,2378 @@
    ],
    "appearances": [],
    "book": "mh5"
+  },
+  {
+   "id": "thor-mh6",
+   "name": "Thor",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "thor-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [
+      "God of Thunder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "320",
+       "karma": "76",
+       "resources": "EXCELLENT",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Mjolnir"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "crystal-lion-mh6",
+   "name": "Crystal Lion",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "crystal-lion-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "giant-spider-mh6",
+   "name": "Giant Spider",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "giant-spider-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Special Attack"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "giant-wolf-mh6",
+   "name": "Giant Wolf",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "giant-wolf-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Bite"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "moltens-mh6",
+   "name": "Moltens",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "moltens-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Special attack"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "sunflower-mh6",
+   "name": "Sunflower",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "sunflower-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "215",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "burning-house-mh6",
+   "name": "Burning House",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "burning-house-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Special defense"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "stone-gargoyle-mh6",
+   "name": "Stone Gargoyle",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "stone-gargoyle-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "monster-of-the-sphere-mh6",
+   "name": "Monster of the Sphere",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "monster-of-the-sphere-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "165",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "crystal-serpent-mh6",
+   "name": "Crystal serpent",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "crystal-serpent-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "175",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "flame-wing-mh6",
+   "name": "Flame Wing",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "flame-wing-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flame Breath"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "thorn-giant-mh6",
+   "name": "Thorn Giant",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "thorn-giant-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "165",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "thorn-trap-mh6",
+   "name": "Thorn Trap",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "thorn-trap-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "whip-vines-mh6",
+   "name": "Whip Vines",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "whip-vines-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "half-trolls-mh6",
+   "name": "Half-Trolls",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "half-trolls-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "102",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "lizard-mh6",
+   "name": "Lizard",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "lizard-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "wereboar-mh6",
+   "name": "Wereboar",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "wereboar-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Special defense"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "gisla-mh6",
+   "name": "Gisla",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "gisla-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "20",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magician"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "crystal-giant-mh6",
+   "name": "Crystal Giant",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "crystal-giant-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "195",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "giant-vulture-mh6",
+   "name": "Giant Vulture",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "giant-vulture-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "living-fire-mh6",
+   "name": "Living Fire",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "living-fire-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "232",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Special defense"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "maurglon-the-cavern-troll-mh6",
+   "name": "Maurglon the Cavern Troll",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "maurglon-the-cavern-troll-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "255",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "nightmare-witherer-mh6",
+   "name": "Nightmare Witherer",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "nightmare-witherer-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "170",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "granite-guardian-mh6",
+   "name": "Granite Guardian",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "granite-guardian-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "carried": true,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "geirrodur-mh6",
+   "name": "Geirrodur",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "geirrodur-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [
+      "King of the Rock Trolls"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "26",
+       "resources": "AMAZING",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Tordenstok"
+      },
+      {
+       "name": "Leadership"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "loki-mh6",
+   "name": "Loki",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "loki-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [
+      "God of Mischief"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "150",
+       "karma": "115",
+       "resources": "EXCELLENT",
+       "popularity": "25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Magic"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "rock-troll-mh6",
+   "name": "Rock Troll",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "rock-troll-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "104",
+       "karma": "10",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Clubs"
+      },
+      {
+       "name": "Cowardice"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "executioner-mh6",
+   "name": "Executioner",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "executioner-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [
+      "Skurge, Warlord"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "245",
+       "karma": "36",
+       "resources": "EXCELLENT",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Keen Eyesight"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Magical Axe"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "storm-giant-mh6",
+   "name": "Storm Giant",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "storm-giant-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "14",
+       "resources": "POOR",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
+  },
+  {
+   "id": "ulik-mh6",
+   "name": "Ulik",
+   "team": "MH6 Thunder Over Jotunheim",
+   "versions": [
+    {
+     "id": "ulik-mh6",
+     "label": null,
+     "team": "MH6 Thunder Over Jotunheim",
+     "part": "Inside cover",
+     "pages": [],
+     "identity": [
+      "Leader of the Lost Trolls"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "285",
+       "karma": "50",
+       "resources": "INCREDIBLE",
+       "popularity": "20",
+       "read_off_image": [
+        "popularity"
+       ]
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Pounders"
+      },
+      {
+       "name": "Minions"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh6"
   }
  ]
 }
