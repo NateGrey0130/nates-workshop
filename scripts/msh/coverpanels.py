@@ -159,8 +159,10 @@ HEALTH_SPECIAL = re.compile(r'^(Health\s*:\s*\d[\d,]*)\s+(Special\s*:\s*(.*?))\s
 # `health_labels`: MH6's Flame Wing, printed 8, "Health: 120 Flame Breath: In"):
 # the Health is the number, and the label is the grid's one power, its rank
 # as the power's text
-STORY_RUNIN = re.compile("^(.+?)['\u2019\ufffd]s Story\\.\\s*(.*)$")
 HEALTH_LABEL = re.compile(r"^(Health\s*:\s*\d[\d,]*)\s+([A-Z][A-Za-z' -]*?)\s*:\s*(.*?)\s*$")
+# a card's story run-in, its name, an apostrophe and Story. (registry
+# `story_runins`: MH6's "Thor's Story."), and the text after it
+STORY_RUNIN = re.compile("^(.+?)['\u2019\ufffd]s Story\\.\\s*(.*)$")
 
 
 def section_line(book):
@@ -258,7 +260,9 @@ def stream(book, slug, part, first, last, split_at_rules):
         lines = booklet.stream_of(offsets(book), slug, part, first, last, split_at_rules)
     finally:
         booklet.mend_fused, booklet.rules = orig, orig_rules
-    if panel and book.get('panel_foot'):
+    if panel:
+        # foot_lines stops a book without `panel_foot` whose panel has text
+        # below the foot, which would be lost
         lines = foot_lines(book, slug, part, lines)
     if panel and book.get('panel_head'):
         lines = head_lines(book, slug, part, lines)
@@ -310,7 +314,9 @@ def foot_lines(book, slug, part, lines):
     height, and a panel prints no folio, so its columns run lower (MH4's
     inside front cover: "Incredible temporarily." at 96.4%). Each such line
     goes on after the last line of its column, read as stream_of reads one.
-    MH1-3's panels hold no word there (measured on the TSV 2026-10-23)."""
+    MH1-3's panels hold no word there (measured on the TSV 2026-10-23), and a
+    book without `panel_foot` whose panel does stops here, as does one without
+    `foot_baseline` whose foot words share a line above the cut."""
     pdf = next(p for p in book['parts'] if p['name'] == part)['pdf'][0]
     words, (W, H) = roster.read_words(os.path.join(roster.CACHE, 'books', slug, 'tsv', 'p%03d.tsv' % pdf))
     body = [w for w in words if 0.03 * H < w['y'] and w['y'] + w['h'] < 0.955 * H]
@@ -328,6 +334,8 @@ def foot_lines(book, slug, part, lines):
             at = [n for n, x in enumerate(out) if x['pdf'] == pdf and x['col'] == c + 1]
             if not at:
                 continue
+            if not book.get('panel_foot'):
+                raise SystemExit('%s: %s prints %r below the foot, and the registry has no panel_foot' % (slug, part, l['text']))
             last = out[at[-1]]
             l.update(pdf=pdf, printed=last['printed'], part=part, band=last['band'], col=c + 1, body_h=body_h,
                      col_x0=edges[c], col_x1=edges[c + 1],
@@ -336,11 +344,19 @@ def foot_lines(book, slug, part, lines):
             # Geirrodur, Inside cover 3, whose last line's first words sit
             # above the cut and its last six below): the words below go on
             # the end of the line they share a baseline with, not as a line
-            # of their own after the column's last
-            same = [n for n in at if abs(out[n]['y1'] - l['y1']) <= 0.5 * body_h] if book.get('foot_baseline') else []
+            # of their own after the column's last. The words below the cut
+            # are not all after those above it (Geirrodur's "can", between
+            # "he" and "win."), so the line is rebuilt from its words by x
+            same = [n for n in at if abs(out[n]['y1'] - l['y1']) <= 0.5 * body_h]
+            if same and not book.get('foot_baseline'):
+                raise SystemExit('%s: %s: %r shares a baseline with %r above the foot, and the registry has no foot_baseline'
+                                 % (slug, part, l['text'], out[same[-1]]['text']))
             if same:
                 x = out[same[-1]]
-                out[same[-1]] = dict(x, text=x['text'].rstrip() + ' ' + l['text'].strip(), words=x['words'] + l['words'],
+                if x['text'].strip() != ' '.join(w['t'] for w in sorted(x['words'], key=lambda w: w['x'])):
+                    raise SystemExit('%s: foot_baseline: %r is not its words in order, %s' % (slug, x['text'], part))
+                ws = sorted(x['words'] + l['words'], key=lambda w: w['x'])
+                out[same[-1]] = dict(x, text=' '.join(w['t'] for w in ws), words=ws,
                                      y0=min(x['y0'], l['y0']), y1=max(x['y1'], l['y1']), x1=max(x['x1'], l['x1']))
                 continue
             out.insert(at[-1] + 1, l)
@@ -1311,6 +1327,18 @@ def coverage(book, entries):
             m = re.search(r"[a-z,] ([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)+)\. [A-Z]", p['text'])
             if e['kind'] == 'entry' and m:
                 lines.append('  POWERS: A HEAD AFTER AN OPEN SENTENCE IN %s\'s %s: %s' % (e['header'], p['name'], m.group(1)))
+                bad = True
+    # a story or Talents run-in left inside a section's or a power's text
+    # (MH6's "Thor's Story.", "Talents.", read by registry `story_runins` and
+    # `section_labels`): a card's story or talents read as the text before
+    # it. Held for every book, whatever its registry says, so a rule turned
+    # off or a header the stream cut wrong (MH6 without `faint_rules`) shows
+    for e in entries:
+        for k, t in list(e['sections'].items()) + [(p['name'], p['text']) for p in e['powers']]:
+            t = t if isinstance(t, str) else ' '.join(t)
+            m = re.search(r"(?:^|[.!?] )((?:[A-Z][\w-]*(?: [A-Z][\w-]*)*\Ws Story|Talents)\.)(?: |$)", t)
+            if m:
+                lines.append('  A RUN-IN INSIDE %s\'s %s: %s' % (e['header'], k, m.group(1)))
                 bad = True
     no_health = {roster.norm(n) for n in book.get('no_health', [])}
     for e in entries:
