@@ -5,9 +5,9 @@ entry: `scripts/msh/books.json` -> `mh6`. Measured 2026-10-23.
 
 **Rows citing this book:** none yet (survey only; no data imported).
 
-**DRAFT (2026-10-23).** Everything above *Which reader fits* was measured
-and read on the page images. The trial parse is the next row's, and the
-Marvel smoke suite has not been run on this branch.
+**DRAFT (2026-10-23).** Everything here was measured and read on the page
+images, and the trial parse is in *Which reader fits*. The Marvel smoke
+suite has not been run on this branch.
 
 The sixth module of the MH series, through `scripts/msh/` only. Characters
 only (decision 3): the adventure, items and places are not imported.
@@ -177,16 +177,111 @@ nothing imports.
 
 ## Which reader fits
 
-**Not finished.** Row 1b runs the trial parse. What is measured so far:
+**`cover-panels` (`scripts/msh/coverpanels.py`), with seven things taught
+to it.** Measured, not argued: a scratch copy of `scripts/msh/` at
+`90f89968` (this branch; its scripts are `origin/main` `6d7f98d3`'s) with
+this entry plus `"layout": "cover-panels"` and `"opponent_names": "title"`,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE`. The stock
+reader exits 1 at once: `repeat_grids finds Moltens 0 times on Adventure
+Book p.16`, because no Moltens grid is in the stream (*The red pattern*).
 
-- The seven cover cards are the shape `cover-panels`
-  (`scripts/msh/coverpanels.py`) reads for MH4 and MH5: rank-word rows with
-  colons, `Powers:` and run-ins, three columns to a panel.
-- The grids are not MH5's one-line grids: each has its own bold name line
-  and a letter row, as MH1-4's grids do, but sits inside an encounter's
-  text, after a bold choice heading (`Attack`, `Talk`) that is not a name.
-- Under the red pattern the cached OCR has no grid to read (above), so the
-  reader cannot find 24 of the 25 grids in the stream it is given.
+With that entry's `repeat_grids` set aside, it reads to the end and fails
+the checklist: 11 entries, 7 blocks, 1 failing, none of the 23 opponents
+found, the Executioner missing, and five entries with no block made of the
+comic page's captions and the encounters' prose.
+
+With registry-only workarounds in the scratch copy (below, and for items 1
+and 3) and four trial-only patches (items 4-7), `roster.py mh6` reads every entry: **30
+entries, 30 blocks, 29 pass, all found: yes**, the Moltens repeat checked
+against the first and not an entry. It still exits 1 on Ulik (item 2),
+which needs a reader change and was not patched. Every carried grid's
+Health holds on its codes (the table above).
+
+What the stock reader misses, each with its page and cause:
+
+- **The booklet holds no card** (registry, no reader change). The entry's
+  `character_ranges` (printed 3-16) has the reader take every booklet page
+  as a card page: the comic page's captions (printed 5) and the encounters
+  become five entries with no block. Every full block is on a panel, so
+  `character_ranges` is empty; the panels are read through `panels` alone.
+- **Two cards stacked on one panel** (registry, no reader change). Inside
+  cover 3 sets Loki over the top of columns 2-3 and Geirrodur and Rock Troll
+  under him; Inside cover 4 sets Ulik and Storm Giant in the top half and
+  the Executioner in the bottom half of columns 1-2. A rule divides the two
+  halves (seen on the page image of PDF 20), but it crosses only part of the page, so
+  `booklet.rules` does not see it. Without it each column is read top to
+  bottom: Geirrodur's story lands in Loki's MAGIC., and Ulik's four powers
+  in the Executioner's card. `faint_rules` at y 1580 (Inside cover 3) and
+  y 1600 (Inside cover 4) in TSV pixels splits them. Note that a panel is
+  page 1 of itself here (`stream` reads it so), not null as in
+  `lost_headers` and `speck_lines`.
+- **The Executioner's header is not in the TSV** (registry). Tesseract reads
+  no word of it, on Inside cover 4 over `Skurge, Warlord`; without it his
+  block is read as Ulik's second. `lost_headers` places it, as MH3's Human
+  Torch's.
+- **Talents.** is a run-in with a full stop on Thor's card (registry):
+  `section_labels` with Talents reads it as his talents (the section regex
+  already takes a full stop). Without it, it and his story land in MJOLNIR.
+- **`panel_foot`** (registry, as MH4 and MH5): Geirrodur's last line on
+  Inside cover 3, column 1, runs below the 95.5% foot.
+- **`repeat_grids`** stays as written: the second Moltens grid (printed 16)
+  is checked against printed 3's once item 7 lets the reader tell them
+  apart.
+
+What the reader must learn, all in `coverpanels.py` behind the registry,
+with MH1-5's `roster.json`, `book-text.sql` and `npcs.json` rows proved
+byte-identical before and after. Seven things:
+
+1. **A foot line that straddles the cut.** Geirrodur's LEADERSHIP. ends on a
+   line (Inside cover 3, column 1, y 3041-3079 of the TSV) whose first words
+   sit above the 95.5% foot and whose last six sit below it. `foot_lines`
+   adds the words below as a line of their own after the column's last line,
+   so the line is split in two and its pieces read out of order. A word
+   below the foot belongs to the line it shares a baseline with. (In the
+   trial a `speck_lines` and a `drop_lines` put the line back whole.)
+2. **A value lost on the art.** Ulik's `Popularity:` (Inside cover 4) has
+   its 20 printed on his portrait; the TSV holds the label and no value, the
+   block's crop reads `oN`, and the block fails `unprinted: Popularity`. The
+   value read off the page image needs a way in (a registry field, or an
+   override that sets the value and not only marks the block known).
+3. **A story run-in as the card's background.** Every card but Rock Troll's
+   and Storm Giant's ends on a run-in that is the character's name and
+   `Story.` (Thor's, Loki's, Geirrodur's, Ulik's, the Executioner's). The
+   reader takes each as text of the last power before it. In the trial each
+   was named in `section_labels`, which keys it as a section of its own
+   name; the reader should read the pattern and key it `background`.
+4. **A letter row the OCR cannot read.** Flame Wing's (printed 8, the one
+   clear grid) reads as six words that are not the letters, so `letter_xs`
+   finds no grid there and the entry is lost. The code row under it reads
+   cleanly. Trial patch: when the letter row does not read and the line
+   under it is seven words, take the columns from those words.
+5. **Any label on a grid's Health line.** `HEALTH_SPECIAL` takes only
+   `Special:`; MH6 prints `Flame Breath: In` on Flame Wing's line (and Body
+   Armor, Flight and Special attack labels on hidden grids), so the Health
+   reads as `120 Flame Breath: In` and fails. Trial patch: any capitalised
+   label. The power it makes should be named by the label, with the rank
+   as its text, where MH4's `Special:` names the power by its value.
+6. **Grids carried in the registry.** 22 named grids and the Moltens repeat
+   are under the red pattern and not in the stream (decision 4). Trial
+   patch: a `carried_grids` list (part, page, name, codes, Health), each
+   made an opponent entry with no text; all 23 then pass and the checklist
+   is complete. The parser row decides how a carried grid ties to its page:
+   17 of the 22 have a name line in the cached OCR (Wereboar's under the
+   pattern, read anyway; the Nightmare Witherer's with its leading The), and
+   Stone Gargoyle's, Burning House's, Whip Vines', Half-Trolls' and
+   Lizard's are not; and at least Moltens' prose under its name line is
+   printed in black.
+7. **A repeat with its original's name.** `repeat_grids` looks up `of`
+   among every entry of that name, the repeat included, so a repeat named as
+   its original (Moltens, printed 16 of printed 3) finds two and stops. MH4's
+   repeats were named otherwise (2 Minions of Modok's Minions). Trial patch:
+   the lookup leaves the repeat out.
+
+No other reader fits: the cards print rank words and no ability numbers and
+are on the cover's panels, as MH1-5's are (mh4.md, *Which reader fits*).
+
+This survey sets no `layout`, as MH1-5's did not: that is the parser's
+choice.
 
 ## Decisions this survey leaves open
 
