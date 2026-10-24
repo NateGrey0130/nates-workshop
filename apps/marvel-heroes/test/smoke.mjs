@@ -1098,6 +1098,51 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'leader-mh5' }).snapshot));
   }
 
+  // MH6 is laid out as MH1-MH5 are (scripts/msh/coverpanels.py,
+  // mh6-overrides.json), but its seven card panels cite alike (Inside cover),
+  // its Adventure Book prints only one-line grids, most on a red pattern the
+  // OCR cannot read (carried in the registry), and it prints no misprint.
+  if (data.npcs.characters.some((c) => c.book === 'mh6')) {
+    const mh6 = data.npcs.characters.filter((c) => c.book === 'mh6');
+    const blocks6 = mh6.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blk6 = (id) => mh6.find((c) => c.id === id)?.versions[0].blocks[0];
+    const panelIds = mh6.filter((c) => c.versions[0].part === 'Inside cover').map((c) => c.id);
+    check('MH6: 30 characters under the book\'s title, each id ending -mh6, one block each: seven card panels and 23 Adventure Book opponents',
+      mh6.length === 30 && mh6.every((c) => c.id.endsWith('-mh6') && c.team === 'MH6 Thunder Over Jotunheim' && c.versions.length === 1)
+      && blocks6.length === 30 && panelIds.join() === 'thor-mh6,geirrodur-mh6,loki-mh6,rock-troll-mh6,executioner-mh6,storm-giant-mh6,ulik-mh6'
+      && mh6.filter((c) => c.versions[0].part === 'Adventure').length === 23,
+      `${mh6.length} ${panelIds}`);
+    check('MH6: Thor (Inside cover 1) sorts before the Adventure Book and the other six panels after it',
+      mh6[0].id === 'thor-mh6' && mh6[1].id === 'crystal-lion-mh6' && mh6.slice(24).map((c) => c.id).join() === panelIds.slice(1).join(),
+      mh6.map((c) => c.id).join());
+    const ov6 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh6-overrides.json'), 'utf8')).overrides;
+    check('MH6: no block carries a misprint override, and the one override is a text verdict (the Executioner\'s Magical Axe speck)',
+      blocks6.every(({ b }) => !b.override) && ov6.length === 1
+      && ov6[0].verdict === 'text' && ov6[0].match.row === 'mh6:executioner-mh6:power:4',
+      JSON.stringify(ov6.map((o) => [o.verdict, o.match])));
+    const carried = blocks6.filter(({ b }) => b.carried);
+    check('MH6: 22 of the 23 one-line grids are carried in the registry, Flame Wing\'s read off the page, and no panel is carried',
+      carried.length === 22 && carried.every(({ b }) => b.kind === 'line')
+      && blocks6.filter(({ b }) => b.kind === 'line').length === 23 && !blk6('flame-wing-mh6')?.carried
+      && !carried.some(({ id }) => panelIds.includes(id)),
+      `${carried.length} ${blocks6.filter(({ b }) => b.kind === 'line' && !b.carried).map(({ id }) => id)}`);
+    check('MH6: Ulik\'s Popularity (20) is the one value read off the image, and plays',
+      JSON.stringify(blk6('ulik-mh6')?.read_off_image) === '["popularity"]' && blk6('ulik-mh6')?.popularity === '20'
+      && bookNpc({ character: 'ulik-mh6' }).snapshot?.abilities.popularity.number === 20
+      && blocks6.filter(({ b }) => b.read_off_image).length === 1,
+      JSON.stringify(blocks6.filter(({ b }) => b.read_off_image).map(({ id, b }) => [id, b.read_off_image])));
+    const book6 = data.npcs.books.find((b) => b.slug === 'mh6');
+    check('MH6: the book reads Adventure 3-15 and Inside cover once, a panel card cites the panel with no page and an opponent its page',
+      JSON.stringify([book6?.part, book6?.pages, book6?.panels]) === '["Adventure",[3,15],["Inside cover"]]'
+      && tagline(bookNpc({ character: 'thor-mh6' }).snapshot).startsWith('MH6 Thunder Over Jotunheim, Inside cover;')
+      && tagline(bookNpc({ character: 'crystal-lion-mh6' }).snapshot).startsWith('MH6 Thunder Over Jotunheim, Adventure p.3;')
+      && tagline(bookNpc({ character: 'granite-guardian-mh6' }).snapshot).startsWith('MH6 Thunder Over Jotunheim, Adventure p.15;'),
+      `${JSON.stringify(book6)} ${tagline(bookNpc({ character: 'thor-mh6' }).snapshot)}`);
+    check('MH6: the four panels with a full grid play their printed Health and Karma (Thor 320/76, Loki 150/115, the Executioner 245/36, Ulik 285/50)',
+      ['thor-mh6', 'loki-mh6', 'executioner-mh6', 'ulik-mh6'].map((id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; }).join()
+        === '320/76,150/115,245/36,285/50');
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
