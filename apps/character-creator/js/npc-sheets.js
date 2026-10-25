@@ -108,6 +108,7 @@ window.npcSheets = (function () {
         <a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${c.id}&amp;play=1">▶ Play</a>
         <button class="btn btn-sm btn-ghost" title="Keep a copy in your NPC library, for any campaign"
           onclick="npcSheets.keep(${c.id})">📚 keep</button>
+        <button class="btn btn-sm btn-ghost" onclick="npcSheets.transfer(${c.id})">Transfer to player…</button>
         <button class="btn btn-sm btn-ghost" onclick="npcSheets.remove(${c.id})">delete</button>
       </span>
     </div>`;
@@ -404,6 +405,22 @@ window.npcSheets = (function () {
     } catch (err) { alert('Failed: ' + err.message); }
   }
 
+  // Hand a statted NPC to a player (js/transfer-dialog.js). It becomes their
+  // character in this campaign, so it leaves this list - sheets() keeps
+  // kind = 'npc' only - and joins the roster the host shows. A linked dossier
+  // stays linked and stays the G.M.'s.
+  async function transfer(id) {
+    const c = S.roster.find((x) => x.id === id);
+    const res = await transferDialog.open({ name: c?.name || 'this NPC',
+      send: (to) => api(`characters/${id}/transfer`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to_email: to }),
+      }) });
+    if (!res) return;
+    await reloadRoster();
+    S.lib.msg = `Moved ${c?.name || 'the NPC'} to ${res.character.player_email}.`; S.lib.err = false;
+    render();
+  }
+
   // Link a sheet to a dossier, moving the link off whichever dossier held it.
   async function link(sheetId, npcId) {
     const was = S.dossiers.find((n) => n.character_id === sheetId);
@@ -446,6 +463,7 @@ window.npcSheets = (function () {
           <button class="btn btn-sm" onclick="npcSheets.pull(${e.id})" ${L.busy ? 'disabled' : ''}>⤵ Pull into this campaign</button>
           <button class="btn btn-sm btn-ghost" onclick="npcSheets.renameEntry(${e.id})">rename</button>
           <button class="btn btn-sm btn-ghost" onclick="npcSheets.noteEntry(${e.id})">note</button>
+          <button class="btn btn-sm btn-ghost" onclick="npcSheets.transferEntry(${e.id})" ${L.busy ? 'disabled' : ''}>Transfer to player…</button>
           <button class="btn btn-sm btn-ghost" onclick="npcSheets.deleteEntry(${e.id})">delete</button>
         </span></div>`;
     return `<div class="panel-inset" style="margin-top:10px">
@@ -504,6 +522,38 @@ window.npcSheets = (function () {
     render();
   }
 
+  // Hand a library entry to a player, into a campaign the G.M. runs - this
+  // one unless they pick another. The entry leaves the library. A different
+  // game is asked about exactly as pull() asks.
+  async function transferEntry(id) {
+    const e = S.lib.entries.find((x) => x.id === id);
+    let camps = [{ id: Number(cid()), name: 'This campaign', system: S.host.system }];
+    if (window.campaignList) {
+      try { camps = (await campaignList.load()).filter((c) => c.is_gm); } catch { /* this one, then */ }
+    }
+    let into = null;
+    const send = async (to, campaignId, force = false) => {
+      into = campaignId;
+      try {
+        return await api(`npc-library/${id}/transfer`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to_email: to, campaign_id: campaignId, force }),
+        });
+      } catch (err) {
+        if (!force && err.status === 409 && err.detail?.code === 'system_mismatch'
+            && confirm(`${err.message}.\n\nTransfer it anyway?`)) return send(to, campaignId, true);
+        throw err;
+      }
+    };
+    const res = await transferDialog.open({ name: e?.name || 'this entry', campaigns: camps,
+      campaignId: Number(cid()), send });
+    if (!res) return;
+    await loadLib();
+    if (String(into) === String(cid())) await reloadRoster();
+    S.lib.msg = `Moved ${res.character.name} to ${res.character.player_email}.`; S.lib.err = false;
+    render();
+  }
+
   async function patchEntry(id, body) {
     try {
       await api(`npc-library/${id}`, {
@@ -533,5 +583,6 @@ window.npcSheets = (function () {
 
   return { mount, render, setRoster, setDossiers, openGen, closeGen, genSet, roll,
            openPick, closePick, pickSearch, pickSet, place, remove, link, sheets, className,
-           openLib, closeLib, keep, pull, renameEntry, noteEntry, deleteEntry, setToLib };
+           openLib, closeLib, keep, pull, renameEntry, noteEntry, deleteEntry, setToLib,
+           transfer, transferEntry };
 })();
