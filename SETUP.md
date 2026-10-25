@@ -60,7 +60,7 @@ nates-workshop/
 │   └── table-room/       The Table's live game room. NOT deployed by a merge either
 └── functions/api/
     ├── _middleware.js    Access JWT verification on /api/*; PUBLIC_PATHS exemptions
-    ├── _lib/             access.js (the ONE identity read), access-jwt.js, claude-client.js
+    ├── _lib/             access.js (the ONE identity read), access-jwt.js, claude-client.js, people.js
     ├── claude.js         /api/claude proxy: model allowlist + token cap
     ├── media-vault/      per-item CRUD, lookup proxy (TMDB key server-side), sharing
     ├── pick3cut5/        room + solo; outside the wall; thin proxies to the Worker
@@ -276,7 +276,9 @@ GET /accounts/{account_id}/pages/projects/nates-workshop
   of MediaVault works, which is how it goes unnoticed.
 - `MV_SHARE_CANDIDATES`: who MediaVault's share picker may offer. It is a
   **hand-kept mirror of the Access allow policy**, re-checked by
-  `functions/api/media-vault/shares.js` on every grant. **Unset means nobody.**
+  `functions/api/media-vault/shares.js` on every grant. It is read in one place,
+  `functions/api/_lib/people.js`, so any app offering people reads the same list.
+  **Unset means nobody.**
   It lives in the dashboard (not `wrangler.jsonc`) because it lists real
   people's addresses and the repo is public. Stored as a secret, it cannot be
   read back; the picker is the only view of who is in it.

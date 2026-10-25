@@ -521,10 +521,18 @@ check('the TMDB key is read from the environment, not the source',
   // Both halves are structural and both are asserted here, because the second
   // is the one a finished-looking modal makes easy to skip.
   const sh = endpointCode['shares.js'];
+  // The list itself is read in the shared people helper, so other apps can
+  // offer and re-check the same people; shares.js must take it from there
+  // rather than keep a second reader that could drift from the first.
+  const people = stripComments(readFileSync(join(repoRoot, 'functions', 'api', '_lib', 'people.js'), 'utf8'));
   check('the share candidate list is read from the environment, not the source',
-    sh.includes('env.MV_SHARE_CANDIDATES')
-    && !/@[a-z0-9-]+\.(com|net|org)/i.test(sh),
+    people.includes('env.MV_SHARE_CANDIDATES')
+    && !/@[a-z0-9-]+\.(com|net|org)/i.test(people + sh),
     'an address hardcoded here is a list that cannot be changed without a deploy');
+  check('and shares.js takes it from the shared people helper',
+    /import\s*\{[^}]*\bshareCandidates\b[^}]*\}\s*from\s*'\.\.\/_lib\/people\.js'/.test(sh)
+    && !/function shareCandidates|env\.MV_SHARE_CANDIDATES/.test(sh),
+    'a second reader of the list is a second place for it to go stale');
   // The POST must consult it BEFORE the INSERT. Order matters and a substring
   // test cannot see order, so compare positions in the source.
   const post = sh.slice(sh.indexOf('onRequestPost'));
@@ -534,7 +542,7 @@ check('the TMDB key is read from the environment, not the source',
     gate !== -1 && insert !== -1 && gate < insert,
     'a picker the server does not enforce is decorative');
   check('and an unset list means nobody, rather than everybody',
-    /MV_SHARE_CANDIDATES\s*\)\s*\|\|\s*''/.test(sh) || sh.includes("|| '')"),
+    /MV_SHARE_CANDIDATES\s*\)\s*\|\|\s*''/.test(people) || people.includes("|| '')"),
     'shareCandidates must default to an empty list');
 
   // SHARE-AUDIT V8. The mirror is secret_text and cannot be read back, so the
