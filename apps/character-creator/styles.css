@@ -3356,3 +3356,22 @@ body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); 
 /* The codex marks what the reader's own characters hold (me/holdings). */
 .codex-yours { margin-left: 6px; font-size: 10px; vertical-align: 1px; }
 .codex-mine { margin: 6px 0; }
+
+/* "Transfer to player…" (js/transfer-dialog.js): one modal over the sheet,
+   the campaign page and GM Tools. Width is capped by the viewport so a phone
+   keeps its 16px gutter; a long address in the picker wraps the select, not
+   the page. */
+.transfer-dialog {
+  /* margin: auto is what centres a modal <dialog>, and shared/styles.css's
+     reset zeroes it - the dialog sat in the top-left corner without this. */
+  margin: auto; width: min(440px, calc(100vw - 32px)); max-width: none; padding: 16px 18px;
+  background: var(--bg-card); color: var(--text-primary);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent);
+}
+.transfer-dialog::backdrop { background: rgba(26, 22, 20, 0.45); }
+.transfer-dialog h3 { margin: 0 0 10px; font-size: 16px; overflow-wrap: anywhere; }
+.transfer-field { display: block; margin-top: 8px; }
+.transfer-field select { display: block; width: 100%; max-width: 100%; margin-top: 4px; }
+.transfer-warn { margin: 12px 0 0; color: var(--text-secondary); }
+.transfer-status { margin: 8px 0 0; min-height: 1.2em; }
+.transfer-buttons { margin-top: 12px; }

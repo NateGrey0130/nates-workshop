@@ -223,7 +223,7 @@ async function load() {
     C.nextThreshold = res.next_threshold ?? null;
     C.levelUpReady = !!res.level_up_ready;
 
-    const [journal, catalog, catalogs] = await Promise.all([
+    const [journal, catalog, catalogs, me] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
       // The skill picker needs the catalog to offer choices and to show what a
@@ -239,7 +239,12 @@ async function load() {
       // catalog's percentage while `resolvePicks` stored the book's.
       api('catalogs?system=' + encodeURIComponent(C.data.campaign_system || ''))
         .catch(() => ({ skills: [] })),
+      // Who is looking, for the G.M.'s "Transfer to player…": can_write is
+      // true for the owner and for the G.M. alike, so it cannot say which.
+      // Asked once, and only of a G.M., who is the only one it could show for.
+      C.isGm && C.me === undefined ? api('me').catch(() => ({})) : null,
     ]);
+    if (me) C.me = me.email ?? null;
     C.journal = journal.entries; C.catalog = catalog.items;
     // THIS CHARACTER'S GAME MAY PRINT DIFFERENT PERCENTAGES
     // (BOOK-INGEST-AUDIT.md F83). Substituted here, on the rows, so the two
@@ -624,6 +629,30 @@ function syncPlayChrome() {
   document.body.classList.toggle('play-mode', C.playMode);
   const t = $('play-toggle');
   if (t) { t.style.display = ''; t.textContent = C.playMode ? '📄 Sheet' : '▶ Play'; }
+  const x = $('transfer-btn');
+  if (x) x.style.display = canTransfer() ? '' : 'none';
+}
+
+// "Transfer to player…" is the campaign's G.M.'s, and only on a character they
+// OWN - their own PC or a statted NPC, never a player's
+// (functions/api/character-creator/characters/[id]/transfer.js refuses the
+// rest; this only keeps the button off a sheet where it would be refused).
+function canTransfer() {
+  return !!(C.data && C.isGm && C.me && C.data.player_email === C.me);
+}
+
+// A move: once it lands the character is the player's, and the sheet reloads
+// as the G.M. sees a player's character - still theirs to edit as G.M., with
+// the button gone. Typed edits are saved first, so they go with it.
+async function transferCharacter() {
+  if (!canTransfer()) return;
+  await settleEdits();
+  const res = await transferDialog.open({ name: C.data.name,
+    send: (to) => api(`characters/${id}/transfer`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to_email: to }),
+    }) });
+  if (!res) return;
+  await load();
 }
 
 // One structured result per roll, newest kept, capped. The shape was chosen so

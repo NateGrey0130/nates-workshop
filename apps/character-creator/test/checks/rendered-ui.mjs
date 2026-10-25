@@ -132,6 +132,7 @@ const SECTIONS = [
   'Present mode shows without revealing',
   'The campaign views are shared, and style nothing',
   'Statted NPCs: one panel, two pages',
+  'Transfer to player: one dialog, for a G.M. on their own character',
   'The name panel beside every Name box',
 ];
 
@@ -5018,6 +5019,71 @@ export async function run() {
       /async function pull\(id, force = false\)/.test(pull)
         && /err\.status === 409 && err\.detail\?\.code === 'system_mismatch'\s*&& confirm\(/.test(pull)
         && /return pull\(id, true\)/.test(pull));
+  }
+
+  // ---------- Transfer to player: one dialog, for a G.M. on their own character ----------
+  // A G.M. MOVES a character they own to someone on the share list
+  // (functions/api/character-creator/characters/[id]/transfer.js and
+  // npc-library/[id]/transfer.js, which refuse everything else). Three places
+  // offer it - the sheet, a statted-NPC row, a library entry - through ONE
+  // dialog, js/transfer-dialog.js. This pins that the picker can offer only the
+  // list, that the sheet hides the button unless the viewer is the G.M. AND the
+  // owner, and that every page whose scripts open the dialog loads it.
+  section('Transfer to player: one dialog, for a G.M. on their own character');
+  {
+    const dlg = readFileSync(join(appDir, 'js', 'transfer-dialog.js'), 'utf8');
+    check('the dialog asks transfer-candidates and nothing else',
+      (dlg.match(/\bapi\([^)]/g) || []).length === 1 && dlg.includes("api('transfer-candidates')"));
+    check('and offers no box to type an address into', !/<input|<textarea/.test(dlg));
+    check('an empty list says who can fix it, and the dialog says what is cleared',
+      dlg.includes("'Nobody to transfer to. Ask Nate to add them to the share list'")
+        && dlg.includes("'This moves the character to them. Notes, the play log and NPC gear notes are cleared. The bio is not.'"));
+    check('names and addresses are escaped, and nothing is written into an inline handler',
+      dlg.includes('${escHtml(name)}') && dlg.includes('value="${escHtml(e)}">${escHtml(e)}') && !/\bon\w+="/.test(dlg));
+
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
+    const sheetHtml = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'index.html'), 'utf8');
+    const gate = functionBody(sheet, 'function canTransfer()');
+    check('the sheet shows the button to the campaign\'s G.M. who owns the character, and nobody else',
+      !!gate && /C\.isGm && C\.me && C\.data\.player_email === C\.me/.test(gate), gate || 'no canTransfer');
+    check('the button starts hidden and only that gate shows it',
+      /id="transfer-btn" onclick="transferCharacter\(\)" style="display:none"/.test(sheetHtml)
+        && /x\.style\.display = canTransfer\(\) \? '' : 'none'/.test(sheet)
+        && (sheet.match(/\$\('transfer-btn'\)/g) || []).length === 1);
+    const act = functionBody(sheet, 'async function transferCharacter()');
+    check('and pressing it re-checks the gate, then reloads the sheet after the move',
+      !!act && /^async function transferCharacter\(\) \{\s*if \(!canTransfer\(\)\) return;/.test(act)
+        && /await load\(\);/.test(act));
+
+    const panel = readFileSync(join(appDir, 'js', 'npc-sheets.js'), 'utf8');
+    check('every statted-NPC row and every library entry offers it, from the shared panel',
+      /onclick="npcSheets\.transfer\(\$\{c\.id\}\)">Transfer to player…/.test(panel)
+        && /onclick="npcSheets\.transferEntry\(\$\{e\.id\}\)"[^>]*>Transfer to player…/.test(panel));
+    const entry = panel.slice(panel.indexOf('async function transferEntry('), panel.indexOf('async function patchEntry('));
+    check('a library entry lands only in a campaign the G.M. runs, and crosses games only after a 409 and a yes',
+      /\.filter\(\(c\) => c\.is_gm\)/.test(entry)
+        && /!force && err\.status === 409 && err\.detail\?\.code === 'system_mismatch'\s*&& confirm\(/.test(entry)
+        && /return send\(to, campaignId, true\)/.test(entry));
+
+    // Derived, not listed: any page whose own scripts open the dialog must
+    // load it, so a fourth caller cannot ship without it.
+    const openers = [];
+    for (const d of readdirSync(join(repoRoot, 'apps'), { withFileTypes: true })) {
+      const page = `apps/${d.name}/index.html`;
+      if (!d.isDirectory() || !existsSync(join(repoRoot, page))) continue;
+      const html = readFileSync(join(repoRoot, page), 'utf8');
+      const srcs = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]);
+      const opens = srcs.some((src) => {
+        const f = src.startsWith('/') ? join(repoRoot, src.slice(1)) : join(repoRoot, 'apps', d.name, src);
+        return existsSync(f) && readFileSync(f, 'utf8').includes('transferDialog.open(');
+      });
+      if (!opens) continue;
+      openers.push(page);
+      check(`${page} loads the dialog it opens`, srcs.includes('/apps/character-creator/js/transfer-dialog.js'));
+    }
+    check('the dialog is opened by the sheet, the campaign page and GM Tools',
+      ['apps/campaign/index.html', 'apps/character-sheet/index.html', 'apps/gm-tools/index.html']
+        .every((p) => openers.includes(p)), openers.join(', '));
   }
 
   // ---------- The name panel beside every Name box ----------
