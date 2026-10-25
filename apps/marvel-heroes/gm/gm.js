@@ -34,6 +34,7 @@ import { esc, renderSheet, tagline } from '../js/sheet.js';
 import { rollInitiative, initiativeTalents } from '../js/initiative.js';
 import { campaignUi } from '../js/campaign-ui.js';
 import { bookChoices } from '../js/npc-book.js';
+import { transferDialog } from '../js/transfer.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const FIELDS = [['health', 'Health'], ['karma', 'Karma'], ['karma_pool', 'Karma pool']];
@@ -253,6 +254,7 @@ async function loadNpcs() {
       <span><button type="button" class="linklike" data-npc-show="${n.id}">${esc(n.name)}</button>
         <span class="muted">${esc(tagline(n.snapshot))}; ${n.hidden ? 'hidden' : 'shown to players'}</span></span>
       <span class="row"><button type="button" class="btn secondary small" data-npc-hide="${n.id}" data-hidden="${n.hidden}">${n.hidden ? 'Show' : 'Hide'}</button>
+        <button type="button" class="btn secondary small" data-npc-give="${n.id}" aria-label="Transfer ${esc(n.name)} to a player">Transfer to player...</button>
         <button type="button" class="btn secondary small" data-npc-drop="${n.id}" aria-label="Delete ${esc(n.name)}">Delete</button></span>
     </li>`).join('');
 }
@@ -286,6 +288,21 @@ function initNpcForm(data) {
   $('#npc-list').addEventListener('click', async (e) => {
     const show = e.target.closest('[data-npc-show]');
     if (show) { showNpc(G.npcs.find((n) => String(n.id) === show.dataset.npcShow)); return; }
+    // The sheet becomes a hero the player owns, linked to this campaign, and
+    // leaves this list (npc-sheets/transfer.js); its People page stays here.
+    const give = e.target.closest('[data-npc-give]');
+    if (give) {
+      const n = G.npcs.find((x) => String(x.id) === give.dataset.npcGive);
+      const r = await transferDialog({ name: n.name,
+        send: (to) => api(`campaigns/${G.id}/npc-sheets/transfer`, { method: 'POST', body: { npc_id: n.id, to_email: to } }) });
+      if (!r) return;
+      $('#npc-sheet').hidden = true;
+      $('#npc-status').textContent = `Moved ${n.name} to ${r.data.to_email}, as a hero in this campaign.`;
+      const d = await api(`campaigns/${G.id}`);
+      if (d.ok) { G.detail = d.data; drawRoster(); }
+      await loadNpcs();
+      return;
+    }
     const hide = e.target.closest('[data-npc-hide]');
     const drop = e.target.closest('[data-npc-drop]');
     if (!hide && !drop) return;

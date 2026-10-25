@@ -709,3 +709,18 @@ body.present.idle { cursor: none; }
 .present-frame[hidden], .present-state[hidden] { display: none; }
 body.present.is-error .present-arrow, body.present.is-error .present-bottom { display: none; }
 @media (max-width: 560px) { .present-arrow { width: 48px; height: 48px; font-size: 28px; } .present-prev { left: 8px; } .present-next { right: 8px; } }
+
+/* -- Transfer to player (js/transfer.js): a modal over either page -- */
+.transfer-dialog {
+  background: var(--panel);
+  color: var(--ink);
+  border: 3px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  width: min(440px, calc(100vw - 32px));
+  overflow: visible;   /* short; the UA's auto drew an empty scrollbar gutter */
+}
+.transfer-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.transfer-field { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
+.transfer-warn { font-weight: 600; }

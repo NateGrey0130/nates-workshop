@@ -487,6 +487,7 @@ by roll, and they decide nothing here.
 | `js/npc.js` | the NPC roller: the generator run with a GM's body type, origin, exact number of Powers (rolled until one has it, extras bought as UPB p.14 allows, refused rather than padded) and highest rank, ending in a hero-shaped snapshot |
 | `js/npc-book.js` | a Notable NPC as a campaign NPC: one version and stat block of `data/npcs.json` to a hero-shaped snapshot with `mode: 'book'` - the printed numbers placed on the ladder by their range, each misprint the book's arithmetic exposes corrected, forms as forms and tiers as a choice; and the list of choices the GM picks from |
 | `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
+| `js/transfer.js` | the Transfer to player dialog the My heroes tab and the GM page share; its picker is filled only from the candidates endpoint |
 | `js/campaign-ui.js`, `js/undo.js` | the ui adapter the shared campaign views take - `esc`, an `escJs` that carries O'Brien through an inline handler, a yes/no question, the page's status line - and "Removed. Undo" in place of "Are you sure?", with the Palladium pages' contract |
 | `gm/present.html`, `gm/present.js` | present mode: one of the GM's pictures on black, for the screen turned to the table. The behaviour is `shared/js/campaign/present.js`; this is the skeleton of ids it fills, and where Escape goes. Showing is not revealing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
@@ -517,6 +518,7 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
 | `/functions/api/marvel-heroes/book-text.js` | GET one sourcebook entry's text from `msh_book_text`, in the book's order; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
+| `/functions/api/marvel-heroes/transfer.js`, `_lib/transfer.js` | GET who a character can go to (the Access allowlist's mirror, minus the caller; empty when unset); POST move one of your own heroes to one of them, notes cleared, campaign links kept |
 | `/functions/api/marvel-heroes/campaigns.js`, `campaigns/[id].js`, `_lib/campaigns.js` | list and create campaigns; read, edit (GM) and delete (GM) one; who may do what, and the checks every write goes through |
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes/[heroId].js` | GET a linked hero's sheet (its GM or owner); PATCH `{ field: delta }` for the four play numbers, GM only, written with its `msh_hero_events` row in one batch |
@@ -524,6 +526,7 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs/from-book.js` | POST, GM only: add a Notable NPC with `js/npc-book.js`, on the same terms as the roller - a hidden sheet, a dossier when asked, a 400 that says which version or block to choose |
 | `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
+| `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets/transfer.js` | POST, GM only: hand an NPC sheet to a player on the list, as a hero of theirs linked to this campaign, notes cleared; the sheet row goes, its People dossier stays |
 | `/functions/api/marvel-heroes/journal.js`, `journal/[entryId].js`, `_lib/notes.js` | a campaign's notes: list and write (members), change and delete (author or GM); @mentions, and the full-text query |
 | `/functions/api/marvel-heroes/campaigns/[id]/search.js`, `ask.js` | full-text search over the notes, and Ask, the paid answer from them |
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs.js`, `npcs/[npcId].js`, `npcs/[npcId]/portrait.js`, `npcs/sweep.js` | People: the roster, one dossier and every note mentioning them, its portrait in R2; the sweep answers 501 |

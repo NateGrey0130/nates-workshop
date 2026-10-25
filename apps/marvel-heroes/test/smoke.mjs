@@ -755,6 +755,98 @@ section('Campaigns: the GM changes only the play numbers, and a hero plays in on
       && sqlite.prepare('SELECT count(*) AS n FROM msh_hero_events').get().n === 0);
 }
 
+section('Transfer to a player: only the owner or the GM, only to someone who can sign in, and the notes stay behind');
+
+{
+  const { sqlite, env, route, call } = await marvelStandIn();
+  const R = {
+    transfer: await route('transfer.js'),
+    npcTransfer: await route('campaigns/[id]/npc-sheets/transfer.js'),
+    list: await route('campaigns.js'),
+    link: await route('campaigns/[id]/heroes.js'),
+    heroes: await route('heroes.js'),
+  };
+  const LIST = 'ann@x.org, Bob@x.org; gm@x.org';
+  env.MV_SHARE_CANDIDATES = LIST;
+  const heroRow = (id) => sqlite.prepare('SELECT owner_email, build, sheet, updated_at FROM msh_heroes WHERE id = ?').get(id);
+  sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet, updated_at)
+    VALUES ('hero-ann-0001', 'ann@x.org', 'Hero A', '{"seeds":{}}', '{"abilities":{}}', ?, '2020-01-01 00:00:00')`)
+    .run(JSON.stringify({ notes: 'mine', background: 'from Queens', karma: 12 }));
+  const camp = (await call(R.list, 'POST', { body: { name: 'Tuesday' } })).body.campaign;
+  const p = { id: String(camp.id) };
+  await call(R.link, 'POST', { who: 'ann@x.org', params: p, body: { hero_id: 'hero-ann-0001' } });
+  const give = (who, to, id = 'hero-ann-0001') => call(R.transfer, 'POST', { who, body: { hero_id: id, to_email: to } });
+
+  const cands = (await call(R.transfer, 'GET')).body.candidates;
+  check('the candidates are the list, lowercased, minus the caller', JSON.stringify(cands) === '["ann@x.org","bob@x.org"]', JSON.stringify(cands));
+
+  const before = JSON.stringify(heroRow('hero-ann-0001'));
+  const notMine = await give('bob@x.org', 'gm@x.org');
+  check('a hero the caller does not own is refused as missing', notMine.status === 404, JSON.stringify(notMine));
+  const offList = await give('ann@x.org', 'eve@x.org');
+  check('an address not on the list is refused', offList.status === 403, JSON.stringify(offList));
+  check('and so is the caller themselves', (await give('ann@x.org', 'ANN@x.org')).status === 400);
+  delete env.MV_SHARE_CANDIDATES;
+  const unset = await give('ann@x.org', 'bob@x.org');
+  check('with the list unset, every transfer is refused and nobody is a candidate',
+    unset.status === 503 && (await call(R.transfer, 'GET', { who: 'ann@x.org' })).body.candidates.length === 0, JSON.stringify(unset));
+  env.MV_SHARE_CANDIDATES = LIST;
+  check('and none of those refusals wrote anything', JSON.stringify(heroRow('hero-ann-0001')) === before);
+
+  const moved = await give('ann@x.org', ' Bob@X.org ');
+  const after = heroRow('hero-ann-0001');
+  const sheet = JSON.parse(after.sheet);
+  check('the owner moves their hero: the recipient owns it now', moved.status === 200 && after.owner_email === 'bob@x.org', JSON.stringify(moved));
+  check('its notes are cleared and the rest of its sheet is kept',
+    sheet.notes === undefined && sheet.background === 'from Queens' && sheet.karma === 12, after.sheet);
+  check('and updated_at moves', after.updated_at > '2020-01-01 00:00:00', after.updated_at);
+  check('its campaign link stays', !!sqlite.prepare('SELECT 1 FROM msh_campaign_heroes WHERE hero_id = ? AND campaign_id = ?').get('hero-ann-0001', camp.id));
+  check('it leaves the giver\'s list and is in the recipient\'s',
+    (await call(R.heroes, 'GET', { who: 'ann@x.org' })).body.heroes.length === 0
+    && (await call(R.heroes, 'GET', { who: 'bob@x.org' })).body.heroes[0]?.id === 'hero-ann-0001');
+  check('and the old owner cannot move it again', (await give('ann@x.org', 'gm@x.org')).status === 404);
+
+  // A full list is refused, in the UPDATE's own guard.
+  const fill = sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES (?, 'gm@x.org', 'Filler', '{}', '{}')`);
+  for (let i = 0; i < 200; i++) fill.run(`filler-${String(i).padStart(4, '0')}`);
+  check('a recipient with no room left is refused, and the hero stays put',
+    (await give('bob@x.org', 'gm@x.org')).status === 409 && heroRow('hero-ann-0001').owner_email === 'bob@x.org');
+  sqlite.exec("DELETE FROM msh_heroes WHERE id LIKE 'filler-%'");
+
+  // An NPC sheet: the GM's only, and it becomes a hero linked here.
+  const book = JSON.stringify({ mode: 'book', book: 'ma1', character: 'x', version: 'v1', block: null });
+  const npcId = Number(sqlite.prepare(`INSERT INTO msh_npc_sheets (campaign_id, name, build, snapshot, sheet, created_by)
+    VALUES (?, 'Thug', ?, '{"abilities":{"fighting":{"rank":"good"}}}', ?, 'gm@x.org') RETURNING id`)
+    .get(camp.id, book, JSON.stringify({ notes: 'the plot', identity: 'Joe' })).id);
+  const dossier = Number(sqlite.prepare(`INSERT INTO msh_npcs (campaign_id, name, sheet_id, created_by) VALUES (?, 'Thug', ?, 'gm@x.org') RETURNING id`).get(camp.id, npcId).id);
+  const giveNpc = (who, to, id = npcId) => call(R.npcTransfer, 'POST', { who, params: p, body: { npc_id: id, to_email: to } });
+  const npcThere = () => !!sqlite.prepare('SELECT 1 FROM msh_npc_sheets WHERE id = ?').get(npcId);
+  const heroCount = () => sqlite.prepare('SELECT count(*) AS n FROM msh_heroes').get().n;
+  const n0 = heroCount();
+  check('a player who is not the GM cannot transfer an NPC sheet', (await giveNpc('ann@x.org', 'bob@x.org')).status === 403);
+  check('nor can the GM send one to an address not on the list', (await giveNpc('gm@x.org', 'eve@x.org')).status === 403);
+  delete env.MV_SHARE_CANDIDATES;
+  check('nor to anyone while the list is unset', (await giveNpc('gm@x.org', 'ann@x.org')).status === 503);
+  env.MV_SHARE_CANDIDATES = LIST;
+  check('and none of those wrote anything', npcThere() && heroCount() === n0);
+
+  const made = await giveNpc('gm@x.org', 'ann@x.org');
+  const newId = made.body.hero?.id ?? '';
+  const h = newId && heroRow(newId);
+  check('the GM\'s transfer makes a hero the recipient owns, from the sheet\'s build', made.status === 200
+    && h?.owner_email === 'ann@x.org' && h.build === book && heroCount() === n0 + 1, JSON.stringify(made));
+  check('with the sheet\'s notes cleared and the rest kept', !!h && JSON.parse(h.sheet).notes === undefined && JSON.parse(h.sheet).identity === 'Joe', h?.sheet);
+  check('linked to this campaign', !!sqlite.prepare('SELECT 1 FROM msh_campaign_heroes WHERE hero_id = ? AND campaign_id = ? AND campaign_open = 1').get(newId, camp.id));
+  check('and the NPC sheet row is gone', !npcThere());
+  check('while its People dossier stays with the GM, unlinked',
+    sqlite.prepare('SELECT sheet_id FROM msh_npcs WHERE id = ?').get(dossier)?.sheet_id === null);
+  check('a second transfer of the same sheet finds nothing', (await giveNpc('gm@x.org', 'bob@x.org')).status === 404);
+  const saved = await call(R.heroes, 'POST', { who: 'ann@x.org', body: { id: newId, name: 'Thug', build: JSON.parse(book),
+    snapshot: { abilities: { fighting: { rank: 'good' } } }, sheet: { notes: 'mine now' } } });
+  check('the new owner can save the sheet of a hero that came from the book', saved.status === 200
+    && JSON.parse(heroRow(newId).build).mode === 'book' && JSON.parse(heroRow(newId).sheet).notes === 'mine now', JSON.stringify(saved));
+}
+
 section('An NPC from the book: the printed numbers, misprints corrected, as a hidden sheet the GM adds');
 
 {
