@@ -52,8 +52,13 @@ async function snapshotCharacter(env, characterId) {
  * Write a snapshot back as a new statted NPC in a campaign: a kind = 'npc'
  * characters row owned by `email`, and its child rows. Returns the new id.
  * `notes` REPLACES the sheet's notes when given (the caller appends to them).
+ * `kind` is 'pc' for a library entry transferred to a player. `extraWrites`
+ * are statements that must land with the child rows or not at all - the
+ * transfer's delete of the entry - run in the same batch; with any, the
+ * answer is { id, extra } and `extra` holds their results.
  */
-export async function restoreSnapshot(env, snap, { campaignId, email, name = null, notes = undefined }) {
+export async function restoreSnapshot(env, snap, { campaignId, email, name = null, notes = undefined,
+  kind = 'npc', extraWrites = [] }) {
   const { results: info } = await env.DB.prepare('SELECT name FROM pragma_table_info(\'characters\')').all();
   const has = new Set((info || []).map((c) => c.name));
   const fields = { ...snap.character };
@@ -63,7 +68,7 @@ export async function restoreSnapshot(env, snap, { campaignId, email, name = nul
   const all = ['campaign_id', 'player_email', 'kind', ...cols];
   const row = await env.DB.prepare(
     `INSERT INTO characters (${all.join(', ')}) VALUES (${all.map(() => '?').join(', ')}) RETURNING id`
-  ).bind(campaignId, email, 'npc', ...cols.map((k) => fields[k] ?? null)).first();
+  ).bind(campaignId, email, kind, ...cols.map((k) => fields[k] ?? null)).first();
   const id = row.id;
   const writes = [];
   for (const [key, c] of Object.entries(CHILDREN)) {
@@ -74,14 +79,17 @@ export async function restoreSnapshot(env, snap, { campaignId, email, name = nul
       ).bind(id, ...cs.map((k) => r[k] ?? null)));
     }
   }
+  writes.push(...extraWrites);
+  let results = [];
   if (writes.length) {
-    try { await env.DB.batch(writes); }
+    try { results = await env.DB.batch(writes); }
     catch (e) {
       // Half a copy is worse than none: take the row back out, and say why.
       await env.DB.prepare('DELETE FROM characters WHERE id = ?').bind(id).run();
       throw e;
     }
   }
+  if (extraWrites.length) return { id, extra: results.slice(-extraWrites.length) };
   return id;
 }
 

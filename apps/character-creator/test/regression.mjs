@@ -350,7 +350,9 @@ serverLog = join(state, 'dev-server.log');
 const serverLogFd = openSync(serverLog, 'a');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
-  '--binding', 'ADMIN_EMAIL=dev@localhost'],
+  '--binding', 'ADMIN_EMAIL=dev@localhost',
+  // Who the character transfer may hand a sheet to (functions/api/_lib/people.js).
+  '--binding', 'MV_SHARE_CANDIDATES=player2@example.com,fresh-recipient@example.com,spelled.person@example.com'],
   { cwd: repoRoot, shell: true, stdio: ['ignore', serverLogFd, serverLogFd] });
 
 // Liveness is the answer, not just the exit code. G20 named two candidates -
@@ -3619,6 +3621,130 @@ check('and none of them with ?mine=1',
   const after404 = await lib('GET', `/npc-library/${entryId}`);
   check('its owner can delete it, and copies already pulled stay',
     gone.status === 200 && after404.status === 404 && (await api('GET', `/characters/${copyId}`)).status === 200);
+}
+
+// ── A G.M. transfers a character to a player (_lib/transfer.js) ─────────────
+//
+// A move, instant, of a character the G.M. owns, to someone on the
+// MV_SHARE_CANDIDATES list this server was booted with. What only requests can
+// prove: each refusal, that the row arrives as the player's own PC in their
+// `mine` list, that the G.M.'s notes and play log do not travel, and that a
+// library transfer leaves no entry behind. In a CLOSED campaign of its own,
+// because closing is no bar and no other block's counts should move.
+// The list being unset is proved in smoke (`A transfer is refused before the
+// database is read`), since this server has it set.
+{
+  const gm = 'dev@localhost', player = 'player2@example.com', fresh = 'fresh-recipient@example.com';
+  const cand = await api('GET', '/transfer-candidates');
+  const candSelf = await apiAs(player, 'GET', '/transfer-candidates');
+  check('the transfer picker offers the list, and never the caller',
+    cand.status === 200 && cand.body.candidates?.includes(player) && cand.body.candidates.includes(fresh)
+      && !candSelf.body.candidates?.includes(player) && candSelf.body.candidates?.includes(fresh),
+    JSON.stringify({ gm: cand.body, player: candSelf.body }));
+
+  const table = (await api('POST', '/campaigns', { name: 'Transfer Table', system: cls.system, open: true })).body.campaign;
+  const sheet = (name, extra = {}) => ({ campaign_id: table.id, name, class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' }, ...extra });
+  const theirs = (await apiAs(player, 'POST', '/characters', sheet('Player Owned'))).body.id;
+  await api('PATCH', `/campaigns/${table.id}`, { open: false });
+  const gmPc = (await api('POST', '/characters', sheet('Built For A Player', { notes: 'G.M. secret: he is the heir' }))).body.id;
+  await api('POST', `/characters/${gmPc}/items`, { custom_name: 'Signet Ring', qty: 1, notes: 'a plain ring' });
+  await api('POST', `/characters/${gmPc}/events`, { kind: 'roll', note: 'G.M. rolled in secret', private: true });
+  const move = (id, to, who = gm) => apiAs(who, 'POST', `/characters/${id}/transfer`, { to_email: to });
+
+  const nonGm = await move(theirs, fresh, player);
+  check('a player cannot transfer, even their own character', nonGm.status === 403, JSON.stringify(nonGm.body));
+  const notMine = await move(theirs, fresh);
+  check('the G.M. cannot transfer a player\'s character', notMine.status === 403, JSON.stringify(notMine.body));
+  const offList = await move(gmPc, 'nobody-on-the-list@example.com');
+  check('an address not on the list is refused, with a code the page can read',
+    offList.status === 403 && offList.body.code === 'not_a_candidate', JSON.stringify(offList.body));
+  const toSelf = await move(gmPc, gm);
+  check('and so is the G.M. themself', toSelf.status === 400, toSelf.status);
+  const untouched = (await api('GET', `/characters/${gmPc}`)).body.character;
+  check('and every refusal leaves the character as it was',
+    untouched?.player_email === gm && untouched.notes === 'G.M. secret: he is the heir', JSON.stringify(untouched));
+
+  const moved = await move(gmPc, ' Fresh-Recipient@Example.com ');
+  const after = await apiAs(fresh, 'GET', `/characters/${gmPc}`);
+  const line = /^Transferred from the G\.M\. on \d{4}-\d{2}-\d{2}\.$/;
+  check('the G.M. transfers a character they own: the player\'s PC, its notes one line',
+    moved.status === 200 && moved.body.character?.player_email === fresh && after.body.character?.kind === 'pc'
+      && line.test(after.body.character.notes || ''),
+    JSON.stringify({ moved: moved.body, notes: after.body.character?.notes }));
+  const freshMine = (await apiAs(fresh, 'GET', '/characters?mine=1')).body.characters || [];
+  const gmMine = (await api('GET', '/characters?mine=1')).body.characters || [];
+  check('it is in the player\'s own list at once, and gone from the G.M.\'s',
+    freshMine.some((c) => c.id === gmPc) && !gmMine.some((c) => c.id === gmPc),
+    JSON.stringify(freshMine.map((c) => c.id)));
+  const log = (await apiAs(fresh, 'GET', `/characters/${gmPc}/events`)).body.events;
+  check('the G.M.\'s play log does not travel - private rolls included', Array.isArray(log) && log.length === 0,
+    JSON.stringify(log));
+  check('a PC\'s gear notes, readable by anyone already, stay',
+    (after.body.items || []).some((i) => i.custom_name === 'Signet Ring' && i.notes === 'a plain ring'),
+    JSON.stringify(after.body.items));
+  const again = await move(gmPc, player);
+  check('and it is the player\'s now: the G.M. cannot move it on', again.status === 403, again.status);
+
+  // A statted NPC: hidden from the player until the moment it is theirs.
+  const npcId = (await api('POST', `/campaigns/${table.id}/npcs/generate`, { class_id: cls.id, level: 1, name: 'Turncoat' })).body.npcs?.[0]?.id;
+  await api('PATCH', `/characters/${npcId}`, { notes: 'Betrays the party in act three' });
+  await api('POST', `/characters/${npcId}/items`, { custom_name: 'Poisoned Dagger', qty: 1, notes: 'secretly poisoned' });
+  const dossier = (await api('POST', `/campaigns/${table.id}/npcs`, { name: 'Turncoat Dossier' })).body.npc;
+  await api('PATCH', `/campaigns/${table.id}/npcs/${dossier.id}`, { character_id: npcId });
+  const hidden = await apiAs(player, 'GET', `/characters/${npcId}`);
+  const npcMoved = await move(npcId, player);
+  const npcAfter = await apiAs(player, 'GET', `/characters/${npcId}`);
+  check('a statted NPC, a 404 to the player before, is their PC after, its notes one line',
+    hidden.status === 404 && npcMoved.status === 200 && npcAfter.body.character?.kind === 'pc'
+      && line.test(npcAfter.body.character.notes || ''),
+    JSON.stringify({ hidden: hidden.status, moved: npcMoved.body, notes: npcAfter.body.character?.notes }));
+  check('and the notes on its gear, which only the G.M. could read, are cleared',
+    (npcAfter.body.items || []).some((i) => i.custom_name === 'Poisoned Dagger' && !i.notes),
+    JSON.stringify(npcAfter.body.items));
+  const roster = (await api('GET', `/campaigns/${table.id}/npcs`)).body.npcs || [];
+  check('its dossier stays linked, and stays the G.M.\'s',
+    roster.find((n) => n.id === dossier.id)?.character_id === npcId, JSON.stringify(roster.find((n) => n.id === dossier.id)));
+
+  // The owner is written the way the recipient's own requests arrive: a
+  // spelling Access has sent before wins over the list's lowercase.
+  const spelled = 'Spelled.Person@Example.com';
+  await apiAs(spelled, 'POST', '/campaigns', { name: 'Spelled Table', system: cls.system });
+  const third = (await api('POST', '/characters', sheet('Spelled Out'))).body.id;
+  const toSpelled = await move(third, 'spelled.person@example.com');
+  const spelledMine = (await apiAs(spelled, 'GET', '/characters?mine=1')).body.characters || [];
+  check('a recipient seen before keeps the spelling their requests carry, so it is in their list',
+    toSpelled.body.character?.player_email === spelled && spelledMine.some((c) => c.id === third),
+    JSON.stringify({ moved: toSpelled.body, mine: spelledMine.map((c) => c.id) }));
+
+  // From the library: the entry becomes the player's PC, and is gone.
+  const libNpc = (await api('POST', `/campaigns/${table.id}/npcs/generate`, { class_id: cls.id, level: 1, name: 'Shelved' })).body.npcs?.[0]?.id;
+  await api('PATCH', `/characters/${libNpc}`, { notes: 'Library secret' });
+  const entryId = (await api('POST', '/npc-library', { character_id: libNpc })).body.entry?.id;
+  const give = (body, who = gm) => apiAs(who, 'POST', `/npc-library/${entryId}/transfer`, body);
+  const libOff = await give({ to_email: 'nobody-on-the-list@example.com', campaign_id: table.id });
+  const otherTable = (await apiAs('other-gm@example.com', 'POST', '/campaigns', { name: 'Not Yours', system: cls.system })).body.campaign;
+  const libNotGm = await give({ to_email: fresh, campaign_id: otherTable.id });
+  const libStolen = await give({ to_email: fresh, campaign_id: otherTable.id }, 'other-gm@example.com');
+  check('a library transfer refuses an address off the list, a campaign not the G.M.\'s, and another G.M.',
+    libOff.status === 403 && libNotGm.status === 403 && libStolen.status === 404,
+    [libOff.status, libNotGm.status, libStolen.status].join(', '));
+  const pfTable = (await api('POST', '/campaigns', { name: 'Transfer PF Table', system: 'palladium-fantasy' })).body.campaign;
+  const libMismatch = await give({ to_email: fresh, campaign_id: pfTable.id });
+  check('and the game has to match, as for a pull', libMismatch.status === 409 && libMismatch.body.code === 'system_mismatch',
+    JSON.stringify(libMismatch.body));
+  const given = await give({ to_email: fresh, campaign_id: table.id });
+  const givenId = given.body.character?.id;
+  const givenRow = (await apiAs(fresh, 'GET', `/characters/${givenId}`)).body.character;
+  const freshMine2 = (await apiAs(fresh, 'GET', '/characters?mine=1')).body.characters || [];
+  check('a library entry transferred is the player\'s PC in the campaign, in their list, its notes one line',
+    given.status === 201 && givenRow?.kind === 'pc' && givenRow.player_email === fresh && givenRow.campaign_id === table.id
+      && line.test(givenRow.notes || '') && freshMine2.some((c) => c.id === givenId),
+    JSON.stringify({ given: given.body, row: givenRow && { kind: givenRow.kind, notes: givenRow.notes } }));
+  const entryGone = await api('GET', `/npc-library/${entryId}`);
+  const twice = await give({ to_email: fresh, campaign_id: table.id });
+  check('and the entry is gone from the library - a move, so a second transfer finds nothing',
+    entryGone.status === 404 && twice.status === 404, [entryGone.status, twice.status].join(', '));
 }
 
 // ── The City Creator's saved cities (migration 080, cities) ─────────────────
