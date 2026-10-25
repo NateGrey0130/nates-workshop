@@ -12,6 +12,8 @@ import { snapshot, renderSheet, tagline } from './js/sheet.js';
 import { makeGear } from './js/gear.js';
 import { makePowerText, missingNote, paragraphs } from './js/power-text.js';
 import { makePointBuy, emptyBuild as emptyPb, normalise as normalisePb } from './js/pointbuy.js';
+import { api } from './js/api.js';
+import { transferDialog } from './js/transfer.js';
 
 export const APP = 'marvel-heroes';
 
@@ -1014,6 +1016,8 @@ function initHeroes(generator, pointBuy) {
     dirty = false;
     sheetEl.innerHTML = renderSheet(open);
     $('#sheet-open-gen').textContent = open.build?.mode === 'pointbuy' ? 'Open in Point Buy' : 'Open in the generator';
+    // A Notable NPC a GM transferred from the book has no dice to reopen.
+    $('#sheet-open-gen').hidden = open.build?.mode === 'book';
     wrap.hidden = false;
     sheetStatus.textContent = '';
     for (const b of list.querySelectorAll('.hero-item')) b.classList.toggle('on', b.dataset.hero === id);
@@ -1062,6 +1066,23 @@ function initHeroes(generator, pointBuy) {
     wrap.hidden = true;
     await load();
     status.textContent = `Deleted ${gone}. ${status.textContent}`;
+  });
+  // A move, not a copy: once it lands the hero is the other player's, so it
+  // leaves this list as a delete would (functions/api/marvel-heroes/transfer.js).
+  $('#sheet-transfer').addEventListener('click', async () => {
+    if (!open) return;
+    if (dirty && !confirm('The sheet has changes that are not saved, and they will not go with it. Transfer anyway?')) return;
+    const hero = open;
+    const r = await transferDialog({ name: hero.name,
+      send: (to) => api('transfer', { method: 'POST', body: { hero_id: hero.id, to_email: to } }) });
+    if (!r) return;
+    generator.forget(hero.id);
+    pointBuy.forget(hero.id);
+    open = null;
+    dirty = false;
+    wrap.hidden = true;
+    await load();
+    status.textContent = `Moved ${hero.name} to ${r.data.to_email}. ${status.textContent}`;
   });
   document.addEventListener('mh-tab', (e) => { if (e.detail === 'heroes') load(); });
 }

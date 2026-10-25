@@ -51,13 +51,19 @@ export function sanitizeHero(body) {
   // purchases (`mode: 'pointbuy'`, R24). Each is rebuilt from its own known
   // keys, so nothing else rides along - and a Point Buy build keeps its mode,
   // which is what sends it back to the right tab when it is opened.
+  // A third, `mode: 'book'`, is a Notable NPC a GM added from the book and then
+  // transferred to a player (campaigns/[id]/npc-sheets/transfer.js): nothing
+  // rebuilds it, so it only has to survive the owner saving the sheet.
   const b = body.build;
   const pointBuy = plainObject(b) && b.mode === 'pointbuy';
-  if (pointBuy ? !plainObject(b.pb) : !plainObject(b) || !plainObject(b.seeds)) {
+  const book = plainObject(b) && b.mode === 'book';
+  if (book ? typeof b.book !== 'string' || typeof b.character !== 'string'
+    : pointBuy ? !plainObject(b.pb) : !plainObject(b) || !plainObject(b.seeds)) {
     return { error: 'A hero needs the generator state it was built from' };
   }
   if (!plainObject(body.snapshot) || !plainObject(body.snapshot.abilities)) return { error: 'A hero needs a snapshot of what was built' };
-  const build = JSON.stringify(pointBuy ? { mode: 'pointbuy', pb: b.pb }
+  const build = JSON.stringify(book ? { mode: 'book', book: b.book, character: b.character, version: b.version ?? null, block: b.block ?? null }
+    : pointBuy ? { mode: 'pointbuy', pb: b.pb }
     : { seeds: b.seeds, picks: plainObject(b.picks) ? b.picks : {} });
   const snapshot = JSON.stringify(body.snapshot);
   // No sheet at all means "leave the saved one alone": the generator saves a
