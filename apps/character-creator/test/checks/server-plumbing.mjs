@@ -26,7 +26,8 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification',
   'A person is limited to 100 Claude calls a day', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
-  'A deleted character is read by nothing', 'A deleted campaign is read by nothing'];
+  'A deleted character is read by nothing', 'A deleted campaign is read by nothing',
+  'A transfer is refused before the database is read'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -621,6 +622,8 @@ section('A deleted character is read by nothing');
       why: 'a cleanup delete of the row this request just wrote, hard by ruling (2026-10-12)' },
     { file: '_lib/npc-snapshot.js', has: 'DELETE FROM characters', count: 2,
       why: 'the half-copied restore and the move to the NPC library, both hard by ruling (2026-10-12)' },
+    { file: 'npc-library/[id]/transfer.js', has: 'DELETE FROM characters',
+      why: 'a library transfer that lost the race for its entry takes back the row it just wrote, as the restore does' },
     { file: 'campaigns/[id]/items.js', has: 'AS claimed_by_name',
       why: 'the stash history names a claimant deleted since, by ruling (2026-10-19); it reads the name only' },
   ];
@@ -700,6 +703,7 @@ section('A deleted campaign is read by nothing');
     { file: '_lib/system-bases.js', has: 'SELECT campaigns.system AS system', why: GATED },
     { file: '_lib/npc-snapshot.js', has: 'SELECT campaigns.system FROM characters JOIN campaigns', why: GATED },
     { file: 'npc-library/[id]/pull.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
+    { file: 'npc-library/[id]/transfer.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
     { file: 'campaigns/[id]/npcs/generate.js', has: 'SELECT id, system FROM campaigns WHERE id = ?', why: GATED },
   ];
 
@@ -746,6 +750,49 @@ section('A deleted campaign is read by nothing');
   check('and still asks for the name typed, and names the players a 409 lists',
     ask.includes('Type the campaign\'s name to confirm') && ask.includes('typed.trim() !== name')
       && ask.includes('err.detail?.characters'));
+}
+
+// ---------- A G.M.'s character transfer (_lib/transfer.js) ----------
+// The list of who may receive a character is MV_SHARE_CANDIDATES, and unset
+// means nobody. regression boots its server with the list set, so the unset
+// case is here: each route is called as a function with a database that fails
+// the check if it is touched at all, which is also the proof that an address
+// off the list is refused before anything is read or written.
+section('A transfer is refused before the database is read');
+{
+  const { onRequestGet: candidatesGet } = await import('../../../../functions/api/character-creator/transfer-candidates.js');
+  const { onRequestPost: sheetPost } = await import('../../../../functions/api/character-creator/characters/[id]/transfer.js');
+  const { onRequestPost: libraryPost } = await import('../../../../functions/api/character-creator/npc-library/[id]/transfer.js');
+  let touched = 0;
+  const DB = new Proxy({}, { get: () => () => { touched++; throw new Error('the database was read'); } });
+  const unset = { DB }, listed = { DB, MV_SHARE_CANDIDATES: 'Dev@Localhost, friend@example.com' };
+  const post = (path, body) => new Request(`http://localhost/api/character-creator${path}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  // A handler that reached the database throws, and that is a FAIL line, not a crash.
+  const call = async (handler, ctx) => {
+    try { const res = await handler(ctx); return { status: res.status, body: await res.json() }; }
+    catch (e) { return { status: 'threw', body: { error: e.message } }; }
+  };
+
+  const none = await call(candidatesGet, { request: new Request('http://localhost/x'), env: unset });
+  check('with the list unset, the picker offers nobody', none.status === 200 && Array.isArray(none.body.candidates)
+    && none.body.candidates.length === 0, JSON.stringify(none));
+  const some = await call(candidatesGet, { request: new Request('http://localhost/x'), env: listed });
+  check('and with it set, everyone on it but the caller, whatever the case',
+    JSON.stringify(some.body.candidates) === '["friend@example.com"]', JSON.stringify(some));
+
+  const refusals = [
+    ['a sheet, list unset', await call(sheetPost, { request: post('/characters/1/transfer', { to_email: 'friend@example.com' }), env: unset, params: { id: '1' } })],
+    ['a library entry, list unset', await call(libraryPost, { request: post('/npc-library/1/transfer', { to_email: 'friend@example.com', campaign_id: 1 }), env: unset, params: { id: '1' } })],
+    ['a sheet, address off the list', await call(sheetPost, { request: post('/characters/1/transfer', { to_email: 'stranger@example.com' }), env: listed, params: { id: '1' } })],
+    ['a library entry, address off the list', await call(libraryPost, { request: post('/npc-library/1/transfer', { to_email: 'stranger@example.com', campaign_id: 1 }), env: listed, params: { id: '1' } })],
+  ];
+  for (const [what, r] of refusals) {
+    check(`${what}: refused with not_a_candidate`, r.status === 403 && r.body.code === 'not_a_candidate', JSON.stringify(r));
+  }
+  const unsetMsg = (await call(sheetPost, { request: post('/characters/1/transfer', { to_email: 'friend@example.com' }), env: unset, params: { id: '1' } })).body.error;
+  check('and the unset list says which knob is wrong', /MV_SHARE_CANDIDATES is unset/.test(unsetMsg || ''), unsetMsg);
+  check('and none of them touched the database', touched === 0, `${touched} reads`);
 }
 
 }
