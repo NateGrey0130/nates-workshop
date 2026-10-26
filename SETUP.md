@@ -535,6 +535,35 @@ past eight days or when there is none. Nothing runs it for you, and CI cannot,
 because the backups are on this machine only. Run it at the start of a session
 that writes D1, and before trusting a backup in a recovery.
 
+## The preview D1 databases
+
+Three databases exist for pull-request previews, one per group, created
+2026-10-26 with `npx wrangler d1 create`:
+
+| binding | database_name | database_id |
+|---|---|---|
+| `DB` | `nates-workshop-media-preview` | `1c5f3ddb-ae56-4be3-b13e-f34eae720405` |
+| `DB_MARVEL` | `nates-workshop-marvel-preview` | `750a8ae5-eb89-4625-996f-8d84a86165a0` |
+| `DB_TOOLS` | `nates-workshop-tools-preview` | `329ff05e-e217-4128-8817-33c274696430` |
+
+**Nothing binds them yet.** `wrangler.jsonc` binds production's three only.
+
+**They hold the repo, never production.** Rebuild all three from nothing:
+
+```bash
+node scripts/build-preview-d1.mjs
+```
+
+It drops everything in each, then applies what `scripts/build-local-d1.mjs`
+applies locally: Palladium's schema, catalog seed and every data script not
+marked `-- local-only`, and the Marvel and tools schemas. No player data goes
+in. Marvel's book text and the tools' filament catalog start empty, because
+the first is never in the repo and `scripts/ofd-refresh.mjs` reaches only
+production's `DB_TOOLS`. The script refuses any database whose name does not
+end in `-preview`, or that `wrangler.jsonc` binds, and it hands wrangler a
+scratch config naming the preview databases alone. `--db <group>` rebuilds
+one.
+
 ## Adding a New App
 
 The `app-suite` skill is the full procedure. The short form:

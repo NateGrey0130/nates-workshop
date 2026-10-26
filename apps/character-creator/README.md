@@ -1042,6 +1042,9 @@ scripts/
 │                           any directory: schema, seed, every data script, one
 │                           wrangler call. regression.mjs and book-worktree.mjs
 │                           both use it, so a clean build means one thing
+├── build-preview-d1.mjs    The same clean build into the three *-preview D1s,
+│                           --remote: drops everything first, loads no player
+│                           data, refuses any name not ending in -preview
 ├── book-worktree.mjs       One worktree per book, beside the main checkout: its
 │                           own local D1 built fresh, the OCR cache and D1 env in
 │                           its settings.local.json, memory linked. --remove
