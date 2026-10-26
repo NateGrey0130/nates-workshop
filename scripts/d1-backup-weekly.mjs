@@ -32,10 +32,10 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, w
 import { join, relative, resolve, isAbsolute } from 'node:path';
 import { repoRoot } from './d1-query-lib.mjs';
 
-export const DEFAULT_ROOT = 'C:\\Users\\natha\\Backups\\nates-workshop';
-export const GROUPS = ['palladium', 'marvel', 'tools'];
-export const KEEP = 8;
-export const MAX_AGE_DAYS = 8;
+const DEFAULT_ROOT = 'C:\\Users\\natha\\Backups\\nates-workshop';
+const GROUPS = ['palladium', 'marvel', 'tools'];
+const KEEP = 8;
+const MAX_AGE_DAYS = 8;
 const DATED = /^\d{4}-\d{2}-\d{2}$/;
 
 const args = process.argv.slice(2);

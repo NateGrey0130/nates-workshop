@@ -513,10 +513,10 @@ it runs from. A different root is its first argument.
 the User-scope `CLOUDFLARE_API_TOKEN` (`docs/cloudflare-credentials.md`). It
 runs only while he is logged on. A week the PC was off is simply missed, and
 `--check` reports it. From PowerShell (`--%` passes the rest to `schtasks`
-untouched, which the embedded quotes need):
+with only `%USERPROFILE%` expanded, which the embedded quotes need):
 
 ```powershell
-schtasks --% /Create /TN "nates-workshop\D1 backup" /SC WEEKLY /D SUN /ST 12:00 /TR "\"C:\Program Files\nodejs\node.exe\" C:\Users\natha\Projects\nates-apps\scripts\d1-backup-weekly.mjs" /F
+schtasks --% /Create /TN "nates-workshop\D1 backup" /SC WEEKLY /D SUN /ST 12:00 /TR "\"C:\Program Files\nodejs\node.exe\" %USERPROFILE%\Projects\nates-apps\scripts\d1-backup-weekly.mjs" /F
 schtasks /Query /TN "nates-workshop\D1 backup" /V /FO LIST
 schtasks /Delete /TN "nates-workshop\D1 backup" /F
 ```
