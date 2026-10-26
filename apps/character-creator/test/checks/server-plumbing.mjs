@@ -24,6 +24,7 @@ import { loadCharacterClass } from '../../../../functions/api/character-creator/
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification',
+  'The browser Claude proxy forwards only the fields it checked',
   'A person is limited to 100 Claude calls a day', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
   'A deleted character is read by nothing', 'A deleted campaign is read by nothing',
@@ -258,6 +259,71 @@ section('Access JWT verification');
     /Every Claude call in `functions\/` writes one row to\s*\r?\n?`claude_usage`/.test(setupSrc));
   check('and names the endpoints it can be read by',
     /cc-extract-class/.test(setupSrc) && /cc-npc-sweep/.test(setupSrc));
+}
+
+// ---------- The browser proxy forwards only the fields it checked ----------
+// functions/api/claude.js used to forward `{ ...body }`, so a browser could put
+// `tools`, `thinking` or anything else on the shared key unchecked. The route
+// is driven here with a stubbed fetch, and the body that would have gone to
+// Anthropic is what is read. The server callers build their own requests and
+// send `thinking` on purpose; callAnthropic must keep passing it.
+section('The browser Claude proxy forwards only the fields it checked');
+{
+  const { onRequestPost } = await import('../../../../functions/api/claude.js');
+  const { callAnthropic } = await import('../../../../functions/api/_lib/claude-client.js');
+  const realFetch = globalThis.fetch;
+  let sent;
+  globalThis.fetch = async (_url, init) => {
+    sent = JSON.parse(init.body);
+    return new Response('{"content":[]}', { status: 200 });
+  };
+  const env = { ANTHROPIC_API_KEY: 'test-key' };
+  const post = async (body) => {
+    sent = undefined;
+    const res = await onRequestPost({ env, request: new Request('http://local/api/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) });
+    return { status: res.status, error: res.status === 400 ? (await res.json()).error : null };
+  };
+  const base = { model: 'claude-sonnet-5', max_tokens: 100, system: 's',
+    messages: [{ role: 'user', content: 'hi' }] };
+  try {
+    // The shape apps/city-creator/city.js sends.
+    const city = { ...base, output_config: { effort: 'low',
+      format: { type: 'json_schema', schema: { type: 'object' } } } };
+    const ok = await post(city);
+    check('a city-creator-shaped body is forwarded with exactly its own keys',
+      ok.status === 200 && sent
+        && JSON.stringify(Object.keys(sent).sort()) === JSON.stringify(Object.keys(city).sort())
+        && JSON.stringify(sent.output_config) === JSON.stringify(city.output_config),
+      `status ${ok.status}, sent ${sent ? Object.keys(sent).join(',') : 'nothing'}`);
+
+    for (const [key, value] of [['tools', [{ name: 't', input_schema: { type: 'object' } }]],
+      ['thinking', { type: 'enabled', budget_tokens: 9000 }], ['metadata', { user_id: 'x' }]]) {
+      const r = await post({ ...base, [key]: value });
+      check(`\`${key}\` is refused 400 by name, and nothing is sent`,
+        r.status === 400 && sent === undefined && String(r.error).includes(key),
+        `status ${r.status}, error ${r.error}, sent ${sent ? 'yes' : 'no'}`);
+    }
+
+    for (const [label, oc] of [
+      ['an unknown effort', { effort: 'max' }],
+      ['an unknown key inside it', { effort: 'low', task_budget: 5 }],
+      ['a format that is not json_schema', { format: { type: 'text' } }],
+      ['a json_schema format with no schema object', { format: { type: 'json_schema', schema: 'x' } }],
+      ['a non-object', 'low']]) {
+      const r = await post({ ...base, output_config: oc });
+      check(`output_config with ${label} is refused 400`,
+        r.status === 400 && sent === undefined && /output_config/.test(String(r.error)),
+        `status ${r.status}, error ${r.error}`);
+    }
+
+    sent = undefined;
+    await callAnthropic({ ...base, thinking: { type: 'disabled' } }, env);
+    check('a server-side callAnthropic call still sends its `thinking`',
+      sent?.thinking?.type === 'disabled', JSON.stringify(sent?.thinking));
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 }
 
 // ---------- 100 Claude calls per person in any 24 hours ----------

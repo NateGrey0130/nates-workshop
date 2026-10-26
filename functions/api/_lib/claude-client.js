@@ -69,6 +69,58 @@ export function validateClaudeRequest(body) {
   return null;
 }
 
+// What browser code may send through the HTTP route, and nothing else. The
+// route forwards a payload built from these keys only, so a field nobody
+// checked (`tools`, `thinking`, `metadata`, ...) never reaches Anthropic on the
+// shared key. Server callers do not pass through here: they build their own
+// request and may send `thinking` deliberately.
+const PROXY_FIELDS =['model', 'max_tokens', 'system', 'messages', 'output_config'];
+const OUTPUT_EFFORTS = ['low', 'medium', 'high'];
+
+const isPlainObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+function checkOutputConfig(oc) {
+  if (!isPlainObject(oc)) return 'output_config must be an object';
+  for (const k of Object.keys(oc)) {
+    if (k !== 'effort' && k !== 'format') return `output_config.${k} is not allowed`;
+  }
+  if (oc.effort !== undefined && !OUTPUT_EFFORTS.includes(oc.effort)) {
+    return 'output_config.effort must be low, medium or high';
+  }
+  if (oc.format !== undefined) {
+    const f = oc.format;
+    if (!isPlainObject(f) || f.type !== 'json_schema' || !isPlainObject(f.schema)
+      || Object.keys(f).some((k) => k !== 'type' && k !== 'schema')) {
+      return 'output_config.format must be { type: "json_schema", schema: <object> }';
+    }
+  }
+  return null;
+}
+
+// validateClaudeRequest plus the browser route's own limits: every top-level
+// key must be one of PROXY_FIELDS, and output_config must have the one shape
+// the city creator sends. Returns an error string naming the field, or null.
+export function validateProxyRequest(body) {
+  if (!isPlainObject(body)) return 'Body must be a JSON object';
+  const extra = Object.keys(body).filter((k) => !PROXY_FIELDS.includes(k));
+  if (extra.length) return `Field not allowed: ${extra.join(', ')}`;
+  if (body.max_tokens !== undefined && (!Number.isInteger(body.max_tokens) || body.max_tokens < 1)) {
+    return 'max_tokens must be a positive integer';
+  }
+  if (body.output_config !== undefined) {
+    const err = checkOutputConfig(body.output_config);
+    if (err) return err;
+  }
+  return validateClaudeRequest(body);
+}
+
+// The payload the HTTP route forwards: the allowed fields that are present.
+export function proxyPayload(body) {
+  const out = {};
+  for (const k of PROXY_FIELDS) if (body[k] !== undefined) out[k] = body[k];
+  return out;
+}
+
 /**
  * Calls the Anthropic Messages API. Assumes the body already passed
  * validateClaudeRequest(). Returns { status, text } — the raw upstream status
