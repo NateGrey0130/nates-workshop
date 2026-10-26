@@ -149,6 +149,7 @@
         "workers/table-room/",
         "scripts/agent-usage.mjs",
         "scripts/build-local-d1.mjs",
+        "scripts/build-preview-d1.mjs",
         "scripts/d1-apply.mjs",
         "scripts/d1-backup.mjs",
         "scripts/d1-backup-weekly.mjs",
