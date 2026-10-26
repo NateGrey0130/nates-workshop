@@ -1,7 +1,7 @@
 // Shared API helpers for all workshop apps
 
 // Calls the server-side Claude proxy (functions/api/claude.js).
-// payload: { model, max_tokens, system, messages } per Anthropic Messages API.
+// payload: { model, max_tokens, system, messages, output_config } only; any other key is a 400.
 async function claudeRequest(payload) {
   const res = await fetch('/api/claude', {
     method: 'POST',
