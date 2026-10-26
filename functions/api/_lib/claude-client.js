@@ -74,7 +74,7 @@ export function validateClaudeRequest(body) {
 // checked (`tools`, `thinking`, `metadata`, ...) never reaches Anthropic on the
 // shared key. Server callers do not pass through here: they build their own
 // request and may send `thinking` deliberately.
-export const PROXY_FIELDS = ['model', 'max_tokens', 'system', 'messages', 'output_config'];
+const PROXY_FIELDS =['model', 'max_tokens', 'system', 'messages', 'output_config'];
 const OUTPUT_EFFORTS = ['low', 'medium', 'high'];
 
 const isPlainObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
