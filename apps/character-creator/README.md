@@ -835,7 +835,9 @@ scripts/
 │                           `wrangler d1 export` REFUSES this database — one
 │                           fts5 virtual table makes the whole of it
 │                           un-exportable. Derives what to skip rather than
-│                           naming it. Manual; see docs/operations.md Recovery
+│                           naming it. See docs/operations.md Recovery
+├── d1-backup-weekly.mjs    All three databases into a dated folder outside the
+│                           repo, newest 8 kept; --check fails past 8 days
 ├── ofd-refresh.mjs         Snapshot the Open Filament Database into ff_brands
 │                           and ff_filaments — FilamentForge's catalog. The app
 │                           reads the snapshot; only this script talks to OFD
