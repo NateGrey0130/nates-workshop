@@ -28,7 +28,7 @@ const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Acce
   'A person is limited to 100 Claude calls a day', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
   'A deleted character is read by nothing', 'A deleted campaign is read by nothing',
-  'A transfer is refused before the database is read'];
+  'A transfer is refused before the database is read', 'Client error reporting'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -859,6 +859,161 @@ section('A transfer is refused before the database is read');
   const unsetMsg = (await call(sheetPost, { request: post('/characters/1/transfer', { to_email: 'friend@example.com' }), env: unset, params: { id: '1' } })).body.error;
   check('and the unset list says which knob is wrong', /MV_SHARE_CANDIDATES is unset/.test(unsetMsg || ''), unsetMsg);
   check('and none of them touched the database', touched === 0, `${touched} reads`);
+}
+
+// ---------- A page's own errors reach the server, and not too many ----------
+// shared/js/client-errors.js listens for `error` and `unhandledrejection` and
+// posts to functions/api/client-error.js, which logs one console.error line.
+// Both are driven here, not read as text: the client runs in a vm context
+// with a stubbed window and fetch, and the route is called directly with a
+// stubbed console.error.
+section('Client error reporting');
+{
+  const { runInNewContext } = await import('node:vm');
+  const clientSrc = readFileSync(join(repoRoot, 'shared', 'js', 'client-errors.js'), 'utf8');
+  // A fresh page load: its own listeners, its own fetch.
+  const load = (fetchImpl) => {
+    const listeners = {};
+    const posts = [];
+    const win = {
+      location: { href: 'http://localhost/apps/codex/' },
+      navigator: { userAgent: 'smoke' },
+      addEventListener: (type, fn) => { listeners[type] = fn; },
+      fetch: (url, init) => { posts.push({ url, init }); return fetchImpl(); },
+    };
+    win.window = win;
+    runInNewContext(clientSrc, win);
+    const fire = (type, event) => {
+      try { listeners[type](event); return null; } catch (e) { return e; }
+    };
+    return { listeners, posts, fire, win };
+  };
+  const ok = () => Promise.resolve({ status: 204 });
+
+  const page = load(ok);
+  check('the client listens for both error and unhandledrejection',
+    typeof page.listeners.error === 'function' && typeof page.listeners.unhandledrejection === 'function',
+    Object.keys(page.listeners).join(', ') || 'no listeners');
+  page.fire('error', { message: 'boom', filename: '/apps/codex/codex.js', lineno: 12, colno: 3,
+    error: { message: 'boom', stack: 'Error: boom\n' + 'x'.repeat(5000) } });
+  const first = page.posts[0] && JSON.parse(page.posts[0].init.body);
+  check('one error is one POST to /api/client-error with keepalive',
+    page.posts.length === 1 && page.posts[0].url === '/api/client-error' && page.posts[0].init.keepalive === true,
+    JSON.stringify(page.posts.map((p) => p.url)));
+  check('and it carries the seven fields, the stack cut to 2 KB',
+    first && first.message === 'boom' && first.source === '/apps/codex/codex.js' && first.line === 12
+      && first.col === 3 && first.page === 'http://localhost/apps/codex/' && first.ua === 'smoke'
+      && first.stack.length === 2048,
+    JSON.stringify(first && { ...first, stack: first.stack.length }));
+  page.fire('error', { message: 'boom', error: { message: 'boom' } });
+  check('the same message twice is reported once', page.posts.length === 1, `${page.posts.length} posts`);
+  for (let i = 0; i < 9; i++) page.fire('error', { message: `distinct ${i}` });
+  check('and a page load sends at most five', page.posts.length === 5, `${page.posts.length} posts`);
+
+  const rej = load(ok);
+  rej.fire('unhandledrejection', { reason: new Error('nope') });
+  rej.fire('unhandledrejection', { reason: 'plain string' });
+  const rejMsgs = rej.posts.map((p) => JSON.parse(p.init.body).message);
+  check('a rejection is reported with its reason, Error or not',
+    JSON.stringify(rejMsgs) === JSON.stringify(['Unhandled rejection: nope', 'Unhandled rejection: plain string']),
+    JSON.stringify(rejMsgs));
+
+  // The reporter must never be the next error. A fetch that throws on the
+  // call, and one whose promise rejects, are both swallowed.
+  const throwing = load(() => { throw new Error('fetch is gone'); });
+  const thrown = throwing.fire('error', { message: 'a' });
+  let unhandled = 0;
+  const onUnhandled = () => { unhandled += 1; };
+  process.on('unhandledRejection', onUnhandled);
+  const rejecting = load(() => Promise.reject(new Error('offline')));
+  const thrown2 = rejecting.fire('error', { message: 'b' });
+  const thrown3 = rejecting.fire('unhandledrejection', { get reason() { throw new Error('hostile'); } });
+  const thrown4 = rejecting.fire('error', null);
+  await new Promise((r) => setTimeout(r, 20));
+  process.off('unhandledRejection', onUnhandled);
+  check('a fetch that throws or rejects, and a hostile event, never throw out of the handler',
+    !thrown && !thrown2 && !thrown3 && !thrown4 && unhandled === 0,
+    `${[thrown, thrown2, thrown3, thrown4].filter(Boolean).map((e) => e.message).join('; ')}; ${unhandled} unhandled`);
+
+  // The endpoint.
+  const route = await import('../../../../functions/api/client-error.js');
+  const logged = [];
+  const realError = console.error;
+  // console.error is stubbed only for the call, so a FAIL line the harness
+  // prints is never swallowed into `logged`.
+  const send = async (body, email = 'friend@example.com') => {
+    console.error = (...args) => { logged.push(args.join(' ')); };
+    try {
+      return await route.onRequestPost({ request: new Request('http://localhost/api/client-error', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Cf-Access-Authenticated-User-Email': email },
+        body: typeof body === 'string' ? body : JSON.stringify(body) }) });
+    } finally {
+      console.error = realError;
+    }
+  };
+  try {
+    route.resetRateLimit();
+    const res = await send({ message: 'boom', source: 's.js', line: 4, col: 2, stack: 'Error: boom\n  at f', page: '/apps/codex/', ua: 'u' });
+    check('a report answers 204', res.status === 204, `status ${res.status}`);
+    check('and logs exactly one line naming the person and the message',
+      logged.length === 1 && !logged[0].includes('\n') && logged[0].startsWith('client-error ')
+        && logged[0].includes('"email":"friend@example.com"') && logged[0].includes('"message":"boom"'),
+      JSON.stringify(logged));
+
+    logged.length = 0;
+    const huge = 'y'.repeat(1000);
+    await send({ message: huge, source: huge, page: huge, ua: huge, stack: 'z'.repeat(3000).slice(0, 3000), line: 1e12, col: -5 });
+    const rec = logged[0] ? JSON.parse(logged[0].slice('client-error '.length)) : {};
+    check('every field is capped on the server too',
+      rec.message?.length === route.CAPS.message && rec.source?.length === route.CAPS.source
+        && rec.page?.length === route.CAPS.page && rec.ua?.length === route.CAPS.ua
+        && rec.stack?.length === route.CAPS.stack && rec.line === 1e9 && rec.col === 0,
+      JSON.stringify({ m: rec.message?.length, s: rec.source?.length, p: rec.page?.length, u: rec.ua?.length, st: rec.stack?.length, l: rec.line, c: rec.col }));
+    const longMail = await send({ message: 'm' }, 'a'.repeat(500) + '@example.com');
+    check('the email too', longMail.status === 204
+      && JSON.parse(logged.at(-1).slice('client-error '.length)).email.length === route.CAPS.email);
+
+    const big = await send('{"message":"' + 'q'.repeat(route.MAX_BODY) + '"}');
+    const notJson = await send('not json');
+    check('an oversized body is 413 and a non-JSON one 400, neither logged',
+      big.status === 413 && notJson.status === 400 && logged.length === 2, `${big.status} ${notJson.status}, ${logged.length} lines`);
+
+    route.resetRateLimit();
+    logged.length = 0;
+    const statuses = [];
+    for (let i = 0; i < route.RATE_LIMIT + 3; i++) statuses.push((await send({ message: `n${i}` }, 'loop@example.com')).status);
+    const other = await send({ message: 'other person' }, 'other@example.com');
+    check(`one person is cut off after ${route.RATE_LIMIT} a minute, with nothing logged past it`,
+      statuses.slice(0, route.RATE_LIMIT).every((s) => s === 204)
+        && statuses.slice(route.RATE_LIMIT).every((s) => s === 429) && logged.length === route.RATE_LIMIT + 1,
+      `${statuses.join(',')}; ${logged.length} lines`);
+    check('and another person is not', other.status === 204, `status ${other.status}`);
+  } finally {
+    console.error = realError;
+    route.resetRateLimit();
+  }
+
+  // Which pages load it. Row 6a of the 2026-10-26 plan loads it on every page
+  // that loads shared/js/ui.js except Pick 3 Cut 5 (see the client's header);
+  // it must come first, so it is listening before the other scripts run.
+  const appsDir = join(repoRoot, 'apps');
+  const pages = [];
+  for (const app of readdirSync(appsDir, { withFileTypes: true })) {
+    if (!app.isDirectory()) continue;
+    for (const f of readdirSync(join(appsDir, app.name))) {
+      if (!f.endsWith('.html')) continue;
+      const html = readFileSync(join(appsDir, app.name, f), 'utf8');
+      if (/<script src="\/shared\/js\/ui\.js"><\/script>/.test(html)) pages.push({ path: `${app.name}/${f}`, html });
+    }
+  }
+  const firstScript = (html) => (html.match(/<script\b[^>]*\bsrc="([^"]+)"/) || [])[1];
+  const missing = pages.filter((p) => p.path !== 'pick3cut5/index.html'
+    && firstScript(p.html) !== '/shared/js/client-errors.js').map((p) => p.path);
+  check('every ui.js page but Pick 3 Cut 5 loads client-errors.js as its first script',
+    pages.length >= 11 && missing.length === 0, missing.join(', ') || `${pages.length} pages`);
+  const p3 = pages.find((p) => p.path === 'pick3cut5/index.html');
+  check('and Pick 3 Cut 5 does not, because it would need a sixth Access bypass',
+    p3 && !p3.html.includes('client-errors.js'));
 }
 
 }
