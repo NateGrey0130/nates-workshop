@@ -452,8 +452,13 @@ It derives what to skip rather than carrying a list: virtual tables
 and Cloudflare's own `_cf_*` bookkeeping. A second FTS table added later is
 covered without editing the script.
 
-**It is manual, deliberately.** A scheduled export that quietly stops is worse
-than a documented one somebody runs, because the first kind is believed.
+**It runs weekly, for all three databases**, through
+[`d1-backup-weekly.mjs`](../../../scripts/d1-backup-weekly.mjs) and a Windows
+scheduled task (`SETUP.md` → *The weekly D1 backup*), into dated folders
+outside the repo, keeping the newest eight. This was manual until 2026-10-26,
+on the grounds that a scheduled export that quietly stops is believed. That
+objection is answered rather than dropped: `--check` prints the age of the
+newest complete backup and exits 1 past eight days.
 
 **What each mechanism actually covers:**
 

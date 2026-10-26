@@ -37,8 +37,11 @@
 // is not the same thing - a backup tool that reports success after writing
 // half a database is a defect, not a posture.
 //
-// Manual on purpose. A scheduled export that quietly stops is worse than a
-// documented one somebody runs, because the first kind is believed.
+// One database per run. d1-backup-weekly.mjs runs it for all three on a
+// schedule (SETUP.md -> "The weekly D1 backup"). This used to say "manual on
+// purpose", because a scheduled export that quietly stops is believed; the
+// weekly script's --check answers that by printing the newest good backup's
+// age and failing past eight days.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { d1Query, dbFromArgv, targetFromArgv } from './d1-query-lib.mjs';

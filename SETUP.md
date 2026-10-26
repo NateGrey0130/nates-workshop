@@ -495,6 +495,46 @@ the main checkout.
   **Drop Filtered Events**, and capture health is checked with
   `m18-capture-health.ps1`, never the file size (it preallocates).
 
+## The weekly D1 backup
+
+`scripts/d1-backup-weekly.mjs` backs up all three databases (`palladium`,
+`marvel`, `tools`) from production into
+`C:\Users\natha\Backups\nates-workshop\<YYYY-MM-DD>\<db>\<table>.json`, keeps
+the newest eight dated folders, and writes `last-run.json` in the root. A run
+with any failure stays in `<YYYY-MM-DD>.partial` and deletes nothing.
+`docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
+not.
+
+**The root stays outside the repo.** The repo is public, and a backup holds
+every campaign note and character. The script refuses a root inside the tree
+it runs from. A different root is its first argument.
+
+**The schedule is a Windows task, run as Nate's own user** so that it reads
+the User-scope `CLOUDFLARE_API_TOKEN` (`docs/cloudflare-credentials.md`). It
+runs only while he is logged on. A week the PC was off is simply missed, and
+`--check` reports it. From PowerShell (`--%` passes the rest to `schtasks`
+untouched, which the embedded quotes need):
+
+```powershell
+schtasks --% /Create /TN "nates-workshop\D1 backup" /SC WEEKLY /D SUN /ST 12:00 /TR "\"C:\Program Files\nodejs\node.exe\" C:\Users\natha\Projects\nates-apps\scripts\d1-backup-weekly.mjs" /F
+schtasks /Query /TN "nates-workshop\D1 backup" /V /FO LIST
+schtasks /Delete /TN "nates-workshop\D1 backup" /F
+```
+
+The second line lists it (`Last Run Time` and `Last Result`). The third
+removes it. `schtasks /Run /TN "nates-workshop\D1 backup"` runs it now.
+
+**Ask whether it is still running, from the repo root:**
+
+```bash
+node scripts/d1-backup-weekly.mjs --check
+```
+
+It prints the last run and the age of the newest complete backup, and exits 1
+past eight days or when there is none. Nothing runs it for you, and CI cannot,
+because the backups are on this machine only. Run it at the start of a session
+that writes D1, and before trusting a backup in a recovery.
+
 ## Adding a New App
 
 The `app-suite` skill is the full procedure. The short form:

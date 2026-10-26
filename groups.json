@@ -151,6 +151,7 @@
         "scripts/build-local-d1.mjs",
         "scripts/d1-apply.mjs",
         "scripts/d1-backup.mjs",
+        "scripts/d1-backup-weekly.mjs",
         "scripts/d1-query-lib.mjs",
         "scripts/deploy-sweep.mjs",
         "scripts/deploy-table-room.mjs",
