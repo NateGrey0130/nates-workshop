@@ -1731,6 +1731,14 @@ export async function run() {
       /confirm\(`Delete \$\{c\.name\} \(level/.test(sheetSrc)
         && /await M\.ctx\.ui\.modal\(`Delete "\$\{S\.entry\.title\}"/.test(settingSrc),
       'a character or a GM page can now be deleted without a question');
+    // A native alert box froze the sheet mid-session until it was dismissed, and
+    // the sheet had 38 of them beside a flash() that already said the same
+    // things in #msg. Every one is now flash(), or fieldErr() beside the field
+    // the error is about. confirm() is not this check's business.
+    const sheetAlerts = sheetSrc.split('\n').map((l, i) => [i + 1, l])
+      .filter(([, l]) => /(?<![.\w])alert\(/.test(l)).map(([n]) => n);
+    check('the sheet has no alert(): it flashes into #msg, or says it beside the field',
+      !sheetAlerts.length, `alert( at sheet.js:${sheetAlerts.join(', ')}`);
   }
 
   section('The GM dashboard');
@@ -2253,10 +2261,11 @@ export async function run() {
             server.events.push({ id: server.events.length + 1, kind, payload: { note } });
             return { ok: true };
           };
-          const endSession = new Function('api', 'postEvent', 'jsonReq', 'id', 'C', 'confirm', 'alert',
+          // `alerts` is what the sheet flashed as an error; a notice is marked.
+          const endSession = new Function('api', 'postEvent', 'jsonReq', 'id', 'C', 'confirm', 'flash',
             'recordRoll', 'resetMelee', src + '; return endSession;')(
             api, postEvent, (method, body) => ({ method, body }), '7', { meleeAttacks: 2 },
-            () => true, (m) => alerts.push(m), () => {}, () => {});
+            () => true, (m, isError) => alerts.push(isError ? m : '(notice) ' + m), () => {}, () => {});
           await endSession();
           return alerts;
         };
@@ -3880,12 +3889,14 @@ export async function run() {
         }
         return '';
       };
-      w.fns = new Function('C', 'id', 'api', 'jsonReq', 'document', 'hasKey', 'repaintHitTo', 'alert',
+      // `w.alerts` holds what the sheet flashed as an error; a notice is marked.
+      w.fns = new Function('C', 'id', 'api', 'jsonReq', 'document', 'hasKey', 'repaintHitTo', 'flash',
         'stillHere', '$', 'vesselsHtml',
         turns + src.join('\n') + '; return { patchVesselMdc, refreshVessels };')(
         C, 3, api, (method, body) => ({ method, body: JSON.stringify(body) }), doc, own,
         // The picker's labels are drawn from state: keep what it would have read.
-        () => { w.picker = JSON.stringify(C.vehicles[0].mdc_current || {}); }, (msg) => { w.alerts.push(msg); },
+        () => { w.picker = JSON.stringify(C.vehicles[0].mdc_current || {}); },
+        (msg, isError) => { w.alerts.push(isError ? msg : '(notice) ' + msg); },
         (kind, rows) => rows, () => ({}), redraw);
       // Somebody else, in another browser: straight into what the server holds.
       w.elsewhere = (loc, v) => { if (v === undefined) delete server.mdc[loc]; else server.mdc[loc] = v; };
@@ -4108,13 +4119,15 @@ export async function run() {
       const undoable = (op) => { w.op = op; op.hide(); };
       w.fns = new Function('C', 'id', 'api', '$', 'undoable', 'inventoryRowsHtml', 'jsonReq', 'escJs', 'escHtml',
         'leadingDice', 'payloadCapacity', 'currentAmmo', 'codexLink', 'strikeChipsHtml', 'playSecOpen',
-        'alert', 'flash', 'prompt', 'load', 'dropDrafts',
+        'fieldErr', 'flash', 'prompt', 'load', 'dropDrafts',
         waiting + src.join('\n')
           + '; return { repaintPlayWeapons, drawWeapon, refreshInventory, patchItem, removeItem, giveToStash, addItem };')(
         C, 3, api, (elId) => page[elId] || null, undoable, () => C.items.map((x) => x.item_name).join(','),
         (method, body) => ({ method, body: JSON.stringify(body) }), String, String,
         (dice) => dice, () => null, () => null, () => '', () => '', () => true,
-        (msg) => { w.alerts.push(msg); }, () => {}, () => null, async () => {}, () => {});
+        // `w.alerts` is what the sheet said was an error, beside a field or in #msg.
+        (field, msg) => { if (msg) w.alerts.push(msg); },
+        (msg, isError) => { if (isError) w.alerts.push(msg); }, () => null, async () => {}, () => {});
       // What render() leaves behind: the cards as the rows stood then.
       w.fns.repaintPlayWeapons();
       // "drawn | carried", the way the play strip shows them.
@@ -4225,11 +4238,14 @@ export async function run() {
         }
         throw new Error('the stand-in server has no ' + method + ' ' + path);
       };
-      w.fns = new Function('C', 'id', 'api', '$', 'jsonReq', 'alert', 'load', 'dropDrafts', 'refreshInventory',
-        src + '; return { addItem };')(
+      // `w.alerts` is what the sheet said was an error, beside a field or in #msg.
+      w.fns = new Function('C', 'id', 'api', '$', 'jsonReq', 'flash', 'load', 'dropDrafts', 'refreshInventory',
+        'fieldErr', src + '; return { addItem };')(
         { catalog: [{ slug: 'bow', name: 'Bow' }] }, 3, api, (elId) => page[elId] || null,
-        (method, body) => ({ method, body: JSON.stringify(body) }), (msg) => { w.alerts.push(msg); },
-        async () => { w.reloads++; if (w.fail.reload) throw w.fail.reload; }, () => {}, async () => {});
+        (method, body) => ({ method, body: JSON.stringify(body) }),
+        (msg, isError) => { w.alerts.push(isError ? msg : '(notice) ' + msg); },
+        async () => { w.reloads++; if (w.fail.reload) throw w.fail.reload; }, () => {}, async () => {},
+        (field, msg) => { if (msg) w.alerts.push(msg); });
       w.all = () => JSON.stringify({ items: server.items.length, journal: server.journal.map((e) => e.title),
         alerts: w.alerts, calls: w.calls });
       return w;
@@ -4334,10 +4350,11 @@ export async function run() {
         await settle();
       };
       w.fns = new Function('C', 'id', 'derive', 'api', 'jsonReq', 'poolData', 'paintPool', 'syncPowerBtns',
-        'flash', 'alert', 'queueChange', 'renderQueueState', 'formExtra',
+        'flash', 'queueChange', 'renderQueueState', 'formExtra',
         turn + apply + press + '; return { adjustPool };')(
         C, 3, win.derive, api, (method, body) => ({ method, body: JSON.stringify(body) }), () => C.data,
-        () => {}, () => {}, (msg) => { w.flashes.push(msg); }, (msg) => { w.alerts.push(msg); },
+        // An error flash is what an alert box used to say; `w.alerts` keeps the name.
+        () => {}, () => {}, (msg, isError) => { (isError ? w.alerts : w.flashes).push(msg); },
         async (kind, note) => { w.queued.push(note); return true; }, () => {}, () => undefined);
       w.all = () => JSON.stringify({ server: server.hp_current, screen: C.data.hp_current, sent: w.sent,
         inFlight: w.wire.length, alerts: w.alerts, flashes: w.flashes, queued: w.queued });
@@ -4442,10 +4459,11 @@ export async function run() {
       };
       const jsonReq = (method, body) => ({ method, body: JSON.stringify(body) });
       w.fns = new Function('C', 'id', 'api', 'jsonReq', 'postEvent', 'paintPool', 'syncPowerBtns', 'recordRoll',
-        'flash', 'alert', 'queueChange', 'renderQueueState', 'load',
+        'flash', 'queueChange', 'renderQueueState', 'load',
         added + pool + use + '; return { usePower };')(
         C, 3, api, jsonReq, (kind, note, changes) => api('characters/3/events', jsonReq('POST', { kind, note, changes })),
-        () => {}, () => {}, () => { w.logged++; }, (m) => { w.flashes.push(m); }, (m) => { w.alerts.push(m); },
+        // An error flash is what an alert box used to say; `w.alerts` keeps the name.
+        () => {}, () => {}, () => { w.logged++; }, (m, isError) => { (isError ? w.alerts : w.flashes).push(m); },
         async () => { w.queued++; return true; }, () => {},
         async () => { C.data = { ...C.data, ...(await api('characters/3')).character }; });
       w.all = () => JSON.stringify({ server: server.ppe_current, screen: C.data.ppe_current, sent: w.bodies,
@@ -4530,12 +4548,14 @@ export async function run() {
       };
       w.recordRoll = recordRoll;
       w.fns = new Function('C', 'derive', '$', 'poolData', 'paintPool', 'syncPowerBtns', 'postEvent', 'queueChange',
-        'renderQueueState', 'formExtra', 'recordRoll', 'rollBarHtml', 'alert',
+        'renderQueueState', 'formExtra', 'recordRoll', 'rollBarHtml', 'flash',
         src.join('\n') + '; return { applyOverflow };')(
         C, win.derive, (elId) => (elId === 'roll-line' ? bar : null), () => C.data, () => {}, () => {},
         async () => { w.posts++; await w.during?.(); if (w.fail) throw w.fail; }, async () => { w.queued++; return true; },
         () => {}, () => undefined, recordRoll,
-        () => (C.overflow ? `Apply ${C.overflow.amount} to body` : (C.lastRoll?.name ?? '')), (msg) => { w.alerts.push(msg); });
+        () => (C.overflow ? `Apply ${C.overflow.amount} to body` : (C.lastRoll?.name ?? '')),
+        // `w.alerts` is what the sheet flashed as an error; a notice is marked.
+        (msg, isError) => { w.alerts.push(isError ? msg : '(notice) ' + msg); });
       w.all = () => JSON.stringify({ pools: [C.data.sdc_current, C.data.hp_current], offer: C.overflow, log: w.log,
         bar: bar.innerHTML, posts: w.posts, queued: w.queued, alerts: w.alerts });
       return w;
