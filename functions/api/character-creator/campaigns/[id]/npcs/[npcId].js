@@ -8,7 +8,7 @@
 //        themselves are untouched, because the @ in the text is just text.
 //        Whoever created it, or the G.M. - see mayDelete.
 
-import { json, readJson, requireCampaign, requireMember } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember, tooLong, TEXT_MAX } from '../../../_lib/auth.js';
 import { STATUSES, trim, serialiseAliases, parseAliases, forViewer, SHEET_LIVE } from '../npcs.js';
 
 export async function onRequestGet({ request, env, params }) {
@@ -36,6 +36,11 @@ export async function onRequestPatch({ request, env, params }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  // Bounded before anything is read or written (auth.js TEXT_MAX).
+  const over = tooLong([['The name', b.name, TEXT_MAX.title], ['The aliases', b.aliases, TEXT_MAX.line],
+    ['The faction', b.faction, TEXT_MAX.line], ['The disposition', b.disposition, TEXT_MAX.line],
+    ['The description', b.description, TEXT_MAX.note]]);
+  if (over) return over;
   const sets = [], binds = [];
 
   if ('name' in b) {
