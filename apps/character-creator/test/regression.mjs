@@ -27,6 +27,8 @@ import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE
   parseClassMarkdown, combineClasses, isChoiceGroup } from '../js/parser.js';
 import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { TEXT_MAX } from '../../../functions/api/character-creator/_lib/auth.js';
+import { CREATE_ITEMS_MAX } from '../../../functions/api/character-creator/characters.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
 import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseMosLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
@@ -1415,6 +1417,34 @@ SELECT '${who}', 'proxy', 200, datetime('now', '-' || i || ' minutes') FROM n;
     badAttr.status === 400 && /attribute PB must be a number/.test(badAttr.body?.error || ''), badAttr.body);
   const after = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
   check('and neither left a character behind', after === before, `${before} -> ${after}`);
+
+  // Creating a character bounds what it stores, with the PATCH's caps for the
+  // same fields (auth.js TEXT_MAX.section) and a count on the item list, each
+  // one a 413 before anything is written. A normal create is proved above
+  // (`and so may the GM`), with a bio and an empty item list.
+  const TEXT_MAX_SECTION = TEXT_MAX.section;
+  const big = 'x'.repeat(TEXT_MAX_SECTION + 1);
+  const oversized = [
+    ['bio', { bio: { story: big } }],
+    ['notes', { notes: big }],
+    ['combat', { combat: { note: big } }],
+    ['saves', { saves: { note: big } }],
+    ['armor', { armor: [{ name: big }] }],
+    ['items, by count', { items: Array.from({ length: CREATE_ITEMS_MAX + 1 }, (_, i) => ({ custom_name: `Pebble ${i}` })) }],
+    ['items, by size', { items: [{ custom_name: 'Diary', notes: big }] }],
+  ];
+  for (const [field, extra] of oversized) {
+    const res = await api('POST', '/characters', { ...joinable(`Oversized ${field}`), ...extra });
+    check(`a create with an oversized ${field} is refused with 413`,
+      res.status === 413 && /too (long|many)/.test(res.body?.error || ''), `${res.status} ${JSON.stringify(res.body).slice(0, 160)}`);
+  }
+  const atCap = await api('POST', '/characters', { ...joinable('Full pack'),
+    notes: 'x'.repeat(TEXT_MAX_SECTION),
+    items: Array.from({ length: CREATE_ITEMS_MAX }, (_, i) => ({ custom_name: `Pebble ${i}` })) });
+  check(`and one at the limits (${CREATE_ITEMS_MAX} items) is kept`, atCap.status === 201, `${atCap.status} ${JSON.stringify(atCap.body).slice(0, 160)}`);
+  const afterBig = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
+  check('and no refused create left a character behind', afterBig === after + 1, `${after} -> ${afterBig}`);
+  if (atCap.body?.id) await api('DELETE', `/characters/${atCap.body.id}`);
 
   // Back to open, so nothing downstream inherits the closed state.
   await api('PATCH', `/campaigns/${campaignId}`, { open: true });
