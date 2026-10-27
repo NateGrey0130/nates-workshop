@@ -8,7 +8,7 @@
 //        that has to be atomic. The way back is characters/[id]/items/
 //        [itemId]/stash.js.
 
-import { json, readJson, requireCampaign, isHiddenNpc } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, isHiddenNpc, tooLong, TEXT_MAX } from '../../../_lib/auth.js';
 
 export async function onRequestPatch({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id);
@@ -18,6 +18,8 @@ export async function onRequestPatch({ request, env, params }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  const over = tooLong([['The item note', b.notes, TEXT_MAX.note]]);
+  if (over) return over;
   const sets = [], binds = [];
   if (Number.isFinite(Number(b.qty)) && Number(b.qty) > 0) {
     sets.push('qty = ?'); binds.push(Math.trunc(Number(b.qty)));

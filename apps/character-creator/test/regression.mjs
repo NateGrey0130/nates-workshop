@@ -3087,6 +3087,40 @@ check('and one at the limit is kept', atLimit.status === 201 || atLimit.status =
 if (atLimit.body?.entry?.id) await api('DELETE', `/journal/${atLimit.body.entry.id}`);
 const bigSection = await api('PATCH', `/characters/${charId}`, { bio: { story: 'x'.repeat(200001) } });
 check('a character section past its limit is refused the same way', bigSection.status === 413, bigSection.status);
+// The campaign's own PATCHes are bounded too: a dossier's description, a
+// prep page's body and a stash item's notes. Each over its limit is a 413
+// that writes nothing (read back), and a normal edit still lands.
+{
+  const dossier = (await api('POST', `/campaigns/${campaignId}/npcs`, { name: 'Cap Probe' })).body.npc;
+  const npcPath = `/campaigns/${campaignId}/npcs/${dossier?.id}`;
+  const npcBig = await api('PATCH', npcPath, { description: 'x'.repeat(TEXT_MAX.note + 1) });
+  const npcOk = await api('PATCH', npcPath, { description: 'Runs the docks.' });
+  const npcBack = (await api('GET', npcPath)).body.npc;
+  check('a dossier description past its limit is refused with 413, and a normal one is kept',
+    npcBig.status === 413 && npcOk.status === 200 && npcBack?.description === 'Runs the docks.',
+    JSON.stringify({ big: npcBig.status, ok: npcOk.status, len: npcBack?.description?.length }));
+
+  const page = (await api('POST', `/campaigns/${campaignId}/entries`, { title: 'Cap Probe Page' })).body.entry;
+  const pagePath = `/campaigns/${campaignId}/entries/${page?.id}`;
+  const pageBig = await api('PATCH', pagePath, { body: 'x'.repeat(TEXT_MAX.section + 1) });
+  const pageOk = await api('PATCH', pagePath, { body: 'The docks at night.' });
+  const pageBack = (await api('GET', pagePath)).body.entry;
+  check('a prep page body past its limit is refused with 413, and a normal one is kept',
+    pageBig.status === 413 && pageOk.status === 200 && pageBack?.body === 'The docks at night.',
+    JSON.stringify({ big: pageBig.status, ok: pageOk.status, len: pageBack?.body?.length }));
+  await api('DELETE', pagePath);
+
+  const loot = (await api('POST', `/campaigns/${campaignId}/items`, { custom_name: 'Cap Probe Rope', qty: 1 })).body.item;
+  const lootPath = `/campaigns/${campaignId}/items/${loot?.id}`;
+  const lootBig = await api('PATCH', lootPath, { notes: 'x'.repeat(TEXT_MAX.note + 1) });
+  const lootOk = await api('PATCH', lootPath, { notes: 'Fifty feet.' });
+  const lootBack = ((await api('GET', `/campaigns/${campaignId}/items`)).body.items || []).find((i) => i.id === loot?.id);
+  check('a stash item note past its limit is refused with 413, and a normal one is kept',
+    lootBig.status === 413 && lootOk.status === 200 && lootBack?.notes === 'Fifty feet.',
+    JSON.stringify({ big: lootBig.status, ok: lootOk.status, len: lootBack?.notes?.length }));
+  await api('DELETE', lootPath);
+  await api('DELETE', npcPath);
+}
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
 check('and read back', journal.status === 200 && journal.body.entries.length > 0, journal.body);
 check('journal paging reports its shape',
@@ -3647,6 +3681,16 @@ check('and none of them with ?mine=1',
 
   const blank = await lib('PATCH', `/npc-library/${entryId}`, { name: '  ' });
   check('an entry cannot be renamed to nothing', blank.status === 400, blank.status);
+  // Bounded like every other free text (auth.js TEXT_MAX): a 413 that writes
+  // nothing, and a normal note still lands.
+  const longName = await lib('PATCH', `/npc-library/${entryId}`, { name: 'x'.repeat(TEXT_MAX.title + 1) });
+  const longNotes = await lib('PATCH', `/npc-library/${entryId}`, { notes: 'x'.repeat(TEXT_MAX.note + 1) });
+  const okNotes = await lib('PATCH', `/npc-library/${entryId}`, { notes: 'Met in the Docks.' });
+  const capped = (await lib('GET', `/npc-library/${entryId}`)).body.entry;
+  check('a library name or note past its limit is refused with 413, and a normal note is kept',
+    longName.status === 413 && longNotes.status === 413 && okNotes.status === 200
+      && capped?.name === 'Renamed In Library' && capped?.notes === 'Met in the Docks.',
+    JSON.stringify({ name: longName.status, notes: longNotes.status, ok: okNotes.status, back: capped?.name }));
   const gone = await lib('DELETE', `/npc-library/${entryId}`);
   const after404 = await lib('GET', `/npc-library/${entryId}`);
   check('its owner can delete it, and copies already pulled stay',

@@ -10,7 +10,7 @@
 // edited where sheets are edited - pull it into a campaign, change it there,
 // and keep the new version.
 
-import { getUserEmail, unauthorized, json, readJson } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, tooLong, TEXT_MAX } from '../_lib/auth.js';
 
 async function own(request, env, id) {
   const email = getUserEmail(request);
@@ -34,6 +34,8 @@ export async function onRequestPatch({ request, env, params }) {
   if (g.res) return g.res;
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  const over = tooLong([['The name', b.name, TEXT_MAX.title], ['The notes', b.notes, TEXT_MAX.note]]);
+  if (over) return over;
   const sets = [], binds = [];
   if ('name' in b) {
     const name = typeof b.name === 'string' ? b.name.trim() : '';

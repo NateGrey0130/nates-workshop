@@ -6,7 +6,7 @@
 // notebook and nothing here is ever revealed. The pictures are, one at a time,
 // through images/[imageId].js.
 
-import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, tooLong, TEXT_MAX } from '../../../_lib/auth.js';
 import { KINDS } from '../entries.js';
 
 async function found(env, params) {
@@ -36,6 +36,9 @@ export async function onRequestPatch({ request, env, params }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  // Bounded before any write (auth.js TEXT_MAX); a page is a section's size.
+  const over = tooLong([['The title', b.title, TEXT_MAX.title], ['The page', b.body, TEXT_MAX.section]]);
+  if (over) return over;
   const sets = [];
   const binds = [];
   if ('title' in b) {
