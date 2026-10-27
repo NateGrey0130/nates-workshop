@@ -393,7 +393,10 @@ section('A refusal rolls back and does not queue');
   const after = evalIn('({hp: C.data.hp_current, sdc: C.data.sdc_current})');
   check('the pools go back where they were', after.hp === 20 && after.sdc === 5, JSON.stringify(after));
   check('nothing is queued', (await fakeQueue.count(CHAR)) === 0);
-  check('and the player is told', /refused on merit/.test(String(ctx.__alert)), ctx.__alert);
+  // Told in #msg, as an error: the sheet no longer opens an alert box.
+  const said = byId('msg');
+  check('and the player is told', /refused on merit/.test(said.textContent) && /\berr\b/.test(said.className)
+    && ctx.__alert === undefined, JSON.stringify({ msg: said.textContent, cls: said.className, alert: ctx.__alert }));
   check('the database never moved', JSON.stringify(await pools()) === JSON.stringify({ hp: 20, sdc: 5 }));
 }
 

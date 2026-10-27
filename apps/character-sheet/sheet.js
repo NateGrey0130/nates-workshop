@@ -166,7 +166,7 @@ async function saveFormPools(values) {
       f[k] = prev[k];
       paintPool(k.replace(/_current$/, ''));
     }
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -306,9 +306,43 @@ function campaignLink() {
   });
 }
 
+// The sheet's one place to say something. It used to share the job with 38
+// native alert boxes, each of which froze the page mid-session until it was
+// dismissed; a smoke check now keeps them out of this file. A message runs
+// over more than one line where it lists the server's reasons, so #msg keeps
+// its line breaks. Call it AFTER any render() or load(): both redraw #msg.
 function flash(text, isError) {
   const el = $('msg');
   if (el) { el.textContent = text; el.className = isError ? 'err small' : 'muted small'; }
+}
+
+// An error about one field sits under that field instead of in #msg, and an
+// empty text takes it away. The field is described by it while it stands, and
+// gets the focus back so the fix is one keystroke away.
+function fieldErr(fieldId, text) {
+  const input = $(fieldId);
+  if (!input) { if (text) flash(text, true); return; }
+  const errId = fieldId + '-err';
+  let el = $(errId);
+  if (!text) {
+    el?.remove();
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+    return;
+  }
+  if (!el) {
+    // On its own line under the row the field sits in, so a long message does
+    // not push the row's other controls aside.
+    el = document.createElement('div');
+    el.id = errId;
+    el.className = 'err small field-err';
+    el.setAttribute('role', 'alert');
+    (input.closest('.rowline') || input).insertAdjacentElement('afterend', el);
+  }
+  el.textContent = text;
+  input.setAttribute('aria-invalid', 'true');
+  input.setAttribute('aria-describedby', errId);
+  input.focus();
 }
 
 // ─── small builders for the sheet's boxed idiom ───
@@ -467,7 +501,7 @@ async function addGmPower() {
   try {
     await api('characters/' + id, jsonReq('PATCH', { gm_abilities: [...gmPowerNames(), name] }));
     await refreshPowers();
-  } catch (err) { alert(err.message); }
+  } catch (err) { flash(err.message, true); }
 }
 
 async function removeGmPower(name) {
@@ -475,7 +509,7 @@ async function removeGmPower(name) {
   try {
     await api('characters/' + id, jsonReq('PATCH', { gm_abilities: gmPowerNames().filter((n) => n !== name) }));
     await refreshPowers();
-  } catch (err) { alert(err.message); }
+  } catch (err) { flash(err.message, true); }
 }
 
 // ─── Granted skills ──────────────────────────────────────────────────────
@@ -885,7 +919,7 @@ async function sendPoolPress(key, delta, changes, retried = false) {
       return;
     }
     applyChanges(changes, 'from');
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -1186,7 +1220,7 @@ async function resolveConflict(key, side) {
     // The entry is still queued and the answers are dropped, so the next flush
     // asks again rather than leaving a half-answered press in limbo.
     delete C.resolved[c.seq];
-    alert('Could not resolve: ' + err.message);
+    flash('Could not resolve: ' + err.message, true);
     return;
   }
   delete C.resolved[c.seq];
@@ -1234,7 +1268,7 @@ async function bodyDamage(amt) {
       return true;
     }
     applyChanges(changes, 'from');
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
     return false;
   }
 }
@@ -1352,7 +1386,7 @@ async function sendHit(note, change, undo) {
       return true;
     }
     undo();
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
     return false;
   }
 }
@@ -1643,10 +1677,10 @@ async function endSession() {
   let events;
   try {
     events = (await api(`characters/${id}/events?limit=300`)).events;
-  } catch (err) { alert('Could not load events: ' + err.message); return; }
+  } catch (err) { flash('Could not load events: ' + err.message, true); return; }
   const lastRecap = [...events].reverse().find((e) => e.kind === 'recap');
   const session = events.filter((e) => (!lastRecap || e.id > lastRecap.id) && !e.undone_at && e.kind !== 'recap');
-  if (!session.length) { alert('No play events since the last recap.'); return; }
+  if (!session.length) { flash('No play events since the last recap.'); return; }
 
   let damage = 0;
   const powers = {};
@@ -1682,7 +1716,7 @@ async function endSession() {
   // entry that fails after a good marker loses that one recap, and says so.
   try {
     await postEvent('recap', 'session recap posted');
-  } catch (err) { alert('Recap failed: ' + err.message); return; }
+  } catch (err) { flash('Recap failed: ' + err.message, true); return; }
   // A marked recap is the end of the fight as well as the session, whether or
   // not the entry below reaches the journal.
   resetMelee(C.meleeAttacks);
@@ -1693,7 +1727,7 @@ async function endSession() {
     }));
   } catch (err) {
     recordRoll('recap', 'Session recap', { note: 'not saved to the journal' });
-    alert('The session was ended, but its recap was not saved to the journal: ' + err.message);
+    flash('The session was ended, but its recap was not saved to the journal: ' + err.message, true);
     return;
   }
   recordRoll('recap', 'Session recap', { note: 'posted to the journal' });
@@ -1801,7 +1835,7 @@ async function writeAmmo(invId, next, cap, ammoNote) {
     }
     it.ammo_current = stored;
     if (el) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -2242,7 +2276,7 @@ async function applyRest() {
       return;
     }
     applyChanges(changes, 'from');
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -2945,7 +2979,7 @@ function render() {
       <div id="queue-state" class="queue-state noprint"></div>
       <div class="rowline noprint vitals-save">
         ${w ? `<span id="autosave" class="autosave muted small" role="status" aria-live="polite">${autosaveText()}</span>
-        <span id="msg"></span>` : ''}
+        <span id="msg" role="status" aria-live="polite"></span>` : ''}
         <span class="muted small">current / max</span></div>` : ''}
     <nav class="tabbar noprint" role="tablist">
       ${[['vitals', 0], ['skills', skills.length],
@@ -3300,7 +3334,7 @@ async function openLevelUp() {
     C.proposal = res.proposal;
     if (!res.proposal) { C.levelUpReady = false; flash('No level-up is due after all.'); }
     render();
-  } catch (err) { alert('Could not open the level-up: ' + err.message); }
+  } catch (err) { flash('Could not open the level-up: ' + err.message, true); }
 }
 
 function levelUpPanel() {
@@ -3676,7 +3710,7 @@ async function claimPowers() {
     await load();
   } catch (err) {
     const details = errorDetails(err);
-    alert(['Could not learn those: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'));
+    flash(['Could not learn those: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'), true);
   }
 }
 
@@ -3871,17 +3905,20 @@ function setSkillPick(prefix, i, value, total) {
       .filter((k) => k !== key && k.startsWith(`${prefix}-`) && hth.isHandToHand(C.pickValues[k]));
     const cost = hth.handToHandCost(C.cls, value, { atCreation: false });
     if (cost === null && !C.pickShowAll) {
-      alert(`${value} is not a Hand to Hand style ${C.cls?.name || 'this class'} offers`
-        + `${C.cls?.skills?.hand_to_hand?.creation_only ? ' after creation' : ''}.`);
-      render(); return;
+      // After the render, which redraws #msg and would take the message with it.
+      render();
+      flash(`${value} is not a Hand to Hand style ${C.cls?.name || 'this class'} offers`
+        + `${C.cls?.skills?.hand_to_hand?.creation_only ? ' after creation' : ''}.`, true);
+      return;
     }
     const priced = typeof cost === 'number';
     const others = Object.keys(C.pickValues)
       .filter((k) => k !== key && k.startsWith(`${prefix}-`) && C.pickValues[k] && !otherRows.includes(k)).length;
     if (priced && Number.isFinite(total) && others + cost > total) {
-      alert(`${value} costs this class ${hth.costLabel(cost)}, and only ${total - others} `
-        + `${total - others === 1 ? 'is' : 'are'} free here.`);
-      render(); return;
+      render();
+      flash(`${value} costs this class ${hth.costLabel(cost)}, and only ${total - others} `
+        + `${total - others === 1 ? 'is' : 'are'} free here.`, true);
+      return;
     }
     const terms = priced ? { cost, condition: hth.handToHandCondition(C.cls, value) } : {};
     const onSheet = hth.oneHandToHand((C.data.skills || []).filter((s) => hth.isHandToHand(s.name))).kept;
@@ -3922,7 +3959,8 @@ function collectPicks(prefix, total) {
 
 async function logXp() {
   const delta = parseInt($('xp-delta').value, 10);
-  if (!Number.isFinite(delta)) { alert('Enter an XP amount (0 re-checks for a pending level-up).'); return; }
+  if (!Number.isFinite(delta)) { fieldErr('xp-delta', 'Enter an XP amount (0 re-checks for a pending level-up).'); return; }
+  fieldErr('xp-delta', '');
   try {
     const res = await api(`characters/${id}/xp`, jsonReq('POST', { delta }));
     dropDrafts(/^xp-delta$/);
@@ -3935,7 +3973,7 @@ async function logXp() {
     C.levelUpReady = !!res.proposal;
     C.levelUpDeferred = false;
     render();
-  } catch (err) { alert('XP update failed: ' + err.message); }
+  } catch (err) { flash('XP update failed: ' + err.message, true); }
 }
 
 async function confirmLevelUp() {
@@ -3962,7 +4000,7 @@ async function confirmLevelUp() {
     await load();
   } catch (err) {
     const details = errorDetails(err);
-    alert(['Level-up failed: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'));
+    flash(['Level-up failed: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'), true);
   }
 }
 
@@ -4054,7 +4092,7 @@ async function burnPpe(index) {
     flash(`${res.spell}: rolled ${res.dice} for ${res.rolled}, burned ${res.burned} P.P.E. from the base.`);
     await load();
   } catch (err) {
-    alert('Could not burn it: ' + err.message);
+    flash('Could not burn it: ' + err.message, true);
   }
 }
 
@@ -4066,7 +4104,7 @@ async function usePower(index) {
   if (!pool) return;
   const cur = C.data[pool + '_current'];
   if (cur == null) return;
-  if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
+  if (cur < p.cost) { flash(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`, true); return; }
   const label = pool === 'ppe' ? 'P.P.E.' : 'I.S.P.';
 
   // THE SHEET LENS: write, then reload the page around it. There is no queue
@@ -4113,7 +4151,7 @@ async function sendPowerUse(p, pool, from, label, retried = false) {
       if (theirs < p.cost) {
         paintPool(pool);
         syncPowerBtns();
-        alert(`${label} was changed elsewhere to ${theirs}: not enough for ${p.name}, which costs ${p.cost}.`);
+        flash(`${label} was changed elsewhere to ${theirs}: not enough for ${p.name}, which costs ${p.cost}.`, true);
         return;
       }
       C.data[key] = theirs - p.cost;
@@ -4130,7 +4168,7 @@ async function sendPowerUse(p, pool, from, label, retried = false) {
     C.data[key] = from;
     paintPool(pool);
     syncPowerBtns();
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -4156,19 +4194,20 @@ async function spendInSheetView(p, pool, cur, label, expect = C.data.updated_at,
     if (err.status === 409 && err.detail?.conflict && !retried) {
       let fresh;
       try { fresh = (await api('characters/' + id)).character; } catch (reread) {
-        alert('Failed: ' + reread.message);
+        flash('Failed: ' + reread.message, true);
         return;
       }
       const theirs = fresh[key];
       if (typeof theirs !== 'number' || theirs < p.cost) {
-        alert(`${label} was changed elsewhere to ${theirs ?? 'nothing'}: not enough for ${p.name}, which costs ${p.cost}.`);
+        // After the reload, which redraws #msg.
         await load();
+        flash(`${label} was changed elsewhere to ${theirs ?? 'nothing'}: not enough for ${p.name}, which costs ${p.cost}.`, true);
         return;
       }
       if (theirs !== cur) flash(`${label} was changed elsewhere to ${theirs}; spent from that.`);
       return spendInSheetView(p, pool, theirs, label, fresh.updated_at, true);
     }
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   }
 }
 
@@ -4506,12 +4545,13 @@ async function addVessel() {
   const slug = $('add-vessel')?.value || '';
   const custom = $('add-vessel-name')?.value.trim() || '';
   const nickname = $('add-vessel-nick')?.value.trim() || '';
-  if (!slug && !custom) { alert('Pick a vessel from the catalog, or type a name.'); return; }
+  if (!slug && !custom) { fieldErr('add-vessel-name', 'Pick a vessel from the catalog, or type a name.'); return; }
+  fieldErr('add-vessel-name', '');
   try {
     await api('characters/' + id + '/vehicles',
       jsonReq('POST', slug ? { slug, nickname } : { custom_name: custom, nickname }));
     await refreshVessels();
-  } catch (err) { alert('Failed: ' + err.message); }
+  } catch (err) { flash('Failed: ' + err.message, true); }
 }
 
 // Undo rather than confirm, as removeItem - see js/undo-toast.js.
@@ -4576,7 +4616,7 @@ async function patchVesselMdc(vid, location, value) {
       if (had) v.mdc_current[location] = from; else delete v.mdc_current[location];
       paintVesselInput(vid, location); repaintHitTo();
     }
-    alert('Failed: ' + err.message);
+    flash('Failed: ' + err.message, true);
   } finally {
     if (!--base.waiting) vesselBase.delete(key);
   }
@@ -4590,9 +4630,9 @@ async function vesselClash(location, typed, err) {
   repaintHitTo();
   const theirs = err.detail.theirs;
   const typedText = String(typed ?? '').trim();
-  alert(`${location} was changed somewhere else${
+  flash(`${location} was changed somewhere else${
     'theirs' in err.detail ? (theirs == null ? ', back to undamaged' : ` to ${theirs}`) : ''
-  }, so your ${typedText === '' ? 'blank' : typedText} was not saved. The sheet shows what is stored now. Type yours again if it still stands.`);
+  }, so your ${typedText === '' ? 'blank' : typedText} was not saved. The sheet shows what is stored now. Type yours again if it still stands.`, true);
 }
 
 // Repaint only the vessel block, for the reason refreshInventory exists: a full
@@ -5062,7 +5102,7 @@ window.addEventListener('beforeunload', (ev) => {
 
 async function patchItem(rowId, fields) {
   try { await api(`characters/${id}/items/${rowId}`, jsonReq('PATCH', fields)); await refreshInventory(); }
-  catch (err) { alert('Update failed: ' + err.message); }
+  catch (err) { flash('Update failed: ' + err.message, true); }
 }
 
 // Add or drop one enchantment on one inventory row.
@@ -5076,7 +5116,7 @@ async function addEnchantment(rowId) {
   if (!it) return;
   const held = Array.isArray(it.enchantments) ? it.enchantments : [];
   const offered = (C.enchantCatalog || []).filter((e) => !held.includes(e.slug));
-  if (!offered.length) return alert('Nothing left to add.');
+  if (!offered.length) return flash('Nothing left to add.');
   const menu = offered
     .map((e, i) => `${i + 1}. ${e.name} (${e.applies_to}${e.cost ? `, ${e.cost.toLocaleString()} gold` : ''})`)
     .join('\n');
@@ -5143,7 +5183,8 @@ async function addItem() {
   const name = $('add-name').value.trim();
   const qty = Math.max(1, +$('add-qty').value || 1);
   const notes = $('add-notes').value.trim() || null;
-  if (!slug && !name) { alert('Pick a catalog item or enter a name.'); return; }
+  if (!slug && !name) { fieldErr('add-name', 'Pick a catalog item or enter a name.'); return; }
+  fieldErr('add-name', '');
   // The journal entry is written FIRST, because the item row carries its id -
   // so an item that then fails would leave "Acquired X" on the Notes tab for
   // an X nobody holds. `logged` is that entry while the item is still unsent.
@@ -5192,13 +5233,14 @@ async function addItem() {
           + ' Check the Gear tab after a reload, and delete the entry from the Notes tab if the item is not on it.';
       }
     }
-    alert('Add failed: ' + err.message + left);
+    flash('Add failed: ' + err.message + left, true);
   }
 }
 
 async function addJournal() {
   const body = $('j-body').value.trim();
-  if (!body) { alert('Write something first.'); return; }
+  if (!body) { fieldErr('j-body', 'Write something first.'); return; }
+  fieldErr('j-body', '');
   const campaignLevel = $('j-campaign')?.checked;
   try {
     await api('journal', jsonReq('POST', {
@@ -5210,7 +5252,7 @@ async function addJournal() {
     }));
     dropDrafts(/^j-/);
     await load();
-  } catch (err) { alert('Journal failed: ' + err.message); }
+  } catch (err) { flash('Journal failed: ' + err.message, true); }
 }
 
 if (!id) {
@@ -5279,6 +5321,7 @@ function renderRoster() {
   $('app').innerHTML = `<div class="panel">
     <div class="home-head">
       <span class="muted small">${R.mine.length} character${R.mine.length === 1 ? '' : 's'}</span>
+      <span id="msg" role="status" aria-live="polite"></span>
       <a class="btn btn-primary" href="/apps/character-creator/">+ New character</a>
     </div>
     ${rows ? `<ul class="home-list">${rows}</ul>`
@@ -5301,7 +5344,7 @@ async function deleteFromRoster(cid) {
   try {
     await api('characters/' + cid, { method: 'DELETE' });
   } catch (err) {
-    alert('Could not delete ' + c.name + ': ' + err.message);
+    flash('Could not delete ' + c.name + ': ' + err.message, true);
     return;
   }
   R.mine = R.mine.filter((x) => x.id !== cid);

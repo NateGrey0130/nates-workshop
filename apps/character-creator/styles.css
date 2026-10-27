@@ -413,7 +413,9 @@ th {
   color: var(--text-secondary); margin-top: 4px;
 }
 
-#msg { min-height: 18px; font-size: 13px; }
+#msg { min-height: 18px; font-size: 13px; white-space: pre-line; }
+/* fieldErr() in the sheet: an error under the row of the one field it is about. */
+.field-err { margin-top: 4px; }
 
 /* ─── WIZARD ─── */
 
