@@ -243,6 +243,9 @@ async function load() {
       // true for the owner and for the G.M. alike, so it cannot say which.
       // Asked once, and only of a G.M., who is the only one it could show for.
       C.isGm && C.me === undefined ? api('me').catch(() => ({})) : null,
+      // The category matcher the pickers use (sheet.html's bridge). Awaited
+      // HERE, beside the catalogs, so no picker can draw before it is set.
+      globalThis.skillCatsReady,
     ]);
     if (me) C.me = me.email ?? null;
     C.journal = journal.entries; C.catalog = catalog.items;
@@ -3336,19 +3339,15 @@ function powerPickerBlock(p) {
 // equals one, so a plain includes dropped the entry and the picker came up
 // empty: the Totem Warrior's whole gate, and 14 of the Healing Shaman's 33
 // level-up grants (BOOK-INGEST-AUDIT F66). UI-AUDIT F30 did this for the skill
-// pickers; these are the psionic two. Defensive ternary like admits() below,
-// because the bridge in sheet.html is a deferred module and this is a classic
-// script.
+// pickers; these are the psionic two. No fallback: load() waits for the bridge
+// in sheet.html (globalThis.skillCatsReady) before any picker has a catalog,
+// and a plain `includes` in its place silently dropped every object entry.
 const psiAdmits = (cats, power) => !cats || !cats.length
-  || (globalThis.skillCats
-    ? globalThis.skillCats.categoryAllows(cats, power)
-    : cats.includes(power.category));
+  || globalThis.skillCats.categoryAllows(cats, power);
 
 // The same entries are PRINTED in each picker's caption, where an object joins
 // as "[object Object]".
-const psiCatLabel = (cats) => (cats || []).map((c) => (globalThis.skillCats
-  ? globalThis.skillCats.categoryLabel(c)
-  : (typeof c === 'string' ? c : c?.name ?? ''))).join(', ');
+const psiCatLabel = (cats) => (cats || []).map((c) => globalThis.skillCats.categoryLabel(c)).join(', ');
 
 // WHICH TRADITIONS A LEVEL-GATED SPELL PICK MAY REACH (BOOK-INGEST-AUDIT F57).
 // The same two tests as spellTraditionAllowed and spellTraditionsAllowed in
@@ -3736,9 +3735,8 @@ function pickerBlock(grants, total, prefix) {
   // what it admits, and ten of one live grant's thirteen categories are objects.
   // `includes` would drop all ten and offer three categories where the class
   // grants thirteen. Same helper as the server, the wizard and the validator.
-  const admits = (s) => (globalThis.skillCats
-    ? globalThis.skillCats.categoryAllows(allowed, s)
-    : allowed.includes(s.category));
+  // No fallback: load() waits for the bridge before the catalog is here.
+  const admits = (s) => globalThis.skillCats.categoryAllows(allowed, s);
   const pool = unheld.filter((s) => showAll || !allowed || admits(s));
 
   // THE PERCENTAGE BESIDE EACH SKILL IS THE ONE THE SERVER WILL STORE. It used
@@ -3754,7 +3752,7 @@ function pickerBlock(grants, total, prefix) {
   // which takes no class bonus either (resolvePicks), so one rule covers both
   // and the number does not depend on which rows the secondary picks land in.
   //
-  // Defensive like admits() above: the bridge is a deferred module.
+  // Defensive: this bridge (skillPercent) is still a deferred module.
   const startsAt = (s) => {
     const fn = globalThis.skillPercent?.newPickPercent;
     if (!fn) return s.base;
