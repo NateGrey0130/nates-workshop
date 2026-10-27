@@ -2,7 +2,7 @@
 // (owner/GM). Catalog-linked via item slug, or freeform via custom_name.
 // Optional journal_entry_id ties the addition to a session log entry.
 
-import { json, readJson, requireCharacter } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter, tooLong, TEXT_MAX } from '../../_lib/auth.js';
 
 export async function onRequestPost({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
@@ -11,6 +11,9 @@ export async function onRequestPost({ request, env, params }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  // A line, as the PATCH caps it (items/[itemId].js), before any write.
+  const over = tooLong([['The item note', b.notes, TEXT_MAX.line]]);
+  if (over) return over;
   let gearSlug = null;
   if (b.slug) {
     const item = await env.DB.prepare('SELECT slug FROM gear WHERE slug = ?').bind(b.slug).first();

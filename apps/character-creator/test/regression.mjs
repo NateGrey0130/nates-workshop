@@ -3121,6 +3121,54 @@ check('a character section past its limit is refused the same way', bigSection.s
   await api('DELETE', lootPath);
   await api('DELETE', npcPath);
 }
+// Creating them is bounded at the same sizes as editing them: a POST over its
+// limit is a 413 that writes no row (read back by name), and a normal POST
+// still creates one.
+{
+  const npcsPath = `/campaigns/${campaignId}/npcs`;
+  const npcBig = await api('POST', npcsPath, { name: 'Cap Post Big', description: 'x'.repeat(TEXT_MAX.note + 1) });
+  const npcBigFaction = await api('POST', npcsPath, { name: 'Cap Post Faction', faction: 'x'.repeat(TEXT_MAX.line + 1) });
+  const npcOk = await api('POST', npcsPath, { name: 'Cap Post Ok', description: 'Runs the docks.' });
+  const npcNames = ((await api('GET', `${npcsPath}?q=Cap%20Post`)).body.npcs || []).map((n) => n.name);
+  check('creating a dossier past a field limit is refused with 413 and writes nothing, and a normal one is created',
+    npcBig.status === 413 && npcBigFaction.status === 413 && npcOk.status === 201
+      && npcOk.body.npc?.description === 'Runs the docks.'
+      && !npcNames.includes('Cap Post Big') && !npcNames.includes('Cap Post Faction'),
+    JSON.stringify({ big: npcBig.status, faction: npcBigFaction.status, ok: npcOk.status, names: npcNames }));
+  if (npcOk.body.npc?.id) await api('DELETE', `${npcsPath}/${npcOk.body.npc.id}`);
+
+  const entriesPath = `/campaigns/${campaignId}/entries`;
+  const pageBig = await api('POST', entriesPath, { title: 'Cap Post Big Page', body: 'x'.repeat(TEXT_MAX.section + 1) });
+  const pageOk = await api('POST', entriesPath, { title: 'Cap Post Ok Page', body: 'The docks at night.' });
+  const pageTitles = ((await api('GET', `${entriesPath}?q=Cap%20Post`)).body.entries || []).map((e) => e.title);
+  check('creating a prep page past its limit is refused with 413 and writes nothing, and a normal one is created',
+    pageBig.status === 413 && pageOk.status === 201 && pageOk.body.entry?.body === 'The docks at night.'
+      && !pageTitles.includes('Cap Post Big Page'),
+    JSON.stringify({ big: pageBig.status, ok: pageOk.status, titles: pageTitles }));
+  if (pageOk.body.entry?.id) await api('DELETE', `${entriesPath}/${pageOk.body.entry.id}`);
+
+  const stashPath = `/campaigns/${campaignId}/items`;
+  const lootBig = await api('POST', stashPath, { custom_name: 'Cap Post Big Rope', qty: 1, notes: 'x'.repeat(TEXT_MAX.note + 1) });
+  const lootOk = await api('POST', stashPath, { custom_name: 'Cap Post Ok Rope', qty: 1, notes: 'Fifty feet.' });
+  const lootNames = ((await api('GET', `${stashPath}?include_removed=1`)).body.items || []).map((i) => i.custom_name);
+  check('adding a stash item past its note limit is refused with 413 and writes nothing, and a normal one is added',
+    lootBig.status === 413 && lootOk.status === 201 && lootOk.body.item?.notes === 'Fifty feet.'
+      && !lootNames.includes('Cap Post Big Rope'),
+    JSON.stringify({ big: lootBig.status, ok: lootOk.status }));
+  if (lootOk.body.item?.id) await api('DELETE', `${stashPath}/${lootOk.body.item.id}`);
+
+  // A character's item note is capped at a line on PATCH (items/[itemId].js),
+  // so its POST is too.
+  const invPath = `/characters/${charId}/items`;
+  const invBig = await api('POST', invPath, { custom_name: 'Cap Post Big Lamp', qty: 1, notes: 'x'.repeat(TEXT_MAX.line + 1) });
+  const invOk = await api('POST', invPath, { custom_name: 'Cap Post Ok Lamp', qty: 1, notes: 'Half full.' });
+  const invNames = ((await api('GET', `/characters/${charId}`)).body.items || []).map((i) => i.custom_name);
+  check('adding a character item past its note limit is refused with 413 and writes nothing, and a normal one is added',
+    invBig.status === 413 && invOk.status === 201 && invOk.body.item?.notes === 'Half full.'
+      && !invNames.includes('Cap Post Big Lamp'),
+    JSON.stringify({ big: invBig.status, ok: invOk.status }));
+  if (invOk.body.item?.id) await api('DELETE', `${invPath}/${invOk.body.item.id}`);
+}
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
 check('and read back', journal.status === 200 && journal.body.entries.length > 0, journal.body);
 check('journal paging reports its shape',

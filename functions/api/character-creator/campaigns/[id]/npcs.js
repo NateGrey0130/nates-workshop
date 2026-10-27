@@ -7,7 +7,7 @@
 // a side effect, which is the path that actually gets used. This is for the NPC
 // somebody wants to write up before the party has met them.
 
-import { json, readJson, requireCampaign, requireMember } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember, tooLong, TEXT_MAX } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 export const STATUSES = ['alive', 'dead', 'unknown', 'never-met'];
@@ -86,6 +86,11 @@ export async function onRequestPost({ request, env, params }) {
   const name = typeof b.name === 'string' ? b.name.trim() : '';
   if (!name) return json({ error: 'name is required' }, 400);
   if (name.length > 120) return json({ error: 'name is too long' }, 400);
+  // The rest at the sizes the PATCH uses (npcs/[npcId].js), before any read
+  // or write (auth.js TEXT_MAX).
+  const over = tooLong([['The aliases', b.aliases, TEXT_MAX.line], ['The faction', b.faction, TEXT_MAX.line],
+    ['The disposition', b.disposition, TEXT_MAX.line], ['The description', b.description, TEXT_MAX.note]]);
+  if (over) return over;
 
   const existing = await env.DB.prepare(
     'SELECT id FROM npcs WHERE campaign_id = ? AND name COLLATE NOCASE = ?'

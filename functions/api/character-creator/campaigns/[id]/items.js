@@ -8,7 +8,7 @@
 // and soft-deleted rather than deleted, because "what did we used to have" is
 // a question a party asks and a DELETE cannot answer.
 
-import { json, readJson, requireCampaign, requireMember } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember, tooLong, TEXT_MAX } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 import { gearJoin } from '../../_lib/catalog-redirects.js';
 
@@ -61,6 +61,9 @@ export async function onRequestPost({ request, env, params }) {
     return json({ error: 'Needs an item_id from the gear catalog, or a custom_name' }, 400);
   }
   const qty = Number.isFinite(Number(b.qty)) && Number(b.qty) > 0 ? Math.trunc(Number(b.qty)) : 1;
+  // The note's size on PATCH too (items/[itemId].js), refused before any write.
+  const over = tooLong([['The item note', b.notes, TEXT_MAX.note]]);
+  if (over) return over;
 
   // The entry has to belong to THIS campaign. A stash row pointing at another
   // table's session note would leak the note's existence through the join.
