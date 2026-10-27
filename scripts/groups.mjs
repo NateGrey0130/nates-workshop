@@ -192,7 +192,7 @@ export function check(root = repoRoot) {
 // wrangler.jsonc as an object: JSON once its comments and trailing commas are
 // gone. Comments are dropped outside strings only, because the file carries
 // URLs ("https://...") inside them.
-export function parseJsonc(text) {
+function parseJsonc(text) {
   let out = '';
   for (let i = 0; i < text.length;) {
     const c = text[i];
@@ -233,7 +233,7 @@ export function readWranglerConfig(root = repoRoot) {
 const NON_INHERITABLE = ['vars', 'd1_databases', 'durable_objects', 'hyperdrive', 'kv_namespaces', 'queues',
   'r2_buckets', 'vectorize', 'services', 'analytics_engine_datasets', 'ai'];
 
-export function previewFailures(cfg) {
+function previewFailures(cfg) {
   const preview = cfg.env?.preview;
   if (!preview) return ['wrangler.jsonc has no env.preview, so every pull-request preview binds production\'s D1 and R2'];
   const failures = [];
