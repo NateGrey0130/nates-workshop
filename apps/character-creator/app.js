@@ -919,6 +919,7 @@ function render() {
   wirePickers();
   stepHistory();
   queueDraftSave();
+  stepHeading();
   restoreFocus(held);
 }
 
@@ -1020,12 +1021,14 @@ window.addEventListener('popstate', (ev) => {
     return;
   }
   histRestoring = true;
+  const was = S.step;
   try {
     S.step = reachableStep(want);
     render();
   } finally {
     histRestoring = false;
   }
+  if (S.step !== was) announceStep();
 });
 
 // EVERY ROLL A STEP MAKES BY BEING SHOWN, in one place, made before the step
@@ -1121,6 +1124,27 @@ function goStep(i) {
   S.step = i; render();
   // A new step starts at its top; the last one may have been left mid-list.
   if (moved && typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+  if (moved) announceStep();
+}
+
+// A step change used to leave focus on the Next, Back or rail button that had
+// just been drawn over, so a keyboard user landed on <body> and a screen reader
+// said nothing about the new step (creator retro row 18, 2026-10-27). Focus goes
+// to the step's own heading, which carries the shared [tabindex] focus ring, and
+// one polite live region speaks the step's name. A redraw on the same step never
+// comes here: render()'s restoreFocus() keeps that case as it was.
+function announceStep() {
+  const live = $('step-live');
+  if (live) live.textContent = `Step ${S.step + 1} of ${STEPS.length}: ${STEPS[S.step]}`;
+  stepHeading()?.focus({ preventScroll: true });
+}
+// The step's heading, made focusable. render() calls this on every wizard draw,
+// before restoreFocus(), so a same-step redraw while the heading holds focus
+// finds the same heading (tabindex and all) and keeps focus on it.
+function stepHeading() {
+  const h = $('app')?.querySelector('h2');
+  if (h) h.setAttribute('tabindex', '-1');
+  return h || null;
 }
 
 // Why the step's own Next button is disabled, or ''. The same sentences those
@@ -1237,7 +1261,7 @@ function pickSystem(sys) {
   S.system = sys;
   // This game's own skill percentages, if it prints any (F83).
   applySkillSystem();
-  S.step = ST.RACE; render();
+  S.step = ST.RACE; render(); announceStep();
 }
 function resetBuild() {
   // Every key of the build and everything derived from it, at its fresh value.
