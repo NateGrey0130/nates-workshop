@@ -111,6 +111,7 @@ const SECTIONS = [
   'The front door agrees with the rooms',
   'A typed override is drawn as text',
   'A levelled-up spell pick keeps to the traditions of its class',
+  'The sheet waits for its category bridge',
   'The wizard and the codex head a held list by its tradition',
   'Changes that could not be sent',
   'A redraw keeps what was typed',
@@ -2468,6 +2469,114 @@ export async function run() {
     check('both pickers ask one test, so they cannot drift apart again',
       (sheetSrc.match(/spellTraditionOk\(x, /g) || []).length === 2
         && !/g\.traditions\.some\(/.test(sheetSrc), 'a picker has its own copy of the tradition test');
+  }
+
+  // ---------- The sheet waits for its category bridge ----------
+  // sheet.js is a classic script and cannot import parser.js, so the page hands
+  // it categoryAllows and categoryLabel on globalThis.skillCats. The bridge used
+  // to be an inline MODULE, which runs after every classic script, and the three
+  // helpers that read it fell back to a plain `includes` while it was unset. That
+  // rule drops an OBJECT category ({ name, except }), so a picker drawn before
+  // the module had run silently offered less than the class grants. Now the
+  // bridge publishes a promise from a classic script that runs first, load()
+  // waits for it beside the catalogs every picker reads, and the fallback is
+  // gone. Run, not read: the bridge is executed with an import that answers
+  // late, and both kinds of picker are called on an object-gated fixture.
+  section('The sheet waits for its category bridge');
+  {
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+    const html = readFileSync(appPath('sheet.html'), 'utf8');
+    const parser = await import('../../js/parser.js');
+    const cut = (from, to) => {
+      const a = sheetSrc.indexOf(from), b = sheetSrc.indexOf(to, a);
+      return a >= 0 && b > a ? sheetSrc.slice(a, b) : '';
+    };
+
+    // The bridge, as the page runs it, with an import that resolves later than
+    // sheet.js starts.
+    const bridge = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+      .map((m) => m[1]).find((b) => /globalThis\.skillCatsReady\s*=/.test(b)) ?? null;
+    check('the bridge is a classic script that publishes a ready promise', bridge !== null,
+      'no plain <script> sets globalThis.skillCatsReady');
+    check('and it runs before sheet.js does',
+      bridge !== null && html.indexOf(bridge) < html.indexOf('<script src="sheet.js">'));
+    const g = {};
+    let asked = null;
+    const lateImport = (path) => {
+      asked = path;
+      return new Promise((resolve) => setTimeout(() => resolve(parser), 25));
+    };
+    if (bridge) {
+      try {
+        new Function('globalThis', '__import', bridge.replace(/\bimport\(/g, '__import('))(g, lateImport);
+      } catch (e) {
+        check('the bridge runs outside the page', false, e.message);
+      }
+    }
+    check('the bridge imports the shared matcher', asked === '/apps/character-creator/js/parser.js', String(asked));
+    check('and has not resolved when sheet.js starts',
+      g.skillCats === undefined && typeof g.skillCatsReady?.then === 'function');
+
+    // load() fills the catalogs every picker reads, so a picker cannot draw
+    // before it returns. The bridge has to be in the batch load() awaits.
+    const load = functionBody(sheetSrc, 'async function load()') || '';
+    const batch = load.indexOf('await Promise.all([');
+    const batchEnd = batch < 0 ? -1 : load.indexOf(']);', batch);
+    const waits = load.indexOf('globalThis.skillCatsReady');
+    check('load() waits for the bridge in the batch that fetches the catalogs',
+      batch > 0 && waits > batch && waits < batchEnd
+        && batchEnd < load.indexOf('C.skillCatalog =') && batchEnd < load.indexOf('C.psiCatalog ='),
+      'globalThis.skillCatsReady is not inside load()\'s await Promise.all([...])');
+    if (g.skillCatsReady) await g.skillCatsReady.catch(() => {});
+
+    // The psionic pickers (banked panel) and the skill picker, on an object gate.
+    const psiSrc = cut('const psiAdmits', '// WHICH TRADITIONS') + cut('function pendingPowersPanel(', 'async function claimPowers(');
+    const psiCatalog = [
+      { name: 'Alter Aura', category: 'Physical' }, { name: 'Telekinesis', category: 'Physical' },
+      { name: 'See Aura', category: 'Sensitive' }, { name: 'Mind Bolt', category: 'Super' },
+    ];
+    const pending = [{ kind: 'psionic', granted_at_level: 2, slot: 0, count: 1,
+      categories: [{ name: 'Physical', except: ['Telekinesis'] }, 'Sensitive'] }];
+    const options = (html) => [...html.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+    const psiOptions = (glob) => {
+      const C = { data: { campaign_system: 'rifts', powers: [] }, spellCatalog: [], psiCatalog, talentCatalog: [],
+        claimingPowers: true, pendingPowers: pending, pendingPowersTotal: 1 };
+      try {
+        return { options: options(new Function('C', 'escHtml', 'globalThis', 'poolMax',
+          psiSrc + '\nreturn pendingPowersPanel;')(C, (x) => String(x ?? ''), glob, () => null)()) };
+      } catch (e) { return { threw: e.message }; }
+    };
+    const skillSrc = (functionBody(sheetSrc, 'function pickerBlock(') || '') + '\n}';
+    const skillCatalog = [
+      { name: 'Climbing', category: 'Physical', base: 40 }, { name: 'Swimming', category: 'Physical', base: 50 },
+      { name: 'Cooking', category: 'Domestic', base: 35 },
+    ];
+    const grants = [{ level: 4, count: 1, kind: 'related', categories: [{ name: 'Physical', except: ['Swimming'] }] }];
+    const skillOptions = (glob) => {
+      const C = { data: { skills: [], attributes: {}, campaign_system: null }, skillCatalog,
+        pickShowAll: false, pickFilter: '', pickValues: {}, pickLangs: {} };
+      const Picker = { filter: (rows) => rows, inputHtml: () => '' };
+      const langSkills = { isRepeatableRow: () => false, LITERACY_OTHER: 'Literacy: Other' };
+      try {
+        return { options: options(new Function('C', 'escHtml', 'globalThis', 'Picker', 'langSkills',
+          skillSrc + '\nreturn pickerBlock;')(C, (x) => String(x ?? ''), glob, Picker, langSkills)(grants, 1, 'lu')) };
+      } catch (e) { return { threw: e.message }; }
+    };
+
+    const psiLate = psiOptions(g);
+    check('once the bridge resolves late, the psionic picker admits an object-gated category',
+      JSON.stringify(psiLate.options) === '["Alter Aura","See Aura"]', JSON.stringify(psiLate));
+    const skillLate = skillOptions(g);
+    check('and so does the skill picker',
+      JSON.stringify(skillLate.options) === '["Climbing"]', JSON.stringify(skillLate));
+    // No second rule: without the bridge a picker fails loudly rather than
+    // quietly offering three categories where the class grants thirteen.
+    for (const [what, got, want] of [['psionic', psiOptions({}), 'Alter Aura'], ['skill', skillOptions({}), 'Climbing']]) {
+      check(`without the bridge the ${what} picker never drops an object category silently`,
+        !!got.threw || (got.options || []).includes(want), JSON.stringify(got));
+    }
+    check('no category helper keeps a plain includes fallback',
+      !/allowed\.includes\(s\.category\)/.test(sheetSrc) && !/cats\.includes\(power\.category\)/.test(sheetSrc));
   }
 
   // ---------- The wizard and the codex head a held list by its tradition ----------

@@ -67,10 +67,16 @@
      which TEN are objects, so ten categories would vanish from the picker.
      `categoryAllows` is the matcher the server, the wizard and the validator
      already share - the sheet uses it rather than keeping a fourth copy of the
-     rule. UI-AUDIT F30. -->
-<script type="module">
-  import { categoryAllows, categoryLabel } from '/apps/character-creator/js/parser.js';
-  globalThis.skillCats = { categoryAllows, categoryLabel };
+     rule. UI-AUDIT F30.
+     A CLASSIC script with a dynamic import, not a module: a module runs after
+     sheet.js, and nothing said when it had. This one runs first and publishes
+     a promise that load() in sheet.js waits for beside the catalogs, so no
+     picker draws before the matcher is here and sheet.js keeps no fallback. -->
+<script>
+  globalThis.skillCatsReady = import('/apps/character-creator/js/parser.js')
+    .then(({ categoryAllows, categoryLabel }) => {
+      globalThis.skillCats = { categoryAllows, categoryLabel };
+    });
 </script>
 <!-- What a new skill pick is STORED at: the catalog base, a formula resolved
      against the character's attributes, plus the class's bonus for a related
