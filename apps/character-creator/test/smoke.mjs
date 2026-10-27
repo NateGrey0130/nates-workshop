@@ -2309,9 +2309,34 @@ check('a variant overriding something it may not warns', (() => {
 // taken off that.
 section('Picker filtering');
 
+// It escapes with shared/js/ui.js's escHtml, which every page loads before it,
+// so that function is handed in the way the page's global scope would.
 const pickerWindow = {};
-new Function('window', readFileSync(join(appDir, 'js', 'picker.js'), 'utf8'))(pickerWindow);
+const pickerSrc = readFileSync(join(appDir, 'js', 'picker.js'), 'utf8');
+const uiSrc = readFileSync(join(repoRoot, 'shared', 'js', 'ui.js'), 'utf8');
+const pickerEsc = new Function(uiSrc.slice(uiSrc.indexOf('function escHtml'),
+  uiSrc.indexOf('\n}', uiSrc.indexOf('function escHtml')) + 2) + '\nreturn escHtml;')();
+new Function('window', 'escHtml', pickerSrc)(pickerWindow, pickerEsc);
 const Picker = pickerWindow.Picker;
+
+// One escaper, not two: picker.js kept its own copy of escHtml's replacements,
+// and two copies drift (row 25 of the 2026-10-26 creator plan).
+check('picker.js escapes with the shared escHtml, not a copy of its own',
+  !/escapeAttr/.test(pickerSrc) && /escHtml\(value/.test(pickerSrc));
+// The tiered-picks heading put its title into markup unescaped.
+{
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const body = appSrc.slice(appSrc.indexOf('function tieredStartHtml('), appSrc.indexOf('function startingTalentHtml('));
+  check('tieredStartHtml escapes its title, grantedBy and hint',
+    body.length > 100 && !/\$\{o\.(title|grantedBy|hint)\}/.test(body)
+    && /escHtml\(o\.title\)/.test(body) && /escHtml\(o\.grantedBy\)/.test(body));
+}
+// A small button is 22px tall; on a touch screen it gets the 44px floor.
+{
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  check('a coarse pointer gives .btn-sm and .mc-btn-sm a 44px floor',
+    /@media \(pointer: coarse\) \{\s*\.btn-sm, \.mc-btn-sm \{ min-height: 44px; \}/.test(css));
+}
 
 const skill = { name: 'Wilderness Survival', category: 'Wilderness', source_book: 'rifts-main' };
 

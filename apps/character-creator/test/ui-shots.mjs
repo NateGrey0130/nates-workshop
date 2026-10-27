@@ -106,8 +106,13 @@ const MEASURE = `(async () => {
   }
   const scrolls = doc.scrollHeight > innerHeight + 400;
   window.scrollTo(0, 0); await w(100);
+  // The shortest small button on the page, since .btn-sm is the one a finger
+  // misses (44px is the touch floor styles.css sets under pointer: coarse).
+  const small = [...document.querySelectorAll('.btn-sm, .mc-btn-sm')].filter((e) => e.offsetParent)
+    .map((e) => Math.round(e.getBoundingClientRect().height));
   return JSON.stringify({ overflowX, boxes, chrome: Math.round(chrome), vh: innerHeight, scrolls,
-    height: doc.scrollHeight, text: document.body.innerText.length });
+    height: doc.scrollHeight, text: document.body.innerText.length,
+    smallBtn: small.length ? Math.min(...small) : null, smallBtns: small.length });
 })()`;
 
 const state = mkdtempSync(join(tmpdir(), 'cc-ui-shots-'));
@@ -194,6 +199,10 @@ const rows = [];
 for (const size of SIZES) {
   await send('Emulation.setDeviceMetricsOverride',
     { width: size.width, height: size.height, deviceScaleFactor: 1, mobile: size.mobile });
+  // A phone is a touch screen, and `mobile` alone leaves the pointer fine: without
+  // this, no (pointer: coarse) rule applies and the phone shots show desktop
+  // hit areas.
+  await send('Emulation.setTouchEmulationEnabled', { enabled: size.mobile, maxTouchPoints: size.mobile ? 5 : 0 });
   for (const page of PAGES) {
     errors = [];
     await send('Page.navigate', { url: `http://127.0.0.1:${PORT}${page.path}` });
@@ -220,7 +229,8 @@ for (const size of SIZES) {
     }
     rows.push({ page: page.name, size: size.name, v, flags, file });
     console.log(`  ${flags.length ? 'FLAG' : 'ok  '} ${page.name} @ ${size.name}`
-      + (v ? `  chrome ${v.chrome}/${v.vh}px, height ${v.height}px` : ''));
+      + (v ? `  chrome ${v.chrome}/${v.vh}px, height ${v.height}px` : '')
+      + (v && v.smallBtn !== null ? `, shortest of ${v.smallBtns} small buttons ${v.smallBtn}px` : ''));
     for (const f of flags) console.log(`         ${f}`);
   }
 }

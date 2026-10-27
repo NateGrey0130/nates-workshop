@@ -4741,11 +4741,13 @@ function tieredStartHtml(groups, o) {
 
   if (o.head) return o.head(takenAll().length, total) + blocks;
   const granted = (o.granted || []).filter((n) => typeof n === 'string' && n.trim());
-  return (granted.length ? `<h3>${o.title} &mdash; ${granted.length} granted by ${o.grantedBy}
+  // Every caller passes constants today; escaped anyway, so a title built from
+  // a class's own words one day cannot write markup.
+  return (granted.length ? `<h3>${escHtml(o.title)} &mdash; ${granted.length} granted by ${escHtml(o.grantedBy)}
       <span class="muted small">(already on the character)</span></h3>`
       + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
-    + `<h3>${o.title} &mdash; ${takenAll().length}/${total}
-    <span class="muted small">(${o.hint})</span></h3>`
+    + `<h3>${escHtml(o.title)} &mdash; ${takenAll().length}/${total}
+    <span class="muted small">(${escHtml(o.hint)})</span></h3>`
     + blocks;
 }
 

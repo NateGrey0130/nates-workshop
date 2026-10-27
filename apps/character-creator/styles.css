@@ -992,6 +992,15 @@ body.play-mode .vital.conflict .val > input,
   .sheet-grid.sheet-3 { max-width: 900px; margin-inline: auto; }
 }
 
+/* A SMALL BUTTON IS SMALL TO THE EYE, NOT TO A FINGER. .btn-sm is 3px of
+   padding on 12px text, 22px tall, and only play mode raised it to 44px. On a
+   touch screen every page gets the floor; a mouse keeps the compact size.
+   Measured by test/ui-shots.mjs on a 375px phone with touch: 22px on the sheet
+   and GM tools, 24px on the campaign page, before this rule. */
+@media (pointer: coarse) {
+  .btn-sm, .mc-btn-sm { min-height: 44px; }
+}
+
 /* ── THE CHIP COLUMN (Board & Tissue, 2026-09-20) ─────────────────────────
    A block is told apart from its neighbour by a 13px column of board down its
    left edge. It is a ::before rather than a border-left because it is BOARD

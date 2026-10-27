@@ -1636,7 +1636,7 @@ export async function run() {
     check('and a literal id on one is written once, so a <label for> finds one control', !twice.length, `written more than once: ${twice.join(', ')}`);
     const input = functionBody(picker, 'function inputHtml(');
     check('the picker\'s filter box is named by its title, or its placeholder when it has none',
-      !!input && /aria-label="\$\{escapeAttr\(label \|\| placeholder\)\}"/.test(input),
+      !!input && /aria-label="\$\{escHtml\(label \|\| placeholder( \|\| '')?\)\}"/.test(input),
       'Picker.inputHtml writes the search box without an aria-label');
   }
 
