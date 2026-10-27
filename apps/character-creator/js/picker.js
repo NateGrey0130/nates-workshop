@@ -64,18 +64,18 @@
   // box read back as an anonymous search field. `label` is the picker's own
   // title ("Filter related skills"); a caller that passes none is named by its
   // placeholder, so no filter box can render without an accessible name.
+  //
+  // Escaped with escHtml (shared/js/ui.js, which every page loading this file
+  // loads first). This file carried its own copy of the same four replacements
+  // until 2026-10-27; `value ?? ''` keeps the one difference, that a missing
+  // value read as '' here and reads as 'undefined' through escHtml.
   function inputHtml({ id, value = '', placeholder = 'Filter…', label, shown, total }) {
     const count = (total === undefined) ? ''
       : `<span class="muted small pick-count">${shown} of ${total}</span>`;
     return `<div class="pick-filter">
-      <input type="search" id="${id}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" aria-label="${escapeAttr(label || placeholder)}">
+      <input type="search" id="${id}" value="${escHtml(value ?? '')}" placeholder="${escHtml(placeholder ?? '')}" aria-label="${escHtml(label || placeholder || '')}">
       ${count}
     </div>`;
-  }
-
-  function escapeAttr(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   // Both pages re-render by replacing innerHTML, which destroys the input
