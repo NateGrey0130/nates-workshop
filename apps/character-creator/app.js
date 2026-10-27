@@ -1305,7 +1305,7 @@ function renderRace() {
     inner = QUIZ.map((q, i) => `
       <h3>${i + 1}. ${q.q}</h3>
       <div class="rowline">` + q.opts.map(([val, label]) =>
-        `<button class="btn btn-sm ${S.quiz[i] === val ? '' : 'btn-ghost'}" onclick="quizPick(${i},'${val}')">${label}</button>`).join('') + `</div>`).join('');
+        `<button class="btn btn-sm ${S.quiz[i] === val ? '' : 'btn-ghost'}" aria-pressed="${S.quiz[i] === val}" onclick="quizPick(${i},'${val}')">${label}</button>`).join('') + `</div>`).join('');
     if (answered) {
       // A shortlist that held the entire catalogue, a third of it scoring zero,
       // was longer than the browse list it exists to replace. The ranking and
@@ -1572,12 +1572,15 @@ function tagReadout(c) {
 function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
+  // A <button> may hold phrasing content only, so the title, the tag row and
+  // the blurb are spans that styles.css sets to display:block at the size the
+  // <h3>, <div> and <p> they replace gave. The whole card stays the one target.
   return `<button type="button" class="pick${sel}" onclick="pickClass('${escJs(c.id)}')">
-    <h3>${esc(c.name)}</h3>
+    <span class="pick-title">${esc(c.name)}</span>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
-    ${classTags(c).length ? `<div>${tagReadout(c)}</div>` : ''}
-    <p class="muted small">${esc(blurb(c.lore, 110))}</p>
+    ${classTags(c).length ? `<span class="pick-tags">${tagReadout(c)}</span>` : ''}
+    <span class="pick-blurb muted small">${esc(blurb(c.lore, 110))}</span>
   </button>`;
 }
 function classDetail(c) {

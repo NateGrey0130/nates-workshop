@@ -651,6 +651,17 @@ th {
 /* The tag row and the lore blurb were touching. */
 .pick .tag { margin-bottom: 2px; }
 .pick p { margin-top: 10px; line-height: 1.5; }
+/* The class card is a <button>, which may hold phrasing content only, so its
+   title, tag row and blurb are spans. These give each the box the <h3>, <div>
+   and <p> above gave it, measured identical before and after. The title's
+   font-stretch is shared/styles.css's heading rule, which an <h3> picked up and
+   a span does not: without it a long class name wraps to a second line. */
+.pick .pick-title {
+  display: block; font-family: var(--font-display); font-stretch: 75%;
+  font-size: 15px; font-weight: 600; margin: 0 0 8px;
+}
+.pick .pick-tags { display: block; }
+.pick .pick-blurb { display: block; margin-top: 10px; line-height: 1.5; }
 /* The system and class cards are <button>s. They were `<div onclick>`, which no
    keyboard can reach, and they are steps 1 and 2 — so the wizard could not be
    BEGUN without a mouse. A button brings its own defaults with it (centred

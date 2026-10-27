@@ -102,6 +102,7 @@ const SECTIONS = [
   'A wizard control keeps keyboard focus when its own change redraws the step',
   'A step change puts focus on the step\'s heading and announces it',
   'Every wizard select and input has a name',
+  'A quiz answer says it is pressed, and a class card holds phrasing content',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
   'The printed sheet',
@@ -1634,6 +1635,43 @@ export async function run() {
     check('the picker\'s filter box is named by its title, or its placeholder when it has none',
       !!input && /aria-label="\$\{escapeAttr\(label \|\| placeholder\)\}"/.test(input),
       'Picker.inputHtml writes the search box without an aria-label');
+  }
+
+  // ---------- A quiz answer says it is pressed, and a class card holds phrasing content ----------
+  // The guided quiz showed which answer was chosen only by dropping btn-ghost,
+  // which a screen reader cannot see: every answer read as the same plain
+  // button. And the class card is a <button> that held an <h3>, a <div> of tags
+  // and a <p> of lore, none of which a button may contain; the card now uses
+  // spans that styles.css gives the same boxes (measured over all 655 Rifts
+  // cards, browse and quiz, before and after).
+  section('A quiz answer says it is pressed, and a class card holds phrasing content');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+    const answer = app.split('\n').find((l) => l.includes('onclick="quizPick(${i},'));
+    check('app.js writes the quiz answer buttons on one line', !!answer, 'no line calls quizPick(${i}, ...): the scan is reading the wrong shape');
+    check('each quiz answer carries aria-pressed on the same test that drops btn-ghost',
+      !!answer && answer.includes('${S.quiz[i] === val ? \'\' : \'btn-ghost\'}') && answer.includes('aria-pressed="${S.quiz[i] === val}"'),
+      answer ? answer.trim().slice(0, 160) : 'no line');
+    // Line comments out: classCard's own comment names the tags it gave up.
+    const code = (src) => src && src.replace(/^\s*\/\/.*$/gm, '');
+    const card = code(functionBody(app, 'function classCard('));
+    const readout = code(functionBody(app, 'function tagReadout('));
+    check('classCard and tagReadout are found', !!card && !!readout, 'functionBody could not cut one of them out of app.js');
+    const phrasing = new Set(['span', 'b', 'i', 'em', 'strong', 'small', 'abbr', 'code', 'img', 'br', 'svg', 'mark', 'sup', 'sub']);
+    const inside = [card, readout].filter(Boolean).flatMap((src) => [...src.matchAll(/<([a-z][a-z0-9]*)\b/g)].map((m) => m[1]));
+    const flow = [...new Set(inside.filter((t) => t !== 'button' && !phrasing.has(t)))];
+    check(`the class card's markup holds phrasing content only (${inside.length} tags read)`,
+      inside.length >= 5 && !flow.length, flow.length ? `a <button> may not contain: ${flow.map((t) => `<${t}>`).join(', ')}` : `only ${inside.length} tags found`);
+    check('the card is still one <button>, so the whole card stays the click target',
+      !!card && (card.match(/<button\b/g) || []).length === 1 && /<button type="button" class="pick\$\{sel\}" onclick="pickClass\(/.test(card),
+      'classCard no longer writes the card as a single <button class="pick">');
+    const rule = (sel) => new RegExp(`\\.pick \\.${sel}\\s*\\{[^}]*display:\\s*block`).test(css);
+    check('styles.css sets each of the card\'s three spans to display:block',
+      ['pick-title', 'pick-tags', 'pick-blurb'].every(rule),
+      ['pick-title', 'pick-tags', 'pick-blurb'].filter((s) => !rule(s)).join(', ') + ' missing');
+    check('and the title keeps the heading face\'s font-stretch, or long names wrap',
+      /\.pick \.pick-title\s*\{[^}]*font-stretch:\s*75%/.test(css), '.pick .pick-title has no font-stretch: 75%');
   }
 
   // ---------- The GM dashboard ----------
