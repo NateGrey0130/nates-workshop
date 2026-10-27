@@ -325,6 +325,27 @@ section('The browser Claude proxy forwards only the fields it checked');
   } finally {
     globalThis.fetch = realFetch;
   }
+
+  // The 5.5 models are allowed beside the older ids, and the one default
+  // the server exports is the same string the browser reads from
+  // shared/js/api.js, which cannot import the server module.
+  const { validateClaudeRequest, DEFAULT_MODEL, ALLOWED_MODELS } =
+    await import('../../../../functions/api/_lib/claude-client.js');
+  for (const model of ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5',
+    'claude-haiku-4-5-20251001', 'claude-sonnet-5', 'claude-opus-5']) {
+    const err = validateClaudeRequest({ ...base, model });
+    check(`model ${model} passes validateClaudeRequest`, err === null, String(err));
+  }
+  for (const model of ['claude-sonnet-5-6', 'claude-opus-5-5-20260401', '', undefined]) {
+    const err = validateClaudeRequest({ ...base, model });
+    check(`an unknown model (${JSON.stringify(model)}) is refused`, err === 'Model not allowed', String(err));
+  }
+  check('DEFAULT_MODEL is an allowed model', ALLOWED_MODELS.includes(DEFAULT_MODEL), String(DEFAULT_MODEL));
+  const browserApi = readFileSync(join(repoRoot, 'shared', 'js', 'api.js'), 'utf8');
+  const browserDefault = browserApi.match(/^const CLAUDE_DEFAULT_MODEL = '([^']+)';\r?$/m)?.[1];
+  check('shared/js/api.js CLAUDE_DEFAULT_MODEL matches the server DEFAULT_MODEL',
+    browserDefault !== undefined && browserDefault === DEFAULT_MODEL,
+    `browser ${browserDefault}, server ${DEFAULT_MODEL}`);
 }
 
 // ---------- 100 Claude calls per person in any 24 hours ----------
