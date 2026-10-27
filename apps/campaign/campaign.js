@@ -108,8 +108,8 @@ function render() {
     return;
   }
   // Five panels behind the sheet's own `.tabbar`, reused rather than
-  // re-styled: 44px targets, its `.tab-n` count pill, and the
-  // tablist/tab/aria-selected roles. It sits OUTSIDE the panel, as the sheet's
+  // re-styled: 44px targets and its `.tab-n` count pill. The tabs pattern itself (roles, ids, aria-controls, arrow keys)
+  // is js/tabs.js's, wired in wireCampaignTabs below. It sits OUTSIDE the panel, as the sheet's
   // does, because `.tabbar` is sticky and paints itself in --bg-primary —
   // inside a card it would smear the wrong colour on scroll.
   //
@@ -123,20 +123,45 @@ function render() {
                 ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
                 ['money', 'Currency', 0],
                 ['handouts', 'Handouts', C.handouts.state.handouts.length + (D.cities?.length || 0)]];
+  // The whole page is redrawn, the strip included, so a tab that had focus is
+  // gone after it: hand focus to the new selected tab, or an arrow key (or a
+  // click) drops the keyboard user at the top of the document.
+  const refocus = !!document.activeElement?.closest?.('.campaign-tabs');
   $('app').innerHTML = `
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
     </div>
     ${C.table.html()}
-    <nav class="tabbar campaign-tabs" role="tablist">${tabs.map(([k, label, n]) =>
-      `<button class="tab${D.tab === k ? ' on' : ''}" role="tab" aria-selected="${D.tab === k}"
+    <nav class="tabbar campaign-tabs" aria-label="Campaign sections">${tabs.map(([k, label, n]) =>
+      `<button type="button" class="tab${D.tab === k ? ' on' : ''}" data-tab="${k}"
          onclick="setTab('${k}')">${esc(label)}${
          n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}</nav>
+    <div class="campaign-tabpanel">
     ${D.tab === 'notes' ? C.notes.html()
       : D.tab === 'people' ? peopleView()
       : D.tab === 'stash' ? stashView()
-      : D.tab === 'handouts' ? C.handouts.html({ extra: cityMapsHtml() }) : C.ledger.html()}`;
+      : D.tab === 'handouts' ? C.handouts.html({ extra: cityMapsHtml() }) : C.ledger.html()}
+    </div>`;
+  wireCampaignTabs();
+  if (refocus) document.querySelector('.campaign-tabs [aria-selected="true"]')?.focus();
   C.notes.afterRender();
+}
+
+// THE TABS PATTERN IS js/tabs.js's, not this file's: ids, aria-controls,
+// role="tabpanel", the roving tabindex and the arrow, Home and End keys. Only
+// the selected tab's panel is drawn, so only it carries aria-controls.
+function wireCampaignTabs() {
+  const nav = document.querySelector('.campaign-tabs');
+  if (!nav || !globalThis.tabs) return;
+  globalThis.tabs.wire(nav, {
+    prefix: 'campaign',
+    tabs: [...nav.querySelectorAll('.tab')],
+    key: (el) => el.dataset.tab,
+    // A class, not an id: the helper gives the panel its own id.
+    panel: (tab) => (tab === D.tab ? document.querySelector('.campaign-tabpanel') : null),
+    selected: (tab) => tab === D.tab,
+    select: setTab,
+  });
 }
 
 function setTab(t) {

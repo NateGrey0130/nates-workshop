@@ -969,7 +969,13 @@ function listHtml(sec) {
 
 function render() {
   const sec = byId(S.tab);
-  $('app').innerHTML = tabsHtml() + listHtml(sec);
+  // The strip is redrawn with the rest, so a tab that had focus is gone after
+  // it: hand focus to the new selected tab, or an arrow key (or a click) drops
+  // the keyboard user at the top of the document.
+  const refocus = !!document.activeElement?.closest?.('.codex-tabs');
+  $('app').innerHTML = tabsHtml() + `<div class="codex-tabpanel">${listHtml(sec)}</div>`;
+  wireCodexTabs();
+  if (refocus) document.querySelector('.codex-tabs [aria-selected="true"]')?.focus();
 
   const box = $('codex-filter');
   // Same caret restoration Picker.wire() does, and for the same reason: this
@@ -978,24 +984,46 @@ function render() {
   if (S.filterFocused && box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
 }
 
+// THE TABS PATTERN IS js/tabs.js's, not this file's: the tablist role, ids,
+// aria-controls, role="tabpanel", the roving tabindex and the arrow, Home and
+// End keys. Only the open section is drawn, so only its tab names a panel.
+function wireCodexTabs() {
+  const nav = document.querySelector('.codex-tabs');
+  if (!nav || !globalThis.tabs) return;
+  globalThis.tabs.wire(nav, {
+    prefix: 'codex',
+    tabs: [...nav.querySelectorAll('.tab')],
+    key: (el) => el.dataset.tab,
+    // A class, not an id: the helper gives the panel its own id.
+    panel: (tab) => (tab === S.tab ? document.querySelector('.codex-tabpanel') : null),
+    selected: (tab) => tab === S.tab,
+    select: selectTab,
+  });
+}
+
+// A tab chosen by click or by arrow key.
+function selectTab(id) {
+  S.tab = id;
+  S.filterFocused = false;
+  // The filter is per-section: a query that narrowed spells means nothing
+  // against vessels, and carrying it across would open a tab on "nothing
+  // matches that" with no visible reason.
+  S.filter = '';
+  // A group and a sort belong to one section's rows for the same reason.
+  // The system does not, and stays.
+  S.group = '';
+  S.sort = '';
+  location.hash = '#' + S.tab;
+  syncQuery();
+  render();
+  loadSection(S.tab);
+}
+
 // ─── one listener for the page, rather than a handler per row ───
 document.addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) {
-    S.tab = tab.dataset.tab;
-    S.filterFocused = false;
-    // The filter is per-section: a query that narrowed spells means nothing
-    // against vessels, and carrying it across would open a tab on "nothing
-    // matches that" with no visible reason.
-    S.filter = '';
-    // A group and a sort belong to one section's rows for the same reason.
-    // The system does not, and stays.
-    S.group = '';
-    S.sort = '';
-    location.hash = '#' + S.tab;
-    syncQuery();
-    render();
-    loadSection(S.tab);
+    selectTab(tab.dataset.tab);
     return;
   }
 

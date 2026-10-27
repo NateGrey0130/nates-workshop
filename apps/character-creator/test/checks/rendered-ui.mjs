@@ -139,6 +139,7 @@ const SECTIONS = [
   'Transfer to player: one dialog, for a G.M. on their own character',
   'The name panel beside every Name box',
   'One tabs helper: roles, ids, roving tabindex and arrow keys',
+  'Campaign and codex tabs: the helper, aria-controls to a drawn panel',
 ];
 
 export async function run() {
@@ -5577,5 +5578,41 @@ export async function run() {
     const at = (s) => html.indexOf(s);
     check('the sheet page loads tabs.js before sheet.js',
       at('/apps/character-creator/js/tabs.js') > 0 && at('/apps/character-creator/js/tabs.js') < at('src="sheet.js"'));
+  }
+
+  // ---------- Campaign and codex tabs use the helper (creator retro row 21, 2026-10-27) ----------
+  // Campaign's strip had role="tablist", role="tab" and aria-selected and
+  // nothing else; the codex's had no ARIA at all. In both, ArrowRight on a
+  // focused tab did nothing (reproduced on a local server). Each page now
+  // wires js/tabs.js over a strip and ONE drawn panel, the selected tab's.
+  // Both pages redraw the whole strip on a selection, so each hands focus to
+  // the new selected tab after the redraw: the helper's own focus() lands on
+  // the detached old button.
+  section('Campaign and codex tabs: the helper, aria-controls to a drawn panel');
+  {
+    for (const [name, dir, file, fn, cls] of [
+      ['campaign', 'campaign', 'campaign.js', 'function wireCampaignTabs()', 'campaign'],
+      ['codex', 'codex', 'codex.js', 'function wireCodexTabs()', 'codex'],
+    ]) {
+      const js = readFileSync(join(repoRoot, 'apps', dir, file), 'utf8').replace(/\r\n/g, '\n');
+      const html = readFileSync(join(repoRoot, 'apps', dir, 'index.html'), 'utf8');
+      const at = (s) => html.indexOf(s);
+      check(`${name}: the page loads tabs.js before ${file}`,
+        at('/apps/character-creator/js/tabs.js') > 0 && at('/apps/character-creator/js/tabs.js') < at(`src="${file}"`));
+      const wireFn = functionBody(js, fn) || '';
+      check(`${name}: ${fn.slice(9, -2)} wires the helper over the .${cls}-tabs strip`,
+        new RegExp(`querySelector\\('\\.${cls}-tabs'\\)`).test(wireFn) && /globalThis\.tabs\.wire\(nav, \{/.test(wireFn),
+        `${file} has no ${fn}, or it no longer calls tabs.wire`);
+      check(`${name}: the selected tab's aria-controls names the panel render drew`,
+        new RegExp(`panel: \\(tab\\) => \\(tab === [DS]\\.tab \\? document\\.querySelector\\('\\.${cls}-tabpanel'\\) : null\\)`).test(wireFn));
+      const render = functionBody(js, 'function render()') || '';
+      check(`${name}: render draws the panel and wires the strip after it`,
+        render.includes(`<div class="${cls}-tabpanel">`)
+          && render.indexOf(`<div class="${cls}-tabpanel">`) < render.indexOf(`${fn.slice(9, -2)}();`));
+      check(`${name}: focus follows the selection across the redraw`,
+        new RegExp(`if \\(refocus\\) document\\.querySelector\\('\\.${cls}-tabs \\[aria-selected="true"\\]'\\)\\?\\.focus\\(\\);`).test(render));
+      check(`${name}: the strip writes no role or aria-selected of its own`,
+        !/role="tab(list)?"|aria-selected="\$\{/.test(js));
+    }
   }
 }
