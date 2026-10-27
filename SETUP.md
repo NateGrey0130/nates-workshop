@@ -78,6 +78,7 @@ directory is a path segment.
 A bucket must exist **before** the deploy that binds it. Every read goes
 through a Function that checks campaign membership: **never enable public
 access on it.** Which credential can reach R2: `docs/cloudflare-credentials.md`.
+The weekly backup copies it (*The weekly D1 backup*).
 
 ## How deploys work
 
@@ -504,6 +505,19 @@ the newest eight dated folders, and writes `last-run.json` in the root. A run
 with any failure stays in `<YYYY-MM-DD>.partial` and deletes nothing.
 `docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
 not.
+
+**The same run mirrors the R2 bucket** `nates-workshop-media` into
+`C:\Users\natha\Backups\nates-workshop\r2\nates-workshop-media\`, one copy
+that grows rather than a dated one: it lists every key and downloads only the
+keys not already there at the same size, and it never deletes a local file. It
+only reads the bucket. `CLOUDFLARE_API_TOKEN` cannot reach R2, so it uses a
+separate R2 API token with **Object Read on `nates-workshop-media` only**, from
+two User-scope variables, `R2_BACKUP_ACCESS_KEY_ID` and
+`R2_BACKUP_SECRET_ACCESS_KEY`, plus `CLOUDFLARE_ACCOUNT_ID` for the endpoint.
+The values live in those variables and nowhere else. A run that cannot list or
+copy the bucket exits 1 and records why under `r2` in `last-run.json`, and
+`--check` then exits 1 too; the dated D1 folders still rotate, because the
+mirror has no part in that.
 
 **The root stays outside the repo.** The repo is public, and a backup holds
 every campaign note and character. The script refuses a root inside the tree
