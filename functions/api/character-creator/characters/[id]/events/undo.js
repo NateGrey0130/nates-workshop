@@ -16,6 +16,7 @@
 // response says what was restored so the client can update in place.
 
 import { json, requireCharacter } from '../../../_lib/auth.js';
+import { POOL_FIELDS } from '../events.js';
 
 export async function onRequestPost({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
@@ -36,6 +37,14 @@ export async function onRequestPost({ request, env, params }) {
   const restored = { character: {}, second_form: {}, item: null, armor: null, vehicle: null };
 
   const charFields = changes.character || {};
+  // A field name below becomes SQL (`SET ${field}`), and it comes from the
+  // stored payload, not from this request. The events route admits only
+  // POOL_FIELDS on the way in; a row naming anything else was written some
+  // other way, so the whole undo is refused before anything is written.
+  const foreign = Object.keys(charFields).filter((f) => !POOL_FIELDS.has(f));
+  if (foreign.length) {
+    return json({ error: `This event names a field undo cannot restore: ${foreign.join(', ')}` }, 409);
+  }
   const sets = [], binds = [];
   for (const [field, fv] of Object.entries(charFields)) {
     if (typeof fv?.from !== 'number') continue;

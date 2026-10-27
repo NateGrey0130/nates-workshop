@@ -478,7 +478,17 @@ window.npcSheets = (function () {
   }
 
   async function loadLib() {
-    try { S.lib.entries = (await api('npc-library')).entries || []; }
+    // The list is paged (default 200 a page); follow next_offset to the end,
+    // so a library past one page still shows whole.
+    try {
+      const all = [];
+      for (let offset = 0; offset !== null;) {
+        const page = await api(`npc-library?offset=${offset}`);
+        all.push(...(page.entries || []));
+        offset = Number.isInteger(page.next_offset) && page.next_offset > offset ? page.next_offset : null;
+      }
+      S.lib.entries = all;
+    }
     catch (err) { S.lib.entries = []; S.lib.msg = 'Could not load your library: ' + err.message; S.lib.err = true; }
   }
   async function openLib() {

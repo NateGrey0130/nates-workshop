@@ -28,7 +28,8 @@ const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Acce
   'A person is limited to 100 Claude calls a day', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
   'A deleted character is read by nothing', 'A deleted campaign is read by nothing',
-  'A transfer is refused before the database is read', 'Client error reporting'];
+  'A transfer is refused before the database is read', 'Client error reporting',
+  'Undo restores only a play pool', 'The NPC library list is paged'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -859,6 +860,106 @@ section('A transfer is refused before the database is read');
   const unsetMsg = (await call(sheetPost, { request: post('/characters/1/transfer', { to_email: 'friend@example.com' }), env: unset, params: { id: '1' } })).body.error;
   check('and the unset list says which knob is wrong', /MV_SHARE_CANDIDATES is unset/.test(unsetMsg || ''), unsetMsg);
   check('and none of them touched the database', touched === 0, `${touched} reads`);
+}
+
+// ---------- Undo puts only a play pool's name into SQL ----------
+// events/undo.js writes `SET ${field}` from the field names in the stored
+// event's payload. The events route admits only POOL_FIELDS on the way in;
+// undo re-checks the same set on the way out, so a tampered or legacy row is
+// a 409 and writes nothing. Called as a function over a stand-in database
+// that records every statement it is handed.
+section('Undo restores only a play pool');
+{
+  const { onRequestPost: undoPost } = await import('../../../../functions/api/character-creator/characters/[id]/events/undo.js');
+  const stub = (payload) => {
+    const log = { batches: [], sql: [] };
+    const DB = {
+      prepare(sql) {
+        log.sql.push(sql);
+        const st = { sql, binds: [], bind(...b) { st.binds = b; return st; },
+          first: async () => (/FROM characters JOIN campaigns/.test(sql)
+            ? { id: 1, player_email: 'dev@localhost', campaign_id: 1, kind: 'pc', gm_email: 'gm@example.com' } : null),
+          all: async () => ({ results: /FROM play_events/.test(sql)
+            ? [{ id: 7, kind: 'damage', payload: JSON.stringify(payload) }] : [] }) };
+        return st;
+      },
+      batch: async (sts) => { log.batches.push(sts.map((s) => s.sql)); return sts.map(() => ({ results: [] })); },
+    };
+    return { DB, log };
+  };
+  const undo = async (payload) => {
+    const { DB, log } = stub(payload);
+    let status, body;
+    try {
+      const res = await undoPost({ request: new Request('http://localhost/api/character-creator/characters/1/events/undo', { method: 'POST' }),
+        env: { DB }, params: { id: '1' } });
+      status = res.status; body = await res.json();
+    } catch (e) { status = 'threw'; body = { error: e.message }; }
+    return { status, body, log };
+  };
+
+  const tampered = await undo({ changes: { character: { 'hp_current = 0, name': { from: 5 } } } });
+  check('an undo whose field is not a play pool is a 409', tampered.status === 409, JSON.stringify(tampered.body));
+  check('and writes nothing, the event stamp included', tampered.log.batches.length === 0,
+    JSON.stringify(tampered.log.batches));
+  check('and its field name reaches no statement', !tampered.log.sql.some((s) => s.includes('name =')),
+    tampered.log.sql.filter((s) => s.includes('name =')).join(' | '));
+  const mixed = await undo({ changes: { character: { hp_current: { from: 9 }, gm_notes: { from: 1 } } } });
+  check('one bad field among good ones refuses the whole undo', mixed.status === 409 && mixed.log.batches.length === 0,
+    JSON.stringify({ status: mixed.status, batches: mixed.log.batches }));
+  const fine = await undo({ changes: { character: { hp_current: { from: 9 }, ppe_current: { from: 3 } } } });
+  check('a play pool is still restored', fine.status === 200
+    && fine.log.batches[0]?.some((s) => /UPDATE characters SET hp_current = \?, ppe_current = \?/.test(s))
+    && fine.body.restored?.character?.hp_current === 9, JSON.stringify({ status: fine.status, body: fine.body }));
+}
+
+// ---------- The NPC library list is paged ----------
+// GET npc-library used to return every entry the caller owns in one answer.
+// It now takes the shared `limit`/`offset`, and says where the next page
+// starts (null on the last one). Columns are unchanged: still summaries.
+section('The NPC library list is paged');
+{
+  const { onRequestGet: libGet } = await import('../../../../functions/api/character-creator/npc-library.js');
+  const rows = ['Alda', 'Brom', 'Cael'].map((name, i) => ({ id: i + 1, name, system: 'rifts', source: 'campaign',
+    notes: null, sheet: JSON.stringify({ character: { class_id: 4, level: i + 1 } }), created_at: 'c', updated_at: 'u' }));
+  const seen = [];
+  const DB = {
+    prepare(sql) {
+      const st = { sql, binds: [], bind(...b) { st.binds = b; return st; },
+        all: async () => ({ results: rows }), first: async () => null };
+      return st;
+    },
+    batch: async (sts) => sts.map((s) => {
+      seen.push({ sql: s.sql, binds: s.binds });
+      if (/COUNT\(\*\)/i.test(s.sql)) return { results: [{ n: rows.length }] };
+      const m = /LIMIT \? OFFSET \?/.test(s.sql);
+      const [limit, offset] = m ? s.binds.slice(-2) : [rows.length, 0];
+      return { results: rows.slice(offset, offset + limit) };
+    }),
+  };
+  const list = async (qs) => {
+    try {
+      const res = await libGet({ request: new Request(`http://localhost/api/character-creator/npc-library${qs}`), env: { DB } });
+      return { status: res.status, body: await res.json() };
+    } catch (e) { return { status: 'threw', body: { error: e.message } }; }
+  };
+  const first = await list('?limit=2');
+  check('the list honours limit', first.status === 200 && first.body.entries?.length === 2,
+    JSON.stringify(first.body).slice(0, 300));
+  check('and says where the next page starts', first.body.next_offset === 2 && first.body.total === 3,
+    JSON.stringify({ next_offset: first.body.next_offset, total: first.body.total }));
+  const last = await list('?limit=2&offset=2');
+  check('the last page names no next page', last.body.entries?.length === 1 && last.body.next_offset === null
+    && last.body.entries[0].name === 'Cael', JSON.stringify(last.body).slice(0, 300));
+  seen.length = 0;
+  await list('');
+  const page = seen.find((s) => /LIMIT \? OFFSET \?/.test(s.sql));
+  check('with no limit asked, the query is still bounded', !!page && page.binds.slice(-2).join() === '200,0',
+    JSON.stringify(seen));
+  const e = first.body.entries?.[0] || {};
+  check('and the entries are still summaries, no sheet',
+    ['id', 'name', 'system', 'source', 'notes', 'class_id', 'occ_class_id', 'level', 'created_at', 'updated_at']
+      .every((k) => k in e) && !('sheet' in e), JSON.stringify(e));
 }
 
 // ---------- A page's own errors reach the server, and not too many ----------

@@ -35,7 +35,9 @@ import { secondFormView } from '../../../../../apps/character-creator/js/second-
 
 // The character columns a play event may touch. Anything else is the sheet
 // lens's business and goes through PATCH, where the field list lives.
-const POOL_FIELDS = new Set(['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'isp_current']);
+// events/undo.js re-checks a stored event's fields against this same set
+// before it puts any of them into SQL.
+export const POOL_FIELDS =new Set(['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'isp_current']);
 // The pools a second form tracks on its own. P.P.E., I.S.P. and M.D.C. are one
 // pool both forms share, and stay under `character`.
 const FORM_POOL_FIELDS = new Set(['sdc_current', 'hp_current']);
