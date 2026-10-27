@@ -5,8 +5,8 @@
 //   node scripts/build-preview-d1.mjs --db tools       one group (palladium|marvel|tools)
 //   node scripts/build-preview-d1.mjs --name <db>      the database for --db, by name
 //
-// WHAT THEY ARE FOR: pull-request previews (row 5 of the 2026-10-26 creator
-// plan binds them). Production has the real databases; until these existed a
+// WHAT THEY ARE FOR: pull-request previews, which wrangler.jsonc's env.preview
+// binds to them. Production has the real databases; until these existed a
 // preview deployment could only read and write production's.
 //
 // WHAT GOES IN: the same clean build scripts/build-local-d1.mjs makes, against
@@ -28,7 +28,8 @@
 // change lands the repo's state, not the sum of every build.
 //
 // THE GUARD: a target whose name does not end in `-preview`, or that matches
-// any database_name in wrangler.jsonc, is REFUSED before wrangler is started.
+// any database_name wrangler.jsonc binds at its top level (production's; its
+// env.preview binds these three), is REFUSED before wrangler is started.
 // And wrangler never sees wrangler.jsonc: every call runs with `-c` on a
 // scratch config naming the preview databases alone, so a production
 // database is not reachable from this script by any argument.
@@ -41,6 +42,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bootstrapSql } from './build-local-d1.mjs';
 import { groupDatabases, repoRoot, runWrangler } from './d1-query-lib.mjs';
+import { readWranglerConfig } from './groups.mjs';
 import { statementsKeepingTriggers } from './sql-statements.mjs';
 
 const PREVIEW_DATABASES = {
@@ -52,8 +54,9 @@ const PREVIEW_DATABASES = {
 /** Why `name` may not be built, or null when it may. */
 function refusal(name, wranglerConfig) {
   if (!/-preview$/.test(name || '')) return `${name || '(none)'} does not end in -preview`;
-  const production = [...wranglerConfig.matchAll(/"database_name"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
-  if (production.includes(name)) return `${name} is a database wrangler.jsonc binds`;
+  // The top level only: env.preview binds these very databases, on purpose.
+  const production = (wranglerConfig.d1_databases ?? []).map((d) => d.database_name);
+  if (production.includes(name)) return `${name} is a database wrangler.jsonc binds for production`;
   return null;
 }
 
@@ -70,7 +73,7 @@ const targets = Object.entries(PREVIEW_DATABASES)
   .filter(([g]) => !only || g === only)
   .map(([group, d]) => ({ group, ...d, ...(ni !== -1 ? { name: args[ni + 1], id: null } : {}) }));
 
-const wranglerConfig = readFileSync(join(repoRoot, 'wrangler.jsonc'), 'utf8');
+const wranglerConfig = readWranglerConfig(repoRoot);
 for (const t of targets) {
   const why = refusal(t.name, wranglerConfig);
   if (why) fail(`REFUSED: ${why}. This script builds preview databases only.`);

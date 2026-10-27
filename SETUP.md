@@ -560,7 +560,13 @@ Three databases exist for pull-request previews, one per group, created
 | `DB_MARVEL` | `nates-workshop-marvel-preview` | `750a8ae5-eb89-4625-996f-8d84a86165a0` |
 | `DB_TOOLS` | `nates-workshop-tools-preview` | `329ff05e-e217-4128-8817-33c274696430` |
 
-**Nothing binds them yet.** `wrangler.jsonc` binds production's three only.
+**Every pull-request preview binds them**, through `env.preview` in
+`wrangler.jsonc`, under production's binding names, along with the R2 bucket
+`nates-workshop-media-preview` as `MEDIA`. Production and `wrangler pages dev`
+read the top level. Pages makes that block restate every binding and the
+Access vars, so the two room Workers are production's in a preview too.
+`node scripts/groups.mjs --check` (rule 8) holds the block to `-preview`
+resources.
 
 **They hold the repo, never production.** Rebuild all three from nothing:
 

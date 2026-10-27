@@ -36,6 +36,9 @@
 //      bindings groups.json names are exactly the D1s wrangler.jsonc binds.
 //      Rule 6 reads table names; this reads the handle the query runs on, so a
 //      query written against the wrong database cannot pass by naming no table.
+//   8. wrangler.jsonc's env.preview gives a pull-request preview its own D1s
+//      and R2 bucket, under production's binding names, and production's
+//      Access vars (previewFailures says why each part is held)
 //
 // Read-only. Exits 1 on any failure and names each one.
 
@@ -180,7 +183,86 @@ export function check(root = repoRoot) {
     }
   }
 
+  // 8. a pull-request preview reaches none of production's data
+  failures.push(...previewFailures(parseJsonc(config)));
+
   return { failures, files: files.length, entries: seen.size, tables: created.length };
+}
+
+// wrangler.jsonc as an object: JSON once its comments and trailing commas are
+// gone. Comments are dropped outside strings only, because the file carries
+// URLs ("https://...") inside them.
+function parseJsonc(text) {
+  let out = '';
+  for (let i = 0; i < text.length;) {
+    const c = text[i];
+    if (c === '"') {
+      let j = i + 1;
+      while (j < text.length && text[j] !== '"') j += text[j] === '\\' ? 2 : 1;
+      out += text.slice(i, j + 1);
+      i = j + 1;
+    } else if (c === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+    } else if (c === '/' && text[i + 1] === '*') {
+      const end = text.indexOf('*/', i + 2);
+      i = end === -1 ? text.length : end + 2;
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
+}
+
+export function readWranglerConfig(root = repoRoot) {
+  return parseJsonc(readFileSync(join(root, 'wrangler.jsonc'), 'utf8'));
+}
+
+// Pages builds a preview from the top level of wrangler.jsonc unless
+// `env.preview` overrides it, so without that block every pull-request preview
+// reads and writes production's D1 and R2. Pages' rule for the block: override
+// one non-inheritable key (vars or any binding) and you must re-specify all of
+// them, or the deploy fails validation. So:
+//   - every non-inheritable key the top level has, env.preview has;
+//   - its vars are the top level's, so a preview's /api/* stays armed by Access;
+//   - each D1 and R2 binding is there under the same name, on a resource whose
+//     name ends in -preview and that the top level does not bind;
+//   - the Durable Object and service bindings are the top level's: those
+//     Workers have no preview copy, and a different value here would be a
+//     decision nobody wrote down.
+const NON_INHERITABLE = ['vars', 'd1_databases', 'durable_objects', 'hyperdrive', 'kv_namespaces', 'queues',
+  'r2_buckets', 'vectorize', 'services', 'analytics_engine_datasets', 'ai'];
+
+function previewFailures(cfg) {
+  const preview = cfg.env?.preview;
+  if (!preview) return ['wrangler.jsonc has no env.preview, so every pull-request preview binds production\'s D1 and R2'];
+  const failures = [];
+  for (const k of NON_INHERITABLE) {
+    if (k in cfg && !(k in preview)) failures.push(`wrangler.jsonc env.preview does not re-specify ${k} - Pages refuses a preview config that overrides one non-inheritable key and not all`);
+  }
+  if (JSON.stringify(preview.vars ?? {}) !== JSON.stringify(cfg.vars ?? {})) {
+    failures.push('wrangler.jsonc env.preview.vars differ from vars - a preview must be armed by Access exactly as production is');
+  }
+  for (const [key, nameOf, idOf] of [
+    ['d1_databases', (d) => d.database_name, (d) => d.database_id],
+    ['r2_buckets', (b) => b.bucket_name, (b) => b.bucket_name],
+  ]) {
+    const prod = cfg[key] ?? [];
+    const prev = preview[key] ?? [];
+    for (const p of prod) {
+      const q = prev.find((d) => d.binding === p.binding);
+      if (!q) { failures.push(`wrangler.jsonc env.preview.${key} has no ${p.binding}`); continue; }
+      if (!/-preview$/.test(nameOf(q) ?? '')) failures.push(`wrangler.jsonc env.preview binds ${p.binding} to ${nameOf(q)}, whose name does not end in -preview`);
+      if (prod.some((d) => nameOf(d) === nameOf(q) || idOf(d) === idOf(q))) failures.push(`wrangler.jsonc env.preview binds ${p.binding} to a resource production binds`);
+    }
+    for (const q of prev) {
+      if (!prod.some((p) => p.binding === q.binding)) failures.push(`wrangler.jsonc env.preview.${key} binds ${q.binding}, which the top level does not`);
+    }
+  }
+  for (const k of ['durable_objects', 'services']) {
+    if (k in cfg && JSON.stringify(preview[k]) !== JSON.stringify(cfg[k])) failures.push(`wrangler.jsonc env.preview.${k} differ from the top level's`);
+  }
+  return failures;
 }
 
 // Known tables a source file names where SQL would: after FROM, JOIN, INTO,

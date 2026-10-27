@@ -18,8 +18,9 @@
   // These reach `wrangler pages dev` too, where no Access exists to mint a
   // token; the middleware exempts localhost for exactly that reason, the same
   // reality auth.js's dev@localhost fallback answers. Preview deployments
-  // built from this config are armed as well - they sit OUTSIDE Access, so
-  // arming them turns their /api/* into a wall rather than an open door.
+  // are armed as well, by the same two values restated in env.preview below -
+  // they sit OUTSIDE Access, so arming them turns their /api/* into a wall
+  // rather than an open door.
   //
   // To stand down: remove both (the middleware passes through unless both are
   // set) and merge.
@@ -120,5 +121,73 @@
       "binding": "PICK3CUT5",
       "service": "pick3cut5-room"
     }
-  ]
+  ],
+  // PULL-REQUEST PREVIEWS GET THEIR OWN DATA. Pages builds a preview from the
+  // top level above unless this block overrides it, so before 2026-10-27 every
+  // preview read and wrote production's three D1s and its bucket. Local dev
+  // (`wrangler pages dev`) and production still read the top level.
+  //
+  // Pages' rule: override one non-inheritable key (vars or any binding) and
+  // every one of them must be restated here, or the deploy fails validation.
+  // So the Access vars are repeated as they are - a preview's /api/* is walled
+  // exactly as production's - and so are the two room Workers, which have no
+  // preview copy: a preview's Pick 3 Cut 5 and Table rooms are production's
+  // Workers, and pick3cut5-room writes its claude_usage rows to production.
+  //
+  // The databases hold what the repo builds, never production's rows:
+  // `node scripts/build-preview-d1.mjs` rebuilds them (SETUP.md -> The preview
+  // D1 databases), and nothing rebuilds them as data scripts merge. The bucket
+  // was made empty in the dashboard. groups.mjs --check rule 8 holds this
+  // block to production's binding names and to -preview resources.
+  "env": {
+    "preview": {
+      "vars": {
+        "ACCESS_TEAM_DOMAIN": "fatmans.cloudflareaccess.com",
+        "ACCESS_AUD": "2496fc92a44613095fab0041f70ad421f2539ddf0fa5dbb7994cc0d514c4ebd3"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "nates-workshop-media-preview",
+          "database_id": "1c5f3ddb-ae56-4be3-b13e-f34eae720405"
+        },
+        {
+          "binding": "DB_MARVEL",
+          "database_name": "nates-workshop-marvel-preview",
+          "database_id": "750a8ae5-eb89-4625-996f-8d84a86165a0"
+        },
+        {
+          "binding": "DB_TOOLS",
+          "database_name": "nates-workshop-tools-preview",
+          "database_id": "329ff05e-e217-4128-8817-33c274696430"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA",
+          "bucket_name": "nates-workshop-media-preview"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "P3C5_ROOM",
+            "class_name": "Room",
+            "script_name": "pick3cut5-room"
+          },
+          {
+            "name": "TABLE_ROOM",
+            "class_name": "TableRoom",
+            "script_name": "table-room"
+          }
+        ]
+      },
+      "services": [
+        {
+          "binding": "PICK3CUT5",
+          "service": "pick3cut5-room"
+        }
+      ]
+    }
+  }
 }
