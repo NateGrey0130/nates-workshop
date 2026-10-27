@@ -272,18 +272,31 @@ function initNpcForm(data) {
   $('#npc-origin').innerHTML = opt(data.origins.origins);
   $('#npc-ceiling').innerHTML = '<option value="">No limit</option>'
     + data.ranks.ranks.filter((r) => !['shift-0', 'beyond'].includes(r.id)).map((r) => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  // One roll at a time: a double click used to send two generate requests and
+  // save two NPCs. The button stays disabled until the request settles, either
+  // way (the Palladium roller's busy flag, npc-sheets.js).
+  let npcBusy = false;
   $('#npc-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (npcBusy) return;
     const f = new FormData(e.target);
     const body = { name: f.get('name'), dossier: f.get('dossier') === 'on' };
     for (const k of ['body', 'origin', 'ceiling']) if (f.get(k)) body[k] = f.get(k);
     if (f.get('powers')) body.powers = Number(f.get('powers'));
-    $('#npc-status').textContent = 'Rolling...';
-    const r = await api(`campaigns/${G.id}/npcs/generate`, { method: 'POST', body });
-    $('#npc-status').textContent = r.ok ? `${r.data.npc.name} rolled${r.data.dossier_id ? ' and added to People' : ''}.` : errorOf(r);
-    if (!r.ok) return;
-    showNpc({ ...r.data.npc, sheet: {} });
-    await loadNpcs();
+    const btn = e.target.querySelector('button[type="submit"]');
+    npcBusy = true;
+    btn.disabled = true;
+    try {
+      $('#npc-status').textContent = 'Rolling...';
+      const r = await api(`campaigns/${G.id}/npcs/generate`, { method: 'POST', body });
+      $('#npc-status').textContent = r.ok ? `${r.data.npc.name} rolled${r.data.dossier_id ? ' and added to People' : ''}.` : errorOf(r);
+      if (!r.ok) return;
+      showNpc({ ...r.data.npc, sheet: {} });
+      await loadNpcs();
+    } finally {
+      npcBusy = false;
+      btn.disabled = false;
+    }
   });
   $('#npc-list').addEventListener('click', async (e) => {
     const show = e.target.closest('[data-npc-show]');

@@ -1467,6 +1467,21 @@ section('The shared campaign views are loaded in order, reach only this app\'s A
   // there as well as on the Campaigns page, not merely loaded.
   check('GM tools loads and draws The Table\'s panel',
     /MC\.table\.load\(\)/.test(pageScripts[1]) && /MC\.table\.html\(\)/.test(pageScripts[1]));
+  // A double click on Roll the NPC sent two generate requests and saved two
+  // NPCs: the handler returns while a roll is in flight, disables the button
+  // before the request, and re-enables it in a finally, so an error frees it.
+  {
+    const h = (pageScripts[1].split("$('#npc-form').addEventListener('submit'")[1] || '').split("$('#npc-list')")[0];
+    const call = h.indexOf('npcs/generate');
+    const guard = h.search(/if \((\w+)\) return;/);
+    const flag = (h.match(/if \((\w+)\) return;/) || [])[1];
+    const fin = h.slice(h.indexOf('finally'));
+    check('GM tools: Roll the NPC sends one request at a time and is re-enabled when it settles',
+      call > 0 && guard >= 0 && guard < call
+        && new RegExp(`${flag} = true;[\\s\\S]*\\.disabled = true;`).test(h.slice(0, call))
+        && h.indexOf('finally') > call && new RegExp(`${flag} = false;`).test(fin) && /\.disabled = false;/.test(fin),
+      h.slice(0, 200));
+  }
   // The page code names only this app's API (the suite itself is left out: it
   // names the other one in these very lines), and no endpoint imports another
   // group's code - a comment naming the Palladium file it mirrors is fine.
