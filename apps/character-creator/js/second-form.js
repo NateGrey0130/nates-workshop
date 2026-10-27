@@ -261,11 +261,7 @@ export function secondFormView({ cls, character, rows = null }) {
   }
 
   const derive = D();
-  const first = derive.classBonuses(cls, level, {
-    attributes: c.attribute_bonuses || {},
-    combat: c.rolled_bonuses?.combat || {},
-    saves: c.rolled_bonuses?.saves || {},
-  });
+  const first = derive.classBonuses(cls, level, derive.characterBonuses(c));
   const formBonuses = {
     attributes: bonus.attributes, combat: bonus.combat, saves: bonus.saves,
     attribute_minimums: bonus.attribute_minimums,

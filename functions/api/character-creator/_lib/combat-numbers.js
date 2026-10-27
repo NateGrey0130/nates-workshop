@@ -9,7 +9,7 @@
 // THE SAME PIPELINE AS GET characters/:id and sheet.js, not a second one:
 //   the class composed with the skills' bonuses folded in (composeClass, the
 //   bonus rows loadSkillBonuses reads, the totem), then
-//   derive.classBonuses(cls, level, { attributes, combat, saves }) and
+//   derive.classBonuses(cls, level, derive.characterBonuses(c)) and
 //   derive.combat(attributes, the typed overrides, those bonuses)
 // - sheet.js builds `combat` with those two calls on those arguments, and
 // workers/table-room/test/room.mjs holds the sheet to them. A number a human
@@ -61,11 +61,7 @@ export async function initiativeNumbers(env, rows) {
         skillRows: await loadSkillBonuses(env, c),
       });
     } catch { cls = null; }
-    const bonuses = derive.classBonuses(cls || {}, c.level, {
-      attributes: c.attribute_bonuses || {},
-      combat: c.rolled_bonuses?.combat || {},
-      saves: c.rolled_bonuses?.saves || {},
-    });
+    const bonuses = derive.classBonuses(cls || {}, c.level, derive.characterBonuses(c));
     const combat = derive.combat(c.attributes || {}, c.combat, bonuses);
     out.set(String(c.id), { bonus: whole(combat.initiative, 0), attacks: whole(combat.attacks, 2) });
   }

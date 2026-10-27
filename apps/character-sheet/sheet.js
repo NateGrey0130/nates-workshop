@@ -2731,20 +2731,12 @@ function render() {
   // Grouped, so a class's DICE combat and save bonuses count too. The legacy
   // flat shape still works — classBonuses tells them apart — but a character
   // saved since rolled_bonuses existed carries both halves.
-  const bonuses = derive.classBonuses(cls, c.level, {
-    attributes: c.attribute_bonuses || {},
-    combat: c.rolled_bonuses?.combat || {},
-    saves: c.rolled_bonuses?.saves || {},
-  });
+  const bonuses = derive.classBonuses(cls, c.level, derive.characterBonuses(c));
   // The same block with the SKILLS left out. `cls` arrives from the API with
   // skill bonuses already folded in, so without this there is no way to tell
   // Boxing's +1 attack per melee from the class's own - and labelling a skill's
   // bonus as the class's is simply wrong.
-  const classOnly = derive.classBonuses({ ...cls, bonuses: cls.class_bonuses ?? cls.bonuses }, c.level, {
-    attributes: c.attribute_bonuses || {},
-    combat: c.rolled_bonuses?.combat || {},
-    saves: c.rolled_bonuses?.saves || {},
-  });
+  const classOnly = derive.classBonuses({ ...cls, bonuses: cls.class_bonuses ?? cls.bonuses }, c.level, derive.characterBonuses(c));
   // THE SECOND FORM'S OWN BONUSES - its delta plus every table result's, folded
   // server-side - ride on top of the first form's block while it shows (F74).
   // `formB` is null otherwise, and every line below reads exactly as it did.

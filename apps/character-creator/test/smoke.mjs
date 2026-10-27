@@ -3308,6 +3308,20 @@ section('Dice attribute bonuses');
   check('a class with no dice bonuses needs no roll',
     Object.keys(D.diceBonuses(mk('bonuses:\n  attributes: { PS: 2 }').data)).length === 0);
 
+  // characterBonuses reads a saved character's rolls into classBonuses's
+  // grouped argument. An older character has neither half stored, and each
+  // missing half has to be an empty map, not undefined.
+  check('characterBonuses of a character with null rolled_bonuses gives empty maps', (() => {
+    const r = D.characterBonuses({ attribute_bonuses: null, rolled_bonuses: null });
+    return ['attributes', 'combat', 'saves'].every((g) =>
+      r[g] && typeof r[g] === 'object' && Object.keys(r[g]).length === 0);
+  })());
+  check('characterBonuses carries what a character rolled, grouped', (() => {
+    const r = D.characterBonuses({ attribute_bonuses: { PS: 7 }, rolled_bonuses: { combat: { strike: 2 }, saves: { magic: 1 } } });
+    return r.attributes.PS === 7 && r.combat.strike === 2 && r.saves.magic === 1
+      && D.classBonuses(cls, 1, r).attributes.PS === 7;
+  })());
+
   // "Minimum P.S. is 22; if lower, adjust up to P.S. 22."
   const floored = mk('bonuses:\n  attributes: { PS: "2d6" }\n  attribute_minimums: { PS: 22 }').data;
   check('a minimum is accepted and parsed', !!floored.bonuses.attribute_minimums);
@@ -3334,11 +3348,9 @@ section('Dice attribute bonuses');
   check('the sheet passes rolled bonuses to classBonuses', (() => {
     const src = readFileSync(appPath('sheet.js'), 'utf8');
     // Grouped now, so a class's DICE combat and save bonuses count on the sheet
-    // as well as its attribute ones.
-    return /classBonuses\(cls, c\.level, \{/.test(src)
-      && /attributes: c\.attribute_bonuses/.test(src)
-      && /combat: c\.rolled_bonuses/.test(src)
-      && /saves: c\.rolled_bonuses/.test(src);
+    // as well as its attribute ones. characterBonuses builds the grouped
+    // argument; the two checks above hold it to all three halves.
+    return /classBonuses\(cls, c\.level, derive\.characterBonuses\(c\)\)/.test(src);
   })());
 }
 
