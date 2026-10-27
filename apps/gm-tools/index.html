@@ -34,6 +34,9 @@
 </header>
 
 <main class="wrap wrap-dash">
+  <!-- flash() in dashboard.js: a failure in a shared view said here instead of
+       an alert box. Outside #app, so a render() cannot wipe it. -->
+  <p id="msg" class="small" role="status" aria-live="polite"></p>
   <div id="app"><p class="muted">Loading dashboard…</p></div>
 </main>
 
@@ -56,6 +59,9 @@
 <script src="/shared/js/campaign/notes.js"></script>
 <script src="/shared/js/campaign/setting.js"></script>
 <script src="/shared/js/campaign/table.js"></script>
+<!-- confirmDialog: every question this page and its shared views ask, in a
+     <dialog> rather than the browser's confirm box. Before dashboard.js. -->
+<script src="/apps/character-creator/js/confirm-dialog.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>

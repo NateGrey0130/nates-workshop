@@ -29,18 +29,31 @@ const D = {
 
 // The shared views reach this page through one adapter, so none of them
 // imports ui.js or knows how this app asks a question or reports a failure.
-// alert() and confirm() are what this page has always used for both.
+// A question goes to confirmDialog (js/confirm-dialog.js, loaded first), and a
+// failure to flash() below; both used to be the browser's own boxes, which
+// halted every script on the page until they were dismissed.
 C.init({
   base: '/api/character-creator', campaignId,
   ui: {
     esc: escHtml, escJs, undoable,
-    modal: (text) => Promise.resolve(confirm(text)),
-    toast: (text) => alert(text),
+    modal: (text) => confirmDialog(text),
+    toast: (text) => flash(text, true),
   },
   render: () => render(),
   reload: () => load(),
   showPeople: () => { D.tab = 'people'; },
 });
+
+// The page's one status line, #msg, which sits above #app so a render() cannot
+// wipe it. An error is scrolled into view if the reader is further down the
+// page, since the button that failed usually is.
+function flash(text, isError) {
+  const el = $('msg');
+  if (!el) return;
+  el.textContent = text;
+  el.className = isError ? 'err small' : 'muted small';
+  if (isError && text) el.scrollIntoView({ block: 'nearest' });
+}
 
 async function load() {
   if (!campaignId) {
@@ -244,7 +257,7 @@ async function linkSheet(npcId, value) {
     P.npc.npc = res.npc;
     P.npcs = P.npcs.map((x) => (x.id === res.npc.id ? { ...x, character_id: res.npc.character_id } : x));
     render();
-  } catch (err) { alert('Failed: ' + err.message); }
+  } catch (err) { flash('Failed: ' + err.message, true); }
 }
 
 // ---------- party stash ----------
@@ -367,7 +380,8 @@ async function addStash() {
 
 async function claim(itemId) {
   const characterId = $('claim-' + itemId)?.value;
-  if (!characterId) { alert('Choose which character is taking it.'); return; }
+  // Said in the stash's own line, under the rows, as addStash says its own.
+  if (!characterId) { $('stash-msg').textContent = 'Choose which character is taking it.'; return; }
   // A stack offers a count (stashRow); a single item has no box and moves whole.
   const qtyBox = $('claim-qty-' + itemId);
   const qty = qtyBox ? Math.trunc(Number(qtyBox.value)) : null;
@@ -377,7 +391,7 @@ async function claim(itemId) {
       body: JSON.stringify({ claim_for_character_id: Number(characterId), ...(qty ? { qty } : {}) }),
     });
     await load();
-  } catch (err) { alert('Failed: ' + err.message); }
+  } catch (err) { $('stash-msg').textContent = 'Failed: ' + err.message; }
 }
 
 // It asked nothing before, and one mis-tap took the party's loot off the list.

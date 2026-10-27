@@ -27,18 +27,32 @@ const $ = (i) => document.getElementById(i);
 
 // The shared views reach this page through one adapter, so none of them
 // imports ui.js or knows how this app asks a question or reports a failure.
-// confirm() and alert() are what this page has always used for both.
+// A question goes to confirmDialog (js/confirm-dialog.js, loaded first), and a
+// failure to flash() below; both used to be the browser's own boxes, which
+// halted every script on the page until they were dismissed.
 const C = mcCampaign;
 C.init({
   base: '/api/character-creator', campaignId,
   ui: {
     esc: escHtml, escJs, undoable,
-    modal: (text) => Promise.resolve(confirm(text)),
-    toast: (text) => alert(text),
+    modal: (text) => confirmDialog(text),
+    toast: (text) => flash(text, true),
   },
   render: () => render(),
   reload: () => load(),
 });
+
+// The page's status line, #msg, above #app so a render() cannot wipe it: where
+// a shared view (a setting page, the journal, The Table) says it failed. The
+// roster's own presses keep gmMsg(), beside the buttons. An error is scrolled
+// into view if the reader is further down the page.
+function flash(text, isError) {
+  const el = $('msg');
+  if (!el) return;
+  el.textContent = text;
+  el.className = isError ? 'err small' : 'muted small';
+  if (isError && text) el.scrollIntoView({ block: 'nearest' });
+}
 
 async function load() {
   try {
@@ -258,7 +272,7 @@ async function gmDamage(id) {
 async function gmDamageTicked() {
   const party = xpTargets();
   if (!party.length) return gmMsg('Nobody is ticked.', true);
-  if (!confirm(`Apply ${D.amt} damage to ${party.map((c) => c.name).join(', ')}?`)) return;
+  if (!(await confirmDialog(`Apply ${D.amt} damage to ${party.map((c) => c.name).join(', ')}?`))) return;
   const failed = [];
   for (const c of party) {
     const patch = derive.damageCascade(pools(c), D.amt);
@@ -357,9 +371,9 @@ async function awardPartyXp() {
   const party = xpTargets();
   if (!party.length) { gmMsg('Tick at least one character to award XP to.', true); return; }
   const everyone = party.length === xpParty().length;
-  if (!confirm(everyone
+  if (!(await confirmDialog(everyone
     ? `Award ${delta} XP to each of the ${party.length} characters in this campaign?`
-    : `Award ${delta} XP to ${party.map((c) => c.name).join(', ')}?`)) return;
+    : `Award ${delta} XP to ${party.map((c) => c.name).join(', ')}?`))) return;
   const ready = [], failed = [];
   for (const c of party) {
     try {
