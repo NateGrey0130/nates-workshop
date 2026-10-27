@@ -3390,7 +3390,10 @@ body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); 
   border: 1px solid var(--border-strong); border-left: 3px solid var(--accent);
 }
 .transfer-dialog::backdrop, .confirm-dialog::backdrop { background: rgba(26, 22, 20, 0.45); }
-.confirm-text { margin: 0; overflow-wrap: anywhere; }
+/* pre-line: the sheet's questions carry their own line breaks (the session
+   recap is one line per count), which a browser confirm box kept and a <p>
+   would otherwise run together. */
+.confirm-text { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
 .confirm-buttons { margin-top: 14px; }
 .transfer-dialog h3 { margin: 0 0 10px; font-size: 16px; overflow-wrap: anywhere; }
 .transfer-field { display: block; margin-top: 8px; }
