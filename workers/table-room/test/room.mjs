@@ -1184,7 +1184,7 @@ section('initiative: the server derives combat numbers the way the sheet does');
 {
   const sheet = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8').replace(/\r\n/g, '\n');
   const lib = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'combat-numbers.js'), 'utf8').replace(/\r\n/g, '\n');
-  const bonusCall = /derive\.classBonuses\(cls(?: \|\| \{\})?, c\.level, \{\n\s*attributes: c\.attribute_bonuses \|\| \{\},\n\s*combat: c\.rolled_bonuses\?\.combat \|\| \{\},\n\s*saves: c\.rolled_bonuses\?\.saves \|\| \{\},\n\s*\}\)/;
+  const bonusCall = /derive\.classBonuses\(cls(?: \|\| \{\})?, c\.level, derive\.characterBonuses\(c\)\)/;
   check('the sheet builds its bonuses with classBonuses on those arguments', bonusCall.test(sheet));
   check('and so does the server', bonusCall.test(lib));
   check('the sheet\'s first-form combat block is derive.combat(attrs, c.combat, bonuses)', /: derive\.combat\(attrs, c\.combat, bonuses\);/.test(sheet));

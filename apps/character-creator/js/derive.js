@@ -272,6 +272,19 @@
     return out;
   }
 
+  // The `rolled` argument classBonuses takes, read off a saved character: what
+  // its class's dice bonuses came up at creation, grouped. attribute_bonuses is
+  // the attribute half and rolled_bonuses the combat and save halves; either
+  // may be missing on an older character, and each missing half is an empty
+  // map. The wizard does not use this - it holds its rolls in its own state.
+  function characterBonuses(c) {
+    return {
+      attributes: c?.attribute_bonuses || {},
+      combat: c?.rolled_bonuses?.combat || {},
+      saves: c?.rolled_bonuses?.saves || {},
+    };
+  }
+
   // Which attributes a class rolls a bonus for, and the dice for each. The
   // wizard rolls these once at creation; nothing else needs them.
   // Every dice-valued attribute bonus, keyed by attribute. A value may be a list
@@ -454,6 +467,7 @@
     bio: (attrs, stored, bonuses) => merge(deriveBio(effective(attrs, bonuses)), stored),
 
     classBonuses,
+    characterBonuses,
     diceBonuses,
     diceBonusesByGroup,
     effective,
