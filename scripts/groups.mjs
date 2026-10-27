@@ -37,8 +37,8 @@
 //      Rule 6 reads table names; this reads the handle the query runs on, so a
 //      query written against the wrong database cannot pass by naming no table.
 //   8. wrangler.jsonc's env.preview gives a pull-request preview its own D1s
-//      and R2 bucket, under production's binding names, and production's
-//      Access vars (previewFailures says why each part is held)
+//      and R2 bucket, under production's binding names, and Access vars armed
+//      for the preview hosts' own Access app (previewFailures says why)
 //
 // Read-only. Exits 1 on any failure and names each one.
 
@@ -224,7 +224,10 @@ export function readWranglerConfig(root = repoRoot) {
 // one non-inheritable key (vars or any binding) and you must re-specify all of
 // them, or the deploy fails validation. So:
 //   - every non-inheritable key the top level has, env.preview has;
-//   - its vars are the top level's, so a preview's /api/* stays armed by Access;
+//   - its vars are the top level's, so a preview's /api/* stays armed by Access,
+//     except ACCESS_AUD: preview hosts sit behind their own Access application
+//     (*.nates-workshop.pages.dev), whose tokens carry its AUD, so production's
+//     AUD here refuses every preview request. It must be set and must differ;
 //   - each D1 and R2 binding is there under the same name, on a resource whose
 //     name ends in -preview and that the top level does not bind;
 //   - the Durable Object and service bindings are the top level's: those
@@ -240,8 +243,13 @@ function previewFailures(cfg) {
   for (const k of NON_INHERITABLE) {
     if (k in cfg && !(k in preview)) failures.push(`wrangler.jsonc env.preview does not re-specify ${k} - Pages refuses a preview config that overrides one non-inheritable key and not all`);
   }
-  if (JSON.stringify(preview.vars ?? {}) !== JSON.stringify(cfg.vars ?? {})) {
-    failures.push('wrangler.jsonc env.preview.vars differ from vars - a preview must be armed by Access exactly as production is');
+  const { ACCESS_AUD: previewAud, ...previewVars } = preview.vars ?? {};
+  const { ACCESS_AUD: prodAud, ...prodVars } = cfg.vars ?? {};
+  if (JSON.stringify(previewVars) !== JSON.stringify(prodVars)) {
+    failures.push('wrangler.jsonc env.preview.vars differ from vars - a preview must be armed by Access as production is');
+  }
+  if (prodAud && (!previewAud || previewAud === prodAud)) {
+    failures.push("wrangler.jsonc env.preview.vars.ACCESS_AUD must be the preview Access app's AUD - production's refuses every preview /api/* call, and none leaves it unarmed");
   }
   for (const [key, nameOf, idOf] of [
     ['d1_databases', (d) => d.database_name, (d) => d.database_id],

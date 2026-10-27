@@ -564,7 +564,11 @@ Three databases exist for pull-request previews, one per group, created
 `wrangler.jsonc`, under production's binding names, along with the R2 bucket
 `nates-workshop-media-preview` as `MEDIA`. Production and `wrangler pages dev`
 read the top level. Pages makes that block restate every binding and the
-Access vars, so the two room Workers are production's in a preview too.
+Access vars, so the two room Workers are production's in a preview too (an
+accepted gap: previews admit Nate alone). Its `ACCESS_AUD` is the AUD of the
+preview Access application (`*.nates-workshop.pages.dev`), not production's:
+a preview's token is minted for that application, and production's AUD
+refused every preview `/api/*` call with `audience mismatch`.
 `node scripts/groups.mjs --check` (rule 8) holds the block to `-preview`
 resources.
 
