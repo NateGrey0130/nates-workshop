@@ -13,11 +13,11 @@
 
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
 import { gearJoin } from '../../_lib/catalog-redirects.js';
-import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit, DEFAULT_MODEL }
+  from '../../../_lib/claude-client.js';
 import { toMatchQuery } from './search.js';
 import { parseAliases } from './npcs.js';
 
-const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 25;         // context bound, not a relevance judgement
 const MAX_BODY_CHARS = 4000;    // one rambling session recap must not crowd out nine others
 
@@ -96,11 +96,12 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const claudeRequest = {
-    model: MODEL,
+    model: DEFAULT_MODEL,
     max_tokens: 1500,
-    // Same posture as the importers: thinking spend comes out of max_tokens and
-    // can starve the answer itself.
-    thinking: { type: 'disabled' },
+    // Thinking spend comes out of max_tokens and can starve the answer itself.
+    // Sonnet 5.5 answers disabled thinking with a 400, so the spend is held
+    // down by low effort instead.
+    output_config: { effort: 'low' },
     system: SYSTEM,
     messages: [{ role: 'user', content: [{ type: 'text',
       text: buildPrompt(question, entries, items.results, balances.results, npcs.results) }] }],
@@ -116,7 +117,7 @@ export async function onRequestPost({ request, env, params }) {
   // answers what was SPENT, not who is allowed to spend it, and extraction is
   // by far the most expensive call in the repo. Every Claude call in
   // functions/ is metered now — see cc-import-* and cc-npc-sweep.
-  await recordUsage(env, { email: guard.email, endpoint: 'campaign-ask', model: MODEL, upstream });
+  await recordUsage(env, { email: guard.email, endpoint: 'campaign-ask', model: DEFAULT_MODEL, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); }
   catch { return json({ error: 'Anthropic returned a non-JSON response' }, 502); }
