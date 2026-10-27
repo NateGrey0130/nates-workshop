@@ -1457,7 +1457,7 @@ function startingLevelPicker() {
       hit points are rolled and the skills, spells and powers each level earns are chosen
       rather than assumed.</p>
     <div class="rowline">
-      <select onchange="setStartingLevel(this.value)">${opts}</select>
+      <select aria-label="Starting level" onchange="setStartingLevel(this.value)">${opts}</select>
       ${level > 1 ? `<span class="muted small">starts with
         ${thresholdFor(xpTableFor(forXp), level)?.toLocaleString() ?? '—'} XP,
         the threshold for level ${level}</span>` : ''}
@@ -1805,7 +1805,7 @@ function occPicker() {
       training program all arrive with it.</p>
     ${!S.occ || !occNeed.options.includes(S.occ) ? `<p class="warn">Choose one to continue.</p>` : ''}
     <div class="rowline">
-      <select onchange="pickOcc(this.value)">
+      <select aria-label="${esc(occNeed.name)} practitioner occupation" onchange="pickOcc(this.value)">
         <option value="">&mdash; choose &mdash;</option>
         ${occNeed.options.map((oid) => {
           const c = S.classes.find((x) => x.id === oid);
@@ -1858,7 +1858,7 @@ function occPicker() {
     ${S.occTagFilter.length ? `<p class="muted small pick-count">${
       options.filter((c) => c.id === S.occ ? hasAllTags(c, S.occTagFilter) : true).length} of ${openCount} open occupations match</p>` : ''}
     <div class="rowline">
-      <select onchange="pickOcc(this.value)">
+      <select aria-label="Occupation" onchange="pickOcc(this.value)">
         <option value="">— none (this race stands alone) —</option>
         ${options.map((c) => `<option value="${esc(c.id)}"${S.occ === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
         ${barred.length ? `<optgroup label="Not open to a ${esc(S.rcc.name)}">
@@ -1870,8 +1870,8 @@ function occPicker() {
       closed to a <b>${esc(S.rcc.name)}</b>${S.rcc.occ_restrictions?.note
     ? ` — ${esc(S.rcc.occ_restrictions.note)}` : '.'}</p>` : ''}
     ${chosen?.variants?.length ? `<div class="rowline">
-      <span class="muted small">Which ${esc(chosen.name)}?</span>
-      <select onchange="pickOccVariant(this.value)">
+      <label class="muted small" for="occ-variant">Which ${esc(chosen.name)}?</label>
+      <select id="occ-variant" onchange="pickOccVariant(this.value)">
         ${chosen.variants.map((v) => `<option value="${esc(v.id)}"${S.occVariant === v.id ? ' selected' : ''}>${esc(v.name || v.id)}</option>`).join('')}
       </select></div>` : ''}
     ${chosen ? (() => {
@@ -2752,7 +2752,8 @@ function skillPickBlock(grants) {
         })
         .sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
       return `<div class="rowline">
-        <select onchange="setLevelPick('${gk}', ${slot}, this.value)">
+        <select aria-label="Level ${g.level} ${g.kind === 'secondary' ? 'secondary' : 'related'} skill, pick ${slot + 1} of ${g.count}"
+          onchange="setLevelPick('${gk}', ${slot}, this.value)">
           <option value="">— leave for later —</option>
           ${options.map((sk) => `<option value="${esc(sk.name)}"${
             chosen[slot] === sk.name ? ' selected' : ''}>${esc(sk.name)}${
@@ -3623,10 +3624,10 @@ function skillsTotemHtml(totemCfg) {
   };
   return !totemCfg ? '' : `
     <div class="block">
-      <h3>Totem animal</h3>
+      <h3><label for="totem-pick">Totem animal</label></h3>
       <div class="attr-note">${esc(totemCfg.note || 'Pick one. Its skills are added to the O.C.C. skills, '
         + 'or +10% where the class already has one, and its bonuses apply for life.')}</div>
-      <select onchange="pickTotem(this.value)">
+      <select id="totem-pick" onchange="pickTotem(this.value)">
         <option value=""${totemPick ? '' : ' selected'}>Choose a totem</option>
         ${(S.totemCatalog || []).map((t) => `<option value="${esc(t.slug)}"${totemPick?.slug === t.slug
           ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}
@@ -3756,7 +3757,9 @@ function skillsOccPartFor(ctx) {
         <span class="pct">${optionPct(name)}</span></label>`;
     }).join('');
     const filterBox = available.length > GROUP_SHORT
-      ? Picker.inputHtml({ id: `grp-filter-${gi}`, value: ui.filter, shown: visible.length, total: available.length })
+      ? Picker.inputHtml({ id: `grp-filter-${gi}`, value: ui.filter, shown: visible.length, total: available.length,
+        label: `Filter the options for pick ${s.choose}${(s.categories || []).length
+          ? ` (${(s.categories || []).map(categoryLabel).join(', ')})` : ''}` })
       : '';
     const more = capped
       ? `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi(${gi}, 'all', true)">Show all ${visible.length}</button>`
@@ -4011,7 +4014,7 @@ function renderSkills() {
           They count toward the floors above, so a character at level ${Math.min(...schedule.map((s) => s.level))} is measured
           against ${relatedAllowance(effective, Math.min(...schedule.map((s) => s.level)))} picks rather than ${relatedCfg.count}.</p>` : ''}
         ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,
-          placeholder: 'Filter…', shown: Picker.filter(relatedPool, S.relatedFilter).length,
+          placeholder: 'Filter…', label: 'Filter related skills', shown: Picker.filter(relatedPool, S.relatedFilter).length,
           total: relatedPool.length })}
         ${pickList(relatedPool, S.related, 'related', relatedCfg.count, S.relatedFilter)}
       </div>
@@ -4019,7 +4022,7 @@ function renderSkills() {
         <h3>Secondary skills — ${S.secondary.length}/${secondaryCfg.count}</h3>
         <p class="muted small">Any category, base % only.</p>
         ${Picker.inputHtml({ id: 'secondary-filter', value: S.secondaryFilter,
-          placeholder: 'Filter…', shown: Picker.filter(secondaryPool, S.secondaryFilter).length,
+          placeholder: 'Filter…', label: 'Filter secondary skills', shown: Picker.filter(secondaryPool, S.secondaryFilter).length,
           total: secondaryPool.length })}
         ${pickList(secondaryPool, S.secondary, 'secondary', secondaryCfg.count, S.secondaryFilter)}
       </div>
@@ -4470,8 +4473,8 @@ function psiRollHtml() {
   const shape = r.tier ? psionicShape(r.tier, S.psiShape) : null;
   const cats = shape && shape.categories === 1
     ? `<div class="rowline" style="margin-top:8px">
-        <label class="small" style="min-width:132px">Category</label>
-        <select onchange="setPsiCategory(this.value)" style="flex:1">
+        <label class="small" for="psi-category" style="min-width:132px">Category</label>
+        <select id="psi-category" onchange="setPsiCategory(this.value)" style="flex:1">
           <option value=""${S.psiCategory ? '' : ' selected'}>— choose —</option>
           ${PSIONIC_CATEGORIES.map((c) => `<option value="${c}"${c === S.psiCategory ? ' selected' : ''}>${c}</option>`).join('')}
         </select></div>`
@@ -5373,7 +5376,7 @@ function renderReview() {
         }).join('')}
       </select>
       <span class="muted small">${campaigns.length ? 'or new:' : 'none yet for this game — name one:'}</span>
-      <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="setDetail('newCampaign', this.value.trim())">
+      <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" aria-label="New campaign name" onchange="setDetail('newCampaign', this.value.trim())">
     </div>
 
     <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span>
