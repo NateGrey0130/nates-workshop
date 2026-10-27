@@ -1729,7 +1729,7 @@ export async function run() {
     const sheetSrc = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8');
     const settingSrc = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'setting.js'), 'utf8');
     check('and deleting a whole character, or a whole GM page, still asks first',
-      /confirm\(`Delete \$\{c\.name\} \(level/.test(sheetSrc)
+      /await confirmDialog\(`Delete \$\{c\.name\} \(level/.test(sheetSrc)
         && /await M\.ctx\.ui\.modal\(`Delete "\$\{S\.entry\.title\}"/.test(settingSrc),
       'a character or a GM page can now be deleted without a question');
     // A native alert box froze the sheet mid-session until it was dismissed, and
@@ -2263,10 +2263,10 @@ export async function run() {
             return { ok: true };
           };
           // `alerts` is what the sheet flashed as an error; a notice is marked.
-          const endSession = new Function('api', 'postEvent', 'jsonReq', 'id', 'C', 'confirm', 'flash',
+          const endSession = new Function('api', 'postEvent', 'jsonReq', 'id', 'C', 'confirmDialog', 'flash',
             'recordRoll', 'resetMelee', src + '; return endSession;')(
             api, postEvent, (method, body) => ({ method, body }), '7', { meleeAttacks: 2 },
-            () => true, (m, isError) => alerts.push(isError ? m : '(notice) ' + m), () => {}, () => {});
+            async () => true, (m, isError) => alerts.push(isError ? m : '(notice) ' + m), () => {}, () => {});
           await endSession();
           return alerts;
         };
@@ -5775,5 +5775,28 @@ export async function run() {
     check('every question the wizard asks is awaited before it acts on the answer', !unawaited.length, unawaited.join(', '));
     check('and confirmReset is an async function, so the || hands back a promise',
       /async function confirmReset\(what\) \{/.test(app));
+
+    // The sheet too (creator retro row 23b, 2026-10-27): seven confirm() calls
+    // - removing a granted power or skill, the recap, a P.P.E. burn, the roster
+    // delete and the two Hand to Hand questions - now ask through the same
+    // helper. The page loads it before sheet.js, no line calls the browser's
+    // box, and every confirmDialog is awaited inside an async function.
+    const sheetHtml = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'index.html'), 'utf8');
+    const helperAt = sheetHtml.indexOf('src="/apps/character-creator/js/confirm-dialog.js"');
+    check('the sheet loads confirm-dialog.js before sheet.js',
+      helperAt > 0 && helperAt < sheetHtml.indexOf('src="sheet.js"'));
+    const sheetSrc = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const sheetBoxes = sheetSrc.split('\n').map((l, i) => [i + 1, l])
+      .filter(([, l]) => !/^\s*\/\//.test(l) && /(?<![\w$])(?:window\.)?(?:confirm|alert)\(/.test(l)).map(([i]) => i);
+    check('sheet.js calls no confirm() or alert()', !sheetBoxes.length, `at sheet.js:${sheetBoxes.join(', ')}`);
+    const sheetAsks = [...sheetSrc.matchAll(/(?<![\w$])(?:window\.)?confirmDialog\(/g)];
+    const sheetUnawaited = sheetAsks.filter((m) => {
+      if (!/await (window\.)?$/.test(sheetSrc.slice(Math.max(0, m.index - 20), m.index))) return true;
+      // The enclosing function: the nearest top-level `function` before the call.
+      const head = sheetSrc.lastIndexOf('\nfunction ', m.index), aHead = sheetSrc.lastIndexOf('\nasync function ', m.index);
+      return aHead < head;
+    }).map((m) => `sheet.js:${sheetSrc.slice(0, m.index).split('\n').length}`);
+    check('every question the sheet asks is awaited, in an async function',
+      sheetAsks.length >= 7 && !sheetUnawaited.length, `${sheetAsks.length} asks; unawaited: ${sheetUnawaited.join(', ')}`);
   }
 }

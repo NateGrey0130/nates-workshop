@@ -505,7 +505,8 @@ async function addGmPower() {
 }
 
 async function removeGmPower(name) {
-  if (!confirm(`Remove the G.M.-assigned power "${name}"?`)) return;
+  if (!(await confirmDialog(`Remove the G.M.-assigned power "${name}"?`,
+    { okLabel: 'Remove it', cancelLabel: 'Keep it', danger: true }))) return;
   try {
     await api('characters/' + id, jsonReq('PATCH', { gm_abilities: gmPowerNames().filter((n) => n !== name) }));
     await refreshPowers();
@@ -596,8 +597,9 @@ async function addSkillGrant() {
 async function removeSkillGrant(grantId) {
   const g = (C.grants || []).find((x) => x.id === grantId);
   if (!g) return;
-  if (!confirm(`Remove the granted skill "${g.name}"?\n\n`
-    + `It leaves the sheet. Why it was given — ${g.reason} — stays in the play log.`)) return;
+  if (!(await confirmDialog(`Remove the granted skill "${g.name}"?\n\n`
+    + `It leaves the sheet. Why it was given — ${g.reason} — stays in the play log.`,
+  { okLabel: 'Remove it', cancelLabel: 'Keep it', danger: true }))) return;
   try {
     const res = await api(`characters/${id}/grants/${grantId}`, { method: 'DELETE' });
     C.data.skills = res.skills;
@@ -1708,7 +1710,8 @@ async function endSession() {
   for (const g of grants) lines.push(g.charAt(0).toUpperCase() + g.slice(1) + '.');
   if (rolls) lines.push(`Rolls: ${rolls}${passes + fails ? ` (${passes} passed, ${fails} failed of those with a target)` : ''}.`);
 
-  if (!confirm(`Post this recap to the journal?\n\n${lines.join('\n')}`)) return;
+  if (!(await confirmDialog(`Post this recap to the journal?\n\n${lines.join('\n')}`,
+    { okLabel: 'Post it', cancelLabel: 'Not now' }))) return;
   // THE MARKER GOES FIRST (Nate, 2026-10-19). It used to follow the entry, so a
   // marker that failed left the entry standing and the next End session counted
   // the same events again: two identical recaps. Now a failed marker writes
@@ -3897,7 +3900,7 @@ function pickerBlock(grants, total, prefix) {
 // than its row says so - the rows it pays with have to be left blank, and a
 // 422 after the fact is a poor way to learn that. "Show all skills" is the
 // GM's override and lifts the first of those, exactly as it does a category.
-function setSkillPick(prefix, i, value, total) {
+async function setSkillPick(prefix, i, value, total) {
   const key = `${prefix}-${i}`;
   const hth = globalThis.handToHand;
   if (value && hth?.isHandToHand(value)) {
@@ -3925,13 +3928,15 @@ function setSkillPick(prefix, i, value, total) {
     const standing = otherRows.length ? { name: C.pickValues[otherRows[0]], type: 'related' } : onSheet;
     if (standing && standing.name !== value) {
       const granted = standing.type !== 'related' && standing.type !== 'secondary';
-      if (!window.confirm(hth.replacePrompt(standing.name, value, granted, terms))) { render(); return; }
+      if (!(await window.confirmDialog(hth.replacePrompt(standing.name, value, granted, terms),
+        { okLabel: `Replace ${standing.name}`, cancelLabel: `Keep ${standing.name}` }))) { render(); return; }
       for (const k of otherRows) delete C.pickValues[k];
     } else if (priced && cost !== 1) {
       // Nothing to replace, but still not a one-pick skill: say what it spends.
-      if (!window.confirm(`${value} costs this class ${hth.costLabel(cost)}`
+      if (!(await window.confirmDialog(`${value} costs this class ${hth.costLabel(cost)}`
         + `${terms.condition ? ` (${terms.condition} only)` : ''}.`
-        + `${cost > 1 ? ` Leave ${cost - 1} other row${cost === 2 ? '' : 's'} blank to pay for it.` : ''}\n\nTake it?`)) {
+        + `${cost > 1 ? ` Leave ${cost - 1} other row${cost === 2 ? '' : 's'} blank to pay for it.` : ''}\n\nTake it?`,
+      { okLabel: `Take ${value}`, cancelLabel: 'Leave it' }))) {
         render(); return;
       }
     }
@@ -4086,7 +4091,8 @@ async function burnPpe(index) {
   if (!dice) return;
   const ask = [`Burn ${dice} P.P.E. out of the base for good, for ${p.name}?`, '',
     "Only when the spell's own conditions say so - its description has them. This cannot be undone."];
-  if (!confirm(ask.join(String.fromCharCode(10)))) return;
+  if (!(await confirmDialog(ask.join(String.fromCharCode(10)),
+    { okLabel: 'Burn it', cancelLabel: 'Keep the P.P.E.', danger: true }))) return;
   try {
     const res = await api(`characters/${id}/ppe-burn`, jsonReq('POST', { name: p.name }));
     flash(`${res.spell}: rolled ${res.dice} for ${res.rolled}, burned ${res.burned} P.P.E. from the base.`);
@@ -5134,7 +5140,7 @@ async function removeEnchantment(rowId, slug) {
 }
 
 // Gone from the table at once, with Undo for a few seconds before the DELETE
-// is sent (js/undo-toast.js). It was a confirm() - asked before the mistake,
+// is sent (js/undo-toast.js). It was a browser confirm box - asked before the mistake,
 // when nobody reads it.
 function removeItem(rowId) {
   const at = C.items.findIndex((x) => x.id === rowId);
@@ -5336,11 +5342,12 @@ function renderRoster() {
 async function deleteFromRoster(cid) {
   const c = R.mine.find((x) => x.id === cid);
   if (!c) return;
-  if (!confirm(`Delete ${c.name} (level ${c.level})? This hides them from everyone. `
+  if (!(await confirmDialog(`Delete ${c.name} (level ${c.level})? This hides them from everyone. `
     + `Only Nate can restore them.\n\n`
     + `Their inventory, level history, unspent picks and play log are hidden with them, `
     + `including anything they had claimed from the campaign stash.\n\n`
-    + `Journal entries they wrote stay in the campaign log.`)) return;
+    + `Journal entries they wrote stay in the campaign log.`,
+  { okLabel: `Delete ${c.name}`, cancelLabel: 'Keep them', danger: true }))) return;
   try {
     await api('characters/' + cid, { method: 'DELETE' });
   } catch (err) {

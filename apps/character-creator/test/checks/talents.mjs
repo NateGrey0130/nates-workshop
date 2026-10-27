@@ -194,7 +194,7 @@ section('A spell can burn P.P.E. out of the caster\'s base (BOOK-INGEST-AUDIT F1
   const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   const burnFn = sheetSrc.slice(sheetSrc.indexOf('async function burnPpe('), sheetSrc.indexOf('async function usePower('));
   check('the sheet posts only the spell name to the burn route', /jsonReq\('POST', \{ name: p\.name \}\)/.test(burnFn), burnFn.slice(0, 200));
-  check('and asks before burning, it being permanent', /confirm\(/.test(burnFn));
+  check('and asks before burning, it being permanent', /await confirmDialog\(/.test(burnFn));
   const useAt = sheetSrc.indexOf('async function usePower(');
   const useFn = useAt === -1 ? '' : sheetSrc.slice(useAt, useAt + 3000);
   check('and the use button never burns - the two are separate presses',

@@ -375,7 +375,7 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
   check('and so do the bonuses the wizard previews',
     fnOf(app, 'skillBonusClass').includes('handToHandReplaced'));
   check('the sheet asks too, on both of its pickers',
-    fnOf(src('sheet.js'), 'setSkillPick').includes('window.confirm')
+    /await window\.confirmDialog\(/.test(fnOf(src('sheet.js'), 'setSkillPick'))
     && src('sheet.js').includes('onchange="setSkillPick('));
   check('and loads the rule it asks with', src('sheet.html').includes('js/hand-to-hand.js'));
   const base = 'functions/api/character-creator/';
