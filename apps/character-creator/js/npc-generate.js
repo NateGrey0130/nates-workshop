@@ -33,11 +33,11 @@
 // otherwise have to duplicate to pick a mage's spells at random. A G.M. choosing
 // an NPC's spells is also usually the point. See bankedPowerGrants below.
 
-import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus, ATTRIBUTES } from './dice.js';
+import { rollAttribute, evalDice, evalDiceBonus, ATTRIBUTES } from './dice.js';
 import { skillBase } from './skill-base.js';
 import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryName,
          relatedFloorStatus, skillOptionName, skillGroupForPick } from './parser.js';
-import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
+import { relatedAllowance, secondaryAllowance, skillGrantsFor, rollStartingPools, rollStartingMoney, buildProposal,
          startingPicksFor, newPickPercent, classSkillNumbers, withIqBonus } from './leveling.js';
 import { isHandToHand } from './hand-to-hand.js';
 import { isFamilyName, isRepeatableRow, otherRowFor } from './language-skills.js';
@@ -107,14 +107,9 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   const rolled = rollDiceBonuses(cls, derive);
 
   // ── pools ──
-  const pb = cls.bonuses?.pools || {};
-  const pools = convertedPools(cls, {
-    hp: rollPoolFormula(cls.hit_points_base, attributes, pb.hp),
-    sdc: rollPoolFormula(cls.sdc_base, attributes, pb.sdc),
-    mdc: rollPoolFormula(cls.mdc_base, attributes, pb.mdc),
-    ppe: rollPoolFormula(cls.ppe_base, attributes, pb.ppe),
-    isp: cls.psionics ? rollPoolFormula(cls.psionics.isp_base, attributes, pb.isp) : null,
-  }, attributes);
+  // The wizard's own roll (leveling.js), so an NPC and a player character of
+  // one class come off the same dice.
+  const pools = rollStartingPools(cls, attributes);
 
   // ── skills at level one ──
   const rows = usableCatalog(catalog, system);
@@ -304,7 +299,7 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
     picks_spent: picksSpent,
     // No alignment: the book gives a class a range, not one, and choosing is
     // the G.M.'s. Money is rolled from the class's own formula, as the wizard does.
-    bio: { money: rollMoney(cls, attributes) },
+    bio: { money: rollStartingMoney(cls, attributes) ?? undefined },
   };
 
   // Spend `count` picks from `pool` at random, or refuse naming what ran dry.
@@ -684,9 +679,4 @@ function bankedPowerGrants(cls) {
     });
   }
   return out;
-}
-
-function rollMoney(cls, attributes) {
-  const money = rollPoolFormula(cls.starting_money, attributes);
-  return money == null ? undefined : String(money);
 }

@@ -925,6 +925,33 @@ export function convertedPools(cls, pools, attrs = {}) {
     mdc: rollPoolFormula((pools.hp ?? 0) + (pools.sdc ?? 0), attrs, cls.bonuses?.pools?.mdc ?? null) };
 }
 
+// A character's level-one pools, rolled. The one roll the wizard (app.js
+// computePools) and the NPC generator both make, so the two cannot disagree on
+// a class's dice. Each pool's formula carries the class's `bonuses.pools`
+// figure ("plus 4D6" over whatever the occupation gives), and a mega-damage
+// conversion is applied last. `psionics` is the block I.S.P. is rolled from:
+// the wizard passes the composed one, since a tier the character rolled can
+// carry it rather than the class.
+export function rollStartingPools(cls, attrs = {}, psionics = cls?.psionics) {
+  const pb = cls?.bonuses?.pools || {};
+  return convertedPools(cls, {
+    hp: rollPoolFormula(cls.hit_points_base, attrs, pb.hp),
+    sdc: rollPoolFormula(cls.sdc_base, attrs, pb.sdc),
+    mdc: rollPoolFormula(cls.mdc_base, attrs, pb.mdc),
+    ppe: rollPoolFormula(cls.ppe_base, attrs, pb.ppe),
+    isp: psionics ? rollPoolFormula(psionics.isp_base, attrs, pb.isp) : null,
+  }, attrs);
+}
+
+// Step 5 is "Equipment AND Money" (p.22): the sum of coin a class starts with,
+// rolled from the same formula parser as the pools. A string, because it is
+// stored in bio as a running number the player edits; null when the class
+// states none.
+export function rollStartingMoney(cls, attrs = {}) {
+  const money = rollPoolFormula(cls?.starting_money, attrs);
+  return money == null ? null : String(money);
+}
+
 // The range that converted maximum can legitimately hold at `level`: both
 // formulas' bounds with their own pool bonuses and their per-level dice for
 // each level after the first, plus the M.D.C. bonus. null when a formula cannot

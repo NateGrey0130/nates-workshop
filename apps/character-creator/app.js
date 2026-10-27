@@ -11,7 +11,7 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { evalDice, evalDiceBonus, rollPoolFormula, rollAttribute, rollQuantity,
+import { evalDice, evalDiceBonus, rollAttribute, rollQuantity,
          isAbsentAttribute, ATTRIBUTES } from './js/dice.js';
 import { S, freshBuild, DRAFT_KEYS, pruneStartingPicks } from './js/wizard-state.js';
 import { poolsPayload, powersPayload, psiClass } from './js/wizard-payload.js';
@@ -36,8 +36,8 @@ import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCa
          spellNamesForGrant, grantNote,
          skillGrantsFor, newPickPercent, classSkillNumbers, withIqBonus, advancedPercent,
          spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
-         startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
-         spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
+         startingPicksFor, relatedAllowance, spellTraditionsAllowed, rollStartingPools,
+         rollStartingMoney, spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
 import { rollSecondForm, secondFormView } from './js/second-form.js';
 import { morphusTables, replayMorphus, entriesFor, rollNext, pickNext, skipNext, undoLast,
          rollUntilBlocked, chooseSub, morphusResults, animalCombinations, effectParts,
@@ -277,24 +277,14 @@ function computePools(force = false) {
   // I.S.P. may come from a tier the character rolled rather than from the
   // class, so the pool is read off the composed object.
   const pc = psiClass();
-  // What the class adds on top of each pool's own formula. Books state these as
-  // "plus 4D6" over whatever the occupation gives, so the bonus rides along with
-  // the roll and lands in the stored maximum.
-  const pb = c.bonuses?.pools || {};
-  // A mega-damage conversion (BOOK-INGEST-AUDIT F62) turns the hit points and
-  // S.D.C. just rolled into one M.D.C. maximum; convertedPools leaves every
-  // other class's pools exactly as rolled.
-  S.pools = convertedPools(c, {
-    hp: rollPoolFormula(c.hit_points_base, S.attrs, pb.hp),
-    sdc: rollPoolFormula(c.sdc_base, S.attrs, pb.sdc),
-    mdc: rollPoolFormula(c.mdc_base, S.attrs, pb.mdc),
-    ppe: rollPoolFormula(c.ppe_base, S.attrs, pb.ppe),
-    isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs, pb.isp) : null,
-  }, S.attrs);
+  // The class's pool bonuses and a mega-damage conversion (BOOK-INGEST-AUDIT
+  // F62) ride along inside rollStartingPools, the one roll the NPC generator
+  // makes too.
+  S.pools = rollStartingPools(c, S.attrs, pc.psionics);
   // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
-  // coin as well as its kit. Rolled from the same formula parser as the pools,
-  // so the Reroll button on Review covers it, and stored in bio because it is a
-  // running number the player edits rather than anything the rules derive.
+  // coin as well as its kit. Rolled below by rollStartingMoney, so the Reroll
+  // button on Review covers it, and stored in bio because it is a running
+  // number the player edits rather than anything the rules derive.
   rollAttrBonuses(force);
   // Review's Reroll button re-rolls the whole character, and a character that
   // starts above level 1 includes the levels it climbed to get there.
@@ -306,8 +296,8 @@ function computePools(force = false) {
   // paragraph above. Review's Reroll (`force`) is the player asking for dice.
   if (force) S.moneyTyped = false;
   if (!S.moneyTyped) {
-    const money = rollPoolFormula(c.starting_money, S.attrs);
-    if (money == null) delete S.bio.money; else S.bio.money = String(money);
+    const money = rollStartingMoney(c, S.attrs);
+    if (money == null) delete S.bio.money; else S.bio.money = money;
   }
 }
 
