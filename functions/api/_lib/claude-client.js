@@ -9,11 +9,20 @@
 
 import { isAdminEmail } from './access.js';
 
+// The older ids stay allowed until every caller has moved off them.
 export const ALLOWED_MODELS = [
   'claude-haiku-4-5-20251001',
   'claude-sonnet-5',
   'claude-opus-5',
+  'claude-haiku-5-5',
+  'claude-sonnet-5-5',
+  'claude-opus-5-5',
 ];
+
+// The model a caller uses when it has no reason to pick another. Browser code
+// cannot import this module, so shared/js/api.js carries the same value as
+// CLAUDE_DEFAULT_MODEL, and smoke fails when the two disagree.
+export const DEFAULT_MODEL = 'claude-sonnet-5-5';
 
 const MAX_TOKENS_CEILING = 16000;
 const MAX_DOC_CHARS = 20000000; // ~15MB of base64
