@@ -73,7 +73,7 @@ const PAGES = [
   { name: 'creator-class-step', path: '/apps/character-creator/',
     act: `(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms));
       const click = (re) => [...document.querySelectorAll('button')].find((b) => re.test(b.textContent))?.click();
-      window.confirm = () => true; click(/New character/); await w(900); click(/Rifts/); await w(1800); })()` },
+      window.confirmDialog = async () => true; click(/New character/); await w(900); click(/Rifts/); await w(1800); })()` },
   { name: 'sheet', path: `/apps/character-sheet/?id=${ID}` },
   { name: 'sheet-play', path: `/apps/character-sheet/?id=${ID}&play=1` },
   { name: 'codex', path: '/apps/codex/' },
