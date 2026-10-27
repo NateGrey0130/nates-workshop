@@ -18,9 +18,8 @@
   // These reach `wrangler pages dev` too, where no Access exists to mint a
   // token; the middleware exempts localhost for exactly that reason, the same
   // reality auth.js's dev@localhost fallback answers. Preview deployments
-  // are armed as well, by the same two values restated in env.preview below -
-  // they sit OUTSIDE Access, so arming them turns their /api/* into a wall
-  // rather than an open door.
+  // are armed as well, in env.preview below, with the same team and the AUD
+  // of the preview hosts' own Access application.
   //
   // To stand down: remove both (the middleware passes through unless both are
   // set) and merge.
@@ -129,8 +128,11 @@
   //
   // Pages' rule: override one non-inheritable key (vars or any binding) and
   // every one of them must be restated here, or the deploy fails validation.
-  // So the Access vars are repeated as they are - a preview's /api/* is walled
-  // exactly as production's - and so are the two room Workers, which have no
+  // So the Access vars are restated - same team, but ACCESS_AUD is the AUD of
+  // the separate Access application on *.nates-workshop.pages.dev, because a
+  // preview's token is minted for that one (production's AUD here refused
+  // every preview /api/* call with "audience mismatch") - and so are the two
+  // room Workers, which have no
   // preview copy: a preview's Pick 3 Cut 5 and Table rooms are production's
   // Workers, and pick3cut5-room writes its claude_usage rows to production.
   //
@@ -143,7 +145,7 @@
     "preview": {
       "vars": {
         "ACCESS_TEAM_DOMAIN": "fatmans.cloudflareaccess.com",
-        "ACCESS_AUD": "2496fc92a44613095fab0041f70ad421f2539ddf0fa5dbb7994cc0d514c4ebd3"
+        "ACCESS_AUD": "5cf151878cf87ab119b337755b8e841d84aa41f766644c52399a2cca42ed2eaa"
       },
       "d1_databases": [
         {
