@@ -4984,11 +4984,21 @@ export async function run() {
     check('the header hides itself on paper',
       /@media print \{ \.appnav \{ display: none; \} \}/.test(sharedCss));
 
-    // A menu button, not a <details> - the same answer W3 reached for the bulk
-    // bar - and a disabled destination rather than a vanishing one.
-    check('the switcher is a menu button with a real expanded state',
-      /aria-expanded="false"/.test(navSrc) && /aria-haspopup/.test(navSrc)
+    // A disclosure button over a list of links, not a <details> - the same
+    // answer W3 reached for the bulk bar - and a disabled destination rather
+    // than a vanishing one. It is NOT an ARIA menu: role="menu" promises arrow
+    // keys, Home and End, and the switcher handles Escape alone, so a screen
+    // reader announced a widget that did not behave as one (creator retro row
+    // 24). Tab walks the links; Escape closes and hands focus back.
+    check('the switcher is a disclosure button with a real expanded state',
+      /aria-expanded="false"/.test(navSrc) && /aria-controls="appnav-menu"/.test(navSrc)
+      && /setAttribute\('aria-expanded'/.test(navSrc)
       && !/<details/.test(navSrc));
+    check('and claims no ARIA menu it does not implement',
+      !/role="menu/.test(navSrc) && !/aria-haspopup/.test(navSrc),
+      'appnav.js still renders role="menu"/"menuitem" or aria-haspopup');
+    check('and Escape closes it and returns focus to the toggle',
+      /e\.key === 'Escape'\) \{ close\(\); btn\.focus\(\); \}/.test(navSrc));
     // Play opens the roster when no character is named, so no entry is dead.
     // This asked for a DISABLED Play for one day, which was the honest answer
     // while the sheet had no landing of its own; the roster moved there on

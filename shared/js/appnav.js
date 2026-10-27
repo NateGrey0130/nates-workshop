@@ -105,18 +105,21 @@
     const here = list.find((a) => a.id === current);
     host.innerHTML = `
       <div class="appnav-switch">
-        <button type="button" class="appnav-btn" aria-expanded="false" aria-haspopup="true"
+        <button type="button" class="appnav-btn" aria-expanded="false"
                 aria-controls="appnav-menu" id="appnav-btn">Switch app${CHEVRON}</button>
-        <ul class="appnav-menu" id="appnav-menu" role="menu" aria-labelledby="appnav-btn" hidden>
+        <ul class="appnav-menu" id="appnav-menu" aria-labelledby="appnav-btn" hidden>
           ${list.map((a) => {
             const on = a.id === current;
+            // A disclosure over a plain list of links, not an ARIA menu: a
+            // menu role promises arrow keys, Home and End, and this handles
+            // Escape alone. Tab walks the links.
             // A destination that cannot work yet is DISABLED, not missing: a
             // menu that changes shape per page teaches nobody what exists.
             const inner = `<span class="appnav-label">${escHtml(a.label)}</span>`
               + `<span class="appnav-hint">${escHtml(a.hint)}</span>`;
-            return `<li role="none">${a.href
-              ? `<a role="menuitem" class="appnav-item${on ? ' on' : ''}" href="${a.href}"${on ? ' aria-current="page"' : ''}>${inner}</a>`
-              : `<span role="menuitem" class="appnav-item is-disabled" aria-disabled="true">${inner}</span>`}</li>`;
+            return `<li>${a.href
+              ? `<a class="appnav-item${on ? ' on' : ''}" href="${a.href}"${on ? ' aria-current="page"' : ''}>${inner}</a>`
+              : `<span class="appnav-item is-disabled" aria-disabled="true">${inner}</span>`}</li>`;
           }).join('')}
         </ul>
       </div>
@@ -135,7 +138,8 @@
       if (open) menu.querySelector('.appnav-item:not(.is-disabled)')?.focus();
     });
     // Escape closes from anywhere inside, and a click outside closes too -
-    // both are what a menu button owes a keyboard and a thumb.
+    // both are what a disclosure owes a keyboard and a thumb. Focus goes back
+    // to the toggle so Escape never strands it on a hidden link.
     host.addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); btn.focus(); } });
     document.addEventListener('click', (e) => { if (!host.contains(e.target)) close(); });
   }
