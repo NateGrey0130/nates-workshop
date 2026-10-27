@@ -138,6 +138,7 @@ const SECTIONS = [
   'Statted NPCs: one panel, two pages',
   'Transfer to player: one dialog, for a G.M. on their own character',
   'The name panel beside every Name box',
+  'One tabs helper: roles, ids, roving tabindex and arrow keys',
 ];
 
 export async function run() {
@@ -5451,5 +5452,130 @@ export async function run() {
     check('"a different name for each" sends the theme and not the Name box',
       /if \(g\.each\) Object\.assign\(body, await namePanel\.batchOptions\(/.test(roll)
         && /else body\.name = /.test(roll));
+  }
+
+  // ---------- One tabs helper (creator retro row 20, 2026-10-27) ----------
+  // The sheet's strip had role="tablist", role="tab" and aria-selected, and
+  // nothing else of the pattern: no ids, no aria-controls, panels that were a
+  // class and no role, every tab a Tab stop, and ArrowRight on a focused tab
+  // did nothing (reproduced in a 600px frame on a local server). js/tabs.js
+  // now carries the pattern for any page; the sheet is the first to load it.
+  //
+  // RUN, not matched: the real tabs.js over a stand-in list, tabs and panels.
+  section('One tabs helper: roles, ids, roving tabindex and arrow keys');
+  {
+    const src = readFileSync(join(appDir, 'js', 'tabs.js'), 'utf8');
+    const el = (doc, name) => {
+      const attrs = new Map(); const on = {};
+      return {
+        name, attrs,
+        setAttribute: (a, v) => attrs.set(a, String(v)),
+        getAttribute: (a) => (attrs.has(a) ? attrs.get(a) : null),
+        removeAttribute: (a) => attrs.delete(a),
+        get id() { return attrs.get('id') || ''; },
+        addEventListener: (type, h) => { (on[type] ||= []).push(h); },
+        fire: (type, ev) => (on[type] || []).forEach((h) => h(ev)),
+        handlers: (type) => (on[type] || []).length,
+        focus() { doc.active = this; },
+        contains(x) { return x === this; },
+      };
+    };
+    const g = {};
+    new Function('globalThis', src)(g);
+    const T = g.tabs;
+    check('tabs.js publishes wire, unwire and step', T && ['wire', 'unwire', 'step'].every((f) => typeof T?.[f] === 'function'),
+      JSON.stringify(Object.keys(T || {})));
+
+    // The arithmetic alone: wrapping both ways, Home and End, nothing else.
+    const n = 6;
+    check('ArrowRight from the last tab wraps to the first', T?.step('ArrowRight', 5, n) === 0);
+    check('ArrowLeft from the first tab wraps to the last', T?.step('ArrowLeft', 0, n) === 5);
+    check('ArrowRight and ArrowLeft move one', T?.step('ArrowRight', 2, n) === 3 && T?.step('ArrowLeft', 2, n) === 1);
+    check('Home goes to the first and End to the last', T?.step('Home', 3, n) === 0 && T?.step('End', 1, n) === 5);
+    check('any other key is not handled', T?.step('a', 1, n) === -1 && T?.step('ArrowDown', 1, n) === -1);
+
+    // A page: four tabs, the second's panel split in two slices, the last with none.
+    if (T) {
+      const doc = { active: null };
+      const keys = ['a', 'b', 'c', 'd'];
+      const list = el(doc, 'list');
+      const tabEls = keys.map((k) => { const t = el(doc, 'tab-' + k); t.key = k; return t; });
+      const panels = { a: [el(doc, 'pa')], b: [el(doc, 'pb1'), el(doc, 'pb2')], c: [el(doc, 'pc')], d: [] };
+      const page = { sel: 'a', selects: [] };
+      const opts = {
+        prefix: 't', tabs: tabEls, key: (t) => t.key, panel: (k) => panels[k],
+        selected: (k) => k === page.sel,
+        select: (k) => { page.sel = k; page.selects.push(k); },
+      };
+      const byId = (id) => [...Object.values(panels).flat(), ...tabEls].find((x) => x.id === id) || null;
+      const attr = (x, a) => x.getAttribute(a);
+      T.wire(list, opts);
+      check('wire: the list is a tablist and each tab a tab with an id',
+        attr(list, 'role') === 'tablist' && tabEls.every((t) => attr(t, 'role') === 'tab' && t.id === `t-tab-${t.key}`),
+        tabEls.map((t) => t.id).join(','));
+      check('and only the selected tab is aria-selected',
+        tabEls.map((t) => attr(t, 'aria-selected')).join(',') === 'true,false,false,false');
+      check('roving tabindex: the selected tab is the one Tab stop',
+        tabEls.map((t) => attr(t, 'tabindex')).join(',') === '0,-1,-1,-1');
+      const controls = tabEls.map((t) => attr(t, 'aria-controls'));
+      check('aria-controls points at a panel that exists, every slice of it',
+        controls[0] === 't-panel-a' && controls[1] === 't-panel-b t-panel-b-2'
+          && controls.slice(0, 3).every((c) => c.split(' ').every((id) => byId(id) && attr(byId(id), 'role') === 'tabpanel')),
+        JSON.stringify(controls));
+      check('and a tab with no panel claims none', controls[3] === null);
+      check('each panel is labelled by its own tab',
+        Object.entries(panels).every(([k, ps]) => ps.every((p) => attr(p, 'aria-labelledby') === `t-tab-${k}`)));
+
+      const press = (key, from = doc.active) => {
+        const ev = { key, target: from, prevented: false, preventDefault() { this.prevented = true; } };
+        list.fire('keydown', ev);
+        return ev;
+      };
+      tabEls[0].focus();
+      press('ArrowRight');
+      check('ArrowRight selects the next tab and moves focus to it',
+        page.sel === 'b' && doc.active === tabEls[1] && attr(tabEls[1], 'tabindex') === '0' && attr(tabEls[0], 'tabindex') === '-1',
+        JSON.stringify({ sel: page.sel, focus: doc.active?.name }));
+      press('End');
+      check('End goes to the last tab', page.sel === 'd' && doc.active === tabEls[3]);
+      press('ArrowRight');
+      check('ArrowRight on the last tab wraps to the first', page.sel === 'a' && doc.active === tabEls[0]);
+      press('ArrowLeft');
+      check('ArrowLeft on the first tab wraps to the last', page.sel === 'd' && doc.active === tabEls[3]);
+      press('Home');
+      check('Home goes to the first tab', page.sel === 'a' && doc.active === tabEls[0]);
+      const other = press('a');
+      check('any other key is left alone', !other.prevented && page.sel === 'a');
+
+      T.wire(list, opts);
+      check('wire on every render adds no second key handler', list.handlers('keydown') === 1);
+
+      T.unwire(list, opts);
+      check('unwire takes every attribute off the tabs',
+        attr(list, 'role') === null && tabEls.every((t) => ['role', 'aria-selected', 'aria-controls', 'tabindex'].every((a) => attr(t, a) === null)));
+      check('and off the panels',
+        Object.values(panels).flat().every((p) => ['role', 'aria-labelledby', 'tabindex'].every((a) => attr(p, a) === null)));
+      const before = page.selects.length;
+      tabEls[0].focus();
+      const navPress = press('ArrowRight');
+      check('and the arrow keys do nothing while unwired', page.selects.length === before && !navPress.prevented);
+    }
+
+    // The sheet: wired in tab mode, unwired in nav mode, on every render and
+    // on every selection, and the page loads the helper before sheet.js.
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const wireFn = functionBody(sheet, 'function wireTabs()') || '';
+    check('the sheet wires the helper in tab mode and unwires it in nav mode',
+      /if \(inTabMode\(\)\) globalThis\.tabs\.wire\(nav, opts\); else globalThis\.tabs\.unwire\(nav, opts\);/.test(wireFn),
+      'wireTabs no longer switches on the mode');
+    check('and hands it every slice of a panel, not the first',
+      /panel: \(tab\) => \[\.\.\.document\.querySelectorAll\(`\.tabpanel\[data-tab="\$\{tab\}"\]`\)\]/.test(wireFn));
+    check('and it is called from syncStripMode and from pickTab',
+      /wireTabs\(\);/.test(functionBody(sheet, 'function syncStripMode()') || '')
+        && /wireTabs\(\);/.test(functionBody(sheet, 'function pickTab(tab)') || ''));
+    const html = readFileSync(appPath('sheet.html'), 'utf8');
+    const at = (s) => html.indexOf(s);
+    check('the sheet page loads tabs.js before sheet.js',
+      at('/apps/character-creator/js/tabs.js') > 0 && at('/apps/character-creator/js/tabs.js') < at('src="sheet.js"'));
   }
 }
