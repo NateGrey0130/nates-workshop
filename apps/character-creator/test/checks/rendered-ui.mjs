@@ -100,6 +100,7 @@ const SECTIONS = [
   'The browser Back button walks the wizard steps',
   'A forward jump on the rail stops where Forward does',
   'A wizard control keeps keyboard focus when its own change redraws the step',
+  'Every wizard select and input has a name',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
   'The printed sheet',
@@ -1472,6 +1473,64 @@ export async function run() {
         /again && again !== el && document\.activeElement !== again/.test(wire),
         'Picker.wire focuses the filter box a second time');
     }
+  }
+
+  // ---------- Every wizard select and input has a name ----------
+  // Seven selects and the picker's search box rendered with no label, no
+  // aria-label and no id a <label for> could point at: a screen reader read the
+  // starting level as an anonymous "combobox, Level 1" and every filter box as
+  // a bare search field (creator retro row 17, 2026-10-27). A placeholder is
+  // not a name, and a caption beside a control names nothing without for=.
+  //
+  // Read as text, since the wizard cannot be rendered here: every <select> and
+  // <input> tag app.js writes must carry aria-label or aria-labelledby, have an
+  // id some <label for> in app.js points at, or sit inside an open <label>.
+  section('Every wizard select and input has a name');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const picker = readFileSync(join(appDir, 'js', 'picker.js'), 'utf8');
+    // The tag runs to the first `>` outside a ${...}, which may itself hold
+    // an arrow or a comparison.
+    const tagAt = (src, from) => {
+      let depth = 0;
+      for (let i = from; i < src.length; i++) {
+        if (src[i] === '$' && src[i + 1] === '{') { depth++; i++; continue; }
+        if (depth && src[i] === '{') depth++;
+        else if (depth && src[i] === '}') depth--;
+        else if (!depth && src[i] === '>') return src.slice(from, i + 1);
+      }
+      return src.slice(from);
+    };
+    const unnamed = [];
+    let tags = 0;
+    const ids = new Map();
+    for (const m of app.matchAll(/<(select|input)\b/g)) {
+      const lineStart = app.lastIndexOf('\n', m.index) + 1;
+      if (/^\s*\/\//.test(app.slice(lineStart, m.index))) continue; // a comment naming the tag
+      const tag = tagAt(app, m.index);
+      if (/type="hidden"/.test(tag)) continue;
+      tags++;
+      const id = /\sid="([^"$]+)"/.exec(tag)?.[1];
+      if (id) ids.set(id, (ids.get(id) || 0) + 1);
+      const before = app.slice(0, m.index);
+      const openLabel = before.lastIndexOf('<label');
+      const wrapped = openLabel > before.lastIndexOf('</label>')
+        && !/^<label[^>]*\sfor=/.test(app.slice(openLabel, openLabel + 200));
+      const named = /\saria-label(ledby)?="/.test(tag)
+        // for="campaign-sel", or a for= that picks between ids: for="${n ? 'a' : 'b'}"
+        || (id && (app.includes(`for="${id}"`) || app.includes(`for="\${`) && new RegExp(`for="\\$\\{[^"]*'${id}'`).test(app)))
+        || (/\sid="\$\{id\}"/.test(tag) && /for="\$\{id\}"/.test(app.slice(Math.max(0, m.index - 1500), m.index + 1500)))
+        || wrapped;
+      if (!named) unnamed.push(`app.js:${before.split('\n').length} ${tag.replace(/\s+/g, ' ').slice(0, 70)}`);
+    }
+    check(`app.js writes the wizard's selects and inputs (${tags} found)`, tags >= 20, `only ${tags} found: the scan is reading the wrong file or shape`);
+    check('every one of them has an accessible name', !unnamed.length, unnamed.join('\n      '));
+    const twice = [...ids].filter(([, n]) => n > 1).map(([id]) => id);
+    check('and a literal id on one is written once, so a <label for> finds one control', !twice.length, `written more than once: ${twice.join(', ')}`);
+    const input = functionBody(picker, 'function inputHtml(');
+    check('the picker\'s filter box is named by its title, or its placeholder when it has none',
+      !!input && /aria-label="\$\{escapeAttr\(label \|\| placeholder\)\}"/.test(input),
+      'Picker.inputHtml writes the search box without an aria-label');
   }
 
   // ---------- The GM dashboard ----------

@@ -59,11 +59,16 @@
   // The count is the point as much as the input is: "12 of 128" tells you
   // whether to keep typing, and whether an empty list means "no match" or
   // "nothing in the catalog".
-  function inputHtml({ id, value = '', placeholder = 'Filter…', shown, total }) {
+  //
+  // A placeholder is not a name: it vanishes on the first keystroke, and the
+  // box read back as an anonymous search field. `label` is the picker's own
+  // title ("Filter related skills"); a caller that passes none is named by its
+  // placeholder, so no filter box can render without an accessible name.
+  function inputHtml({ id, value = '', placeholder = 'Filter…', label, shown, total }) {
     const count = (total === undefined) ? ''
       : `<span class="muted small pick-count">${shown} of ${total}</span>`;
     return `<div class="pick-filter">
-      <input type="search" id="${id}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}">
+      <input type="search" id="${id}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" aria-label="${escapeAttr(label || placeholder)}">
       ${count}
     </div>`;
   }
