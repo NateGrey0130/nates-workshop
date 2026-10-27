@@ -34,6 +34,9 @@
 </header>
 
 <main class="wrap">
+  <!-- flash() in campaign.js: a failure said here instead of an alert box.
+       Outside #app, so a render() cannot wipe it. -->
+  <p id="msg" class="small" role="status" aria-live="polite"></p>
   <div id="app"><p class="muted">Loading campaign…</p></div>
 </main>
 
@@ -58,6 +61,9 @@
 <script src="/shared/js/campaign/handouts.js"></script>
 <script src="/shared/js/campaign/ledger.js"></script>
 <script src="/shared/js/campaign/table.js"></script>
+<!-- confirmDialog: every question this page and its shared views ask, in a
+     <dialog> rather than the browser's confirm box. Before campaign.js. -->
+<script src="/apps/character-creator/js/confirm-dialog.js"></script>
 <script src="campaign.js"></script>
 </body>
 </html>

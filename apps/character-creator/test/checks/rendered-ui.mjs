@@ -5293,8 +5293,8 @@ export async function run() {
       const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
       check(`${script} hands the views this group's API and its adapter`,
         /C\.init\(\{\s*base: '\/api\/character-creator', campaignId,/.test(src)
-          && /modal: \(text\) => Promise\.resolve\(confirm\(text\)\)/.test(src)
-          && /toast: \(text\) => alert\(text\)/.test(src));
+          && /modal: \(text\) => confirmDialog\(text\)/.test(src)
+          && /toast: \(text\) => flash\(text, true\)/.test(src));
     }
     // The views' request helper answers a failure the way this app's api()
     // does, so a caller reading err.status or err.detail (a 409's code, a
@@ -5798,5 +5798,34 @@ export async function run() {
     }).map((m) => `sheet.js:${sheetSrc.slice(0, m.index).split('\n').length}`);
     check('every question the sheet asks is awaited, in an async function',
       sheetAsks.length >= 7 && !sheetUnawaited.length, `${sheetAsks.length} asks; unawaited: ${sheetUnawaited.join(', ')}`);
+
+    // And the campaign page and GM Tools (creator retro row 23c, 2026-10-27).
+    // Each handed the shared campaign views the browser's confirm() as `modal`
+    // and alert() as `toast`, so changing the adapter changes every shared view
+    // at once; the pages' own confirm() and alert() calls go the same way. The
+    // page loads the helper before its script, and has a #msg outside #app for
+    // the non-blocking message, so a re-render cannot wipe a failure.
+    for (const [dir, script] of [['campaign', 'campaign.js'], ['gm-tools', 'dashboard.js']]) {
+      const html = readFileSync(join(repoRoot, 'apps', dir, 'index.html'), 'utf8');
+      const at = html.indexOf('src="/apps/character-creator/js/confirm-dialog.js"');
+      check(`${dir} loads confirm-dialog.js before ${script}`,
+        at > 0 && at < html.indexOf(`src="${script}"`));
+      const msgAt = html.indexOf('<p id="msg"');
+      check(`and ${dir} has a #msg status line outside #app`,
+        msgAt > 0 && msgAt < html.indexOf('<div id="app">') && /<p id="msg"[^>]*role="status"/.test(html));
+      const src = readFileSync(join(repoRoot, 'apps', dir, script), 'utf8').replace(/\r\n/g, '\n');
+      const boxes = src.split('\n').map((l, i) => [i + 1, l])
+        .filter(([, l]) => !/^\s*\/\//.test(l) && /(?<![\w$])(?:window\.)?(?:confirm|alert)\(/.test(l)).map(([i]) => i);
+      check(`${script} calls no confirm() or alert()`, !boxes.length, `at ${script}:${boxes.join(', ')}`);
+      const asks = [...src.matchAll(/(?<![\w$])(?:window\.)?confirmDialog\(/g)];
+      const unawaited = asks.filter((m) => {
+        if (!/(await |=> )(window\.)?$/.test(src.slice(Math.max(0, m.index - 20), m.index))) return true;
+        if (/=> $/.test(src.slice(Math.max(0, m.index - 3), m.index))) return false; // the adapter returns the promise
+        const head = src.lastIndexOf('\nfunction ', m.index), aHead = src.lastIndexOf('\nasync function ', m.index);
+        return aHead < head;
+      }).map((m) => `${script}:${src.slice(0, m.index).split('\n').length}`);
+      check(`every question ${script} asks is awaited, in an async function`,
+        asks.length >= 1 && !unawaited.length, `${asks.length} asks; unawaited: ${unawaited.join(', ')}`);
+    }
   }
 }
