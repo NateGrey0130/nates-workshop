@@ -993,25 +993,33 @@ section('Client error reporting');
     route.resetRateLimit();
   }
 
-  // Which pages load it. Row 6a of the 2026-10-26 plan loads it on every page
-  // that loads shared/js/ui.js except Pick 3 Cut 5 (see the client's header);
-  // it must come first, so it is listening before the other scripts run.
+  // Which pages load it: every HTML page under apps/ at any depth, and the
+  // root page, except Pick 3 Cut 5 (see the client's header). Rows 6a and 6b
+  // of the 2026-10-26 plan. It must come first, so it is listening before the
+  // other scripts run. The walk is of the directory, not of a list, so a page
+  // added without the tag fails here; test/ directories hold fixtures.
   const appsDir = join(repoRoot, 'apps');
-  const pages = [];
-  for (const app of readdirSync(appsDir, { withFileTypes: true })) {
-    if (!app.isDirectory()) continue;
-    for (const f of readdirSync(join(appsDir, app.name))) {
-      if (!f.endsWith('.html')) continue;
-      const html = readFileSync(join(appsDir, app.name, f), 'utf8');
-      if (/<script src="\/shared\/js\/ui\.js"><\/script>/.test(html)) pages.push({ path: `${app.name}/${f}`, html });
+  const pages = [{ path: 'index.html', html: readFileSync(join(repoRoot, 'index.html'), 'utf8') }];
+  const walk = (dir, rel) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) { if (e.name !== 'test' && e.name !== 'node_modules') walk(join(dir, e.name), `${rel}${e.name}/`); continue; }
+      if (e.name.endsWith('.html')) pages.push({ path: `${rel}${e.name}`, html: readFileSync(join(dir, e.name), 'utf8') });
     }
-  }
+  };
+  walk(appsDir, 'apps/');
   const firstScript = (html) => (html.match(/<script\b[^>]*\bsrc="([^"]+)"/) || [])[1];
-  const missing = pages.filter((p) => p.path !== 'pick3cut5/index.html'
+  const missing = pages.filter((p) => p.path !== 'apps/pick3cut5/index.html'
     && firstScript(p.html) !== '/shared/js/client-errors.js').map((p) => p.path);
-  check('every ui.js page but Pick 3 Cut 5 loads client-errors.js as its first script',
-    pages.length >= 11 && missing.length === 0, missing.join(', ') || `${pages.length} pages`);
-  const p3 = pages.find((p) => p.path === 'pick3cut5/index.html');
+  check('every page under apps/ and the root, but Pick 3 Cut 5, loads client-errors.js as its first script',
+    pages.length >= 28 && missing.length === 0, missing.join(', ') || `${pages.length} pages`);
+  // And every page the hub links is one of them, so a manifest slug whose
+  // page sits outside the walk cannot slip past it.
+  const manifest = JSON.parse(readFileSync(join(appsDir, 'manifest.json'), 'utf8'));
+  const walked = new Set(pages.map((p) => p.path));
+  const unwalked = (manifest.apps || []).filter((a) => a.slug && !walked.has(`apps/${a.slug}/index.html`)).map((a) => a.slug);
+  check('and every slug apps/manifest.json lists has its page in that walk',
+    (manifest.apps || []).some((a) => a.slug) && unwalked.length === 0, unwalked.join(', '));
+  const p3 = pages.find((p) => p.path === 'apps/pick3cut5/index.html');
   check('and Pick 3 Cut 5 does not, because it would need a sixth Access bypass',
     p3 && !p3.html.includes('client-errors.js'));
 }
