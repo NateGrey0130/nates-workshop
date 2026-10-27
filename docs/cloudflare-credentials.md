@@ -11,6 +11,7 @@ below has drifted at least once.
 | D1, read or write, local or `--remote` | `npx wrangler` under `CLOUDFLARE_API_TOKEN`, via `scripts/d1-apply.mjs` / `q.mjs` |
 | a Pages question, or a deployment | the `cloudflare-api` MCP plugin |
 | an R2 question (which buckets exist) | the plugin's `cloudflare-bindings` server (`r2_buckets_list`) |
+| reading `nates-workshop-media`'s objects (the weekly backup) | the read-only R2 token in `R2_BACKUP_ACCESS_KEY_ID` / `R2_BACKUP_SECRET_ACCESS_KEY` (User scope), signed by `scripts/d1-backup-weekly.mjs`; `SETUP.md` → *The weekly D1 backup* |
 | an Access question | the plugin: `GET` on apps, policies, IdPs, organizations |
 | an Access change | per endpoint. See *Access writes* |
 

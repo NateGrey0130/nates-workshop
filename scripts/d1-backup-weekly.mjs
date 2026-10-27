@@ -27,9 +27,25 @@
 // or there is none. A schedule that stopped, a PC that was off all week, a
 // token that expired - each shows up as an age, not as silence. SETUP.md ->
 // "The weekly D1 backup" says where to run it.
+//
+// R2. After the databases, each --remote run mirrors the MEDIA bucket
+// (nates-workshop-media, the NPC portraits) into <root>\r2\nates-workshop-media\
+// through R2's S3-compatible API: it lists every key and downloads only the
+// ones not already on disk at the same size. It is one growing copy, not a
+// dated one, and it NEVER deletes a local file, so an object deleted from the
+// bucket stays here. It reads the bucket and does nothing else: GET only, no
+// write, no delete, and it never touches the bucket's public-access setting.
+// CLOUDFLARE_API_TOKEN cannot reach R2 (docs/cloudflare-credentials.md), so it
+// signs its own requests (SigV4, below, no SDK) with a read-only R2 token from
+// R2_BACKUP_ACCESS_KEY_ID and R2_BACKUP_SECRET_ACCESS_KEY, and the account from
+// CLOUDFLARE_ACCOUNT_ID, all User-scope. Their values are never printed or
+// written anywhere. Its counts go into last-run.json under "r2". The mirror
+// has no say in the rotation, which concerns the dated D1 folders only, but a
+// failed mirror makes the run exit 1 and makes --check exit 1.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve, isAbsolute } from 'node:path';
+import { createHash, createHmac } from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve, isAbsolute } from 'node:path';
 import { repoRoot } from './d1-query-lib.mjs';
 
 const DEFAULT_ROOT = 'C:\\Users\\natha\\Backups\\nates-workshop';
@@ -37,6 +53,9 @@ const GROUPS = ['palladium', 'marvel', 'tools'];
 const KEEP = 8;
 const MAX_AGE_DAYS = 8;
 const DATED = /^\d{4}-\d{2}-\d{2}$/;
+const R2_BUCKET = 'nates-workshop-media';
+const R2_PARALLEL = 4;
+const EMPTY_SHA256 = createHash('sha256').update('').digest('hex');
 
 const args = process.argv.slice(2);
 const check = args.includes('--check');
@@ -67,6 +86,20 @@ if (check) {
   } else {
     console.log('last run: none recorded');
   }
+  const r2 = existsSync(join(root, 'last-run.json'))
+    ? JSON.parse(readFileSync(join(root, 'last-run.json'), 'utf8')).r2
+    : undefined;
+  let r2Failed = false;
+  if (!r2) {
+    console.log('R2 mirror: not recorded on the last run.');
+  } else if (r2.skipped) {
+    console.log(`R2 mirror: skipped on the last run (${r2.skipped}).`);
+  } else if (r2.exit !== 0) {
+    console.log(`R2 mirror: FAILED on the last run: ${r2.error ?? `${r2.failed} key(s) not copied`}.`);
+    r2Failed = true;
+  } else {
+    console.log(`R2 mirror: ${r2.objects} objects listed, ${r2.downloaded} downloaded, ${r2.present} already present.`);
+  }
   if (!newest) {
     console.log(`NO COMPLETE BACKUP under ${root}.`);
     process.exit(1);
@@ -79,7 +112,132 @@ if (check) {
     process.exit(1);
   }
   console.log(`${line}. OK.`);
-  process.exit(0);
+  process.exit(r2Failed ? 1 : 0);
+}
+
+// ---------------------------------------------------------------- R2 mirror
+
+const rfc3986 = (s) => encodeURIComponent(s)
+  .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+const hmac = (key, data) => createHmac('sha256', key).update(data).digest();
+
+/** One signed GET against the bucket. `key` undefined lists; a string fetches that object. */
+async function r2Get(creds, key, query = {}) {
+  const host = `${creds.account}.r2.cloudflarestorage.com`;
+  const path = `/${R2_BUCKET}/${key === undefined ? '' : key.split('/').map(rfc3986).join('/')}`;
+  const qs = Object.keys(query).sort().map((k) => `${rfc3986(k)}=${rfc3986(query[k])}`).join('&');
+  const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const scope = `${amzDate.slice(0, 8)}/auto/s3/aws4_request`;
+  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+  const canonical = ['GET', path, qs,
+    `host:${host}\nx-amz-content-sha256:${EMPTY_SHA256}\nx-amz-date:${amzDate}\n`,
+    signedHeaders, EMPTY_SHA256].join('\n');
+  const toSign = ['AWS4-HMAC-SHA256', amzDate, scope,
+    createHash('sha256').update(canonical).digest('hex')].join('\n');
+  let k = hmac(`AWS4${creds.secret}`, amzDate.slice(0, 8));
+  for (const part of ['auto', 's3', 'aws4_request']) k = hmac(k, part);
+  const signature = createHmac('sha256', k).update(toSign).digest('hex');
+  const res = await fetch(`https://${host}${path}${qs ? `?${qs}` : ''}`, {
+    headers: {
+      'x-amz-date': amzDate,
+      'x-amz-content-sha256': EMPTY_SHA256,
+      authorization: `AWS4-HMAC-SHA256 Credential=${creds.id}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    },
+  });
+  if (!res.ok) {
+    // Only the error code: an S3 error body can echo the access key id.
+    const code = /<Code>([^<]*)<\/Code>/.exec(await res.text())?.[1] ?? 'no code';
+    throw new Error(`HTTP ${res.status} ${code}`);
+  }
+  return res;
+}
+
+const unxml = (s) => s
+  .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+  .replace(/&amp;/g, '&');
+
+/** Every key in the bucket with its size, through ListObjectsV2's pages. */
+async function r2List(creds) {
+  const objects = [];
+  let token;
+  do {
+    const query = { 'list-type': '2', 'max-keys': '1000' };
+    if (token) query['continuation-token'] = token;
+    const xml = await (await r2Get(creds, undefined, query)).text();
+    for (const [, body] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+      objects.push({
+        key: unxml(/<Key>([\s\S]*?)<\/Key>/.exec(body)[1]),
+        size: Number(/<Size>(\d+)<\/Size>/.exec(body)[1]),
+      });
+    }
+    token = /<IsTruncated>true<\/IsTruncated>/.test(xml)
+      ? unxml(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/.exec(xml)[1])
+      : undefined;
+  } while (token);
+  return objects;
+}
+
+/** A key's file under the mirror, or null when Windows cannot hold it as a path. */
+function localPath(mirror, key) {
+  const parts = key.split('/');
+  const bad = (p) => !p || p === '.' || p === '..' || /[<>:"\\|?*\x00-\x1f]/.test(p) || /[. ]$/.test(p);
+  return parts.some(bad) ? null : join(mirror, ...parts);
+}
+
+async function mirrorR2() {
+  const creds = {
+    id: process.env.R2_BACKUP_ACCESS_KEY_ID,
+    secret: process.env.R2_BACKUP_SECRET_ACCESS_KEY,
+    account: process.env.CLOUDFLARE_ACCOUNT_ID,
+  };
+  const mirror = join(root, 'r2', R2_BUCKET);
+  const result = { bucket: R2_BUCKET, mirror, exit: 1, objects: 0, bytes: 0, present: 0, downloaded: 0, failed: 0 };
+  const missing = ['R2_BACKUP_ACCESS_KEY_ID', 'R2_BACKUP_SECRET_ACCESS_KEY', 'CLOUDFLARE_ACCOUNT_ID']
+    .filter((n) => !process.env[n]);
+  if (missing.length) {
+    result.error = `not set in this process: ${missing.join(', ')}`;
+    return result;
+  }
+  let objects;
+  try {
+    objects = await r2List(creds);
+  } catch (e) {
+    result.error = `listing the bucket: ${e.message}`;
+    return result;
+  }
+  result.objects = objects.length;
+  result.bytes = objects.reduce((n, o) => n + o.size, 0);
+  const failures = [];
+  const todo = [];
+  for (const o of objects) {
+    const file = localPath(mirror, o.key);
+    if (!file) failures.push({ key: o.key, reason: 'not a path Windows can hold' });
+    else if (existsSync(file) && statSync(file).size === o.size) result.present += 1;
+    else todo.push({ ...o, file });
+  }
+  let next = 0;
+  async function worker() {
+    while (next < todo.length) {
+      const o = todo[next++];
+      try {
+        const body = Buffer.from(await (await r2Get(creds, o.key)).arrayBuffer());
+        if (body.length !== o.size) throw new Error(`got ${body.length} bytes, listed ${o.size}`);
+        mkdirSync(dirname(o.file), { recursive: true });
+        writeFileSync(`${o.file}.part`, body);
+        renameSync(`${o.file}.part`, o.file);
+        result.downloaded += 1;
+      } catch (e) {
+        failures.push({ key: o.key, reason: e.message });
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: R2_PARALLEL }, worker));
+  result.failed = failures.length;
+  if (failures.length) result.failures = failures.slice(0, 20);
+  result.exit = failures.length ? 1 : 0;
+  return result;
 }
 
 // The local date, not UTC: the folder name is what Nate looks for on disk.
@@ -116,7 +274,13 @@ for (const group of GROUPS) {
 }
 
 const ok = GROUPS.every((g) => results[g].exit === 0);
-const record = { date, finishedAt: new Date().toISOString(), target, root, exit: ok ? 0 : 1, databases: results };
+// R2 has no local copy to read, so a --local run (a test of the D1 half) skips it.
+const r2 = target === '--remote' ? await mirrorR2() : { skipped: 'a --local run' };
+const r2ok = !!r2.skipped || r2.exit === 0;
+const record = {
+  date, finishedAt: new Date().toISOString(), target, root,
+  exit: ok && r2ok ? 0 : 1, databases: results, r2,
+};
 
 const deleted = [];
 if (ok) {
@@ -142,4 +306,16 @@ if (ok) {
 } else {
   console.log(`  INCOMPLETE. Nothing rotated or replaced. Its <db>.log files are in ${date}.partial.\n`);
 }
-process.exit(ok ? 0 : 1);
+if (r2.skipped) {
+  console.log(`  R2 mirror skipped: ${r2.skipped}.\n`);
+} else {
+  console.log(`  R2 ${R2_BUCKET} -> ${r2.mirror}`);
+  console.log(`  ${r2.objects} objects listed (${r2.bytes} bytes), ${r2.downloaded} downloaded, ${r2.present} already present, ${r2.failed} failed`);
+  if (r2.error) console.log(`  R2 MIRROR FAILED: ${r2.error}`);
+  for (const f of r2.failures ?? []) console.log(`  R2 not copied: ${f.key}: ${f.reason}`);
+  console.log('');
+}
+// exitCode, not exit(): process.exit() while fetch's sockets are closing
+// aborts node on Windows (a libuv assertion in async.c, exit 127), and that
+// was measured here on the first real run.
+process.exitCode = ok && r2ok ? 0 : 1;

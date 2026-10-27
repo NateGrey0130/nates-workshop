@@ -458,7 +458,9 @@ scheduled task (`SETUP.md` → *The weekly D1 backup*), into dated folders
 outside the repo, keeping the newest eight. This was manual until 2026-10-26,
 on the grounds that a scheduled export that quietly stops is believed. That
 objection is answered rather than dropped: `--check` prints the age of the
-newest complete backup and exits 1 past eight days.
+newest complete backup and exits 1 past eight days. The same run mirrors the
+R2 `MEDIA` bucket (the portraits) into the backup root, new keys only, through
+a read-only R2 token; D1 Time Travel does not cover R2 at all.
 
 **What each mechanism actually covers:**
 

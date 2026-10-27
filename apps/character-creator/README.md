@@ -837,7 +837,8 @@ scripts/
 │                           un-exportable. Derives what to skip rather than
 │                           naming it. See docs/operations.md Recovery
 ├── d1-backup-weekly.mjs    All three databases into a dated folder outside the
-│                           repo, newest 8 kept; --check fails past 8 days
+│                           repo, newest 8 kept; --check fails past 8 days.
+│                           Also mirrors the R2 bucket, new keys only
 ├── ofd-refresh.mjs         Snapshot the Open Filament Database into ff_brands
 │                           and ff_filaments — FilamentForge's catalog. The app
 │                           reads the snapshot; only this script talks to OFD
