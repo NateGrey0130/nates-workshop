@@ -1458,7 +1458,9 @@ section('The shared campaign views are loaded in order, reach only this app\'s A
     check(`${page} loads core.js, then ${mods.join(', ')}, before its own module`,
       at('core') >= 0 && mods.every((m) => at(m) > at('core')) && srcs.findIndex((s) => !s.startsWith('/shared/')) > Math.max(...mods.map(at)),
       srcs.join(' '));
-    check(`${page} loads no other app's script`, srcs.every((s) => s.startsWith('/shared/js/campaign/') || !s.startsWith('/')), srcs.join(' '));
+    // The one other shared script allowed is the site-wide error reporter.
+    check(`${page} loads no other app's script`, srcs.every((s) => s.startsWith('/shared/js/campaign/')
+      || s === '/shared/js/client-errors.js' || !s.startsWith('/')), srcs.join(' '));
   }
   const pageScripts = ['campaign/campaign.js', 'gm/gm.js', 'gm/present.js'].map((f) => readFileSync(join(appDir, f), 'utf8'));
   // GM tools is where a Marvel GM runs a session, so The Table's panel is drawn
