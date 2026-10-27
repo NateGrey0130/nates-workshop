@@ -776,7 +776,7 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
   check('typing one marks it, and clearing the box hands it back to the dice',
     /function setBio\(key, value\) \{[\s\S]{0,160}if \(key === 'money'\) S\.moneyTyped = !!v;/.test(appText));
   check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
-    /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollPoolFormula\(c\.starting_money, S\.attrs\);/.test(appText));
+    /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollStartingMoney\(c, S\.attrs\);/.test(appText));
 }
 
 // The two payload builders that read only the state, the composed class and
@@ -1864,8 +1864,8 @@ check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearC
   const made = (body) => body.replace(/\bon(?:click|change|input|blur|keydown|keyup)="[^"]*"/g, '')
     .replace(/^\s*\/\/.*$/gm, '');
   const ROLLERS = ['computePools', 'rollAdvancement', 'initEquipment', 'ensureMorphusForm', 'rollAttrBonuses',
-    'rollOccBonuses', 'rollTotemBonuses', 'rollBio', 'doPsiRoll', 'rollAbilityGroup', 'evalDice', 'rollPoolFormula',
-    'rollQuantity', 'rollAttribute', 'rollSecondForm'];
+    'rollOccBonuses', 'rollTotemBonuses', 'rollBio', 'doPsiRoll', 'rollAbilityGroup', 'evalDice', 'rollStartingPools',
+    'rollStartingMoney', 'rollQuantity', 'rollAttribute', 'rollSecondForm'];
   check('the rollers this names are all still functions the wizard has or imports',
     ROLLERS.every((r) => bodies.has(r) || new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))),
     ROLLERS.filter((r) => !bodies.has(r) && !new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))).join(', '));
@@ -2396,6 +2396,98 @@ section('Mega-damage conversion (BOOK-INGEST-AUDIT F62)');
   check('a level-up grows M.D.C. by the hit point dice, and touches no emptied pool',
     prop.pools.mdc_max && prop.pools.mdc_max.to >= 28 && prop.pools.mdc_max.to <= 38
     && !prop.pools.hp_max && !prop.pools.sdc_max, JSON.stringify(prop.pools));
+}
+
+section('Starting pools and money are rolled once, for the wizard and the NPC generator alike');
+{
+  // app.js computePools and npc-generate.js each used to write the five pool
+  // rolls and the money roll out for themselves. Both now call leveling.js.
+  // app.js boots on import, so its call is pinned as SOURCE; the generator is
+  // RUN, with Math.random held to one value so every die lands the same
+  // whichever order the two draw in.
+  const LV = await import('../js/leveling.js');
+  const { generateNpc } = await import('../js/npc-generate.js');
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
+  const cp = /function computePools\(force = false\) \{([\s\S]*?)\n\}/.exec(appSrc)?.[1] || '';
+  check('the wizard rolls its pools and its money through leveling.js',
+    /S\.pools = rollStartingPools\(c, S\.attrs, pc\.psionics\);/.test(cp)
+      && /rollStartingMoney\(c, S\.attrs\)/.test(cp) && !/rollPoolFormula|convertedPools/.test(cp));
+  check('and so does the NPC generator, with no pool or money roll of its own',
+    /const pools = rollStartingPools\(cls, attributes\);/.test(npcSrc) && /rollStartingMoney\(cls, attributes\)/.test(npcSrc)
+      && !/rollPoolFormula|convertedPools/.test(npcSrc));
+
+  // Every die lands on the same face while `fixed` holds Math.random.
+  const fixed = (r, fn) => {
+    const real = Math.random;
+    let n = 0;
+    Math.random = () => { if (++n > 1e6) throw new Error('runaway roll'); return r; };
+    try { return fn(); } finally { Math.random = real; }
+  };
+  // What both copies said before they were one function, kept here so the
+  // refactor is held to identical results for the same dice.
+  const before = (c, a, psi = c.psionics) => {
+    const pb = c.bonuses?.pools || {};
+    return LV.convertedPools(c, {
+      hp: rollPoolFormula(c.hit_points_base, a, pb.hp),
+      sdc: rollPoolFormula(c.sdc_base, a, pb.sdc),
+      mdc: rollPoolFormula(c.mdc_base, a, pb.mdc),
+      ppe: rollPoolFormula(c.ppe_base, a, pb.ppe),
+      isp: psi ? rollPoolFormula(psi.isp_base, a, pb.isp) : null,
+    }, a);
+  };
+  const md = (...extra) => parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', ...extra, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+  const classes = {
+    plain: md('hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"', 'ppe_base: "2D6"',
+      'starting_money: "2d6x10"'),
+    bonused: { ...md('hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: 20', 'ppe_base: "1D6x10"'),
+      bonuses: { pools: { hp: 4, sdc: '2d6', ppe: '4d6', isp: 10 } },
+      psionics: { type: 'major', isp_base: '1D6x10 + M.E. attribute' } },
+    converted: md('mdc_from_hp_sdc: true', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"'),
+  };
+  const attrs = { PE: 14, ME: 11 };
+  const faces = [0, 0.37, 0.9999];
+  const same = [];
+  const differ = [];
+  for (const [name, c] of Object.entries(classes)) {
+    for (const r of faces) {
+      const now = fixed(r, () => LV.rollStartingPools?.(c, attrs));
+      const was = fixed(r, () => before(c, attrs));
+      (JSON.stringify(now) === JSON.stringify(was) ? same : differ).push(`${name}@${r} ${JSON.stringify(now)} vs ${JSON.stringify(was)}`);
+    }
+  }
+  check('rollStartingPools gives what the two copies gave, for the same dice', differ.length === 0 && same.length === 9,
+    differ.join('; '));
+  check('the dice reach it: a different face gives different pools',
+    JSON.stringify(fixed(0, () => LV.rollStartingPools?.(classes.plain, attrs)))
+      !== JSON.stringify(fixed(0.9999, () => LV.rollStartingPools?.(classes.plain, attrs))));
+  check('I.S.P. comes off the psionics block passed in, which the wizard reads off the composed class',
+    fixed(0.5, () => LV.rollStartingPools?.(classes.plain, attrs, classes.bonused.psionics))?.isp
+      === fixed(0.5, () => rollPoolFormula(classes.bonused.psionics.isp_base, attrs))
+    && fixed(0.5, () => LV.rollStartingPools?.(classes.plain, attrs))?.isp === null);
+  check('starting money is the class formula as a string, and null for a class stating none',
+    fixed(0.5, () => LV.rollStartingMoney?.(classes.plain, attrs)) === String(fixed(0.5, () => rollPoolFormula('2d6x10', attrs)))
+    && LV.rollStartingMoney?.(classes.converted, attrs) === null);
+
+  // The generator, run. Its pools must be the ones the wizard's call rolls for
+  // the same class, attributes and dice.
+  const world = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(world, world);
+  const mismatched = [];
+  for (const [name, c] of Object.entries(classes)) {
+    const cls = { ...composeClass({ occ: c }), skills: { occ_skills: [], secondary_skills: { count: 0 } } };
+    for (const r of faces) {
+      const npc = fixed(r, () => generateNpc({ cls, level: 1, catalog: [], derive: world.derive, system: 'rifts' }));
+      const wizard = fixed(r, () => LV.rollStartingPools?.(cls, npc.attributes, cls.psionics));
+      const money = fixed(r, () => LV.rollStartingMoney?.(cls, npc.attributes)) ?? undefined;
+      if (JSON.stringify(npc.pools) !== JSON.stringify(wizard) || npc.bio?.money !== money) {
+        mismatched.push(`${name}@${r} npc ${JSON.stringify([npc.pools, npc.bio?.money])} wizard ${JSON.stringify([wizard, money])}`);
+      }
+    }
+  }
+  check('the NPC generator and the wizard roll the same pools and money for one class and one set of dice',
+    mismatched.length === 0, mismatched.join('; '));
 }
 
 section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
@@ -6005,7 +6097,8 @@ section('A pool base carried by a chosen option (BOOK-INGEST-AUDIT F128)');
     row('mdc_base: "2d4x10", mdc_from_hp_sdc: true').warnings.some((w) => w.includes('the flag does nothing')));
 
   // THE READERS OF THE COMPOSED BASE, run rather than read. The wizard's own
-  // call (app.js computePools) is the rollPoolFormula line above.
+  // call (app.js computePools, through leveling.js rollStartingPools) is the
+  // rollPoolFormula line above.
   const findings = (mdc) => validateCharacter({ character: { level: 1 }, cls: held, skills: [],
     attributes: attrs, abilities: [MDC], pools: { hp_max: null, sdc_max: null, mdc_max: mdc },
     catalog: new Map(), enforcePools: true }).violations.filter((x) => x.rule === 'pool_out_of_range');
