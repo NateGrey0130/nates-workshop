@@ -13,7 +13,7 @@
 // or off nothing at all, which is the handout dropped in ten minutes before a
 // session.
 
-import { json, readJson, requireCampaign } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, tooLong, TEXT_MAX } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 export const KINDS = ['place', 'faction', 'lore', 'handout', 'prep'];
@@ -66,6 +66,9 @@ export async function onRequestPost({ request, env, params }) {
   if (!KINDS.includes(kind)) {
     return json({ error: `kind must be one of ${KINDS.join(', ')}` }, 400);
   }
+  // A page is a section's size, as on PATCH (entries/[entryId].js).
+  const over = tooLong([['The page', b.body, TEXT_MAX.section]]);
+  if (over) return over;
 
   const row = await env.DB.prepare(
     `INSERT INTO campaign_entries (campaign_id, kind, title, body, created_by)
