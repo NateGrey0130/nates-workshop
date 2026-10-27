@@ -5,7 +5,7 @@
 // as well as in the wizard — the wizard's checks are a convenience that avoids a
 // round trip, this is the boundary.
 
-import { getUserEmail, unauthorized, json, readJson, campaignAccess } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, campaignAccess, tooLong, TEXT_MAX } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories, storedNumberProblems } from './_lib/validate-character.js';
@@ -131,12 +131,33 @@ async function occRestrictionFor(env, raceId, occId) {
   return byRace.allowed ? raceAllowedForOcc(occ, race) : byRace;
 }
 
+// The item list a create may carry. Every item is an INSERT of its own, so an
+// unbounded list is an unbounded batch. The largest starting kit of any live
+// class is 41 rows (geofront-gun-master: 36 fixed items and 5 choices, read
+// from production 2026-10-27), and the wizard adds hand-picked items on top,
+// so the cap is about five times that.
+export const CREATE_ITEMS_MAX = 200;
+
+// What a create stores is bounded the way the PATCH in characters/[id].js
+// bounds the same fields (TEXT_MAX.section each), plus the item list, by count
+// and by size. Checked before anything is read or written.
+function createTooLarge(b) {
+  if (Array.isArray(b.items) && b.items.length > CREATE_ITEMS_MAX) {
+    return json({ error: `The item list is too long: ${b.items.length.toLocaleString('en-US')} items, and the limit is ${CREATE_ITEMS_MAX}.` }, 413);
+  }
+  return tooLong([['The notes', b.notes, TEXT_MAX.section],
+    ...['bio', 'combat', 'saves', 'armor'].map((s) => [`The ${s} section`, b[s], TEXT_MAX.section]),
+    ['The item list', b.items, TEXT_MAX.section]]);
+}
+
 export async function onRequestPost({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  const over = createTooLarge(b);
+  if (over) return over;
   const r = await createCharacter(env, request, email, b);
   return json(r.body, r.status);
 }
