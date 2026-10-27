@@ -1444,6 +1444,40 @@ section('Notes, People and handouts: the shared views on Marvel\'s own tables, m
     JSON.stringify(limited));
   check('and nothing reaches the model, and the refusal writes no usage row',
     upstreamCalls === 0 && usage.prepare('SELECT count(*) AS n FROM claude_usage').get().n === 100);
+
+  // Under the limit, the request that leaves is the shared default model, and
+  // never disabled thinking: Sonnet 5.5 answers that with a 400 (measured
+  // 2026-10-27, PR #1982), so a caller still sending it fails on every press.
+  const { DEFAULT_MODEL } = await import('../../../functions/api/_lib/claude-client.js');
+  usage.exec('DELETE FROM claude_usage');
+  env.DB = { prepare: (sql) => {
+    const st = usage.prepare(sql);
+    return { bind: (...args) => ({ first: async () => st.get(...args) ?? null, run: async () => st.run(...args) }) };
+  } };
+  env.ANTHROPIC_API_KEY = 'not-a-key';
+  let sent = null;
+  globalThis.fetch = async (url, init) => {
+    sent = JSON.parse(init.body);
+    return new Response(JSON.stringify({ content: [{ type: 'text', text: 'O\'Brien.' }], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200 });
+  };
+  let answered;
+  try {
+    const request = new Request('https://example.com/api/marvel-heroes/x', { method: 'POST',
+      headers: { 'Cf-Access-Authenticated-User-Email': 'ann@x.org', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: 'Who was cornered alone?' }) });
+    const res = await R.ask.onRequestPost({ request, env, params: p });
+    answered = { status: res.status, body: await res.json() };
+  } finally {
+    globalThis.fetch = realFetch;
+    delete env.DB;
+    delete env.ANTHROPIC_API_KEY;
+  }
+  check('Ask sends the shared DEFAULT_MODEL', answered.status === 200 && sent?.model === DEFAULT_MODEL,
+    `${answered.status} ${sent?.model}`);
+  check('and no thinking: { type: \'disabled\' }', sent !== null && sent.thinking?.type !== 'disabled',
+    JSON.stringify(sent?.thinking));
+  const row = usage.prepare('SELECT model FROM claude_usage').get();
+  check('and its usage row records that model', row?.model === DEFAULT_MODEL, String(row?.model));
 }
 
 section('The shared campaign views are loaded in order, reach only this app\'s API, and are styled here');

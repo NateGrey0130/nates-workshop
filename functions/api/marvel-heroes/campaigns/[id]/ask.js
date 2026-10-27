@@ -16,9 +16,9 @@
 
 import { requireMember, json, readJson } from '../../_lib/campaigns.js';
 import { toMatchQuery, parseAliases } from '../../_lib/notes.js';
-import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit, DEFAULT_MODEL }
+  from '../../../_lib/claude-client.js';
 
-const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 25;
 const MAX_BODY_CHARS = 4000;
 
@@ -58,13 +58,15 @@ export async function onRequestPost({ request, env, params }) {
     FROM msh_npcs WHERE campaign_id = ? ORDER BY name LIMIT 200`).bind(g.campaign.id).all();
 
   const claudeRequest = {
-    model: MODEL, max_tokens: 1500, thinking: { type: 'disabled' }, system: SYSTEM,
+    // Thinking spend comes out of max_tokens and can starve the answer. Sonnet
+    // 5.5 refuses thinking switched off with a 400, so low effort holds it down.
+    model: DEFAULT_MODEL, max_tokens: 1500, output_config: { effort: 'low' }, system: SYSTEM,
     messages: [{ role: 'user', content: [{ type: 'text', text: buildPrompt(question, entries, people) }] }],
   };
   const invalid = validateClaudeRequest(claudeRequest);
   if (invalid) return json({ error: 'Built an invalid request: ' + invalid }, 400);
   const upstream = await callAnthropic(claudeRequest, env);
-  await recordUsage(env, { email: g.email, endpoint: 'msh-campaign-ask', model: MODEL, upstream });
+  await recordUsage(env, { email: g.email, endpoint: 'msh-campaign-ask', model: DEFAULT_MODEL, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); } catch { return json({ error: 'Anthropic returned a non-JSON response' }, 502); }
   if (upstream.status !== 200) return json({ error: 'Ask failed: ' + (payload.error?.message || `status ${upstream.status}`) }, 502);
