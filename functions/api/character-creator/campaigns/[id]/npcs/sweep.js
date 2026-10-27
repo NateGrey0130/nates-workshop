@@ -15,11 +15,11 @@
 // importers use, and it earns its place for the same reason.
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
-import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit, DEFAULT_MODEL }
+  from '../../../../_lib/claude-client.js';
 import { parseAliases, trim } from '../npcs.js';
 import { selectInChunks } from '../../../_lib/sql-chunk.js';
 
-const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 20;
 const MAX_BODY_CHARS = 4000;
 
@@ -67,9 +67,11 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const claudeRequest = {
-    model: MODEL,
+    model: DEFAULT_MODEL,
     max_tokens: 4000,
-    thinking: { type: 'disabled' },
+    // Sonnet 5.5 answers disabled thinking with a 400; low effort keeps the
+    // thinking spend out of the 4,000 the list needs.
+    output_config: { effort: 'low' },
     system: SYSTEM,
     messages: [{ role: 'user', content: [{ type: 'text', text: buildPrompt(entries) }] }],
   };
@@ -78,7 +80,7 @@ export async function onRequestPost({ request, env, params }) {
 
   const upstream = await callAnthropic(claudeRequest, env);
   // Any campaign member can press Sweep, same as Ask. Fail-open row.
-  await recordUsage(env, { email: guard.email, endpoint: 'cc-npc-sweep', model: MODEL, upstream });
+  await recordUsage(env, { email: guard.email, endpoint: 'cc-npc-sweep', model: DEFAULT_MODEL, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); }
   catch { return json({ error: 'Anthropic returned a non-JSON response' }, 502); }

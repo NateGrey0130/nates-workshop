@@ -72,9 +72,10 @@ import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { offsetForPrintedPage } from './class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt, buildUserPromptParts } from './extraction-prompt.mjs';
 import { DB, d1Query, repoRoot } from './d1-query-lib.mjs';
+// The default and the allowed list are the server's, so a model the app moves
+// to is one this script moves to as well.
+import { DEFAULT_MODEL, ALLOWED_MODELS } from '../functions/api/_lib/claude-client.js';
 
-const DEFAULT_MODEL = 'claude-sonnet-5';
-const ALLOWED_MODELS = ['claude-sonnet-5', 'claude-opus-5'];
 const MAX_TOKENS = 12000;
 
 // Below this many bytes a cached page is art, a folio and OCR noise - not
@@ -222,7 +223,7 @@ console.log(`pages:     printed ${printedPages.join(', ')} -> `
 console.log(`text:      ${corpus.length.toLocaleString()} chars`);
 console.log(`examples:  ${examples.map((e) => e.class_id).join(', ')}`
   + (likeArg ? ' (--like)' : ` (two most recently published, from ${target})`));
-console.log(`model:     ${model}, max_tokens ${MAX_TOKENS}, thinking disabled`);
+console.log(`model:     ${model}, max_tokens ${MAX_TOKENS}, effort low`);
 console.log(`cached:    ${stable.length.toLocaleString()} chars of stable prefix, `
   + `${varying.length.toLocaleString()} chars of page text sent fresh`);
 if (artPages.length) console.log(`WARNING:   ${artPages.length} short page(s) sent anyway (--allow-short)`);
@@ -244,11 +245,13 @@ if (!apiKey) die('no ANTHROPIC_API_KEY in the environment or in .dev.vars');
 
 // Sonnet 5 thinks by default, and max_tokens caps thinking and text TOGETHER -
 // one extraction burned all 12,000 tokens on a thinking block and produced no
-// text at all. Transcription wants the budget for output.
+// text at all. Transcription wants the budget for output. Sonnet 5.5 answers
+// disabled thinking with a 400, so the spend is held down by low effort
+// instead.
 const body = {
   model,
   max_tokens: MAX_TOKENS,
-  thinking: { type: 'disabled' },
+  output_config: { effort: 'low' },
   system: SYSTEM_PROMPT_CACHE,
   // ONE cache breakpoint, at the end of the stable prefix (F23 step 2). The
   // cached span runs from the start of the request through this block, so it

@@ -29,7 +29,6 @@ const withMap = (city) => ({ ...city, map: layoutMap(city) });
 const $ = (id) => document.getElementById(id);
 const esc = (s) => escHtml(s == null ? '' : String(s));
 const STORE = 'workshop.city.last';
-const MODEL = 'claude-sonnet-5';
 const SETTING_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts' };
 // The setting's money: gold in Palladium Fantasy, credits in Rifts.
 const currency = (c) => tablesFor(c.settings.system)?.CURRENCY || 'gp';
@@ -234,7 +233,7 @@ function themeStatusHtml() {
 // before the answer ended. Called by writeTheme and adaptTheme, each behind a
 // button, and nothing else.
 async function askForPart({ system, prompt, schema }) {
-  const res = await claudeRequest({ model: MODEL, max_tokens: 16000, system,
+  const res = await claudeRequest({ model: CLAUDE_DEFAULT_MODEL, max_tokens: 16000, system,
     output_config: { effort: 'low', format: { type: 'json_schema', schema } },
     messages: [{ role: 'user', content: prompt }] });
   if (res.stop_reason === 'max_tokens') throw new Error('it was cut off before it finished');
@@ -739,7 +738,7 @@ async function generate() {
       const { system, prompt } = poolPrompt(S.settings, 'fantasy');
       // 12,000 tokens: the first try at 4,000 stopped mid-list (stop_reason
       // max_tokens) once the model's thinking and ~300 names were counted.
-      const res = await claudeRequest({ model: MODEL, max_tokens: 12000, system,
+      const res = await claudeRequest({ model: CLAUDE_DEFAULT_MODEL, max_tokens: 12000, system,
         messages: [{ role: 'user', content: prompt }] });
       if (res.stop_reason === 'max_tokens') throw new Error('The name pool was cut off before it finished - try again, or a shorter theme');
       pool = parsePool(res.content?.map((b) => b.text || '').join('') || '', S.settings);
@@ -1017,7 +1016,7 @@ window.City = {
     render();
     try {
       const { system, prompt } = fleshPrompt(S.city, id, opts);
-      const res = await claudeRequest({ model: MODEL, max_tokens: 4000, system,
+      const res = await claudeRequest({ model: CLAUDE_DEFAULT_MODEL, max_tokens: 4000, system,
         messages: [{ role: 'user', content: prompt }] });
       if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off before it finished - try again');
       S.city = withFlesh(S.city, id, parseFlesh(res.content?.map((b) => b.text || '').join('') || ''));

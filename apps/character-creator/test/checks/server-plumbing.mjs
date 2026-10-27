@@ -346,6 +346,26 @@ section('The browser Claude proxy forwards only the fields it checked');
   check('shared/js/api.js CLAUDE_DEFAULT_MODEL matches the server DEFAULT_MODEL',
     browserDefault !== undefined && browserDefault === DEFAULT_MODEL,
     `browser ${browserDefault}, server ${DEFAULT_MODEL}`);
+
+  // The Palladium callers take the default rather than naming a model, so
+  // the next model change is one line in claude-client.js and api.js. And none
+  // of them sends `thinking: { type: 'disabled' }`: Sonnet 5.5 answers it with
+  // a 400 (measured 2026-10-27), so a caller still sending it is a feature
+  // that fails on every press.
+  for (const [rel, takes] of [
+    ['functions/api/character-creator/campaigns/[id]/ask.js', 'DEFAULT_MODEL'],
+    ['functions/api/character-creator/campaigns/[id]/npcs/sweep.js', 'DEFAULT_MODEL'],
+    ['scripts/extract-class.mjs', 'DEFAULT_MODEL'],
+    ['apps/city-creator/city.js', 'CLAUDE_DEFAULT_MODEL'],
+  ]) {
+    const src = readFileSync(join(repoRoot, ...rel.split('/')), 'utf8');
+    const literal = src.match(/'claude-(?:haiku|sonnet|opus)-[0-9a-z-]+'/)?.[0];
+    check(`${rel} names no model of its own`, !literal, literal);
+    check(`${rel} sends ${takes}`, new RegExp(`model: ${takes}\\b`).test(src)
+      || (takes === 'DEFAULT_MODEL' && /flag\('model', DEFAULT_MODEL\)/.test(src)));
+    check(`${rel} sends no thinking: { type: 'disabled' }`,
+      !/thinking:\s*\{\s*type:\s*'disabled'/.test(src));
+  }
 }
 
 // ---------- 100 Claude calls per person in any 24 hours ----------
