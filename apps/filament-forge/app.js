@@ -616,7 +616,7 @@ ${modelCtx}`;
 
   try {
     const data = await claudeRequest({
-      model: 'claude-sonnet-5',
+      model: CLAUDE_DEFAULT_MODEL,
       max_tokens: 2000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],

@@ -193,6 +193,19 @@ check('openfilamentdatabase.org appears nowhere in the app',
   check('reads beyond onboarding go through the parse helper',
     reads.filter(Boolean).every((k) => k === 'ff_onboarding_done'));
 }
+{
+  // The recommendation takes the shared browser default rather than naming a
+  // model, so the next model change is one line in shared/js/api.js. That
+  // constant exists only if api.js loads before app.js.
+  const literal = appSrc.match(/'claude-(?:haiku|sonnet|opus)-[0-9a-z-]+'/)?.[0];
+  check('app.js names no model of its own', !literal, literal);
+  check('app.js sends CLAUDE_DEFAULT_MODEL', /model: CLAUDE_DEFAULT_MODEL\b/.test(appSrc));
+  const page = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const apiAt = page.indexOf('<script src="/shared/js/api.js">');
+  const appAt = page.indexOf('<script src="app.js">');
+  check('index.html loads shared/js/api.js before app.js',
+    apiAt !== -1 && appAt !== -1 && apiAt < appAt, `api.js at ${apiAt}, app.js at ${appAt}`);
+}
 
 // ---------- 5. The README's claims ----------
 section('The README’s claims');
