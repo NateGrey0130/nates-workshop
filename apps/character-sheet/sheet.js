@@ -2340,7 +2340,30 @@ function pickTab(tab) {
     el.classList.toggle('on', on);
     el.setAttribute('aria-selected', String(on));
   }
+  // The roving tabindex follows the selection, so Tab from the strip goes into
+  // the panel just opened rather than along the other five buttons.
+  wireTabs();
   window.scrollTo({ top: 0 });
+}
+
+// THE TABS PATTERN IS js/tabs.js's, not this file's: ids, aria-controls,
+// role="tabpanel", the roving tabindex and the arrow, Home and End keys. Before
+// it, a tab here could be clicked but not reached by arrow - ArrowRight on a
+// focused tab did nothing. Wired in tab mode, taken off in nav mode, for the
+// reason syncStripMode gives below.
+function wireTabs() {
+  const nav = document.querySelector('.tabbar');
+  if (!nav || !globalThis.tabs) return;
+  const opts = {
+    prefix: 'sheet',
+    tabs: [...nav.querySelectorAll('.tab')],
+    key: (el) => el.dataset.tab,
+    // Every slice: stackColumns can split one panel across two columns.
+    panel: (tab) => [...document.querySelectorAll(`.tabpanel[data-tab="${tab}"]`)],
+    selected: (tab) => tab === C.tab,
+    select: pickTab,
+  };
+  if (inTabMode()) globalThis.tabs.wire(nav, opts); else globalThis.tabs.unwire(nav, opts);
 }
 
 // ─── THE STRIP AS NAVIGATION (P5a) ───
@@ -2414,6 +2437,10 @@ function syncStripMode() {
       el.removeAttribute('aria-selected');
     }
   }
+  // And the rest of the pattern on or off with them: ids, aria-controls, the
+  // panels' role, the roving tabindex. Off in nav mode, so every button is an
+  // ordinary Tab stop again and the arrow keys do nothing.
+  wireTabs();
   // RE-MEASURE, and the order is the whole point. The strip lives INSIDE the
   // sticky block, so showing it makes that block taller - and sizeSticky ran
   // before this did. Measured at 1440x900: --sticky-h was 185px against a real
