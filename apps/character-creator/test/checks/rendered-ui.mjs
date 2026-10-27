@@ -100,6 +100,7 @@ const SECTIONS = [
   'The browser Back button walks the wizard steps',
   'A forward jump on the rail stops where Forward does',
   'A wizard control keeps keyboard focus when its own change redraws the step',
+  'A step change puts focus on the step\'s heading and announces it',
   'Every wizard select and input has a name',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
@@ -1453,8 +1454,13 @@ export async function run() {
         /selectionStart/.test(hold) && /setSelectionRange\(/.test(restore), 'the selection range is not carried across');
       check('the restore never scrolls the page',
         /\.focus\(\{ preventScroll: true \}\)/.test(restore), 'restoreFocus() focuses without preventScroll');
-      check('and is the one place app.js moves focus',
-        (app.match(/\.focus\(/g) || []).length === 1, 'app.js moves focus somewhere other than restoreFocus()');
+      // Two places since creator retro row 18: this one, and announceStep(),
+      // which a step change calls (next section).
+      const announce = functionBody(app, 'function announceStep() {') || '';
+      check('and it and announceStep() are the only places app.js moves focus',
+        (app.match(/\.focus\(/g) || []).length === 2
+          && (restore.match(/\.focus\(/g) || []).length === 1 && (announce.match(/\.focus\(/g) || []).length === 1,
+        'app.js moves focus somewhere other than restoreFocus() and announceStep()');
       // A Tab that changed a field redraws under the Tab, after focus has left
       // the field and before any focusout says where it went; the keydown does.
       check('a Tab is noted at keydown, Shift+Tab as backwards',
@@ -1472,6 +1478,103 @@ export async function run() {
       check('Picker.wire does not restore a filter box render() already restored',
         /again && again !== el && document\.activeElement !== again/.test(wire),
         'Picker.wire focuses the filter box a second time');
+    }
+  }
+
+  // ---------- A step change puts focus on the step's heading ----------
+  // goStep() redrew the page and scrolled to the top and did nothing else, so
+  // the Next, Back or rail button just pressed was drawn over while it held
+  // focus and a keyboard user landed on <body>, with nothing announcing the new
+  // step (creator retro row 18, 2026-10-27; reproduced in the browser on
+  // 3aff94eb: Back focused, clicked, activeElement BODY). Rendered rather than
+  // read: goStep(), announceStep() and stepHeading() are lifted out of app.js
+  // and run against a stand-in page whose render() replaces the heading and the
+  // pressed button the way innerHTML does.
+  section('A step change puts focus on the step\'s heading and announces it');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+    const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+    const go = functionBody(app, 'function goStep(i) {');
+    const announce = functionBody(app, 'function announceStep() {');
+    const heading = functionBody(app, 'function stepHeading() {');
+    const render = functionBody(app, 'function render() {');
+    const pick = functionBody(app, 'function pickSystem(sys) {');
+    const steps = app.match(/const STEPS = \[[^\]]*\];/)?.[0];
+    check('goStep(), announceStep(), stepHeading(), render(), pickSystem() and STEPS are all found',
+      !!go && !!announce && !!heading && !!render && !!pick && !!steps,
+      `goStep ${!!go}, announceStep ${!!announce}, stepHeading ${!!heading}, render ${!!render}, pickSystem ${!!pick}, STEPS ${!!steps}`);
+    if (go && announce && heading && render && pick && steps) {
+      const STEPS = new Function(`${steps}\nreturn STEPS;`)();
+      // The stand-in page. render() draws a fresh heading and a fresh Next
+      // button for the step; whatever held focus inside the old markup is gone,
+      // so focus falls to the body, as it does in Chrome.
+      const body = { tagName: 'BODY' };
+      const doc = { activeElement: body };
+      const live = { textContent: '' };
+      const el = (tagName, text) => {
+        const attrs = {};
+        const e = { tagName, text, attrs, focusOpts: null,
+          setAttribute(k, v) { attrs[k] = String(v); },
+          getAttribute(k) { return k in attrs ? attrs[k] : null; },
+          focus(o) { e.focusOpts = o; doc.activeElement = e; } };
+        return e;
+      };
+      const S = { step: 1 };
+      let drawn = { h2: el('H2', 'step 1'), next: el('BUTTON', 'Next') };
+      const page = { 'step-live': live, app: { querySelector: (q) => (q === 'h2' ? drawn.h2 : null) } };
+      const renderStub = () => {
+        const old = drawn;
+        drawn = { h2: el('H2', `step ${S.step}`), next: el('BUTTON', 'Next') };
+        if (doc.activeElement === old.h2 || doc.activeElement === old.next) doc.activeElement = body;
+      };
+      const lib = new Function('S', 'STEPS', '$', 'document', 'window', 'render', 'stepApplies',
+        `${go}\n}\n${announce}\n}\n${heading}\n}\nreturn { goStep };`)(
+        S, STEPS, (id) => page[id], doc, { scrollTo() {} }, renderStub, () => true);
+
+      doc.activeElement = drawn.next;
+      lib.goStep(2);
+      check('after Next, focus is on the new step\'s heading, not the body',
+        doc.activeElement === drawn.h2, `active element is ${doc.activeElement.tagName} "${doc.activeElement.text || ''}"`);
+      check('which is made focusable with tabindex -1, so it takes no Tab stop',
+        drawn.h2.getAttribute('tabindex') === '-1', `tabindex ${drawn.h2.getAttribute('tabindex')}`);
+      check('and is focused without scrolling the page',
+        drawn.h2.focusOpts?.preventScroll === true, `focus options ${JSON.stringify(drawn.h2.focusOpts)}`);
+      check('and the live region holds the step\'s name',
+        live.textContent.includes(STEPS[2]) && live.textContent.includes('Step 3'), `live region "${live.textContent}"`);
+
+      // A press on the step already showing is a redraw, not a step change:
+      // focus stays where render() put it and nothing is announced again.
+      live.textContent = '';
+      doc.activeElement = drawn.next;
+      lib.goStep(2);
+      check('a goStep() to the step already showing moves no focus and announces nothing',
+        doc.activeElement === body && live.textContent === '',
+        `active ${doc.activeElement.tagName}, live "${live.textContent}"`);
+
+      // The other two ways a step changes: the system cards and the browser's
+      // Back and Forward. And a redraw while the heading holds focus must find
+      // the same heading, tabindex and all, or restoreFocus() cannot match it.
+      check('render() marks the heading before restoreFocus(), so a same-step redraw keeps focus on it',
+        render.indexOf('stepHeading();') !== -1 && render.indexOf('stepHeading();') < render.indexOf('restoreFocus(held);')
+          && render.indexOf('stepHeading();') > render.indexOf('[S.step]()'),
+        'render() does not call stepHeading() between the step renderer and restoreFocus()');
+      check('pickSystem() announces the Race step it moves to',
+        /S\.step = ST\.RACE; render\(\); announceStep\(\);/.test(pick), 'choosing a system leaves focus on the body');
+      const popAt = app.indexOf("window.addEventListener('popstate'");
+      const pop = popAt === -1 ? '' : app.slice(popAt, app.indexOf('\n});', popAt));
+      check('the browser Back button announces a step it changed, and only then',
+        /const was = S\.step;/.test(pop) && /if \(S\.step !== was\) announceStep\(\);/.test(pop),
+        'popstate does not announce, or announces when the step did not change');
+
+      const region = html.match(/<[^>]*id="step-live"[^>]*>/)?.[0] || '';
+      check('index.html has one polite live region for the step',
+        /aria-live="polite"/.test(region) && (html.match(/id="step-live"/g) || []).length === 1,
+        `region ${region || 'missing'}`);
+      const sr = css.match(/\.sr-only \{[^}]*\}/)?.[0] || '';
+      check('and it is hidden by clipping, never display: none, which would silence it',
+        /class="sr-only"/.test(region) && /clip-path: inset\(50%\)/.test(sr) && !/display: none|visibility: hidden/.test(sr),
+        `.sr-only is ${sr || 'missing'}`);
     }
   }
 
