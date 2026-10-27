@@ -11,14 +11,24 @@
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { characterAccess } from './_lib/auth.js';
 import { summary, saveToLibrary } from './_lib/npc-snapshot.js';
+import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 
 export async function onRequestGet({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
-  const { results } = await env.DB.prepare(
-    'SELECT * FROM npc_library WHERE owner_email = ? ORDER BY name COLLATE NOCASE, id'
-  ).bind(email).all();
-  return json({ entries: (results || []).map(summary) });
+  // Paged with the shared limit/offset (default 200, at most 500). The largest
+  // real library held 2 entries (--remote, 2026-10-27), so one page is every
+  // library today; the bound is for the one that grows. `next_offset` is where
+  // the next page starts, null on the last.
+  const { limit, offset } = paging(request);
+  const page = await pagedQuery(env, {
+    countSql: 'SELECT COUNT(*) AS n FROM npc_library WHERE owner_email = ?', countBinds: [email],
+    rowsSql: 'SELECT * FROM npc_library WHERE owner_email = ? ORDER BY name COLLATE NOCASE, id', rowsBinds: [email],
+    limit, offset,
+  });
+  page.results = page.results.map(summary);
+  const end = offset + page.results.length;
+  return json({ ...pageBody('entries', page), next_offset: page.results.length && end < page.total ? end : null });
 }
 
 export async function onRequestPost({ request, env }) {
