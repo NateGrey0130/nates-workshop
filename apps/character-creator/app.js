@@ -507,8 +507,8 @@ function resumeDraft() {
   render();
 }
 
-// The one destructive action in this file that never asked. sheet.js has three
-// confirm() calls, campaign.js two, catalog.js two; this had none, and it sits
+// The one destructive action in this file that never asked. sheet.js asked
+// three times, campaign.js twice, catalog.js twice; this had none, and it sits
 // a few hundred pixels from `Resume this build` in the same .nav row. What it
 // destroys includes the rolled attributes, which docs/wizard-and-sheet.md names
 // as the exact thing the draft feature exists to protect.
@@ -520,8 +520,9 @@ async function dismissDraft() {
   const d = S.draftOffer;
   const what = d?.class_name || d?.class_id || 'unfinished';
   const rolled = Object.values(d?.state?.attrs || {}).some((v) => v != null);
-  if (!confirm(`Discard the ${what} build${d?.char_name ? ` for ${d.char_name}` : ''}`
-    + `${rolled ? ', including its rolled attributes' : ''}? This cannot be undone.`)) return false;
+  if (!(await confirmDialog(`Discard the ${what} build${d?.char_name ? ` for ${d.char_name}` : ''}`
+    + `${rolled ? ', including its rolled attributes' : ''}? This cannot be undone.`,
+  { okLabel: 'Discard it', cancelLabel: 'Keep it', danger: true }))) return false;
   S.draftOffer = null;
   await discardDraft();
   render();
@@ -617,7 +618,8 @@ async function newCharacter() {
   if (S.draftOffer) {
     if (!(await dismissDraft())) return;
   } else if (S.rcc && !S.savedId) {
-    if (!confirm(`Start a new character? The ${S.rcc.name} build in progress is discarded.`)) return;
+    if (!(await confirmDialog(`Start a new character? The ${S.rcc.name} build in progress is discarded.`,
+      { okLabel: 'Start a new one', cancelLabel: 'Keep this build', danger: true }))) return;
     await discardDraft();
   }
   S.home = false;
@@ -636,14 +638,15 @@ function continueBuild() {
 // state a player would reach by picking the system and then the card. The
 // Race step lists O.C.C.s beside R.C.C.s (an O.C.C. alone is the human
 // character), so either kind lands on the same step.
-function startWithClass(c) {
+async function startWithClass(c) {
   S.home = false;
   S.classOffer = null; S.classMissing = null;
   S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
   resetBuild();
   freshHistory();
-  pickSystem(c.system);
-  pickClass(c.id);
+  // The build was just reset, so neither asks; both are awaited all the same.
+  await pickSystem(c.system);
+  await pickClass(c.id);
 }
 
 // The draft card's other half when a codex link arrived with a draft on the
@@ -653,7 +656,7 @@ async function startOfferedClass() {
   if (!c) return;
   S.draftOffer = null;
   await discardDraft();
-  startWithClass(c);
+  await startWithClass(c);
 }
 
 function keepDraftOverClass() {
@@ -1247,14 +1250,15 @@ function buildHasWork() {
   return Object.values(S.attrs || {}).some((v) => typeof v === 'number')
     || (S.related || []).length > 0 || (S.secondary || []).length > 0;
 }
-function confirmReset(what) {
+async function confirmReset(what) {
   return !buildHasWork()
-    || confirm(`Changing the ${what} clears the attributes, skills and gear chosen so far. Change it?`);
+    || confirmDialog(`Changing the ${what} clears the attributes, skills and gear chosen so far. Change it?`,
+      { okLabel: `Change the ${what}`, cancelLabel: 'Keep my build', danger: true });
 }
 
-function pickSystem(sys) {
+async function pickSystem(sys) {
   if (S.system !== sys) {
-    if (!confirmReset('game system')) return;
+    if (!(await confirmReset('game system'))) return;
     S.rcc = null; S.quiz = [null, null, null]; S.classTagFilter = []; S.occTagFilter = [];
     resetBuild();
   }
@@ -1637,10 +1641,10 @@ function quizPick(i, val) { S.quiz[i] = val; render(); }
 //
 // So scroll the detail into view. The class list stays right above it, still
 // one scroll away, and what to do next is now the thing you are looking at.
-function pickClass(id) {
+async function pickClass(id) {
   const c = S.classes.find((x) => x.id === id);
   if (S.rcc?.id !== id) {
-    if (S.rcc && !confirmReset('class')) return;
+    if (S.rcc && !(await confirmReset('class'))) return;
     resetBuild();
   }
   S.rcc = c;
@@ -2239,7 +2243,7 @@ function pickOcc(id) {
   const want = id ? S.classes.find((c) => c.id === id) : null;
   const byRace = occAllowedForRace(S.rcc, want);
   const verdict = byRace.allowed ? raceAllowedForOcc(want, S.rcc) : byRace;
-  if (want && !verdict.allowed) { alert(verdict.reason); return; }
+  if (want && !verdict.allowed) { noticeDialog(verdict.reason); return; }
   // The picks made from the PREVIOUS occupation's groups go with it (F125),
   // unless the race offers the same name. Kept, they would count against the
   // server's allowance for groups the character no longer has.
@@ -2490,8 +2494,9 @@ function morphusSub(index, choice) {
     return chooseSub(T, d, index, row?.sub_choices?.[+choice]);
   });
 }
-function morphusRestart() {
-  if (S.morphus.decisions.length && !confirm('Start the Morphus over? Every table result and its rolls are discarded.')) return;
+async function morphusRestart() {
+  if (S.morphus.decisions.length && !(await confirmDialog('Start the Morphus over? Every table result and its rolls are discarded.',
+    { okLabel: 'Start over', cancelLabel: 'Keep the rolls', danger: true }))) return;
   morphusAct(() => []);
 }
 
@@ -2806,12 +2811,12 @@ function skillPickBlock(grants) {
   </div>`;
 }
 
-function setLevelPick(gk, slot, name) {
+async function setLevelPick(gk, slot, name) {
   const list = S.levelPicks[gk] || (S.levelPicks[gk] = []);
   // The slot being written is excepted, so changing it from one Hand to Hand
   // style to another is not asked to replace the value it is overwriting.
   const mine = (r) => r.at === 'level' && r.gk === gk && r.slot === slot;
-  if (name && !makeRoomForHandToHand(name, { except: mine })) { render(); return; }
+  if (name && !(await makeRoomForHandToHand(name, { except: mine }))) { render(); return; }
   list[slot] = name || null;
   render();
 }
@@ -3284,10 +3289,11 @@ function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a
 // would leave it holding a value from a method it has no row for.
 function setAllMethod(m) { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); attrsChanged(); render(); }
 function doRoll(a) { setRoll(a); render(); }
-function rollAll() {
+async function rollAll() {
   // Rolls already on the table are not thrown away by one stray click.
   if (ATTRS.some((a) => typeof S.attrs?.[a] === 'number')
-    && !confirm('Roll every attribute again? The values already here are replaced.')) return;
+    && !(await confirmDialog('Roll every attribute again? The values already here are replaced.',
+      { okLabel: 'Roll again', cancelLabel: 'Keep these', danger: true }))) return;
   rollAllNow();
 }
 function rollAllNow() { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
@@ -3520,7 +3526,7 @@ function handToHandReplaced() {
 // On yes, every other style the player CHOSE comes off the list it was made on
 // and its pick is free again. A granted one stays where it is - it belongs to
 // the class - and handToHandReplaced() keeps it off the character.
-function makeRoomForHandToHand(name, { granted = false, except = () => false } = {}) {
+async function makeRoomForHandToHand(name, { granted = false, except = () => false } = {}) {
   if (!isHandToHand(name)) return true;
   const others = handToHandHeld().filter((r) => !except(r));
   const standing = oneHandToHand(others).kept;
@@ -3532,7 +3538,8 @@ function makeRoomForHandToHand(name, { granted = false, except = () => false } =
   const terms = granted ? {} : {
     cost: handToHandCost(psiClass(), name), condition: handToHandCondition(psiClass(), name),
   };
-  if (!window.confirm(replacePrompt(standing.name, name, !standingChosen, terms))) return false;
+  if (!(await window.confirmDialog(replacePrompt(standing.name, name, !standingChosen, terms),
+    { okLabel: `Replace ${standing.name}`, cancelLabel: `Keep ${standing.name}` }))) return false;
   if (granted) return true;
   for (const r of others) {
     // Spliced in place: toggleSkill() is holding a reference to the list.
@@ -4132,7 +4139,7 @@ function toggleProgram(name) {
   render();
 }
 
-function toggleGroupPick(groupIndex, name, limit) {
+async function toggleGroupPick(groupIndex, name, limit) {
   const list = S.groupPicks[groupIndex] || (S.groupPicks[groupIndex] = []);
   // Language: Other prompts instead of toggling, and the pick is stored under
   // the language's own name — the same rule toggleSkill() applies on the
@@ -4146,7 +4153,7 @@ function toggleGroupPick(groupIndex, name, limit) {
     if (typed === null) return;
     const full = familySkillName(name, typed);
     if (!full) return;
-    if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
+    if (takenNames().has(full.toLowerCase())) { noticeDialog(full + ' is already on this character.'); return; }
     list.push(full);
     render();
     return;
@@ -4155,11 +4162,11 @@ function toggleGroupPick(groupIndex, name, limit) {
   if (i >= 0) list.splice(i, 1);
   // A declined replacement still re-renders: the browser has already ticked
   // the box, and only a render puts it back.
-  else if (list.length < limit && makeRoomForHandToHand(name, { granted: true })) list.push(name);
+  else if (list.length < limit && await makeRoomForHandToHand(name, { granted: true })) list.push(name);
   render();
 }
 
-function toggleSkill(kind, name) {
+async function toggleSkill(kind, name) {
   const list = kind === 'related' ? S.related : S.secondary;
   // Language: Other is taken once per language, each a separate skill named
   // for it — so the row prompts instead of toggling, and never reads as
@@ -4171,7 +4178,7 @@ function toggleSkill(kind, name) {
     if (typed === null) return;
     const full = familySkillName(name, typed);
     if (!full) return;
-    if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
+    if (takenNames().has(full.toLowerCase())) { noticeDialog(full + ' is already on this character.'); return; }
     list.push(full);
     render();
     return;
@@ -4180,7 +4187,7 @@ function toggleSkill(kind, name) {
   if (i >= 0) list.splice(i, 1);
   // Asked BEFORE the push, and a no still re-renders - the browser has already
   // ticked the box, and only a render puts it back.
-  else if (makeRoomForHandToHand(name)) list.push(name);
+  else if (await makeRoomForHandToHand(name)) list.push(name);
   render();
 }
 
@@ -5741,7 +5748,7 @@ async function boot(first = true) {
         const c = S.classes.find((x) => x.id === want);
         if (!c) S.classMissing = want;
         else if (S.draftOffer) S.classOffer = c;
-        else { startWithClass(c); return; }
+        else { await startWithClass(c); return; }
       }
     }
     // goHome() after a save refreshes the lists through here, and the home view

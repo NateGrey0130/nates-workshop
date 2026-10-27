@@ -140,6 +140,7 @@ const SECTIONS = [
   'The name panel beside every Name box',
   'One tabs helper: roles, ids, roving tabindex and arrow keys',
   'Campaign and codex tabs: the helper, aria-controls to a drawn panel',
+  'The wizard asks in a dialog, not a browser box',
 ];
 
 export async function run() {
@@ -1296,7 +1297,7 @@ export async function run() {
       check('the first render of a build replaces the entry it lands on instead of pushing',
         /at\?\.wizBuild !== histBuild\) \{\s*histPos = here;\s*history\.replaceState\(/.test(record),
         'a new build pushes its first step, so Back on it does not leave the page');
-      for (const fn of ['async function newCharacter()', 'function startWithClass(c)', 'function resumeDraft()', 'function startOver()']) {
+      for (const fn of ['async function newCharacter()', 'async function startWithClass(c)', 'function resumeDraft()', 'function startOver()']) {
         const body = functionBody(app, fn);
         check(`${fn.replace(/^(async )?function /, '')} starts a fresh history`,
           !!body && /freshHistory\(\);/.test(body), `${fn} carries the last build's history on`);
@@ -1502,7 +1503,7 @@ export async function run() {
     const announce = functionBody(app, 'function announceStep() {');
     const heading = functionBody(app, 'function stepHeading() {');
     const render = functionBody(app, 'function render() {');
-    const pick = functionBody(app, 'function pickSystem(sys) {');
+    const pick = functionBody(app, 'async function pickSystem(sys) {');
     const steps = app.match(/const STEPS = \[[^\]]*\];/)?.[0];
     check('goStep(), announceStep(), stepHeading(), render(), pickSystem() and STEPS are all found',
       !!go && !!announce && !!heading && !!render && !!pick && !!steps,
@@ -4858,7 +4859,7 @@ export async function run() {
       check('and the wizard takes it, asking first when a draft is waiting',
         /new URLSearchParams\(location\.search\)\.get\('class'\)/.test(wizard)
           && /history\.replaceState\(null, '', location\.pathname \+ location\.hash\)/.test(wizard)
-          && /else if \(S\.draftOffer\) S\.classOffer = c;\s*else \{ startWithClass\(c\); return; \}/.test(wizard),
+          && /else if \(S\.draftOffer\) S\.classOffer = c;\s*else \{ await startWithClass\(c\); return; \}/.test(wizard),
         'the wizard ignores ?class=, keeps it in the address, or starts over a draft without asking');
     }
     // "Your characters with this" (plan PR 9). One read for the whole page,
@@ -5634,5 +5635,145 @@ export async function run() {
       check(`${name}: the strip writes no role or aria-selected of its own`,
         !/role="tab(list)?"|aria-selected="\$\{/.test(js));
     }
+  }
+
+  // ---------- The wizard's questions are a <dialog> (creator retro row 23a, 2026-10-27) ----------
+  // app.js asked seven questions with the browser's confirm() and said three
+  // things with alert(): boxes that halt every script on the page, cannot be
+  // styled, and take focus somewhere the page cannot return it from. Discarding
+  // a draft on the home view put up a native box (reproduced on a local
+  // server). js/confirm-dialog.js is the replacement, run here against a
+  // stand-in document; what can go wrong silently is an asker that is no
+  // longer AWAITED, because `!promise` is always false and the guarded change
+  // then happens whatever the answer.
+  section('The wizard asks in a dialog, not a browser box');
+  {
+    const src = readFileSync(join(appDir, 'js', 'confirm-dialog.js'), 'utf8');
+    const doc = { activeElement: null };
+    const node = (tag) => {
+      const on = {};
+      const n = {
+        tagName: tag.toUpperCase(), children: [], attrs: {}, className: '', id: '', textContent: '', type: '',
+        isConnected: true, open: false, parent: null,
+        setAttribute(a, v) { n.attrs[a] = String(v); },
+        append(...kids) { for (const k of kids) { k.parent = n; n.children.push(k); } },
+        remove() { n.isConnected = false; if (n.parent) n.parent.children = n.parent.children.filter((c) => c !== n); },
+        addEventListener(t, h) { (on[t] ||= []).push(h); },
+        fire(t, extra = {}) {
+          const e = { type: t, prevented: false, preventDefault() { e.prevented = true; }, ...extra };
+          (on[t] || []).forEach((h) => h(e));
+          return e;
+        },
+        focus() { doc.activeElement = n; },
+        showModal() { n.open = true; },
+        close() { n.open = false; n.fire('close'); },
+      };
+      return n;
+    };
+    doc.createElement = node;
+    doc.body = node('body');
+    const g = { document: doc };
+    new Function('globalThis', src)(g);
+    check('confirm-dialog.js publishes confirmDialog and noticeDialog',
+      typeof g.confirmDialog === 'function' && typeof g.noticeDialog === 'function', JSON.stringify(Object.keys(g)));
+
+    if (typeof g.confirmDialog === 'function' && typeof g.noticeDialog === 'function') {
+      const opener = node('button');
+      doc.body.append(opener);
+      const ask = (text, opts) => {
+        opener.focus();
+        const answer = g.confirmDialog(text, opts);
+        const dlg = doc.body.children[doc.body.children.length - 1];
+        const [p, row] = dlg.children;
+        const [ok, cancel] = row?.children || [];
+        return { answer, dlg, p, ok, cancel };
+      };
+      const gone = (d) => !d.open && !d.isConnected && !doc.body.children.includes(d);
+
+      const a = ask('Discard <b>Wolfen</b>?', { okLabel: 'Discard it', cancelLabel: 'Keep it', danger: true });
+      check('it opens a modal <dialog> holding the text as text, not markup',
+        a.dlg.tagName === 'DIALOG' && a.dlg.open && a.p.textContent === 'Discard <b>Wolfen</b>?'
+          && !/innerHTML/.test(src), JSON.stringify({ tag: a.dlg.tagName, open: a.dlg.open, text: a.p.textContent }));
+      check('with the two labels it was given, OK marked as the dangerous one',
+        a.ok?.textContent === 'Discard it' && a.cancel?.textContent === 'Keep it' && /btn-danger/.test(a.ok?.className),
+        JSON.stringify({ ok: a.ok?.textContent, cancel: a.cancel?.textContent, cls: a.ok?.className }));
+      check('a dangerous question opens with focus on Cancel', doc.activeElement === a.cancel);
+      a.ok.fire('click');
+      check('OK resolves true, and the dialog is closed and gone', (await a.answer) === true && gone(a.dlg));
+      check('and focus goes back to what held it', doc.activeElement === opener);
+
+      const b = ask('Roll again?');
+      check('a plain question opens with focus on OK', doc.activeElement === b.ok);
+      b.cancel.fire('click');
+      check('Cancel resolves false', (await b.answer) === false && gone(b.dlg) && doc.activeElement === opener);
+
+      const c = ask('Change the class?');
+      const esc = c.dlg.fire('cancel');
+      check('Escape (the dialog\'s cancel event) resolves false, and the browser\'s own close is held off',
+        (await c.answer) === false && esc.prevented && gone(c.dlg));
+      const d = ask('Change the class?');
+      d.dlg.fire('keydown', { key: 'Escape' });
+      check('and so does the Escape key itself', (await d.answer) === false && gone(d.dlg));
+      const e = ask('Replace Expert?');
+      e.dlg.close();
+      check('a dialog closed any other way is a No', (await e.answer) === false && gone(e.dlg));
+
+      const f = ask('Replace Expert?');
+      const tab = (shiftKey = false) => f.dlg.fire('keydown', { key: 'Tab', shiftKey });
+      const t1 = tab();
+      const onCancel = doc.activeElement === f.cancel;
+      tab();
+      const backOnOk = doc.activeElement === f.ok;
+      tab(true);
+      check('Tab and Shift+Tab go round the two buttons and never leave the dialog',
+        onCancel && backOnOk && doc.activeElement === f.cancel && t1.prevented);
+      f.ok.fire('click');
+      await f.answer;
+
+      // A redraw replaced the control that opened it: nothing is focused by
+      // force, and nothing throws.
+      const gone1 = node('button');
+      gone1.focus();
+      const h = g.confirmDialog('Start over?');
+      gone1.isConnected = false;
+      gone1.focus = () => { throw new Error('focused a detached node'); };
+      let threw = '';
+      try { doc.body.children[doc.body.children.length - 1].children[1].children[0].fire('click'); await h; } catch (err) { threw = err.message; }
+      check('a detached opener is not focused on the way out', !threw, threw);
+
+      const n = g.noticeDialog('Climb is already on this character.');
+      const nd = doc.body.children[doc.body.children.length - 1];
+      const nButtons = nd.children[1].children;
+      check('a notice has one button, on focus, and is an alertdialog',
+        nButtons.length === 1 && doc.activeElement === nButtons[0] && nd.attrs.role === 'alertdialog');
+      nButtons[0].fire('click');
+      check('and resolves when it is dismissed', (await n) === undefined && gone(nd));
+    }
+
+    // The creator itself: the page loads the helper ahead of app.js, and app.js
+    // has no browser box left - comment lines aside.
+    const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+    check('the creator page loads confirm-dialog.js before app.js',
+      html.indexOf('src="js/confirm-dialog.js"') > 0 && html.indexOf('src="js/confirm-dialog.js"') < html.indexOf('src="app.js"'));
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const boxes = app.split('\n').map((l, i) => [i + 1, l])
+      .filter(([, l]) => !/^\s*\/\//.test(l) && /(?<![\w$])(?:window\.)?(?:confirm|alert)\(/.test(l)).map(([i]) => i);
+    check('app.js calls no confirm() or alert()', !boxes.length, `at app.js:${boxes.join(', ')}`);
+    // Every call to something that asks is awaited (or, in confirmReset,
+    // returned from an async function), or its answer is a promise and truthy.
+    const unawaited = [];
+    const resetAt = app.indexOf('async function confirmReset(what) {');
+    const resetEnd = resetAt < 0 ? -1 : app.indexOf('\n}', resetAt);
+    for (const name of ['confirmDialog', 'confirmReset', 'makeRoomForHandToHand', 'startWithClass']) {
+      for (const m of app.matchAll(new RegExp(`(?<![\\w$])${name}\\(`, 'g'))) {
+        const before = app.slice(Math.max(0, m.index - 20), m.index);
+        if (/function $/.test(before) || /await (window\.)?$/.test(before)) continue;
+        if (name === 'confirmDialog' && /\|\| $/.test(before) && m.index > resetAt && m.index < resetEnd) continue;
+        unawaited.push(`${name} at app.js:${app.slice(0, m.index).split('\n').length}`);
+      }
+    }
+    check('every question the wizard asks is awaited before it acts on the answer', !unawaited.length, unawaited.join(', '));
+    check('and confirmReset is an async function, so the || hands back a promise',
+      /async function confirmReset\(what\) \{/.test(app));
   }
 }

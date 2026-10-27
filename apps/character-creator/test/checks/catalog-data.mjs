@@ -364,7 +364,12 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
     check(`${name} asks before a Hand to Hand style is replaced`,
       fnOf(app, name).includes('makeRoomForHandToHand'));
   }
-  check('the wizard asks with a confirm', fnOf(app, 'makeRoomForHandToHand').includes('window.confirm'));
+  check('the wizard asks with the confirm dialog, and waits for the answer',
+    /await window\.confirmDialog\(/.test(fnOf(app, 'makeRoomForHandToHand')));
+  for (const name of ['toggleSkill', 'toggleGroupPick', 'setLevelPick']) {
+    check(`${name} awaits that answer before it changes the list`,
+      /await makeRoomForHandToHand\(/.test(fnOf(app, name)));
+  }
   check('the saved skills leave the replaced style out',
     fnOf(app, 'skillsAtLevelOne').includes('replaced.has') && fnOf(app, 'skillsPayload').includes('replaced.has'));
   check('and so do the bonuses the wizard previews',
