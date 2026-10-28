@@ -24,7 +24,8 @@ import { buildProposal, spellTraditionAllowed, spellTraditionsAllowed } from '..
 // Every @media print block's body, brace-matched and concatenated.
 //
 // This replaces `css.slice(css.lastIndexOf('@media print'))`, which assumed the
-// LAST print block was the sheet's. styles.css has seven of them, and appending
+// LAST print block was the sheet's. styles.css had seven of them (one since
+// 2026-10-27, held there by 'The printed sheet'), and appending
 // an eighth for the codex retargeted eighteen assertions at it — all eighteen
 // failed at once, which was at least loud. The quiet version of that failure is
 // worse: a rule that happens to match in the wrong block reads as a pass. The
@@ -367,7 +368,7 @@ export async function run() {
     check('panels dissolve by default',
       /^\.tabpanel \{ display: contents; \}/m.test(css), 'tabpanel is not display: contents');
     check('the tab bar is hidden by default',
-      /^\.tabbar \{ display: none; \}/m.test(css), 'the tab bar still shows on desktop');
+      /^\.tabbar \{\s*display: none;[^}]*\}/m.test(css), 'the tab bar still shows on desktop');
     // A PHONE **OR ANY TOUCH SCREEN**, which is not the same as a narrow one.
     // An iPad Pro 13" is 1032px in portrait and 1376 in landscape, so the width
     // test alone handed the tablet these tabs were built for the desktop body:
@@ -430,7 +431,7 @@ export async function run() {
       && /const target = sectionTarget\(tab\)/.test(src),
       'the scroll target is the display: contents element again');
     check('and the scroll offset is on .box for the same reason',
-      /^\.box \{ scroll-margin-top: calc\(var\(--header-h, 0px\) \+ var\(--sticky-h, 0px\)/m.test(css)
+      /^\.box \{[^}]*\n  scroll-margin-top: calc\(var\(--header-h, 0px\) \+ var\(--sticky-h, 0px\)/m.test(css.replace(/\r\n/g, '\n'))
       && !/^\.tabpanel \{ scroll-margin-top/m.test(css),
       'scroll-margin sits on an element that generates no box');
     // The strip lives inside the sticky block, so showing it makes that block
@@ -1818,6 +1819,25 @@ export async function run() {
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
     const print = printCss(css);
 
+    // ONE PRINT BLOCK, AND IT IS LAST. There were eight, each beside the screen
+    // rules it undid, and a print rule that sits before a screen rule of equal
+    // specificity loses to it on paper: order decided what printed. Last in the
+    // file, no screen rule can come after one. Comments are stripped first, since
+    // the stylesheet mentions `@media print` in prose.
+    const bare = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const printBlocks = (bare.match(/@media\s+print\b/g) || []).length;
+    check('the stylesheet has one print block',
+      printBlocks === 1, `${printBlocks} @media print blocks; put the new rule in the one at the end of the file`);
+    const lastAt = bare.lastIndexOf('@media print');
+    let depth = 0, end = -1;
+    for (let j = bare.indexOf('{', lastAt); j < bare.length && j >= 0; j++) {
+      if (bare[j] === '{') depth++;
+      else if (bare[j] === '}' && --depth === 0) { end = j; break; }
+    }
+    check('and nothing comes after it',
+      end > 0 && bare.slice(end + 1).trim() === '',
+      'a rule sits after the print block, where it can outrank a print rule on paper');
+
     // Multicol, not grid. A grid row is as tall as its tallest box, so a long
     // list beside a short one leaves the rest of the row blank; measured at five
     // pages either way before this changed.
@@ -1874,10 +1894,9 @@ export async function run() {
     // a P.P.E. column with nothing left to say what it was for. A print render
     // found it and nothing on screen could have. The fixture that caught it is
     // test/fixtures/print-power-desc.html; plan 20 has the rest.
-    // `print` above is the LAST @media print block, which is the one that lays
-    // the paper out in columns. There are six in this stylesheet, and the power
-    // rules belong in the sheet's own block beside `.power-row .cost` rather
-    // than in the layout one — so these three read every print block.
+    // These three read every print block. There is one now, but the split
+    // they were written against had the power rules in a different block from
+    // the multicol layout, and reading them all costs nothing.
     const everyPrint = css.split('@media print').slice(1).join('\n@media print ');
     check('a power name that became a button still prints',
       /\.power-toggle \{ display: inline !important;/.test(everyPrint),
@@ -1938,7 +1957,7 @@ export async function run() {
       /<tr class="skill-row">/.test(sheet) && /<div class="field">/.test(sheet),
       'a row became a control and will not print');
     check('print hides everything play mode adds',
-      /@media print \{ #play-controls, #play-roll-bar, \.roll-btn \{ display: none !important; \} \}/.test(css),
+      /^\s*#play-controls, #play-roll-bar, \.roll-btn \{ display: none !important; \}/m.test(printCss(css)),
       'the print block no longer hides the play blocks');
     // A fourth column for the control moved the printed sheet - the +%/Lvl
     // column shifted 4.5pt left on every skill table. Measured, and the reason
@@ -2389,7 +2408,7 @@ export async function run() {
     // Furniture does not print; state does. Both halves asserted, because
     // suppressing the wrong one is the easy mistake.
     check('the chip does not reach paper',
-      /@media print \{[\s\S]{0,900}?\.box::before \{ display: none; \}/.test(css),
+      /^\s*\.box::before \{ display: none; \}/m.test(printCss(css)),
       '13px of ink down every block on a three-page sheet');
 
     // THE MARK REPLACES AN OPACITY, which is the whole point of it. If the
@@ -4889,7 +4908,7 @@ export async function run() {
     // are a narrow-screen affordance. Reusing the class without this rule makes
     // the codex's tabs vanish on a desktop, which is where you browse a codex.
     check('its tabs survive at desktop width',
-      /\.tabbar\.codex-tabs \{ display: flex; \}/.test(css),
+      /^\.tabbar\.codex-tabs \{[^}]*\bdisplay: flex;/m.test(css),
       '.tabbar is display:none above 820px and the codex would show no tabs there');
 
     // Plan 22. `.tabbar` wraps only under 620px, and seven tabs need 759px: at
@@ -4897,7 +4916,7 @@ export async function run() {
     // scrollbar. Measured in a browser 2026-09-17; this only pins the rule that
     // fixed it, and a text check cannot tell you the bar still fits - look.
     check('and wrap at every width, so a tablet cannot scroll one out of sight',
-      /\.tabbar\.codex-tabs \{ flex-wrap: wrap; \}/.test(css),
+      /^\.tabbar\.codex-tabs \{[^}]*\bflex-wrap: wrap;/m.test(css),
       'above 620px the codex tab bar scrolls sideways again and hides its last tab');
 
     // Same lesson as .power-toggle on the sheet: the shared print block hides

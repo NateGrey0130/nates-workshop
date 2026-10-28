@@ -153,7 +153,6 @@
 }
 
 /* ─── LAYOUT ─── */
-.header { padding: 16px 28px; }
 /* The header did not wrap - shared sets .header-right to flex with no
    flex-wrap - so at 390px its four controls stayed on one row and the TEXT
    inside them broke instead: `Print / Save as PDF` came out one word per
@@ -168,7 +167,7 @@
 
    .header wraps too, or .header-right has nowhere to go: space-between on a
    nowrap parent squeezes it against the logo rather than moving it down. */
-.header { flex-wrap: wrap; row-gap: 6px; }
+.header { padding: 16px 28px; flex-wrap: wrap; row-gap: 6px; }
 .header-right { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .header-group { display: flex; align-items: center; gap: 10px; }
 .header-right .btn, .header-right .home-link { white-space: nowrap; }
@@ -1034,6 +1033,10 @@ body.play-mode .vital.conflict .val > input,
   border-radius: var(--radius-sm);
   overflow: hidden;
   padding-left: 13px;
+  /* Where a link to a section lands: below the sticky header and pools.
+     Why it is here and not on .tabpanel: "What a section scrolls TO", under
+     the tab bar. */
+  scroll-margin-top: calc(var(--header-h, 0px) + var(--sticky-h, 0px) + 16px);
 }
 .box::before {
   content: '';
@@ -1178,8 +1181,8 @@ body.play-mode .vital.conflict .val > input,
 .attr-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 /* "9 +5 = 14" at the size of a bare "9" ran 334px into a 281px box, and the
    box scrolled sideways with the totals cut off (measured at 1280, 2026-10-01).
-   The working is smaller than the answer, and never wraps mid-sum. */
-.attr-stack .field > .val { white-space: nowrap; }
+   The working is smaller than the answer, and never wraps mid-sum (the
+   nowrap is on the value's own rule below). */
 .attr-stack .field > .val .attr-work { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 .attr-stack .field > .val .attr-work .attr-bonus { font-size: 13px; }
 /* Every number on the sheet used to land within two points of every other
@@ -1187,7 +1190,7 @@ body.play-mode .vital.conflict .val > input,
    number you touch forty times a session and the number you touch once were
    the same size, which is the hunting the brief describes. Size now tracks
    how often a number changes. */
-.attr-stack .field > .val { font-size: 22px; font-weight: 800; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.attr-stack .field > .val { white-space: nowrap; font-size: 22px; font-weight: 800; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; }
 
 /* ─── POOLS: ONE WIDGET, BOTH MODES ───
    There used to be two. The sheet drew .vital - an input, a max, 17px - and
@@ -2043,7 +2046,6 @@ input.class-boosted { border-bottom-width: 2px; }
   color: var(--text-muted); padding: 2px 6px 2px 0;
 }
 .block-table td { padding: 2px 6px 2px 0; vertical-align: middle; }
-@media print { .block-editors { display: none; } }
 
 /* Catalog picker filters. The count is half the point — it says whether to keep
    typing, and whether an empty list means "no match" or "empty catalog". */
@@ -2053,7 +2055,6 @@ input.class-boosted { border-bottom-width: 2px; }
 }
 .pick-filter input[type="search"] { flex: 1 1 auto; min-width: 0; }
 .pick-filter .pick-count { flex: 0 0 auto; white-space: nowrap; }
-@media print { .pick-filter { display: none; } }
 
 /* Class tag filters on the Race and Occupation steps. Chips are CONTROLS, so a
    pressed one takes --accent; a class card's tags are readouts and use .tag.
@@ -2070,7 +2071,6 @@ input.class-boosted { border-bottom-width: 2px; }
 .tag-chip.derived:not(.on) { border-style: dashed; }
 .tag-chips .tag-clear { font-size: 12px; background: transparent; border: 0; color: var(--text-muted); text-decoration: underline; }
 .tag.derived { border-style: dashed; }
-@media print { .tag-chips { display: none; } }
 
 /* Character audit. Sits above the catalog tabs because it is not catalog-scoped:
    it reports characters against the classes they were built from, and nothing on
@@ -2103,86 +2103,8 @@ input.class-boosted { border-bottom-width: 2px; }
 .kv-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 6px; }
 @media (max-width: 620px) { .kv-row { grid-template-columns: 1fr 1fr auto; } }
 
-/* ═══ PRINT / SAVE AS PDF ═══
-   Strips interactive chrome and re-renders for paper. Owner views show current
-   values as inputs on screen; .print-only elements carry the same values for
-   print. */
+/* Paper shows .print-only again: the print block is the last thing in this file. */
 .print-only { display: none; }
-
-@media print {
-  @page { margin: 0.5in; }
-  body { background: #fff !important; color: #000; font-size: 10pt; }
-  .wrap { max-width: none; padding: 0; }
-  a { color: #000; text-decoration: none; }
-  header, .header, button, input, textarea, select, #msg, .noprint { display: none !important; }
-  .print-only { display: inline; }
-  /* Same job as .print-only and a name that says it: the value shown wherever
-     its control is not. Paper hides every input outright two lines up, so a
-     gear row would print its quantity blank without this. */
-  .read-value { display: inline; }
-  .panel, .box, .mc-panel {
-    background: #fff !important; border: 1px solid #999; border-radius: 0;
-    padding: 0; margin-bottom: 8px; break-inside: avoid;
-  }
-  .panel, .mc-panel { padding: 8px 10px; }
-  .box > .box-title {
-    background: #eee !important; color: #000; border-bottom: 1px solid #999;
-    padding: 3px 8px; font-size: 8.5pt;
-  }
-  /* The name still leads on paper, at a size paper can afford. Without this
-     the identity rule above prints a 26px name on a 10pt sheet. */
-  .box.identity > .box-title { padding: 3px 8px; }
-  .box.identity > .box-title > h2 { font-size: 13pt; color: #000; }
-  /* And the three ranks collapse: ink is ink, and a printed sheet has no
-     hover, no scroll and no "what do I look at first" problem to solve. */
-  .box[data-col="a"] > .box-title,
-  .box[data-col="c"] > .box-title { color: #000; }
-  .box[data-col="c"] .box-body { font-size: inherit; line-height: inherit; }
-  .box > .box-body { padding: 6px 8px; }
-  .sheet-grid { gap: 8px; }
-  .field > .dots { border-bottom-color: #bbb; }
-  .field > .lbl, .skill-head th, .vital .lbl { color: #333 !important; }
-  .vital { border-color: #999; }
-  .skill-row > td, .skill-note > td, .power-row { border-bottom-color: #ddd; }
-  /* The global print rule below puts 3px 6px on every cell and a solid rule
-     under it. The skills table sets its own, as it does on screen. */
-  .skill-table th, .skill-table td { padding: 1px 0; }
-  /* Whatever is typed in the filter box, the printed sheet carries every skill
-     the character has. */
-  .skill-row.filtered-out, .skill-note.filtered-out { display: table-row !important; }
-  /* A skill and its footnote are one thing; do not break between them. */
-  .skill-row:has(+ .skill-note) { break-after: avoid; }
-  .power-row .cost { color: #000; }
-  .power-group { color: #222; break-after: avoid; }
-  /* Descriptions are a screen affordance. Plan 20 decided this deliberately:
-     one character's held powers carry about 8,000 characters of book prose,
-     which is roughly three extra pages on a sheet that exists to be a control
-     panel at a table. The caret goes with them — on paper the name is just a
-     name, not something that looks pressable. */
-  .power-desc { display: none !important; }
-  .power-toggle::after { display: none !important; }
-  /* AND THE NAME ITSELF HAS TO BE PUT BACK. The blanket rule above hides every
-     `button`, so making the power name a <button> deleted the spell names from
-     the printed sheet — costs and ⚡ columns with nothing to say what they were
-     for. Caught by a print render, invisible on screen, and the same trap
-     .roll-btn's comment already warns about: "the print block hides every
-     button, which is exactly why the ROW could not become one". `inline`
-     rather than the class's own `display`, because that is what the plain
-     <span> it replaced printed as. */
-  .power-toggle { display: inline !important; color: #000 !important; }
-  .advisory { border-left-color: #999; color: #222 !important; }
-  .panel h2, .mc-panel h2 { font-size: 15pt; }
-  .panel h3, .mc-panel h3 { font-size: 10.5pt; color: #000; margin: 8px 0 2px; break-after: avoid; }
-  .muted, .small, .entry .body, .mc-muted, .mc-small, .mc-journal-entry .mc-body { color: #222 !important; }
-  .statline b { color: #000; }
-  .statline { margin: 0 14px 2px 0; }
-  .tag, .mc-tag { background: #fff !important; border-color: #999; color: #000; }
-  .tag.ro, .tag.gm, .mc-tag.mc-gm { display: none; }
-  td, th { padding: 3px 6px; border-bottom: 1px solid #ccc; }
-  th { color: #333; }
-  tr, .entry, .rowline, .mc-journal-entry, .mc-row { break-inside: avoid; }
-  .entry, .mc-journal-entry { border-left: 2px solid #999; margin: 6px 0; padding: 3px 10px; }
-}
 
 /* ─── PLAY MODE ───
    The sheet through an action-first lens, shaped for a phone at the table:
@@ -2439,11 +2361,6 @@ body.show-play-keys .play-keys { display: block; }
 }
 #play-roll-bar .roll-hist li { padding: 3px 0; }
 
-/* Nothing play mode adds reaches paper. Both blocks carry .noprint as well;
-   this is the belt to that braces, and it is the rule that used to hide the
-   whole .play-view. */
-@media print { #play-controls, #play-roll-bar, .roll-btn { display: none !important; } }
-
 /* Play mode phase 2: weapon cards */
 .play-weapon {
   background: var(--bg-secondary); border: 1px solid var(--border);
@@ -2608,11 +2525,8 @@ body.show-play-keys .play-keys { display: block; }
 .grp-done { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 2px 0 10px 18px; }
 .grp-more { margin: 4px 0 10px 18px; }
 
-.tabbar {
-  display: flex; gap: 6px; margin-top: 12px;
-  padding: 8px 0; overflow-x: auto;
-  border-bottom: 1px solid var(--border);
-}
+/* The strip's own rule is below, under TABS ARE A PHONE AFFORDANCE: it is
+   hidden by default and each mode that shows it sets display: flex. */
 .tabbar .tab {
   flex: 1 0 auto;
   min-height: 44px;              /* sized for a finger, not a mouse pointer */
@@ -2638,8 +2552,8 @@ body.show-play-keys .play-keys { display: block; }
    them - Gear cut mid-word, Bio and Notes entirely off-strip, with a scrollbar
    as the only hint they existed. Gear is the tab a player opens most at the
    table. Wrapping to two rows shows all six at once; `1 1 auto` lets them share
-   the row rather than each holding its widest width, and the `overflow-x: auto`
-   above goes inert because nothing overflows any more. */
+   the row rather than each holding its widest width, and the strip's
+   `overflow-x: auto` goes inert because nothing overflows any more. */
 @media (max-width: 620px) {
   .tabbar { flex-wrap: wrap; }
   .tabbar .tab { flex: 1 1 auto; }
@@ -2658,7 +2572,11 @@ body.show-play-keys .play-keys { display: block; }
    localStorage['sheet-tab-<id>'] and keeps marking one tab .on; above 820px
    that simply stops having a visual effect, so a phone and a desktop can share
    a URL and a saved position without either of them being wrong. */
-.tabbar { display: none; }
+.tabbar {
+  display: none; gap: 6px; margin-top: 12px;
+  padding: 8px 0; overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
 .tabpanel { display: contents; }
 
 /* Paired with the body rule above: the same condition, or the tab bar and the
@@ -2683,7 +2601,7 @@ body.show-play-keys .play-keys { display: block; }
 
    `tabbar-sections` is what says which of the two a visible strip is, and
    sheet.js adds it when the tab-mode query does NOT match - so the default
-   `.tabbar { display: none; }` above is untouched, and a bar over visible
+   `display: none` on `.tabbar` above is untouched, and a bar over visible
    panels is never an accident. Same specificity trick, and the same reason, as
    `.tabbar.codex-tabs` further down. */
 .tabbar.tabbar-sections { display: flex; }
@@ -2716,8 +2634,8 @@ body.show-play-keys .play-keys { display: block; }
    and generates no box at all, so a scroll-margin there is applied to nothing
    - the same reason sheet.js scrolls to the first box rather than the slice.
    Every box carrying it is not collateral: it is what makes a link to any box
-   land below the header too. */
-.box { scroll-margin-top: calc(var(--header-h, 0px) + var(--sticky-h, 0px) + 16px); }
+   land below the header too. The declaration is on .box's own rule, beside
+   the chip, so the selector is defined once. */
 
 /* THE BOX TITLE IS A REAL HEADING NOW and must not look like one. The <h2>
    sheet-layout.js wraps the title in carries a UA font-size and margin; both
@@ -2732,153 +2650,6 @@ body.show-play-keys .play-keys { display: block; }
 .box:focus { outline: none; }
 .box:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-@media print {
-  .tabbar { display: none !important; }
-  .tabpanel { display: contents !important; }
-
-  /* THE CHIP COLUMN DOES NOT PRINT. Thirteen pixels of solid ink down the left
-     edge of every block, on a sheet that runs to three pages, is toner spent
-     on a distinction paper does not need: on screen the chip separates blocks
-     tiled against each other, and print already has white space and page
-     breaks doing that job. The .box padding goes back with it so the body does
-     not print indented against a column that is not there.
-
-     The MARK on a power row deliberately still prints - that one is state, not
-     furniture, and surviving greyscale is the entire argument for it being a
-     shape. See .power-row.short. */
-  .box { padding-left: 0; }
-  .box::before { display: none; }
-  /* Nothing sticks to paper. The strip inside it still prints - its current
-     values reach the page through the <b> beside each input, because the
-     global print rule hides every input outright. That <b> is the same node
-     play mode reads and the seven pool mutation paths write to; it used to be
-     a separate .print-only mirror, and folding the two into one is why the
-     unified widget carries two value nodes. Without this rule every pool
-     prints blank, which is a failure only paper would show. */
-  [data-sticky] { position: static !important; }
-  .vitals-strip { padding-top: 0; break-inside: avoid; }
-
-  /* ── UI-AUDIT F58: THE POOL STRIP PRINTED AS A BLACK BAND ────────────────
-     Read off the PDF's own content streams rather than a screenshot, 2026-09-20
-     (`--print-to-pdf`, colour operators extracted): a 720x51pt rectangle filled
-     `0.039 0.059 0.055` - #0A0F0E, which is --bg-primary - with the three cards
-     on it at `0.118 0.153 0.141`, #1E2724, --bg-tertiary.
-
-     THE BAND IS .sheet-sticky, NOT THE CARDS, and the finding said otherwise.
-     `.panel, .box` are reset to #fff above; `.sheet-sticky` is the one dark
-     ground in that subtree no print rule touched, and it shows through the two
-     empty grid tracks that three pools leave in a five-column strip. Whitening
-     only `.vital` - which is what F58 proposed - would have left a black band
-     with three white holes punched in it.
-
-     The LABELS need nothing. They read as invisible because the ground was
-     black; `.field > .lbl, .skill-head th, .vital .lbl { color: #333 }` above
-     already sets them, and #333 on white is 12.6:1. F58 proposed #000 and that
-     rule governs two other things, so it is deliberately left alone.
-
-     The TONE is re-asserted rather than preserved. `.vital { border-color: #999 }`
-     above is later than the screen rule and equal in specificity, so on paper
-     the per-pool top edge was already gone today - which pool is which was
-     being carried by nothing. Re-asserting the top colour is the only thing
-     here that ADDS information to the page. */
-  .sheet-sticky { background: #fff !important; }
-  .vital {
-    background: #fff !important;
-    border-top-color: var(--tone, #999);
-  }
-  /* Five pools, five columns. On screen this is auto-fit at a 84px minimum,
-     which on a 700px page resolves to eight tracks for five items and leaves
-     three empty. Paper knows exactly how many there are. */
-  .vitals { grid-template-columns: repeat(5, 1fr); }
-  /* PAPER IS NOT A 1640px SCREEN. The three-column body and the 44px pool
-     value are screen decisions; letting print inherit them squeezed the
-     columns into a 700px page and took the sheet from seven pages to eight.
-     Measured, not predicted. The body goes back to a block and the inner
-     grids go back to being grids, which is exactly the layout paper had
-     before this phase. This was written as a holding rule for phase 7 to
-     take over; phase 7 is the pagination work below, and it left these
-     lines alone - the layout half was already right, and the page count
-     turned out to be content rather than layout. */
-  /* The prose cap is a screen decision too: on a 700px page 66ch is
-     NARROWER than the column, so it wraps more and runs longer. */
-  .box[data-box] .box-body { max-width: none; }
-  /* MULTICOL, NOT GRID. A two-column grid was the obvious answer and it did
-     not work: a grid row is as tall as its tallest box, so a long Equipment
-     list beside a six-row Combat box leaves the rest of that row blank, and
-     the page count did not move. Measured, both ways - five pages either
-     way, with pages 3-5 carrying 1957, 2238 and 730 drawing operators.
-     Multicol FLOWS: it fills column one, then column two, then the next
-     page, and break-inside on each box decides where it may split.
-
-     Those five-page figures are the RECORD OF THAT COMPARISON, not the
-     current state, and they do not reproduce: character 1 renders 3 pages
-     today. The comparison still stands - it is grid against multicol on one
-     character at one moment - but do not read the numbers as a baseline. */
-  .sheet-grid.sheet-3 {
-    display: block; columns: 2; column-gap: 10px;
-  }
-  .sheet-grid.sheet-3 .tabpanel > .sheet-grid { display: block; }
-  .sheet-grid.sheet-3 .box { break-inside: avoid; margin: 0 0 8px; }
-  /* Short boxes stay whole; the long lists are allowed to split across a
-     column or a page. An unbreakable Equipment box at 23 items, or Skills at
-     sixty, is taller than the space left more often than not, and pushes a
-     column break that leaves the rest of it blank. Their rows already avoid
-     breaking away from their own footnotes, so a split lands between
-     entries. Same specificity as the rule above, stated after it. */
-  .sheet-grid.sheet-3 .box[data-box="equipment"],
-  .sheet-grid.sheet-3 .box[data-box="class-skills"],
-  .sheet-grid.sheet-3 .box[data-box="related-skills"],
-  .sheet-grid.sheet-3 .box[data-box="secondary-skills"],
-  .sheet-grid.sheet-3 .box[data-box="psionics-magic"],
-  .sheet-grid.sheet-3 .box[data-box="journal"] { break-inside: auto; }
-  /* Paper flows one column into the next, so the stacks have nothing to do
-     here and would only stop the boxes reaching the multicol. Dissolved, this
-     is byte for byte the layout print had before the stacks existed. */
-  .sheet-grid.sheet-3 > .sheet-col { display: contents; }
-  .sheet-grid.sheet-3 [data-col],
-  .sheet-grid.sheet-3 .pick-filter { grid-column: auto; }
-  .vital .val { font-size: 17px; font-weight: 700; line-height: 1.2; }
-  .attr-stack .field > .val { font-size: 15px; }
-
-  /* A machine-generated event log has no place on a printed character
-     sheet. Phase 7 could not add this rule - .session-log did not exist
-     until the box did. */
-  .box[data-box="session-log"] { display: none !important; }
-
-  /* THE PAGE COUNT IS CONTENT, NOT LAYOUT, so this cuts content rather than
-     shrinking type. Background and Bearing are character-CREATION prose -
-     where you grew up, what you sound like - and nothing there is looked up
-     mid-session.
-
-     Measured on character 1, one step at a time, in drawing operators per
-     page: 3 pages at 20025/15418/7134 before, 3 at 20025/12812/4666 after.
-     THIS DOES NOT REACH TWO PAGES and the comment should not pretend it does.
-     It is the right cut on its own terms - creation prose is not table
-     reference - and it takes 5074 operators of it off paper.
-
-     Two further attempts were made and BOTH REVERTED, because neither
-     reached two pages and each cost something:
-       - cutting Notes as well: 3 pages at 20025/13697/959. It would have paid
-         a box the player writes for themselves and bought no page.
-       - letting Notes break like the long lists do: 3 pages at
-         20025/13612/3923. It fills the whitespace at the foot of page two's
-         second column, but splits the box mid-prose and still does not
-         close the page.
-
-     WHY THREE PAGES IS WHERE THIS STOPS. Page three is Notes and Journal,
-     whole and unsplit - about a quarter page of content past the break. Both
-     are table reference rather than creation prose, so cutting them is a
-     different trade from cutting Background and Bearing. Shrinking type or
-     tightening padding would close it and is the one thing not on the table:
-     a printed sheet that is hard to read at the table has failed differently.
-     A lighter character reaches two pages on these rules already. */
-  .box[data-box="background"],
-  .box[data-box="bearing"] { display: none; }
-
-  .vital .val b { display: inline !important; }
-  .vital .bar, .vital .steppers { display: none !important; }
-}
-
 /* ═══════════════════════════════════════════════════════════════════
    The codex — codex.html, every spell and psionic power with its text.
    Its own page, so these rules touch nothing the sheet or the wizard uses.
@@ -2889,24 +2660,22 @@ body.show-play-keys .play-keys { display: block; }
    codex's tabs are its primary navigation at every width, and reusing the
    class without this made them vanish on a desktop. Two classes, so the
    .tabbar .tab styling still applies and the specificity (0,2,0) wins at
-   every width without depending on rule order. */
-.tabbar.codex-tabs { display: flex; }
+   every width without depending on rule order.
 
-/* The campaign page's four tabs are the same case, and were hidden on every
-   desktop from 2026-09-01 - the day after that page adopted the sheet's bar -
-   until this rule: People, the party stash and the currency ledger could not
-   be reached on a desktop at all. Wraps for the codex's reason. */
-.tabbar.campaign-tabs { display: flex; flex-wrap: wrap; }
-@media print { .tabbar.campaign-tabs { display: none !important; } }
-
-/* AND THEY WRAP AT EVERY WIDTH, not only under 620px. The sheet's bar wraps on
+   AND THEY WRAP AT EVERY WIDTH, not only under 620px. The sheet's bar wraps on
    a phone and is hidden above 820px, so the band between never mattered much
    there. Here the bar is always shown, and a seventh tab made it 759px wide:
    measured 2026-09-17, a 768px tablet gives the strip 706 and Talents sat 53px
    off the edge with a scrollbar as the only hint - the failure the phone rule
    above was written to end, one breakpoint up. Wrapping is inert wherever the
    tabs fit on one row, which is every desktop. Plan 22. */
-.tabbar.codex-tabs { flex-wrap: wrap; }
+.tabbar.codex-tabs { display: flex; flex-wrap: wrap; }
+
+/* The campaign page's four tabs are the same case, and were hidden on every
+   desktop from 2026-09-01 - the day after that page adopted the sheet's bar -
+   until this rule: People, the party stash and the currency ledger could not
+   be reached on a desktop at all. Wraps for the codex's reason. */
+.tabbar.campaign-tabs { display: flex; flex-wrap: wrap; }
 
 /* EIGHT TABS ON A PHONE. At the shared 18px side padding they take FOUR rows at
    375px (2+3+2+1, 211px of bar before anything to read); at 12px they take
@@ -3050,21 +2819,6 @@ button.codex-fold[aria-expanded="true"]::before { content: '\25BE'; }
 .codex-text {
   margin: 0 0 6px; font-size: 12.5px; line-height: 1.55;
   color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: break-word;
-}
-
-/* A codex IS a reference document, so unlike the sheet it prints its prose.
-   But `.codex-head` is a <button>, and the shared print block hides every
-   button — printing the codex would have produced stat blocks with no names
-   above them, which is the exact bug .power-toggle hit on the sheet. */
-@media print {
-  .codex-toolbar, .tabbar.codex-tabs { display: none !important; }
-  /* min-height goes with it. 44px is a fingertip; carrying it to paper turned
-     607 spells into 29 pages where the same list fits in roughly half. */
-  .codex-head { display: grid !important; padding: 1px 0; min-height: 0; }
-  .codex-fold { display: grid !important; min-height: 0; }
-  .codex-name, .codex-meta, .codex-cost { color: #000 !important; }
-  .codex-entry { break-inside: avoid; }
-  .codex-text, .codex-stats dd { color: #222 !important; }
 }
 
 /* ─── THE SETTING: the GM's pages and the pictures shown from them ───
@@ -3410,3 +3164,281 @@ body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); 
 .transfer-warn { margin: 12px 0 0; color: var(--text-secondary); }
 .transfer-status { margin: 8px 0 0; min-height: 1.2em; }
 .transfer-buttons { margin-top: 12px; }
+
+/* ═══ PRINT / SAVE AS PDF ═══
+   Strips interactive chrome and re-renders for paper. Owner views show current
+   values as inputs on screen; .print-only elements carry the same values for
+   print.
+
+   ONE BLOCK, AND IT IS THE LAST THING IN THE FILE. There were eight, each
+   beside the screen rules it undid, and a print rule placed before a screen
+   rule of equal weight loses to it on paper. Last, nothing on screen can
+   outrank a print rule by coming after it. A new print rule goes in here,
+   not beside its screen rules; smoke holds the count at one and the block at
+   the end of the file. */
+@media print {
+  /* The wizard's and the catalog's controls. */
+  .block-editors { display: none; }
+  .pick-filter { display: none; }
+  .tag-chips { display: none; }
+
+  /* The sheet, and every page that shares this stylesheet. */
+  @page { margin: 0.5in; }
+  body { background: #fff !important; color: #000; font-size: 10pt; }
+  .wrap { max-width: none; padding: 0; }
+  a { color: #000; text-decoration: none; }
+  header, .header, button, input, textarea, select, #msg, .noprint { display: none !important; }
+  .print-only { display: inline; }
+  /* Same job as .print-only and a name that says it: the value shown wherever
+     its control is not. Paper hides every input outright two lines up, so a
+     gear row would print its quantity blank without this. */
+  .read-value { display: inline; }
+  .panel, .box, .mc-panel {
+    background: #fff !important; border: 1px solid #999; border-radius: 0;
+    padding: 0; margin-bottom: 8px; break-inside: avoid;
+  }
+  .panel, .mc-panel { padding: 8px 10px; }
+  .box > .box-title {
+    background: #eee !important; color: #000; border-bottom: 1px solid #999;
+    padding: 3px 8px; font-size: 8.5pt;
+  }
+  /* The name still leads on paper, at a size paper can afford. Without this
+     the identity rule above prints a 26px name on a 10pt sheet. */
+  .box.identity > .box-title { padding: 3px 8px; }
+  .box.identity > .box-title > h2 { font-size: 13pt; color: #000; }
+  /* And the three ranks collapse: ink is ink, and a printed sheet has no
+     hover, no scroll and no "what do I look at first" problem to solve. */
+  .box[data-col="a"] > .box-title,
+  .box[data-col="c"] > .box-title { color: #000; }
+  .box[data-col="c"] .box-body { font-size: inherit; line-height: inherit; }
+  .box > .box-body { padding: 6px 8px; }
+  .sheet-grid { gap: 8px; }
+  .field > .dots { border-bottom-color: #bbb; }
+  .field > .lbl, .skill-head th, .vital .lbl { color: #333 !important; }
+  .vital { border-color: #999; }
+  .skill-row > td, .skill-note > td, .power-row { border-bottom-color: #ddd; }
+  /* The global print rule below puts 3px 6px on every cell and a solid rule
+     under it. The skills table sets its own, as it does on screen. */
+  .skill-table th, .skill-table td { padding: 1px 0; }
+  /* Whatever is typed in the filter box, the printed sheet carries every skill
+     the character has. */
+  .skill-row.filtered-out, .skill-note.filtered-out { display: table-row !important; }
+  /* A skill and its footnote are one thing; do not break between them. */
+  .skill-row:has(+ .skill-note) { break-after: avoid; }
+  .power-row .cost { color: #000; }
+  .power-group { color: #222; break-after: avoid; }
+  /* Descriptions are a screen affordance. Plan 20 decided this deliberately:
+     one character's held powers carry about 8,000 characters of book prose,
+     which is roughly three extra pages on a sheet that exists to be a control
+     panel at a table. The caret goes with them — on paper the name is just a
+     name, not something that looks pressable. */
+  .power-desc { display: none !important; }
+  .power-toggle::after { display: none !important; }
+  /* AND THE NAME ITSELF HAS TO BE PUT BACK. The blanket rule above hides every
+     `button`, so making the power name a <button> deleted the spell names from
+     the printed sheet — costs and ⚡ columns with nothing to say what they were
+     for. Caught by a print render, invisible on screen, and the same trap
+     .roll-btn's comment already warns about: "the print block hides every
+     button, which is exactly why the ROW could not become one". `inline`
+     rather than the class's own `display`, because that is what the plain
+     <span> it replaced printed as. */
+  .power-toggle { display: inline !important; color: #000 !important; }
+  .advisory { border-left-color: #999; color: #222 !important; }
+  .panel h2, .mc-panel h2 { font-size: 15pt; }
+  .panel h3, .mc-panel h3 { font-size: 10.5pt; color: #000; margin: 8px 0 2px; break-after: avoid; }
+  .muted, .small, .entry .body, .mc-muted, .mc-small, .mc-journal-entry .mc-body { color: #222 !important; }
+  .statline b { color: #000; }
+  .statline { margin: 0 14px 2px 0; }
+  .tag, .mc-tag { background: #fff !important; border-color: #999; color: #000; }
+  .tag.ro, .tag.gm, .mc-tag.mc-gm { display: none; }
+  td, th { padding: 3px 6px; border-bottom: 1px solid #ccc; }
+  th { color: #333; }
+  tr, .entry, .rowline, .mc-journal-entry, .mc-row { break-inside: avoid; }
+  .entry, .mc-journal-entry { border-left: 2px solid #999; margin: 6px 0; padding: 3px 10px; }
+
+  /* Nothing play mode adds reaches paper. Both blocks carry .noprint as well;
+     this is the belt to that braces, and it is the rule that used to hide the
+     whole .play-view. */
+  #play-controls, #play-roll-bar, .roll-btn { display: none !important; }
+
+  .tabbar { display: none !important; }
+  .tabpanel { display: contents !important; }
+
+  /* THE CHIP COLUMN DOES NOT PRINT. Thirteen pixels of solid ink down the left
+     edge of every block, on a sheet that runs to three pages, is toner spent
+     on a distinction paper does not need: on screen the chip separates blocks
+     tiled against each other, and print already has white space and page
+     breaks doing that job. The .box padding goes back with it so the body does
+     not print indented against a column that is not there.
+
+     The MARK on a power row deliberately still prints - that one is state, not
+     furniture, and surviving greyscale is the entire argument for it being a
+     shape. See .power-row.short. */
+  .box { padding-left: 0; }
+  .box::before { display: none; }
+  /* Nothing sticks to paper. The strip inside it still prints - its current
+     values reach the page through the <b> beside each input, because the
+     global print rule hides every input outright. That <b> is the same node
+     play mode reads and the seven pool mutation paths write to; it used to be
+     a separate .print-only mirror, and folding the two into one is why the
+     unified widget carries two value nodes. Without this rule every pool
+     prints blank, which is a failure only paper would show. */
+  [data-sticky] { position: static !important; }
+  .vitals-strip { padding-top: 0; break-inside: avoid; }
+
+  /* ── UI-AUDIT F58: THE POOL STRIP PRINTED AS A BLACK BAND ────────────────
+     Read off the PDF's own content streams rather than a screenshot, 2026-09-20
+     (`--print-to-pdf`, colour operators extracted): a 720x51pt rectangle filled
+     `0.039 0.059 0.055` - #0A0F0E, which is --bg-primary - with the three cards
+     on it at `0.118 0.153 0.141`, #1E2724, --bg-tertiary.
+
+     THE BAND IS .sheet-sticky, NOT THE CARDS, and the finding said otherwise.
+     `.panel, .box` are reset to #fff above; `.sheet-sticky` is the one dark
+     ground in that subtree no print rule touched, and it shows through the two
+     empty grid tracks that three pools leave in a five-column strip. Whitening
+     only `.vital` - which is what F58 proposed - would have left a black band
+     with three white holes punched in it.
+
+     The LABELS need nothing. They read as invisible because the ground was
+     black; `.field > .lbl, .skill-head th, .vital .lbl { color: #333 }` above
+     already sets them, and #333 on white is 12.6:1. F58 proposed #000 and that
+     rule governs two other things, so it is deliberately left alone.
+
+     The TONE is re-asserted rather than preserved. `.vital { border-color: #999 }`
+     above is later than the screen rule and equal in specificity, so on paper
+     the per-pool top edge was already gone today - which pool is which was
+     being carried by nothing. Re-asserting the top colour is the only thing
+     here that ADDS information to the page. */
+  .sheet-sticky { background: #fff !important; }
+  .vital {
+    background: #fff !important;
+    border-top-color: var(--tone, #999);
+  }
+  /* Five pools, five columns. On screen this is auto-fit at a 84px minimum,
+     which on a 700px page resolves to eight tracks for five items and leaves
+     three empty. Paper knows exactly how many there are. */
+  .vitals { grid-template-columns: repeat(5, 1fr); }
+  /* PAPER IS NOT A 1640px SCREEN. The three-column body and the 44px pool
+     value are screen decisions; letting print inherit them squeezed the
+     columns into a 700px page and took the sheet from seven pages to eight.
+     Measured, not predicted. The body goes back to a block and the inner
+     grids go back to being grids, which is exactly the layout paper had
+     before this phase. This was written as a holding rule for phase 7 to
+     take over; phase 7 is the pagination work below, and it left these
+     lines alone - the layout half was already right, and the page count
+     turned out to be content rather than layout. */
+  /* The prose cap is a screen decision too: on a 700px page 66ch is
+     NARROWER than the column, so it wraps more and runs longer. */
+  .box[data-box] .box-body { max-width: none; }
+  /* MULTICOL, NOT GRID. A two-column grid was the obvious answer and it did
+     not work: a grid row is as tall as its tallest box, so a long Equipment
+     list beside a six-row Combat box leaves the rest of that row blank, and
+     the page count did not move. Measured, both ways - five pages either
+     way, with pages 3-5 carrying 1957, 2238 and 730 drawing operators.
+     Multicol FLOWS: it fills column one, then column two, then the next
+     page, and break-inside on each box decides where it may split.
+
+     Those five-page figures are the RECORD OF THAT COMPARISON, not the
+     current state, and they do not reproduce: character 1 renders 3 pages
+     today. The comparison still stands - it is grid against multicol on one
+     character at one moment - but do not read the numbers as a baseline. */
+  .sheet-grid.sheet-3 {
+    display: block; columns: 2; column-gap: 10px;
+  }
+  .sheet-grid.sheet-3 .tabpanel > .sheet-grid { display: block; }
+  .sheet-grid.sheet-3 .box { break-inside: avoid; margin: 0 0 8px; }
+  /* Short boxes stay whole; the long lists are allowed to split across a
+     column or a page. An unbreakable Equipment box at 23 items, or Skills at
+     sixty, is taller than the space left more often than not, and pushes a
+     column break that leaves the rest of it blank. Their rows already avoid
+     breaking away from their own footnotes, so a split lands between
+     entries. Same specificity as the rule above, stated after it. */
+  .sheet-grid.sheet-3 .box[data-box="equipment"],
+  .sheet-grid.sheet-3 .box[data-box="class-skills"],
+  .sheet-grid.sheet-3 .box[data-box="related-skills"],
+  .sheet-grid.sheet-3 .box[data-box="secondary-skills"],
+  .sheet-grid.sheet-3 .box[data-box="psionics-magic"],
+  .sheet-grid.sheet-3 .box[data-box="journal"] { break-inside: auto; }
+  /* Paper flows one column into the next, so the stacks have nothing to do
+     here and would only stop the boxes reaching the multicol. Dissolved, this
+     is byte for byte the layout print had before the stacks existed. */
+  .sheet-grid.sheet-3 > .sheet-col { display: contents; }
+  .sheet-grid.sheet-3 [data-col],
+  .sheet-grid.sheet-3 .pick-filter { grid-column: auto; }
+  .vital .val { font-size: 17px; font-weight: 700; line-height: 1.2; }
+  .attr-stack .field > .val { font-size: 15px; }
+
+  /* A machine-generated event log has no place on a printed character
+     sheet. Phase 7 could not add this rule - .session-log did not exist
+     until the box did. */
+  .box[data-box="session-log"] { display: none !important; }
+
+  /* THE PAGE COUNT IS CONTENT, NOT LAYOUT, so this cuts content rather than
+     shrinking type. Background and Bearing are character-CREATION prose -
+     where you grew up, what you sound like - and nothing there is looked up
+     mid-session.
+
+     Measured on character 1, one step at a time, in drawing operators per
+     page: 3 pages at 20025/15418/7134 before, 3 at 20025/12812/4666 after.
+     THIS DOES NOT REACH TWO PAGES and the comment should not pretend it does.
+     It is the right cut on its own terms - creation prose is not table
+     reference - and it takes 5074 operators of it off paper.
+
+     Two further attempts were made and BOTH REVERTED, because neither
+     reached two pages and each cost something:
+       - cutting Notes as well: 3 pages at 20025/13697/959. It would have paid
+         a box the player writes for themselves and bought no page.
+       - letting Notes break like the long lists do: 3 pages at
+         20025/13612/3923. It fills the whitespace at the foot of page two's
+         second column, but splits the box mid-prose and still does not
+         close the page.
+
+     WHY THREE PAGES IS WHERE THIS STOPS. Page three is Notes and Journal,
+     whole and unsplit - about a quarter page of content past the break. Both
+     are table reference rather than creation prose, so cutting them is a
+     different trade from cutting Background and Bearing. Shrinking type or
+     tightening padding would close it and is the one thing not on the table:
+     a printed sheet that is hard to read at the table has failed differently.
+     A lighter character reaches two pages on these rules already. */
+  .box[data-box="background"],
+  .box[data-box="bearing"] { display: none; }
+
+  .vital .val b { display: inline !important; }
+  .vital .bar, .vital .steppers { display: none !important; }
+
+  /* The campaign page's tabs, which are shown at every width on screen. */
+  .tabbar.campaign-tabs { display: none !important; }
+
+  /* A codex IS a reference document, so unlike the sheet it prints its prose.
+     But `.codex-head` is a <button>, and the sheet's rule near the top of
+     this block hides every button — printing the codex would have produced stat blocks with no names
+     above them, which is the exact bug .power-toggle hit on the sheet. */
+  .codex-toolbar, .tabbar.codex-tabs { display: none !important; }
+  /* min-height goes with it. 44px is a fingertip; carrying it to paper turned
+     607 spells into 29 pages where the same list fits in roughly half. */
+  .codex-head { display: grid !important; padding: 1px 0; min-height: 0; }
+  .codex-fold { display: grid !important; min-height: 0; }
+  .codex-name, .codex-meta, .codex-cost { color: #000 !important; }
+  .codex-entry { break-inside: avoid; }
+  .codex-text, .codex-stats dd { color: #222 !important; }
+
+  /* HELD AT THEIR SCREEN VALUES. Before the print blocks were one, each of
+     these screen rules sat after a print rule of equal specificity and beat
+     it on paper. Moving the block last would turn that round, so each is
+     restated here and paper prints what it printed before.
+
+     The codex's two: `.panel { padding: 8px 10px }` and
+     `.panel h2 { font-size: 15pt }` lost to them, and without these the
+     printed codex grows - 4px to 8px on the list, 14px to 20px on each band
+     heading. Measured with computed styles under print media. */
+  .codex-list { padding: 4px 0; }
+  .codex-band h2 { font-size: 14px; }
+  /* AND ONE THAT HIDES A BUG, kept because this change moves rules and is not
+     meant to change what prints. `.read-value { display: inline }` above has
+     never applied: `.read-value { display: none }`, the screen rule beside
+     `body.play-mode .read-value`, came after it. So a printed sheet outside
+     play mode shows a gear row with no quantity and no equipped mark, which
+     is the failure the rule above says it exists to prevent. Deleting this
+     line is the fix; it is left for a decision because it changes paper. */
+  .read-value { display: none; }
+}
