@@ -166,7 +166,7 @@
   async function remove() {
     const n = S.entryImages.length;
     if (!(await M.ctx.ui.modal(`Delete "${S.entry.title}"?\n\n${n ? `Its ${n} picture${n === 1 ? '' : 's'} ` : 'Nothing else '}`
-      + `goes with it, including any the party has already been shown. This cannot be undone.`))) return;
+      + `goes with it, including any the party has already been shown. This cannot be undone.`, { danger: true }))) return;
     try {
       await api(`campaigns/${cid()}/entries/${S.entry.id}`, { method: 'DELETE' });
       S.entry = null; S.entryImages = [];

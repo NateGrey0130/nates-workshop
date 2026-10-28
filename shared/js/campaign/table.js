@@ -102,7 +102,7 @@
   }
 
   async function close() {
-    if (!(await M.ctx.ui.modal('Close the table? Every roll is saved here and the code stops working.'))) return;
+    if (!(await M.ctx.ui.modal('Close the table? Every roll is saved here and the code stops working.', { danger: true }))) return;
     try {
       await M.ctx.api('table/close', M.json('POST', { campaign_id: Number(cid()) }));
       await M.ctx.reload();
