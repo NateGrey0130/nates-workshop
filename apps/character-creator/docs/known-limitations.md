@@ -422,7 +422,7 @@ exactly that, read off the table with no parsing.
 |---|---|---|
 | `app.js` | ~5,570 | the wizard; the largest file in the app |
 | `sheet.js` | ~5,140 | |
-| `js/parser.js` | ~4,470 | **third** largest, and not a page script at all |
+| `js/parser.js` | ~4,030 | **third** largest, and not a page script at all; its ability grants and class tags are `js/abilities.js` and `js/class-tags.js` |
 | `catalog.js` | ~800 | |
 | `dashboard.js` | ~490 | its setting pages and journal feed moved to `/shared/js/campaign/` |
 | `campaign.js` | ~360 | its notes, people, handouts and ledger moved to `/shared/js/campaign/`; its statted-NPC panel is `js/npc-sheets.js`, shared with GM Tools |

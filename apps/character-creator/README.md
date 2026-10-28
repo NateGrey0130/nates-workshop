@@ -165,6 +165,11 @@ apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 │                             `skills.hand_to_hand` says (ES module — both pick
 │                             endpoints and the validator import it, and the
 │                             sheet reads its globalThis mirror the same way)
+├── js/abilities.js           Chosen and granted special abilities, and folding
+│                             the held ones into a class (ES module; re-exported
+│                             by js/parser.js, so importers use the parser)
+├── js/class-tags.js          The class-tag vocabulary, derived and suggested
+│                             tags (ES module; re-exported by js/parser.js)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
@@ -219,9 +224,11 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Fifteen modules are imported by both the browser and the Workers runtime, or
+Seventeen modules are imported by both the browser and the Workers runtime, or
 written to be: `js/parser.js`, `js/class-keys.js` (through the parser: the
-class keys and how a race and an occupation merge each),
+class keys and how a race and an occupation merge each), `js/abilities.js` and
+`js/class-tags.js` (through the parser too, which re-exports both: the ability
+grants and the class tags),
 `js/dice.js`, `js/skill-base.js`,
 `js/psionic-costs.js`, `js/catalog-fields.js`, `js/compose.js`, `js/psionics.js`
 (through compose), `js/language-skills.js`, `js/hand-to-hand.js`,
