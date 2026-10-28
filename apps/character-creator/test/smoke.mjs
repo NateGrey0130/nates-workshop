@@ -110,6 +110,30 @@ async function nodeCheckAll(paths) {
 
 section('Parser');
 
+// parser.js re-exports from abilities, class-tags, combine and categories. The
+// list is pinned by name so a re-export nothing imports (the four merge*
+// helpers were one) cannot linger, and a new one has to be added here on purpose.
+const PARSER_EXPORTS = ['ABILITY_GRANTS','CLASS_TAGS','MAX_AUTHORED_TAGS','OCC_GROUPS','OVERRIDES_RACE_KEYS',
+  'POOL_BONUS_KEYS','RACE_NONE','SECOND_FORM_POOLS','SECOND_FORM_TRAIT_CATALOGS','VARIANT_OVERRIDES',
+  'abilityGroupAllowance','abilityGroupCounts','abilityGroupIndexFor','abilityGroupLevels','abilityGroupOwed',
+  'abilityLevelGrants','abilityOccOptions','abilityOffersPsionics','abilityOptions','abilityProgressionAt',
+  'abilityRollBands','abilityRollLimit','abilityRollMatches','abilityTouchesPool','applyAbilities',
+  'applyAbilityPoolBases','applyVariant','bonusesFromSkills','categoryAllows','categoryBonus','categoryLabel',
+  'categoryName','classTagInfo','classTags','combineClasses','isAbilityChoice','isAbilityDefinition',
+  'isChoiceGroup','isDiceBonus','isGearChoice','isSignedDiceBonus','levelGrants','locateMessage','mosList',
+  'namedByOnly','needsOccupation','normName','normalizeAbilities','occAllowedForRace','pairedSkillCounts',
+  'parseClassMarkdown','parseYaml','psionicsTableLeftRolling','raceAllowedForOcc','relatedFloorStatus',
+  'relatedMinimums','rollAbilityTable','skillConditionalBonuses','skillGroupForPick','skillLevelNotes',
+  'skillOptionName','suggestClassTags','sumBonusGroups','validateBonuses','validateMos','validateSkillEntries',
+  'validateTotem'];
+{
+  const actual = Object.keys(ParserModule).sort();
+  const extra = actual.filter((k) => !PARSER_EXPORTS.includes(k));
+  const missing = PARSER_EXPORTS.filter((k) => !actual.includes(k));
+  check('parser.js exports exactly the pinned names',
+    !extra.length && !missing.length, `extra: ${extra.join(', ') || 'none'}; missing: ${missing.join(', ') || 'none'}`);
+}
+
 // Custom languages: three consumers (wizard, sheet, server validator) share
 // these, so the rule is asserted here once rather than trusted three times.
 check('familySkillName composes', familySkillName(LANGUAGE_OTHER, 'Spanish') === 'Language: Spanish');
@@ -527,6 +551,7 @@ import { poolsPayload, powersPayload, psiClass } from '../js/wizard-payload.js';
 // The wizard's dice-bonus, pool and level-one skill rules, RUN against a state
 // built here rather than read out of app.js as text.
 import * as WR from '../js/wizard-rules.js';
+import * as ParserModule from '../js/parser.js';
 import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
