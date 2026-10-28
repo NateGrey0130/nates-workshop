@@ -1237,6 +1237,13 @@ low"*, it is probably the answer to both.
 
 **Nate's decision, 2026-09-10 (PR #933): leave it held**, as the finding itself recommended.
 
+**Adjusted 2026-10-27: the heading reads as a decline, and this finding was
+HELD, not declined.** The heading's last clause is the recommendation as filed
+on 2026-09-10. The outcome is the two notes above: held by PR #910 and left held
+by Nate in PR #933. Held means the gap stays recorded and the finding can still
+be taken if a consumer appears; nothing here closes it. The heading is kept as
+filed.
+
 - **F56** — medium - a TOTEM is a 48-entry choice table nine classes share, and it grants SKILLS, which no choice a class can offer is able to carry — Taken, 2026-09-10 (PR #944). As written: a `totems` catalog (migration — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F56` heading.
 
 - **F57** — low - a spell pool stated as a LEVEL RANGE admits every tradition's leveled spells, and the Ley Line Walker is offered 167 warlock and ocean spells today — Taken, 2026-09-10 (PR #943) - built fully on Nate's word, which is wider than — full text in `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md` under its own `### F57` heading.
