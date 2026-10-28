@@ -21,6 +21,7 @@ import { rollPoolFormula } from '../../js/dice.js';
 import { isHandToHand, oneHandToHand, replacePrompt, styleKey, handToHandCost, handToHandCondition,
          handToHandSurcharge, handToHandBlock } from '../../js/hand-to-hand.js';
 import { KNOWN_SKILL_KEYS, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
+import { skillsAtLevelOne } from '../../js/wizard-rules.js';
 
 // Declared once for the same skip-the-module contract as environment.mjs —
 // see the note there for why drift in either direction fails loud.
@@ -370,8 +371,22 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
     check(`${name} awaits that answer before it changes the list`,
       /await makeRoomForHandToHand\(/.test(fnOf(app, name)));
   }
+  // The level-one rows are js/wizard-rules.js's, so they are run: a granted
+  // Expert replaced by a chosen Martial Arts is on the class and not on the
+  // character. skillsPayload's level-up half is still app.js's, and read.
+  const levelOne = (() => {
+    const st = { cls: { skills: { occ_skills: [{ name: 'Hand to Hand: Expert' }] } },
+      groupPicks: {}, related: ['Hand to Hand: Martial Arts'], secondary: [], attrs: {} };
+    const catalog = new Map([['Hand to Hand: Martial Arts', { name: 'Hand to Hand: Martial Arts', category: 'Physical' }]]);
+    return skillsAtLevelOne(st, { skillByName: () => catalog,
+      replaced: new Map([['hand to hand: expert', 'Hand to Hand: Martial Arts']]), iq: 0,
+      psiClass: () => st.cls, resolveSkill: () => ({ base: 0, per_level: 0 }),
+      programSkills: () => [], pairedWith: () => '' }).map((r) => r.name);
+  })();
   check('the saved skills leave the replaced style out',
-    fnOf(app, 'skillsAtLevelOne').includes('replaced.has') && fnOf(app, 'skillsPayload').includes('replaced.has'));
+    JSON.stringify(levelOne) === '["Hand to Hand: Martial Arts"]'
+    && fnOf(app, 'skillsAtLevelOne').includes('const replaced = handToHandReplaced();')
+    && fnOf(app, 'skillsPayload').includes('replaced.has'), JSON.stringify(levelOne));
   check('and so do the bonuses the wizard previews',
     fnOf(app, 'skillBonusClass').includes('handToHandReplaced'));
   check('the sheet asks too, on both of its pickers',

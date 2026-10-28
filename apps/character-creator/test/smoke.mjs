@@ -524,6 +524,9 @@ import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rol
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS,
          STARTING_PICK_KINDS, pruneStartingPicks, S as wizardS } from '../js/wizard-state.js';
 import { poolsPayload, powersPayload, psiClass } from '../js/wizard-payload.js';
+// The wizard's dice-bonus, pool and level-one skill rules, RUN against a state
+// built here rather than read out of app.js as text.
+import * as WR from '../js/wizard-rules.js';
 import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -775,8 +778,23 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
   check('a typed starting sum is part of the build', BUILD_KEYS.includes('moneyTyped') && state.moneyTyped === false);
   check('typing one marks it, and clearing the box hands it back to the dice',
     /function setBio\(key, value\) \{[\s\S]{0,160}if \(key === 'money'\) S\.moneyTyped = !!v;/.test(appText));
-  check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
-    /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollStartingMoney\(c, S\.attrs\);/.test(appText));
+  // Run, since js/wizard-rules.js holds computePools: a typed sum survives the
+  // lazy roll, and Review's Reroll (`force`) hands it back to the dice.
+  {
+    const cls = { hit_points_base: '10', starting_money: '1000' };
+    const typed = (moneyTyped) => ({ cls, attrs: {}, bio: { money: '7' }, moneyTyped });
+    const deps = { psiClass: () => cls, rollAttrBonuses: () => {}, rollAdvancement: () => {} };
+    const lazy = typed(true);
+    WR.computePools(lazy, false, deps);
+    const forced = typed(true);
+    WR.computePools(forced, true, deps);
+    const untyped = typed(false);
+    WR.computePools(untyped, false, deps);
+    check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
+      lazy.bio.money === '7' && lazy.moneyTyped === true
+      && forced.bio.money === '1000' && forced.moneyTyped === false && untyped.bio.money === '1000',
+      JSON.stringify([lazy.bio, forced.bio, untyped.bio]));
+  }
 }
 
 // The two payload builders that read only the state, the composed class and
@@ -1866,9 +1884,13 @@ check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearC
   const ROLLERS = ['computePools', 'rollAdvancement', 'initEquipment', 'ensureMorphusForm', 'rollAttrBonuses',
     'rollOccBonuses', 'rollTotemBonuses', 'rollBio', 'doPsiRoll', 'rollAbilityGroup', 'evalDice', 'rollStartingPools',
     'rollStartingMoney', 'rollQuantity', 'rollAttribute', 'rollSecondForm'];
+  // Imported by app.js, or by js/wizard-rules.js, whose rules app.js wraps:
+  // rollStartingPools and rollStartingMoney are called from computePools there.
+  const importsText = appText.slice(0, appText.indexOf('\nconst ATTRS'))
+    + readFileSync(join(appDir, 'js', 'wizard-rules.js'), 'utf8').match(/^import [\s\S]*?;\r?$/gm).join('\n');
+  const known = (r) => bodies.has(r) || new RegExp('\\b' + r + '\\b').test(importsText);
   check('the rollers this names are all still functions the wizard has or imports',
-    ROLLERS.every((r) => bodies.has(r) || new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))),
-    ROLLERS.filter((r) => !bodies.has(r) && !new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))).join(', '));
+    ROLLERS.every(known), ROLLERS.filter((r) => !known(r)).join(', '));
   const drawers = [...bodies.keys()].filter((n) => /^render[A-Z]|Html$|Preview$/.test(n));
   check('the step renderers and markup builders are found', drawers.length > 25, String(drawers.length));
   const rolling = drawers.flatMap((n) => ROLLERS
@@ -1997,8 +2019,19 @@ check('parts() separates the attribute half from the class half', (() => {
   const atOne = calls.filter((m) => m[2].trim() === '1');
   check('exactly one of them is still at level one',
     atOne.length === 1, atOne.map((m) => m[0]).join(' | '));
+  // The level is app.js's wiring, so that half stays a text check; the rule
+  // that applies the bonus is js/wizard-rules.js's and is run.
   check('and it is the I.Q. bonus on the skills held since level one, read with level-one skills',
-    /function skillsAtLevelOne\(\) \{[\s\S]{0,900}derive\.classBonuses\(skillBonusClass\(1\), 1, rolledAll\(\)\)\)\.iq_skill_bonus_pct/.test(appText));
+    /function skillsAtLevelOne\(\) \{[\s\S]{0,900}derive\.classBonuses\(skillBonusClass\(1\), 1, rolledAll\(\)\)\)\.iq_skill_bonus_pct[\s\S]{0,200}skillsAtLevelOneFor\(S, \{[^}]*\biq\b/.test(appText));
+  {
+    const st = { cls: { skills: { occ_skills: [{ name: 'Lore: Demons', base: 40 }] } },
+      groupPicks: {}, related: [], secondary: [], attrs: {} };
+    const rows = WR.skillsAtLevelOne(st, { skillByName: () => new Map(), replaced: new Map(), iq: 5,
+      psiClass: () => st.cls, resolveSkill: (n, x) => ({ base: x.base ?? 0, per_level: 0 }),
+      programSkills: () => [], pairedWith: () => '' });
+    check('the level-one skills carry the I.Q. bonus they are handed, and say how much it was',
+      rows.length === 1 && rows[0].pct === 45 && rows[0].iq_bonus === 5, JSON.stringify(rows));
+  }
   check('the skills\' own schedule is read at the same level as the class\'s',
     /function skillBonusClass\(level = S\.level\) \{[\s\S]{0,900}bonusesFromSkills\(rows, level, S\.cls\)/.test(appText));
 }
@@ -2427,18 +2460,15 @@ section('Starting pools and money are rolled once, for the wizard and the NPC ge
 {
   // app.js computePools and npc-generate.js each used to write the five pool
   // rolls and the money roll out for themselves. Both now call leveling.js.
-  // app.js boots on import, so its call is pinned as SOURCE; the generator is
-  // RUN, with Math.random held to one value so every die lands the same
-  // whichever order the two draw in.
+  // Both are RUN: the wizard's rule is js/wizard-rules.js's computePools, and
+  // the generator is generateNpc, with Math.random held to one value so every
+  // die lands the same whichever order the two draw in.
   const LV = await import('../js/leveling.js');
   const { generateNpc } = await import('../js/npc-generate.js');
-  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
-  const cp = /function computePools\(force = false\) \{([\s\S]*?)\n\}/.exec(appSrc)?.[1] || '';
-  check('the wizard rolls its pools and its money through leveling.js',
-    /S\.pools = rollStartingPools\(c, S\.attrs, pc\.psionics\);/.test(cp)
-      && /rollStartingMoney\(c, S\.attrs\)/.test(cp) && !/rollPoolFormula|convertedPools/.test(cp));
-  check('and so does the NPC generator, with no pool or money roll of its own',
+  check('the wizard\'s pool rule writes out no pool roll of its own',
+    !/rollPoolFormula|convertedPools/.test(readFileSync(join(appDir, 'js', 'wizard-rules.js'), 'utf8')));
+  check('nor does the NPC generator, which rolls its pools and its money through leveling.js',
     /const pools = rollStartingPools\(cls, attributes\);/.test(npcSrc) && /rollStartingMoney\(cls, attributes\)/.test(npcSrc)
       && !/rollPoolFormula|convertedPools/.test(npcSrc));
 
@@ -2484,6 +2514,28 @@ section('Starting pools and money are rolled once, for the wizard and the NPC ge
   }
   check('rollStartingPools gives what the two copies gave, for the same dice', differ.length === 0 && same.length === 9,
     differ.join('; '));
+  // The wizard's computePools, run: the pools are rollStartingPools' for the
+  // class, the attributes and the COMPOSED psionics (a rolled tier's, here,
+  // which the class itself does not carry), and the money is
+  // rollStartingMoney's for the same dice.
+  {
+    const tier = { type: 'minor', isp_base: '2D6 + M.E. attribute' };
+    const wrong = [];
+    for (const [name, c] of Object.entries(classes)) {
+      for (const r of faces) {
+        const st = { cls: c, attrs, bio: {}, moneyTyped: false };
+        fixed(r, () => WR.computePools(st, false,
+          { psiClass: () => ({ ...c, psionics: tier }), rollAttrBonuses: () => {}, rollAdvancement: () => {} }));
+        const pools = fixed(r, () => LV.rollStartingPools(c, attrs, tier));
+        const money = fixed(r, () => LV.rollStartingMoney(c, attrs));
+        if (JSON.stringify(st.pools) !== JSON.stringify(pools) || (st.bio.money ?? null) !== money) {
+          wrong.push(`${name}@${r} ${JSON.stringify([st.pools, st.bio.money])} vs ${JSON.stringify([pools, money])}`);
+        }
+      }
+    }
+    check('the wizard rolls its pools and its money through leveling.js, off the composed psionics',
+      wrong.length === 0, wrong.join('; '));
+  }
   check('the dice reach it: a different face gives different pools',
     JSON.stringify(fixed(0, () => LV.rollStartingPools?.(classes.plain, attrs)))
       !== JSON.stringify(fixed(0.9999, () => LV.rollStartingPools?.(classes.plain, attrs))));
@@ -3544,6 +3596,26 @@ section('Dice combat and save bonuses');
     /attributes: sumRolled\(sumRolled\(S\.attrBonuses, S\.occAttrBonuses\), S\.totemAttrBonuses\)/.test(appSrc));
   check('and keeps them across a draft',
     ['rolledBonuses', 'occRolledBonuses', 'totemRolledBonuses'].every((k) => DRAFT_KEYS.includes(k)));
+  // The race half, run (js/wizard-rules.js): rolled off the RACE when there is
+  // one, rolled once, and re-rolled with the other two halves only when forced.
+  {
+    const race = { id: 'race' };
+    const st = { raceCls: race, cls: { id: 'composed' }, attrBonuses: {} };
+    const seen = [];
+    let n = 0;
+    const deps = {
+      rollDiceBonusesOf: (c) => { seen.push(c.id); n++; return { attributes: { PS: n }, combat: { strike: n }, saves: {} }; },
+      rollOccBonuses: () => seen.push('occ'), rollTotemBonuses: () => seen.push('totem'),
+    };
+    WR.rollAttrBonuses(st, false, deps);
+    WR.rollAttrBonuses(st, false, deps);
+    const lazy = JSON.stringify([seen, st.attrBonuses, st.rolledBonuses]);
+    WR.rollAttrBonuses(st, true, deps);
+    check('the race\'s dice bonuses roll off the race, once, until a forced re-roll takes all three halves',
+      lazy === '[["race"],{"PS":1},{"combat":{"strike":1},"saves":{}}]'
+      && JSON.stringify(seen) === '["race","race","occ","totem"]' && st.attrBonuses.PS === 2,
+      lazy + ' then ' + JSON.stringify(seen));
+  }
 }
 
 // ---------- 1c25. Per-category skill restrictions ----------
@@ -4796,9 +4868,17 @@ section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUD
     freshBuild().pools === null && JSON.stringify(freshBuild().levelPools) === '{}');
   // rerollAdvancement(lvl) reaches computePools() through rollAdvancement's
   // lazy branch, so a clear inside computePools would wipe the other levels.
+  // The rule is js/wizard-rules.js's and is run; app.js's wrapper, which could
+  // still clear around it, is read.
   const cp = /function computePools\(force = false\) \{([\s\S]*?)\n\}/.exec(appSrc);
-  check('computePools does NOT call it, or rolling one level would wipe the rest',
-    !!cp && !/clearRolledPools/.test(cp[1]));
+  {
+    const st = { cls: { hit_points_base: '10' }, attrs: {}, bio: {}, moneyTyped: false,
+      pools: null, levelPools: { 3: { hp_max: 4 } } };
+    WR.computePools(st, false, { psiClass: () => st.cls, rollAttrBonuses: () => {}, rollAdvancement: () => {} });
+    check('computePools does NOT clear the level pools, or rolling one level would wipe the rest',
+      JSON.stringify(st.levelPools) === '{"3":{"hp_max":4}}' && st.pools?.hp === 10
+      && !!cp && !/clearRolledPools/.test(cp[1]), JSON.stringify([st.levelPools, st.pools]));
+  }
   check('and the reason is written where the helper is',
     /Deliberately NOT called from computePools\(\)/.test(appSrc));
   // The level picks are choices, not rolls. F72.

@@ -23,6 +23,24 @@ import { skillConditionalBonuses, parseClassMarkdown, categoryAllows, categoryBo
          sumBonusGroups, validateBonuses, skillGroupForPick }
   from '../../js/parser.js';
 import { classSkillNumbers as LV_classSkillNumbers, newPickPercent as LV_newPickPercent } from '../../js/leveling.js';
+import { skillsAtLevelOne as WR_skillsAtLevelOne } from '../../js/wizard-rules.js';
+
+// The wizard's level-one skill rows (js/wizard-rules.js) for a class whose one
+// skill entry is `group` with `picks` ticked in it. resolveSkill is the
+// wizard's own arithmetic over a catalog row at 40% +5/level, and records what
+// it was handed.
+function groupPickRows(group, picks) {
+  const handed = [];
+  const st = { cls: { skills: { occ_skills: [group] } }, groupPicks: { 0: picks },
+    related: [], secondary: [], attrs: {} };
+  const rows = WR_skillsAtLevelOne(st, { skillByName: () => new Map(), replaced: new Map(), iq: 0,
+    psiClass: () => st.cls, programSkills: () => [], pairedWith: () => '',
+    resolveSkill: (name, explicit) => {
+      handed.push([name, explicit]);
+      return LV_classSkillNumbers({ base: 40, per_level: 5 }, explicit, {});
+    } });
+  return { rows, handed };
+}
 import { appDir, repoRoot, check, section, appPath, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['per_level on a skill entry', 'Group-level skill restrictions',
@@ -97,10 +115,11 @@ section('per_level on a skill entry');
   // The entry goes through `skillGroupForPick` since BOOK-INGEST-AUDIT.md F135,
   // which may swap the group's bonus for the picked option's own. It must hand
   // the group's per_level on either way, so that half is run.
+  // Run, since 2026-10-27: the level-one rows are js/wizard-rules.js's.
   check('and a choice-group pick carries the resolved per_level onto the character', (() => {
-    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const g = { choose: 1, per_level: 0, bonus: 10, from: ['A', { name: 'B', bonus: 15 }] };
-    return /const r = resolveSkill\(name, skillGroupForPick\(s, name\)\);[\s\S]{0,200}?per_level: r\.per_level/.test(src)
+    const g = { choose: 2, per_level: 0, bonus: 10, from: ['A', { name: 'B', bonus: 15 }] };
+    const { rows } = groupPickRows(g, ['A', 'B']);
+    return rows.length === 2 && rows.every((r) => r.per_level === 0 && r.type === 'occ')
       && skillGroupForPick(g, 'A').per_level === 0 && skillGroupForPick(g, 'B').per_level === 0;
   })());
 }
@@ -966,9 +985,11 @@ section('Category skill bonuses');
   // and at level-up through the server. Two copies of one rule is the pair that
   // drifts, so each is pinned to the call rather than to the arithmetic.
   check('the wizard applies it at creation', (() => {
-    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    // The level-one rows are js/wizard-rules.js's since 2026-10-27; the
+    // wizard's state arrives there as `s`.
+    const src = readFileSync(join(appDir, 'js', 'wizard-rules.js'), 'utf8');
     // Through newPickPercent since 2026-10-10, as the level-up pick is.
-    return src.includes('pct: newPickPercent({ ...row, name: n }, S.attrs, relatedCats())');
+    return src.includes('pct: newPickPercent({ ...row, name: n }, s.attrs, relatedCats())');
   })());
   check('the server applies it to a level-up pick', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
@@ -1013,7 +1034,9 @@ section('Category skill bonuses');
     check('a percentage advances by its step per level, to the cap',
       LV.advancedPercent(40, 5, 3) === 55 && LV.advancedPercent(90, 5, 3) === 98);
 
-    const wizardSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+    // The wizard is app.js and the rules it moved into js/wizard-rules.js.
+    const wizardSrc = readFileSync(join(appDir, 'app.js'), 'utf8')
+      + readFileSync(join(appDir, 'js', 'wizard-rules.js'), 'utf8');
     const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
     const levelSrc = readFileSync(join(appDir, 'js', 'leveling.js'), 'utf8');
     for (const [name, text] of [['the wizard', wizardSrc], ['the NPC generator', npcSrc]]) {
@@ -1109,10 +1132,12 @@ section('A choice-group option with its own bonus');
       return P.skillGroupForPick(g, TANK).bonus === 5 && P.skillGroupForPick(g, HOVER).bonus === 15;
     })());
 
-  // The wizard is a browser script and cannot be imported, so its half is the
-  // shared function above, plus that it is what the saved pick is resolved by.
-  check('the wizard resolves a group pick through skillGroupForPick',
-    /resolveSkill\(name, skillGroupForPick\(s, name\)\)/.test(readFileSync(join(appDir, 'app.js'), 'utf8')));
+  // The wizard's level-one rows are js/wizard-rules.js's since 2026-10-27, so
+  // its half is run: the saved pick is resolved with the option's own bonus.
+  check('the wizard resolves a group pick through skillGroupForPick', (() => {
+    const { rows, handed } = groupPickRows({ choose: 1, bonus: 10, from: ['A', { name: 'B', bonus: 15 }] }, ['B']);
+    return handed.length === 1 && handed[0][0] === 'B' && handed[0][1].bonus === 15 && rows[0]?.pct === 55;
+  })());
   // The option ROW, which printed the group's own `base` for every option and so
   // showed two dashes for the Psi-Stalker's 46% and 85%. Three things, each of
   // which was a way to be wrong: the row's percentage is the function's and not
