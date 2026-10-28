@@ -22,7 +22,6 @@ import { isAbilityChoice, ABILITY_GRANTS, isAbilityDefinition, abilityOptions,
 import { validateTags } from './class-tags.js';
 // The combine rules are js/combine.js, re-exported here the same way.
 export {
-  mergePsionics, mergeTalents, mergeSuperAbilities, mergeMagic,
   sumBonusGroups, levelGrants, skillLevelNotes, skillConditionalBonuses,
   bonusesFromSkills, pairedSkillCounts, combineClasses
 } from './combine.js';

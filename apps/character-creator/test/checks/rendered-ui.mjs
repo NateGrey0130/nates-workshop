@@ -129,6 +129,7 @@ const SECTIONS = [
   'An item that was not added leaves no note saying it was',
   'Pool presses go out one at a time',
   'A power spend is guarded on the number it was made from',
+  'A notice is said after the redraw that would wipe it',
   'An overflow that was refused is still on offer',
   'A value is escaped for the place it is written into',
   'The sheet reads only item fields its endpoint sends',
@@ -4529,6 +4530,45 @@ export async function run() {
       await w.fns.usePower(0);
       check('in sheet view a spend the stored pool can no longer pay is stopped',
         w.server.ppe_current === 0 && w.alerts.length === 1, w.all());
+    }
+  }
+
+  // ---------- A notice is said after the redraw that would wipe it ----------
+  // flash() writes #msg and render()/load() redraw it, so a flash before the
+  // redraw is gone as it appears. openLevelUp's "No level-up is due after all"
+  // and burnPpe's result line both did that (#1994's What this left).
+  //
+  // RUN, not matched: the sheet's own two functions, over a log that records
+  // the order of render, load and flash.
+  section('A notice is said after the redraw that would wipe it');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const lvl = fn('async function openLevelUp() {'), burn = fn('async function burnPpe(index) {');
+    check('openLevelUp and burnPpe can be located', !!lvl && !!burn, 'one of them is not where this looks for it');
+    if (lvl && burn) {
+      const jsonReq = (method, body) => ({ method, body });
+      const log = [];
+      const run = async (src, name, C, api, arg) => {
+        log.length = 0;
+        await new Function('C', 'id', 'api', 'jsonReq', 'render', 'load', 'flash', 'spellBurnDice', 'confirmDialog',
+          src + `; return ${name};`)(
+          C, 3, api, jsonReq, () => log.push('render'), async () => { log.push('load'); },
+          (m, isError) => log.push('flash:' + (isError ? 'err:' : '') + m), () => '1d6', async () => true)(arg);
+        return log.join(' | ');
+      };
+      const none = await run(lvl, 'openLevelUp', { data: {} }, async () => ({ xp: 1, next_threshold: 2, proposal: null }));
+      check('"No level-up is due after all" comes after the render that redraws #msg',
+        /^render \| flash:No level-up is due after all\.$/.test(none), none);
+      const some = await run(lvl, 'openLevelUp', { data: {} }, async () => ({ xp: 1, next_threshold: 2, proposal: {} }));
+      check('and a level-up that is due says nothing', some === 'render', some);
+      const burned = await run(burn, 'burnPpe', { data: { powers: [{ name: 'Bolt' }] } },
+        async () => ({ spell: 'Bolt', dice: '1d6', rolled: 4, burned: 4 }), 0);
+      check('the burn result is said after load() has redrawn',
+        /^load \| flash:Bolt: rolled 1d6 for 4, burned 4 P\.P\.E\./.test(burned), burned);
     }
   }
 
