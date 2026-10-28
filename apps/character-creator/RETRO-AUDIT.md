@@ -883,6 +883,12 @@ than folded in. Worth recording that the drop *improves* it: a stash row left on
 a merged-away slug now resolves through `catalog_redirects`, where an id-keyed
 one was simply wrong.
 
+**Adjusted 2026-10-27: fixed since, by PR #1862 (2026-10-19, commit `ea87d70c`).**
+`MERGE_REFS.gear` in `functions/api/character-creator/_lib/catalog-merge.js`
+(lines 44-50, read 2026-10-27) lists `character_items` and `campaign_items`,
+both by `gear_slug`, so a gear merge repoints the party stash as well as the
+sheet. The paragraph above is kept as the record of 2026-09-06.
+
 ---
 
 **`gear.slug NOT NULL` taken, 2026-09-06 (PR #750).** Migration

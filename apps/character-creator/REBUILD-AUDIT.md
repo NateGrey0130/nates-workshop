@@ -21,6 +21,14 @@
 > *"Posture: blocked, no action. This finding exists so the negative result is
 > not re-derived"* — a deliberate dead end, recorded so two plausible OCR runs
 > are not spent rediscovering it.
+>
+> **Adjusted 2026-10-27: the paragraph above no longer describes `F16`.** It
+> was written before `F16` was taken in part on Nate's word, on 2026-09-27
+> (twice, branches `pal/data/rebuild-audit-f16-nightbane-wp` and
+> `pal/data/rebuild-audit-f16-f25-f26`) and again on 2026-10-20 (branch
+> `pal/data/rebuild-audit-f16-trap-construction`), each recorded under its
+> heading with the rest of the finding held. Read under `### F16` for its
+> state; the paragraph above is kept as the record of what it said.
 
 **2026-08-28.** Audit only. Nothing here was repaired, and production was read
 but never written: every remote call in this pass was a `SELECT`.
