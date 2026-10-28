@@ -9,12 +9,14 @@
 // The import from parser.js below is a cycle (parser.js imports this file), and
 // it is safe only because neither file reads the other's bindings while it is
 // first evaluated: every use is inside a function body. Keep it that way. A
-// top-level `const x = normName(...)` here would throw on whichever file loads
-// second. normName is a category helper, row 28b's to move.
+// top-level `const x = OVERRIDES_RACE_KEYS[0]` here would throw on whichever
+// file loads second. normName comes from js/categories.js, which imports
+// nothing and so is outside the cycle.
 import { diceBounds, isAbsentAttribute } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
 import { keysMergedBy } from './class-keys.js';
-import { normName, OVERRIDES_RACE_KEYS } from './parser.js';
+import { normName } from './categories.js';
+import { OVERRIDES_RACE_KEYS } from './parser.js';
 
 // ─── an R.C.C. and an O.C.C. together ───
 //

@@ -169,7 +169,8 @@ section('Group-level skill restrictions');
   // so the pin follows it there and also asks that categoryAllows still routes
   // through it.
   check('categoryAllows still reads the four keys off the category ENTRY', (() => {
-    const src = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
+    // The category rules moved to js/categories.js (row 28b); read them there.
+    const src = readFileSync(join(appDir, 'js', 'categories.js'), 'utf8');
     const bodyOf = (fnName) => {
       const fn = src.slice(src.indexOf(`function ${fnName}(`));
       return fn.slice(0, fn.indexOf('\n}\n'));
