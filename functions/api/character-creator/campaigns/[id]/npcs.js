@@ -85,7 +85,8 @@ export async function onRequestPost({ request, env, params }) {
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const name = typeof b.name === 'string' ? b.name.trim() : '';
   if (!name) return json({ error: 'name is required' }, 400);
-  if (name.length > 120) return json({ error: 'name is too long' }, 400);
+  const tooLongName = tooLong([['The name', name, TEXT_MAX.title]]);
+  if (tooLongName) return tooLongName;
   // The rest at the sizes the PATCH uses (npcs/[npcId].js), before any read
   // or write (auth.js TEXT_MAX).
   const over = tooLong([['The aliases', b.aliases, TEXT_MAX.line], ['The faction', b.faction, TEXT_MAX.line],

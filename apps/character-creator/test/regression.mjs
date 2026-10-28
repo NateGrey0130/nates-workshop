@@ -1429,6 +1429,11 @@ SELECT '${who}', 'proxy', 200, datetime('now', '-' || i || ' minutes') FROM n;
     ['notes', { notes: big }],
     ['combat', { combat: { note: big } }],
     ['saves', { saves: { note: big } }],
+    ['skills', { skills: [{ name: big }] }],
+    ['powers', { powers: [{ name: big }] }],
+    ['abilities', { abilities: [big] }],
+    ['attributes', { attributes: { IQ: big } }],
+    ['second_form', { second_form: { note: big } }],
     ['armor', { armor: [{ name: big }] }],
     ['items, by count', { items: Array.from({ length: CREATE_ITEMS_MAX + 1 }, (_, i) => ({ custom_name: `Pebble ${i}` })) }],
     ['items, by size', { items: [{ custom_name: 'Diary', notes: big }] }],
@@ -3168,6 +3173,30 @@ check('a character section past its limit is refused the same way', bigSection.s
       && !invNames.includes('Cap Post Big Lamp'),
     JSON.stringify({ big: invBig.status, ok: invOk.status }));
   if (invOk.body.item?.id) await api('DELETE', `${invPath}/${invOk.body.item.id}`);
+
+  // A name or title is capped at TEXT_MAX.title everywhere: the dossier and
+  // page POSTs used to refuse at 120 and 200 (a 400) where their PATCHes allow
+  // 300, and custom_name on both item POSTs had no cap at all.
+  const longName = 'n'.repeat(TEXT_MAX.title);
+  const tooLongName = 'n'.repeat(TEXT_MAX.title + 1);
+  const dossier300 = await api('POST', npcsPath, { name: longName });
+  const dossier301 = await api('POST', npcsPath, { name: tooLongName });
+  const page300 = await api('POST', entriesPath, { title: longName, body: 'x' });
+  const page301 = await api('POST', entriesPath, { title: tooLongName, body: 'x' });
+  const loot301 = await api('POST', stashPath, { custom_name: tooLongName, qty: 1 });
+  const loot300 = await api('POST', stashPath, { custom_name: longName, qty: 1 });
+  const inv301 = await api('POST', invPath, { custom_name: tooLongName, qty: 1 });
+  const inv300 = await api('POST', invPath, { custom_name: longName, qty: 1 });
+  check('a dossier name and a page title take the full 300 characters on create and refuse one more with 413',
+    dossier300.status === 201 && page300.status === 201 && dossier301.status === 413 && page301.status === 413,
+    JSON.stringify({ d300: dossier300.status, d301: dossier301.status, p300: page300.status, p301: page301.status }));
+  check('custom_name on the stash and character item POSTs takes 300 characters and refuses 301 with 413',
+    loot300.status === 201 && inv300.status === 201 && loot301.status === 413 && inv301.status === 413,
+    JSON.stringify({ l300: loot300.status, l301: loot301.status, i300: inv300.status, i301: inv301.status }));
+  if (dossier300.body.npc?.id) await api('DELETE', `${npcsPath}/${dossier300.body.npc.id}`);
+  if (page300.body.entry?.id) await api('DELETE', `${entriesPath}/${page300.body.entry.id}`);
+  if (loot300.body.item?.id) await api('DELETE', `${stashPath}/${loot300.body.item.id}`);
+  if (inv300.body.item?.id) await api('DELETE', `${invPath}/${inv300.body.item.id}`);
 }
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
 check('and read back', journal.status === 200 && journal.body.entries.length > 0, journal.body);

@@ -12,7 +12,7 @@ export async function onRequestPost({ request, env, params }) {
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
   // A line, as the PATCH caps it (items/[itemId].js), before any write.
-  const over = tooLong([['The item note', b.notes, TEXT_MAX.line]]);
+  const over = tooLong([['The item name', b.custom_name, TEXT_MAX.title], ['The item note', b.notes, TEXT_MAX.line]]);
   if (over) return over;
   let gearSlug = null;
   if (b.slug) {
