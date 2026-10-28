@@ -162,6 +162,16 @@ compile*, walks `functions/` and its import closure and fails on an import
 attribute or any reach into `scripts/`. It is a **text** check deliberately:
 building with the local wrangler would pass the broken syntax.
 
+The other case is a commit with **no Pages check-run at all**: no deploy was
+started for it, which is not a compile failure and leaves nothing red. #1890
+(`3c83fbd`, 2026-10-20) had no check-suites from any app. What decides it is
+the next commit that did deploy, because a build publishes the whole repo
+root: a later `success` carried the missing commit's content too, and
+`node scripts/deploy-sweep.mjs` reports it as *with no check-run, and shipped
+anyway*. A missing check-run with **nothing newer that deployed** is the
+alarming one and still prints under *DID NOT DEPLOY*; then re-run the merge's
+build from the Cloudflare dashboard or push a trivial follow-up commit.
+
 ## Pick 3 Cut 5 and the second Worker
 
 A Pages project cannot define a Durable Object class, only bind to one exported

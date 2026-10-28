@@ -575,6 +575,7 @@ import { run as cityCreatorChecks } from './checks/city-creator.mjs';
 import { run as auditMenuChecks } from './checks/audit-menus.mjs';
 import { run as sequenceNumberChecks } from './checks/sequence-numbers.mjs';
 import { run as groundTruthChecks } from './checks/ground-truth-report.mjs';
+import { run as deploySweepChecks } from './checks/deploy-sweep-verdicts.mjs';
 import { run as sourcebookChecks } from './checks/sourcebooks-list.mjs';
 import { run as catalogEditorChecks } from './checks/catalog-editor.mjs';
 import { run as catalogDuplicateChecks } from './checks/catalog-duplicates.mjs';
@@ -8422,6 +8423,7 @@ cityCreatorChecks();
 auditMenuChecks();
 sequenceNumberChecks();
 groundTruthChecks();
+deploySweepChecks();
 sourcebookChecks();
 
 // slow one - it shells out to wrangler.
