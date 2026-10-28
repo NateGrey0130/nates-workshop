@@ -3335,8 +3335,9 @@ async function openLevelUp() {
     C.data.xp = res.xp;
     C.nextThreshold = res.next_threshold;
     C.proposal = res.proposal;
-    if (!res.proposal) { C.levelUpReady = false; flash('No level-up is due after all.'); }
+    if (!res.proposal) C.levelUpReady = false;
     render();
+    if (!res.proposal) flash('No level-up is due after all.');
   } catch (err) { flash('Could not open the level-up: ' + err.message, true); }
 }
 
@@ -4095,8 +4096,8 @@ async function burnPpe(index) {
     { okLabel: 'Burn it', cancelLabel: 'Keep the P.P.E.', danger: true }))) return;
   try {
     const res = await api(`characters/${id}/ppe-burn`, jsonReq('POST', { name: p.name }));
-    flash(`${res.spell}: rolled ${res.dice} for ${res.rolled}, burned ${res.burned} P.P.E. from the base.`);
     await load();
+    flash(`${res.spell}: rolled ${res.dice} for ${res.rolled}, burned ${res.burned} P.P.E. from the base.`);
   } catch (err) {
     flash('Could not burn it: ' + err.message, true);
   }
