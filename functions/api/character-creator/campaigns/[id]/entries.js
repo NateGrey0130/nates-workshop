@@ -61,7 +61,8 @@ export async function onRequestPost({ request, env, params }) {
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const title = typeof b.title === 'string' ? b.title.trim() : '';
   if (!title) return json({ error: 'title is required' }, 400);
-  if (title.length > 200) return json({ error: 'title is too long' }, 400);
+  const tooLongTitle = tooLong([['The title', title, TEXT_MAX.title]]);
+  if (tooLongTitle) return tooLongTitle;
   const kind = b.kind ?? 'lore';
   if (!KINDS.includes(kind)) {
     return json({ error: `kind must be one of ${KINDS.join(', ')}` }, 400);

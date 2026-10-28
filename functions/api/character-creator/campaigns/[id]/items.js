@@ -62,7 +62,7 @@ export async function onRequestPost({ request, env, params }) {
   }
   const qty = Number.isFinite(Number(b.qty)) && Number(b.qty) > 0 ? Math.trunc(Number(b.qty)) : 1;
   // The note's size on PATCH too (items/[itemId].js), refused before any write.
-  const over = tooLong([['The item note', b.notes, TEXT_MAX.note]]);
+  const over = tooLong([['The item name', customName, TEXT_MAX.title], ['The item note', b.notes, TEXT_MAX.note]]);
   if (over) return over;
 
   // The entry has to belong to THIS campaign. A stash row pointing at another

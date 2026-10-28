@@ -147,6 +147,11 @@ function createTooLarge(b) {
   }
   return tooLong([['The notes', b.notes, TEXT_MAX.section],
     ...['bio', 'combat', 'saves', 'armor'].map((s) => [`The ${s} section`, b[s], TEXT_MAX.section]),
+    // The PATCH has no cap on these (the sheet edits them through their own
+    // endpoints), so a section's size is the one bound on create too. The NPC
+    // generator is not held to it: it calls createCharacter, not this, and
+    // builds all five from the class and the skill/power catalogs.
+    ...['skills', 'powers', 'abilities', 'attributes', 'second_form'].map((s) => [`The ${s} list`, b[s], TEXT_MAX.section]),
     ['The item list', b.items, TEXT_MAX.section]]);
 }
 
