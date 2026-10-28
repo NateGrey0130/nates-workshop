@@ -4901,7 +4901,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
     /warnings\.push\(stated\.length/.test(cc));
   // The list is the one the parser actually branches on. If someone adds an
   // ninth key there, this fails rather than the warning going quietly stale.
-  const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
+  // combineClasses lives in js/combine.js (re-exported by the parser).
+  const parser = readFileSync(join(appDir, 'js', 'combine.js'), 'utf8');
   // The loop reads CLASS_MERGE's `race-first` keys since 2026-10-10, so the
   // eight are held where they are stated and the loop is held to reading them.
   const { keysMergedBy: mergedBy } = await import('../js/class-keys.js');
@@ -6967,7 +6968,7 @@ section('Magic composition');
 
   // Both merges share one union helper, because they ask the same question of
   // different columns and the pair written twice is the pair that drifts.
-  const src = readFileSync(join(repoRoot, 'apps', 'character-creator', 'js', 'parser.js'), 'utf8');
+  const src = readFileSync(join(repoRoot, 'apps', 'character-creator', 'js', 'combine.js'), 'utf8');
   check('the psionics and magic merges share one union helper',
     (src.match(/unionByName\(/g) || []).length >= 4 && (src.match(/function unionByName/g) || []).length === 1);
 }
@@ -7577,12 +7578,12 @@ variants:
   // The whole point: no caller re-implements the sequence. Every page script and
   // every function is in scope — a page that does not compose a class today is
   // exactly the one that will grow the need tomorrow. Only the two files the
-  // sequence is BUILT from are exempt: parser.js declares combineClasses and
-  // compose.js is the one legitimate caller.
+  // sequence is BUILT from are exempt: js/combine.js declares combineClasses
+  // (parser.js only re-exports it) and compose.js is the one legitimate caller.
   check('no source file composes a class by hand', (() => {
     const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
       e.isDirectory() ? walk(join(dir, e.name)) : (e.name.endsWith('.js') ? [join(dir, e.name)] : []));
-    const exempt = new Set([join(appDir, 'js', 'parser.js'), join(appDir, 'js', 'compose.js')]);
+    const exempt = new Set([join(appDir, 'js', 'combine.js'), join(appDir, 'js', 'compose.js')]);
     const files = [
       ...readdirSync(appDir, { withFileTypes: true })
         .filter((e) => e.isFile() && e.name.endsWith('.js'))

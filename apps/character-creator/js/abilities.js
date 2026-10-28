@@ -10,10 +10,12 @@
 // only because neither file reads the other's bindings while it is first
 // evaluated: every use is inside a function body. Keep it that way. A
 // top-level `const x = isDiceBonus(...)` here would throw on whichever file
-// loads second. The combine rules it calls are rows 28a/28b's to move.
+// loads second. The combine rules it calls are js/combine.js, which is in the
+// same cycle and under the same rule.
 import { diceBounds } from './dice.js';
-import { isDiceBonus, sumBonusGroups, mergePsionics, mergeTalents,
-         mergeSuperAbilities, mergeMagic } from './parser.js';
+import { isDiceBonus } from './parser.js';
+import { sumBonusGroups, mergePsionics, mergeTalents,
+         mergeSuperAbilities, mergeMagic } from './combine.js';
 
 // ---------- shared ability lists ----------
 //
