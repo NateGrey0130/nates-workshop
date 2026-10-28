@@ -173,6 +173,9 @@ apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 ├── js/combine.js             An R.C.C. and an O.C.C. folded into one class
 │                             (combineClasses), its merge, level and bonus
 │                             helpers (ES module; re-exported by js/parser.js)
+├── js/categories.js          The related-skill category rules: what a category
+│                             entry admits, the bonus it pays, and the floors
+│                             (ES module; re-exported by js/parser.js)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
@@ -227,12 +230,12 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Eighteen modules are imported by both the browser and the Workers runtime, or
+Nineteen modules are imported by both the browser and the Workers runtime, or
 written to be: `js/parser.js`, `js/class-keys.js` (through the parser: the
 class keys and how a race and an occupation merge each), `js/abilities.js`,
-`js/class-tags.js` and `js/combine.js` (through the parser too, which
-re-exports all three: the ability grants, the class tags and the combine
-rules),
+`js/class-tags.js`, `js/combine.js` and `js/categories.js` (through the parser
+too, which re-exports all four: the ability grants, the class tags, the
+combine rules and the related-skill category rules),
 `js/dice.js`, `js/skill-base.js`,
 `js/psionic-costs.js`, `js/catalog-fields.js`, `js/compose.js`, `js/psionics.js`
 (through compose), `js/language-skills.js`, `js/hand-to-hand.js`,
