@@ -71,6 +71,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { classify, STALLED_MINS } from './deploy-sweep-lib.mjs';
 
 const REPO = 'NateGrey0130/nates-workshop';
 
@@ -109,17 +110,12 @@ if (commits.length === 0) {
   process.exit(0);
 }
 
-const bad = [];
-const pending = [];
-// Which commits DEPLOYED, keyed by index into `commits` - which is
-// `--first-parent` order, newest first. The supersession test below is the only
-// reader, and an index is all it needs: a smaller index is a later build.
-const deployed = new Set();
-let ok = 0;
+// One row per commit, newest first; scripts/deploy-sweep-lib.mjs decides what
+// each one means.
+const rows = [];
+const deployIds = new Map();
 
-for (const [idx, c] of commits.entries()) {
-  let conclusions;
-  let deployId = null;
+for (const c of commits) {
   try {
     const out = run('gh', [
       'api', `repos/${REPO}/commits/${c.sha}/check-runs`,
@@ -146,42 +142,19 @@ for (const [idx, c] of commits.entries()) {
       // deployments list to find by hand what the check-run had all along.
       '--jq', '[.check_runs[] | select(.name=="Cloudflare Pages") | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "") + "#" + (.details_url // "")] | join(",")',
     ]).trim();
-    deployId = out.match(/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}/)?.[0] ?? null;
-    // Strip the URLs back out for matching and display. Every test below is a
+    deployIds.set(c.sha, out.match(/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}/)?.[0] ?? null);
+    // Strip the URLs back out for matching and display. Every test is a
     // substring or regex over this string, and a failure line prints it raw.
-    conclusions = out.replace(/#[^,]*/g, '');
+    rows.push({ ...c, conclusions: out.replace(/#[^,]*/g, '') });
   } catch (err) {
     // A commit GitHub cannot answer for is not a passing commit. Say so rather
     // than counting it as fine.
-    bad.push({ ...c, why: `check-runs unreadable: ${String(err.message).split('\n')[0]}` });
-    continue;
+    rows.push({ ...c, error: String(err.message).split('\n')[0] });
   }
-
-  if (!conclusions) {
-    // No check run at all. Pages registers one per merge, so an empty list
-    // means the deploy was never triggered - which looks exactly like a
-    // healthy quiet merge and is not one.
-    bad.push({ ...c, why: 'no check-runs at all - the deploy never started' });
-    continue;
-  }
-  if (conclusions.includes('=pending')) {
-    // A check-run that has not concluded. It is aged here and SORTED LATER -
-    // pending has three meanings and the age alone separates only two of them.
-    // A build here finishes in 20-35 seconds, so ten minutes is not "slow";
-    // but a check-run that never concludes at all is not slow either, and for
-    // eight hours this script called that one stuck. See the classifier below.
-    const started = conclusions.match(/=pending@([^,]+)/)?.[1];
-    const mins = started ? Math.floor((Date.now() - Date.parse(started)) / 60000) : null;
-    pending.push({ ...c, idx, why: conclusions, mins, deployId });
-    continue;
-  }
-  if (conclusions.includes('=success') && !/=(failure|cancelled|timed_out|action_required)/.test(conclusions)) {
-    deployed.add(idx);
-    ok += 1;
-    continue;
-  }
-  bad.push({ ...c, why: conclusions });
 }
+
+const { bad, superseded, supersededMissing, stalled, building, ok } = classify(rows);
+for (const c of [...superseded, ...stalled]) c.deployId = deployIds.get(c.sha) ?? null;
 
 const short = (c) => `${c.sha.slice(0, 7)}  ${c.date}  ${c.subject.slice(0, 62)}`;
 
@@ -192,65 +165,6 @@ if (bad.length) {
   for (const c of bad) console.log(`    ${short(c)}\n        ${c.why}`);
   console.log('');
 }
-// Ten minutes. A Pages build on this project takes 20-35 seconds, so this is
-// not a tight threshold - it is twenty times the normal run.
-const STALLED_MINS = 10;
-
-// ── SUPERSEDED IS NOT STUCK ─────────────────────────────────────────────────
-//
-// Four production merges landed within 17 seconds of each other on 2026-09-04
-// (#714-#717). Cloudflare collapsed the queue and SKIPPED the three it
-// overtook plus the first - `latest_stage.name=queued`, `.status=skipped` on
-// all four - and a skipped deployment's check-run never concludes. It sits at
-// `in_progress` / "Building" forever.
-//
-// That is bit-for-bit the signature this script called stuck. It reported all
-// four as PENDING FOR OVER 10 MINUTES at 498 minutes and printed the wedged-
-// preview remedy: delete the blocking deployment to release the queue. There
-// was no queue to release, nothing was missing, and deleting is a destructive
-// action advised on a false premise.
-//
-// THE ANSWER WAS ALREADY IN HAND. A Pages build publishes the whole repo root
-// at its commit, and `--first-parent` order is newest first. So a pending
-// commit that has a NEWER commit reporting `success` HAS SHIPPED - the later
-// build published a tree containing it. That holds whether its own deployment
-// was skipped or wedged, which is exactly why the conclusion does not need
-// Cloudflare's `latest_stage` to reach it. What the sweep loses by not asking
-// is the reason; what it keeps is the only fact that decides anything, which
-// is whether the content is on the site.
-//
-// IT CANNOT QUIET A REAL OUTAGE, and that is the property to preserve:
-//   - A genuinely wedged build BLOCKS the queue. Nothing behind it succeeds,
-//     so nothing behind it is superseded, and it prints below at full volume -
-//     32 minutes of exactly that on 2026-09-02 (HEALTH-AUDIT F24).
-//   - The four-day August outage never reaches this path at all. Those 65
-//     commits CONCLUDED `failure`; they are `bad`, printed first and loudest.
-// Supersession can only ever quieten a commit that a later build carried.
-//
-// WHY THIS DOES NOT ASK CLOUDFLARE: because a script here cannot. The
-// `cloudflare-api` MCP plugin reaches Pages and `node` cannot call it, and the
-// environment `CLOUDFLARE_API_TOKEN` - the only credential a script in this
-// repo has - is refused. Measured 2026-09-05: `/pages/projects`, the
-// deployments list, and a single deployment by id all return HTTP 403
-// `code: 10000`, matching what CLAUDE.md -> "Three credentials" says of
-// `pages project list`. A sweep that silently needed a credential the repo's
-// own token does not have would be a worse trap than the one it replaced.
-const supersededBy = (c) => {
-  // The NEAREST later success, not the newest: that is the build that first
-  // carried this commit's content onto the site.
-  for (let j = c.idx - 1; j >= 0; j -= 1) if (deployed.has(j)) return commits[j];
-  return null;
-};
-const superseded = [];
-const stalled = [];
-const building = [];
-for (const c of pending) {
-  const by = supersededBy(c);
-  if (by) superseded.push({ ...c, by });
-  else if (c.mins !== null && c.mins >= STALLED_MINS) stalled.push(c);
-  else building.push(c);
-}
-
 if (building.length) {
   console.log(`  ${building.length} still building:\n`);
   for (const c of building) {
@@ -280,6 +194,21 @@ if (superseded.length) {
     console.log(`    GET /accounts/{id}/pages/projects/nates-workshop/deployments/${c.deployId}`);
   }
   console.log('');
+}
+if (supersededMissing.length) {
+  // Reported, not dropped, for the same reason as above. A commit with no Pages
+  // check-run at all started no deploy of its own (3c83fbd, 2026-10-26: no
+  // check-suites from any app), but a later build published the whole root.
+  console.log(`  ${supersededMissing.length} with no check-run, and shipped anyway:\n`);
+  for (const c of supersededMissing) {
+    console.log(`    ${short(c)}`);
+    console.log(`        carried by ${c.by.sha.slice(0, 7)}, which deployed after it`);
+  }
+  console.log('');
+  console.log('  No deploy was started for these, but a build publishes the whole repo root,');
+  console.log('  so the later commit carried them too. SETUP.md -> "When the merge does not');
+  console.log('  deploy". A commit with no check-run and NOTHING newer that deployed stays');
+  console.log('  under DID NOT DEPLOY above.\n');
 }
 if (stalled.length) {
   console.log(`  ${stalled.length} PENDING FOR OVER ${STALLED_MINS} MINUTES - probably stuck:\n`);
@@ -316,7 +245,8 @@ if (!bad.length) {
   const tail = stalled.length
     ? `, ${stalled.length} STUCK - see above`
     : ', nothing missing.';
-  const sup = superseded.length ? `, ${superseded.length} superseded but shipped` : '';
+  const nSup = superseded.length + supersededMissing.length;
+  const sup = nSup ? `, ${nSup} superseded but shipped` : '';
   console.log(`  Pages: ${ok} deployed${sup}${building.length ? `, ${building.length} still building` : ''}${tail}\n`);
 } else {
   console.log('  The site is serving the last build that compiled. Find the first bad');

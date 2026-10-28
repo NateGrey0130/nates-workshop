@@ -902,6 +902,10 @@ scripts/
 │                           the live Worker and answers with git log, falling back
 │                           to a timestamp compare only when that binding is absent
 │                           - and saying which. Report only, no exit code
+├── deploy-sweep-lib.mjs    The half of deploy-sweep that decides: a commit with no
+│                           check-run, or one stuck pending, is lost only if
+│                           nothing newer deployed - a build publishes the
+│                           whole root. Pure, so smoke drives it
 ├── deploy-room.mjs         The ONE way to deploy pick3cut5-room. Always passes
 │                           --var GIT_SHA, because the flag was documented in bold
 │                           and the 2026-09-02 hand deploy dropped it anyway, and

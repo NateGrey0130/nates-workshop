@@ -156,6 +156,7 @@
         "scripts/d1-backup-weekly.mjs",
         "scripts/d1-query-lib.mjs",
         "scripts/deploy-sweep.mjs",
+        "scripts/deploy-sweep-lib.mjs",
         "scripts/deploy-table-room.mjs",
         "scripts/sourcebooks.mjs",
         "scripts/deploy-worker-lib.mjs",
