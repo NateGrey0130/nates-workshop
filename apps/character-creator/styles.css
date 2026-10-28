@@ -3433,12 +3433,4 @@ body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); 
      heading. Measured with computed styles under print media. */
   .codex-list { padding: 4px 0; }
   .codex-band h2 { font-size: 14px; }
-  /* AND ONE THAT HIDES A BUG, kept because this change moves rules and is not
-     meant to change what prints. `.read-value { display: inline }` above has
-     never applied: `.read-value { display: none }`, the screen rule beside
-     `body.play-mode .read-value`, came after it. So a printed sheet outside
-     play mode shows a gear row with no quantity and no equipped mark, which
-     is the failure the rule above says it exists to prevent. Deleting this
-     line is the fix; it is left for a decision because it changes paper. */
-  .read-value { display: none; }
 }
