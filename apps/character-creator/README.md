@@ -2,7 +2,7 @@
 
 A persistent, multi-campaign character creator and journal. Build a character
 through a guided wizard, keep a running session log, level up semi-automatically,
-print a sheet laid out after the official form, and import classes, skills,
+print the character sheet as it is laid out on screen, and import classes, skills,
 spells, psionic powers and gear straight out of a sourcebook PDF.
 
 Part of Nate's Workshop. Cloudflare Pages + D1, behind the site-wide Cloudflare
@@ -722,25 +722,47 @@ table code belongs to; Marvel's own `table/*` routes are under
 
 ## Permissions
 
-Three layers, all built on one identity read.
+Four layers, all built on one identity read.
 
 1. **Identity** — `_lib/access.js` `getAccessEmail()` reads the
    `Cf-Access-Authenticated-User-Email` header that Cloudflare Access injects.
-   This is the only place that header is parsed. On localhost, where Access is
-   not in front of the app, `_lib/auth.js` falls back to `dev@localhost`.
-2. **Owner / GM** — `characterAccess()` allows a character's `player_email` or
-   its campaign's `gm_email`; `campaignAccess()` is GM-only. Reads stay open to
-   any authenticated user; only writes are gated. `campaigns.gm_notes` is the
-   single read exception and is stripped server-side.
+   This is the only place that header is parsed. `_lib/auth.js`
+   `getUserEmail()` uses it, and on `localhost` or `127.0.0.1`, where Access
+   is not in front of the app, falls back to `dev@localhost`.
+
+   When `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are both set,
+   `functions/api/_middleware.js` also verifies the `Cf-Access-Jwt-Assertion`
+   token on every `/api/*` request against the team's signing keys
+   (`verifyAccessJwt()` in `functions/api/_lib/access-jwt.js`), and refuses one
+   whose email claim does not match the header. With either variable unset it
+   passes every request through. It also passes localhost and Pick 3 Cut 5's
+   two public routes.
+2. **Character: owner / GM** — `characterAccess()` lets a character's
+   `player_email` or its campaign's `gm_email` write it. Anyone authenticated
+   may read it, with two exceptions that answer as if the character did not
+   exist: an NPC (`kind = 'npc'`) to anyone but its campaign's GM
+   (`isHiddenNpc()`), and a deleted character, or one in a deleted campaign, to
+   everybody.
 
    Endpoints reach it through **`requireCharacter(request, env, id)`**, which
    returns `{ res }` to return or `{ email, access }` to use — the same shape
-   `requireAdmin()` uses. Pass `{ write: false }` for a read. Every handler
-   under `characters/[id]` previously opened with the same five lines, and the
-   order within them is load-bearing: **404 before 403**, so probing ids cannot
-   distinguish a character that is not yours from one that does not exist.
-   That is precisely the kind of detail that goes wrong on the ninth copy.
-3. **Admin** — `isAdminEmail()` compares the identity against the `ADMIN_EMAIL`
+   `requireAdmin()` uses. Pass `{ write: false }` for a read. The order within
+   it is load-bearing: **404 before 403**, so probing ids cannot distinguish a
+   character that is not yours from one that does not exist.
+3. **Campaign: member / GM** — `campaignAccess()` makes a person a **member**
+   if they are the GM or own a non-deleted character in the campaign; there is
+   no membership table. Members may write (`canWrite` is membership), and
+   `isGm` is returned separately for the actions that stay GM-only. A deleted
+   campaign is not found by anybody.
+
+   Endpoints reach it through **`requireCampaign(request, env, id)`**, again
+   404 before 403: `{ gm: true }` refuses anyone but the GM, `{ write: false }`
+   stops after the existence check. **`requireMember()`** is the default guard
+   under a name for member-only reads; the campaign's currency, handouts, items,
+   images, NPCs and NPC portraits GET through it. The campaign's own GET
+   is open to anyone authenticated, but strips `gm_notes` unless the caller is
+   the GM.
+4. **Admin** — `isAdminEmail()` compares the identity against the `ADMIN_EMAIL`
    environment variable and **fails closed** when unset. Admin gates both
    importers, which touch global catalogs rather than one campaign.
 
