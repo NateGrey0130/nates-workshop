@@ -301,8 +301,8 @@ check('and nothing still calls its path',
   check('the fold holds the three change-groups and never the delete group',
     foldedGroups === 3 && !/bulkDelete\(\)/.test(more),
     'bulkMore holds ' + foldedGroups + ' groups');
-  // pick3cut5/AUDIT.md records a toggle that had no aria-expanded until it was
-  // first pressed. This one carries its state in the markup at rest.
+  // A toggle elsewhere once had no aria-expanded until it was first pressed.
+  // This one carries its state in the markup at rest.
   check('and the fold toggle announces its state before it has ever been pressed',
     /id="bulkMoreToggle"[\s\S]*?aria-expanded="false"[\s\S]*?aria-controls="bulkMore"/.test(bar));
 }

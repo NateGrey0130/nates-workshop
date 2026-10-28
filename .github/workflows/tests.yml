@@ -125,14 +125,6 @@ jobs:
         if: steps.groups.outputs.tools == 'true'
         run: node apps/filament-forge/test/smoke.mjs
 
-      - name: pick3cut5 smoke
-        if: steps.groups.outputs.tools == 'true'
-        run: node apps/pick3cut5/test/smoke.mjs
-
-      - name: pick3cut5 game
-        if: steps.groups.outputs.tools == 'true'
-        run: node apps/pick3cut5/test/game.mjs
-
       - name: media-vault
         if: steps.groups.outputs.tools == 'true'
         run: node apps/media-vault/test/smoke.mjs

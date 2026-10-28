@@ -368,6 +368,12 @@ export function run() {
       }
     };
     for (const d of ['apps', 'functions', 'scripts', 'shared']) walkCode(join(repoRoot, d));
+    // workers/ is read as a place an export is USED, never as a source of one:
+    // The Table's room test is the only importer of table-room.js's ALPHABET
+    // since the retired party game's same-named copy went (2026-10-28). The Worker's own exports stay
+    // out of this check, as they always were.
+    const sources = new Set(codeFiles);
+    walkCode(join(repoRoot, 'workers'));
     const bodies = new Map(codeFiles.map((f) => [f, readFileSync(f, 'utf8')]));
     // A name in an HTML file counts as used: the wizard binds inline handlers.
     const htmlFiles = [];
@@ -384,7 +390,7 @@ export function run() {
 
     const orphanExports = [];
     for (const [f, text] of bodies) {
-      if (/[\\/]test[\\/]/.test(f)) continue;
+      if (!sources.has(f) || /[\\/]test[\\/]/.test(f)) continue;
       const names = new Set();
       for (const m of text.matchAll(/^export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);
       for (const m of text.matchAll(/^export\s+(?:const|let|class)\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);

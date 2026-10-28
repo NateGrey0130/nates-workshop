@@ -53,7 +53,7 @@ rule looks wrong. Read an undated claim as true on the day it was written.
   hours the sweep called them *probably stuck* and pointed at deleting a
   deployment to release a queue that did not exist.
 - **The Worker.** The sweep once printed a clean summary while saying nothing
-  about `workers/pick3cut5-room`, which no merge deploys.
+  about the standalone room Worker, which no merge deploys.
 - **The alarm** (`REPO-AUDIT.md` G14) was confirmed reaching Nate by email on
   its first red run, 2026-09-03.
 - **`gh pr checks`** showed a red "Cloudflare Pages fail" on PRs that deployed

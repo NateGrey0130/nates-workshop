@@ -32,7 +32,7 @@
 # whole alarm - it reaches you through GitHub's Actions failure notification,
 # which means it depends on notifications being on for this repo.
 #
-# THE WORKER HALF IS NOT HERE. `workers/pick3cut5-room` produces no check-run at
+# THE WORKER HALF IS NOT HERE. `workers/table-room` produces no check-run at
 # all and answering for it needs Cloudflare credentials, which CI deliberately
 # does not get (G8). `deploy-sweep.mjs` covers that half and remains the only
 # thing that does.

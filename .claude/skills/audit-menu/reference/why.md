@@ -175,8 +175,8 @@ location and got both numbers wrong, counting with the glob that misses
 Measured 2026-09-06 at `c54a794`: four deferrals standing with no number. Two
 were caught later as one-offs (`META-AUDIT` `A5`, `SKILL-AUDIT` `F32`); one
 resolved itself and left its record asserting a false condition; the rest were
-true and invisible, the oldest ten days old. PR #644 filed `pick3cut5/AUDIT`
-`F11` and `F12` while taking `A5` and took neither. `META-AUDIT` `A16`.
+true and invisible, the oldest ten days old. PR #644 filed two findings in
+another menu while taking `A5` and took neither. `META-AUDIT` `A16`.
 
 ## The apparatus pause
 

@@ -16,7 +16,7 @@
 // What counts as a finding is a heading `## F12 — ...` / `### G7 - ...`: a
 // letter prefix, a number, then a dash. Follow-up headings such as
 // `## F41 is closed, 2026-09-09` name a finding without being one, and the
-// dash is what tells them apart. One menu, `apps/pick3cut5/AUDIT.md`, writes
+// dash is what tells them apart. One menu, since retired, wrote
 // `### F1. Title` instead, and until 2026-09-27 its findings were invisible
 // here, so a full stop counts as the separator too.
 //
@@ -109,7 +109,7 @@ export function run() {
       '## F2 is closed, 2026-09-09',
       '#### F3 — a deeper heading',
       '### F2 — the collision',
-      '### F4. the full-stop form pick3cut5 uses',
+      '### F4. the full-stop form',
       '## F4.5 is not a heading form anyone writes',
     ].join('\n');
     const got = findingNumbers(fixture);

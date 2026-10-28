@@ -735,8 +735,8 @@ Four layers, all built on one identity read.
    token on every `/api/*` request against the team's signing keys
    (`verifyAccessJwt()` in `functions/api/_lib/access-jwt.js`), and refuses one
    whose email claim does not match the header. With either variable unset it
-   passes every request through. It also passes localhost and Pick 3 Cut 5's
-   two public routes.
+   passes every request through. It also passes localhost, where no Access
+   exists to mint a token.
 2. **Character: owner / GM** — `characterAccess()` lets a character's
    `player_email` or its campaign's `gm_email` write it. Anyone authenticated
    may read it, with two exceptions that answer as if the character did not
@@ -896,9 +896,9 @@ scripts/
 │                           merge commits on origin/main, naming any whose
 │                           check-run is not success or that has none at all -
 │                           65 consecutive merges once failed with a perfectly
-│                           clear signal nobody read. Then the two Workers,
-│                           pick3cut5-room and table-room, which a merge does
-│                           NOT deploy and which therefore have no check-run. It reads the GIT_SHA binding off
+│                           clear signal nobody read. Then the Worker,
+│                           table-room, which a merge does
+│                           NOT deploy and which therefore has no check-run. It reads the GIT_SHA binding off
 │                           the live Worker and answers with git log, falling back
 │                           to a timestamp compare only when that binding is absent
 │                           - and saying which. Report only, no exit code
@@ -906,13 +906,11 @@ scripts/
 │                           check-run, or one stuck pending, is lost only if
 │                           nothing newer deployed - a build publishes the
 │                           whole root. Pure, so smoke drives it
-├── deploy-room.mjs         The ONE way to deploy pick3cut5-room. Always passes
-│                           --var GIT_SHA, because the flag was documented in bold
-│                           and the 2026-09-02 hand deploy dropped it anyway, and
-│                           refuses a dirty tree, because a sha that names a commit
-│                           whose content did not ship is worse than none
 ├── deploy-table-room.mjs   The ONE way to deploy table-room, The Table's live
-│                           room. The same stamp and the same refusal
+│                           room. Always passes --var GIT_SHA, because the flag was
+│                           documented in bold and a 2026-09-02 hand deploy dropped
+│                           it anyway, and refuses a dirty tree, because a sha that
+│                           names a commit whose content did not ship is worse than none
 ├── deploy-worker-lib.mjs   The body both deploy scripts share. One script per
 │                           Worker, never a --worker flag: a forgotten flag would
 │                           deploy the OTHER Worker, successfully

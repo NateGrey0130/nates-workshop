@@ -65,7 +65,7 @@
 // ── STORAGE ────────────────────────────────────────────────────────────────
 //
 // Everything lives in ctx.storage, because hibernation evicts instance memory
-// while leaving the sockets connected - Pick 3 Cut 5 learned that one first.
+// while leaving the sockets connected.
 //   meta         code, game, campaign, GM, status, and the next roll id
 //   roll:NNNNNN  one key per roll, so a long session never rewrites its feed
 //                and never nears the per-value size limit

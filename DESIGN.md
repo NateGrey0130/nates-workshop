@@ -5,8 +5,7 @@ anything. Product truth is in `PRODUCT.md`.
 
 **THERE ARE THREE VISUAL SYSTEMS NOW, and which one you get is decided by which
 stylesheet your page links.** Board & Tissue retoned the five RPG apps and the
-hub on 2026-09-20; FilamentForge, MediaVault and Pick 3 Cut 5 stay on Ley
-Verdigris. Marvel Heroes (2026-09-23) is the third, Newsprint, and it is the
+hub on 2026-09-20; FilamentForge and MediaVault stay on Ley Verdigris. Marvel Heroes (2026-09-23) is the third, Newsprint, and it is the
 odd one out in mechanism as well as look: it links **no** shared stylesheet at
 all - see *Newsprint* at the end. Every other section below is about the first
 two and says which it describes when they differ, and most of them do.
@@ -25,7 +24,7 @@ cannot rot quietly.
 | | ground | accent | faces |
 |---|---|---|---|
 | Character Creator, Character Sheet, Codex, Campaign, GM Tools | `#EFE9E2` | `#A8401A` | Archivo + Martian Mono |
-| FilamentForge, MediaVault, Pick 3 Cut 5 | `#0A0F0E` | `#35A0AE` | Saira + IBM Plex Sans |
+| FilamentForge, MediaVault | `#0A0F0E` | `#35A0AE` | Saira + IBM Plex Sans |
 | Marvel Heroes (Newsprint) | `#F7F0E1`, dark `#15120F` | `#B81D24` | Saira (condensed) + IBM Plex Sans |
 
 The mechanism is nothing but load order. The five RPG pages link

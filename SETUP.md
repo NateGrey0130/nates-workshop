@@ -3,8 +3,7 @@
 > **Pinned sentences, not a pinned file.** Under
 > `apps/character-creator/test/checks/`, `documented-counts.mjs` (the junction
 > loop), `environment.mjs` (the endpoint count) and `server-plumbing.mjs` (the
-> metering sentence) each read one passage here, as do
-> `apps/pick3cut5/test/smoke.mjs` (the bypass table) and
+> metering sentence) each read one passage here, as does
 > `apps/media-vault/test/smoke.mjs` (the candidate count), and
 > `instruction-paths.mjs` resolves every absolute path. Everything else is
 > prose: ask the thing it describes before acting on it. History is in
@@ -26,13 +25,12 @@ app is at `/apps/<slug>/`.
 |---|---|
 | a browser you are logged into | the app |
 | `curl`, a script, an automated browser | **302 to the Access login wall** |
-| either, on a Pick 3 Cut 5 bypass path | the real response |
 
 A 302 is the wall working, not the site down. To ask production a question,
-query D1 (`scripts/q.mjs --remote`) rather than fetching a page. Two things fetch
-it on purpose: `node apps/pick3cut5/test/smoke.mjs --remote` (the bypass holds,
-the rest still 302s), and confirming a deploy (ask production for a string the
-change added; D1 cannot answer that, because it moved before the merge).
+query D1 (`scripts/q.mjs --remote`) rather than fetching a page. Confirming a
+deploy is the one thing that needs the page (ask production, in a logged-in
+browser, for a string the change added; D1 cannot answer that, because it moved
+before the merge).
 
 ## Project Structure
 
@@ -56,14 +54,12 @@ nates-workshop/
 ├── .claude/              settings.json, hooks/, launch.json, skills/, agents/, scripts/
 ├── scripts/              d1-apply, q, drift-check, deploy-sweep, groups, the book tools
 ├── workers/
-│   ├── pick3cut5-room/   Durable Object server. NOT deployed by a merge
-│   └── table-room/       The Table's live game room. NOT deployed by a merge either
+│   └── table-room/       The Table's live game room. NOT deployed by a merge
 └── functions/api/
-    ├── _middleware.js    Access JWT verification on /api/*; PUBLIC_PATHS exemptions
+    ├── _middleware.js    Access JWT verification on /api/*; no route is exempt
     ├── _lib/             access.js (the ONE identity read), access-jwt.js, claude-client.js, people.js
     ├── claude.js         /api/claude proxy: model allowlist + token cap
     ├── media-vault/      per-item CRUD, lookup proxy (TMDB key server-side), sharing
-    ├── pick3cut5/        room + solo; outside the wall; thin proxies to the Worker
     ├── table/            lookup: which game a table code belongs to (behind the wall)
     ├── filament-forge/   catalog (OFD snapshot) + per-user data
     ├── marvel-heroes/    saved heroes, campaigns, The Table's Marvel routes
@@ -96,8 +92,7 @@ node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
 
 `apps/character-creator/docs/operations.md` has the migration convention and
 the per-migration table. Two things are outside *merge = deploy*: the
-`workers/pick3cut5-room` and `workers/table-room` Workers (next section), and a
-deploy that fails.
+`workers/table-room` Worker (next section), and a deploy that fails.
 
 After a merge, `ship-pr` steps 8–10 confirm it: the merge commit's `Cloudflare
 Pages` check-run, then a string the change added. `node scripts/deploy-sweep.mjs`
@@ -172,98 +167,30 @@ anyway*. A missing check-run with **nothing newer that deployed** is the
 alarming one and still prints under *DID NOT DEPLOY*; then re-run the merge's
 build from the Cloudflare dashboard or push a trivial follow-up commit.
 
-## Pick 3 Cut 5 and the second Worker
+## The Table's room Worker
 
 A Pages project cannot define a Durable Object class, only bind to one exported
-by a standalone Worker (with `script_name` on the binding). So the room server
-is `workers/pick3cut5-room/` and deploys separately.
-`docs/pages-to-workers-migration.md` is the alternative considered and not taken.
+by a standalone Worker (with `script_name` on the binding). So The Table's live
+game room is `workers/table-room/`, bound as `TABLE_ROOM`, and deploys
+separately. `docs/pages-to-workers-migration.md` is the alternative considered
+and not taken.
 
 ### Deploy order, which is not enforced anywhere
 
 The Worker must exist **before** the Pages deploy that binds it; backwards,
-party mode answers 503 while the rest of the site looks fine.
-
-```bash
-npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)
-```
-
-**Keep the `--var`:** `deploy-sweep.mjs` reads `GIT_SHA` back to say which
-build is live, and falls back to timestamps without it. There is deliberately
-no public version route. A change under `workers/pick3cut5-room/` needs this
-deploy again, and a change under `apps/pick3cut5/` alone needs only the merge.
-
-### Its secret is separate
-
-```bash
-npx wrangler secret put ANTHROPIC_API_KEY --config workers/pick3cut5-room/wrangler.jsonc
-```
-
-Rotating the Anthropic key is **two places**, the Pages secret and this one.
-Model ids are plain vars in the Worker's `wrangler.jsonc`. The Worker binds
-`DB` only to write `claude_usage` rows (`pick3cut5-party`, `pick3cut5-solo`,
-null email, fail-open). No game state touches D1, because rooms live in Durable
-Object memory.
-
-### The Table's room, the same way
-
-`workers/table-room/` is The Table's live game room, bound as `TABLE_ROOM` and
-deployed exactly like Pick 3 Cut 5's, with the same order: **before** the Pages
-deploy that binds it, or every `table/` route answers 503.
+every `table/` route answers 503 while the rest of the site looks fine.
 
 ```bash
 node scripts/deploy-table-room.mjs
 ```
 
 It stamps `GIT_SHA` and refuses a dirty tree (`scripts/deploy-worker-lib.mjs`),
-and `deploy-sweep.mjs` checks it beside the other Worker. It has no secret and
-binds no database: rooms keep their feeds in Durable Object storage, and the
-Pages routes save a feed to the campaign's own D1 when the table closes. Unlike
-Pick 3 Cut 5 it sits **behind** Access - its routes are on no bypass list.
-
-### It cannot be played on a preview
-
-Previews are behind their own Access policy and the bypass does not reach them
-(see *Access*). This app is therefore **verified on production right after the
-merge**, with:
-
-```bash
-node apps/pick3cut5/test/smoke.mjs --remote
-```
-
-It fetches the app and its assets with no session and confirms the rest of the
-site is still walled.
-
-### It has to be let out of the login wall
-
-Both halves are required:
-
-1. **Zero Trust → Access → Applications**: *Pick 3 Cut 5 (public)*, a
-   **Bypass** policy (include: Everyone), and exactly **five** destinations on
-   `nates-workshop.pages.dev`, which is Cloudflare's limit:
-
-   | path | why |
-   |---|---|
-   | `apps/pick3cut5` | the app |
-   | `api/pick3cut5` | rooms, WebSocket, solo generation |
-   | `shared/styles.css` | the design system |
-   | `shared/js/ui.js` | `escHtml`, called on every flip |
-   | `shared/fonts` | self-hosted fonts, referenced from inside `styles.css` |
-
-   A sixth dependency needs a **second** Access application. The `shared/` rows
-   are the ones that get forgotten: without them the route answers 200 and the
-   game is broken. `apps/pick3cut5/test/smoke.mjs` derives this list from
-   `index.html` and the stylesheets it loads and fails if this table disagrees.
-   `--remote` checks the live policy, including content type, because Pages
-   answers a missing path with the landing page at 200.
-2. **`PUBLIC_PATHS` in `functions/api/_middleware.js`**, with the **exact**
-   paths `/api/pick3cut5/room` and `/api/pick3cut5/solo`. A bypass lets the
-   request through without a JWT, so an unlisted path takes a 403 from our own
-   middleware. A new route under `functions/api/pick3cut5/` fails the smoke
-   suite until it is listed.
-
-Everything else stays gated. The room code is the only barrier on party mode,
-by design. Local dev, round costs and challenges are in `apps/pick3cut5/README.md`.
+and `deploy-sweep.mjs` reads `GIT_SHA` back to say which build is live. There
+is deliberately no public version route. A change under `workers/table-room/`
+needs this deploy again. It has no secret and binds no database: rooms keep
+their feeds in Durable Object storage, and the Pages routes save a feed to the
+campaign's own D1 when the table closes. It sits **behind** Access like
+everything else.
 
 ## Environment configuration (Cloudflare Pages dashboard)
 
@@ -278,7 +205,7 @@ GET /accounts/{account_id}/pages/projects/nates-workshop
 ```
 
 - `ANTHROPIC_API_KEY`: the `/api/claude` proxy and the PDF importers. It takes
-  effect on the **next deployment**. The Pick 3 Cut 5 Worker holds its own copy.
+  effect on the **next deployment**.
 - `ADMIN_EMAIL`: the one email allowed the importers and catalog editor.
   **Fails closed** when unset.
 - `TMDB_API_KEY`: MediaVault's `video-*` lookups, proxied by
@@ -310,8 +237,7 @@ GET /accounts/{account_id}/pages/projects/nates-workshop
 **Every Claude call in `functions/` writes one row to `claude_usage`** (email,
 endpoint, model, tokens, upstream status), fail-open. The endpoints are `proxy`,
 `campaign-ask`, `msh-campaign-ask`, `cc-npc-sweep` and `cc-extract-class`. The
-last is written by `scripts/extract-class.mjs` from a workstation. The Pick 3
-Cut 5 Worker adds `pick3cut5-solo` and `pick3cut5-party`. A failed extraction
+last is written by `scripts/extract-class.mjs` from a workstation. A failed extraction
 is recorded too, because the tokens were spent. The check pins the sentence
 and two names, not the list: `grep -rho "endpoint: '[a-z0-9-]*'" functions workers`
 is the list.
@@ -352,9 +278,6 @@ the whole policy, so send every field back.
 
 **Previews are walled separately** (Pages → Settings → Preview access), by an
 auto-created Access policy. A friend who needs a preview is added there too.
-**The Pick 3 Cut 5 bypass does not reach previews:** its destinations are
-hostname-specific. A wildcard bypass on `*.nates-workshop.pages.dev` would make
-every preview public on those paths, and it was declined.
 
 ## Setting up a machine
 
@@ -364,7 +287,7 @@ session started outside the repo (the book work runs from
 admin rights and follow repo edits:
 
 ```powershell
-foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','marvel-book','media-vault','pick3cut5','plan-rows','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
+foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','marvel-book','media-vault','plan-rows','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
@@ -574,7 +497,7 @@ Three databases exist for pull-request previews, one per group, created
 `wrangler.jsonc`, under production's binding names, along with the R2 bucket
 `nates-workshop-media-preview` as `MEDIA`. Production and `wrangler pages dev`
 read the top level. Pages makes that block restate every binding and the
-Access vars, so the two room Workers are production's in a preview too (an
+Access vars, so the room Worker is production's in a preview too (an
 accepted gap: previews admit Nate alone). Its `ACCESS_AUD` is the AUD of the
 preview Access application (`*.nates-workshop.pages.dev`), not production's:
 a preview's token is minted for that application, and production's AUD
@@ -622,7 +545,7 @@ and change the Access application domain to match.
 | Service | Cost | Limits |
 |---|---|---|
 | Cloudflare Pages + Functions | Free | 100K requests/day |
-| Cloudflare Workers | Free | `pick3cut5-room` and `table-room`, each its own request budget |
+| Cloudflare Workers | Free | `table-room`, its own request budget |
 | Cloudflare D1 | Free | 5M row reads/day |
 | Cloudflare R2 | Free | `nates-workshop-media`; free storage allowance, no egress |
 | Cloudflare Access | Free | up to 50 users |
@@ -632,7 +555,7 @@ and change the Access application domain to match.
 ## Troubleshooting
 
 **The Pages half has no server logs; the browser console is the tool.** Only
-the two Workers, `pick3cut5-room` and `table-room`, have observability enabled.
+the Worker, `table-room`, has observability enabled.
 So a quiet week means only that nobody hit anything.
 
 | symptom | cause |

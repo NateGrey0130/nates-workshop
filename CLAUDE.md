@@ -13,8 +13,8 @@ itself: `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
 ## Three groups, and which one you are in
 
 The groups are **palladium** (character creator and the apps split from it),
-**marvel** (`marvel-heroes`) and **tools** (FilamentForge, MediaVault,
-Pick 3 Cut 5). Two more owners are not groups: **shared** for what every group
+**marvel** (`marvel-heroes`) and **tools** (FilamentForge, MediaVault). Two
+more owners are not groups: **shared** for what every group
 loads, and **process** for what only the checks read. `groups.json` owns every
 path and D1 table.
 
@@ -66,7 +66,7 @@ The group must match `groups.mjs --affected`. Any `shared` path forces
 `F<n>`) are **claimed at merge**. Re-read `origin/main` for the highest number
 immediately before the merge, never earlier.
 
-## Sixteen skills, and they load from anywhere on this machine
+## Fifteen skills, and they load from anywhere on this machine
 
 Each one lives in `.claude/skills/` and is junction-linked into
 `~/.claude/skills` (`SETUP.md` → junction block). A new skill needs its link in
@@ -88,7 +88,6 @@ linked. An agent written mid-session cannot be spawned until the next turn.
 | `test-suite` | adding or changing a check, pinning a count, reading a failure |
 | `windows-shell` | before an in-place edit, an inline script with backslashes, or a query you will act on |
 | `worktree` | a second concurrent session, and **before `git worktree remove`** |
-| `pick3cut5` | `apps/pick3cut5/`, `workers/pick3cut5-room/`, `shared/`, or an Access policy |
 | `media-vault` | `apps/media-vault/`, `functions/api/media-vault/`, `media_items`, `media_shares` |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
 | `plan-rows` | writing briefs for a multi-PR plan, or driving the `pr-worker` chain through one |

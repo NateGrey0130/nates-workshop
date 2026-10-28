@@ -32,9 +32,8 @@
   // nates-workshop-media, is older than the split - the database was first
   // made for MediaVault - and a D1 cannot be renamed, so the name is wrong on
   // purpose rather than by accident. `DB_MARVEL` and `DB_TOOLS` hold the Marvel
-  // app's and the tools' tables (FilamentForge, MediaVault; Pick 3 Cut 5 uses
-  // none). A group's code names only its own tables and reaches only its own
-  // binding - groups.json gives each group its d1_binding, and groups.mjs
+  // app's and the tools' tables (FilamentForge, MediaVault). A group's code
+  // names only its own tables and reaches only its own binding - groups.json gives each group its d1_binding, and groups.mjs
   // --check fails on either, and on a binding here that no group has.
   //
   // The tables moved one group at a time, each in the pull request that
@@ -73,41 +72,25 @@
       "bucket_name": "nates-workshop-media"
     }
   ],
-  // Pick 3 Cut 5's room server. BOTH of these point at the same standalone
-  // Worker, `pick3cut5-room`, whose source lives in workers/pick3cut5-room/.
+  // TABLE_ROOM is The Table's live game room, the standalone Worker
+  // `table-room`, whose source lives in workers/table-room/.
   //
-  // WHY A SECOND WORKER EXISTS AT ALL: a Pages project cannot define a Durable
-  // Object class - it can only bind to one exported from a standalone Worker,
-  // and unlike Workers, Pages requires `script_name` on the binding. That is a
-  // current documented limitation, not a legacy one. The alternative was
-  // migrating the whole site off Pages; docs/pages-to-workers-migration.md is
-  // that option, written up and not taken.
+  // WHY A SEPARATE WORKER EXISTS AT ALL: a Pages project cannot define a
+  // Durable Object class - it can only bind to one exported from a standalone
+  // Worker, and unlike Workers, Pages requires `script_name` on the binding.
+  // That is a current documented limitation, not a legacy one. The alternative
+  // was migrating the whole site off Pages; docs/pages-to-workers-migration.md
+  // is that option, written up and not taken.
   //
   // THE DEPLOY ORDER MATTERS AND IT IS NOT ENFORCED. Merging to main deploys
-  // Pages and does NOT deploy this Worker. The Worker must be deployed FIRST -
-  // same discipline as the R2 bucket above - or these bindings resolve to
-  // nothing and party mode answers 503 while the rest of the site looks fine.
-  // SETUP.md carries the order.
-  //
-  // Two bindings rather than one because they do different jobs: the Durable
-  // Object binding carries the WebSocket straight to the room's stub, and the
-  // service binding carries plain HTTP (room creation, solo generation) to the
-  // Worker's fetch handler, where the rate limit binding that Pages cannot use
-  // is waiting.
-  //
-  // TABLE_ROOM is The Table's live game room, the standalone Worker in
-  // workers/table-room/, for the same reason and with the same deploy order:
-  // `node scripts/deploy-table-room.mjs` BEFORE the merge that first binds it,
-  // or every /table/ route answers 503. Unlike Pick 3 Cut 5 it sits behind
-  // Access: its routes are under each game's own /api/ directory and on no
-  // bypass list.
+  // Pages and does NOT deploy this Worker. `node scripts/deploy-table-room.mjs`
+  // must run BEFORE the merge that first binds it - same discipline as the R2
+  // bucket above - or the binding resolves to nothing and every /table/ route
+  // answers 503 while the rest of the site looks fine. SETUP.md carries the
+  // order. It sits behind Access: its routes are under each game's own /api/
+  // directory.
   "durable_objects": {
     "bindings": [
-      {
-        "name": "P3C5_ROOM",
-        "class_name": "Room",
-        "script_name": "pick3cut5-room"
-      },
       {
         "name": "TABLE_ROOM",
         "class_name": "TableRoom",
@@ -115,12 +98,6 @@
       }
     ]
   },
-  "services": [
-    {
-      "binding": "PICK3CUT5",
-      "service": "pick3cut5-room"
-    }
-  ],
   // PULL-REQUEST PREVIEWS GET THEIR OWN DATA. Pages builds a preview from the
   // top level above unless this block overrides it, so before 2026-10-27 every
   // preview read and wrote production's three D1s and its bucket. Local dev
@@ -131,10 +108,9 @@
   // So the Access vars are restated - same team, but ACCESS_AUD is the AUD of
   // the separate Access application on *.nates-workshop.pages.dev, because a
   // preview's token is minted for that one (production's AUD here refused
-  // every preview /api/* call with "audience mismatch") - and so are the two
-  // room Workers, which have no
-  // preview copy: a preview's Pick 3 Cut 5 and Table rooms are production's
-  // Workers, and pick3cut5-room writes its claude_usage rows to production.
+  // every preview /api/* call with "audience mismatch") - and so is the room
+  // Worker, which has no preview copy: a preview's Table rooms are
+  // production's Worker.
   //
   // The databases hold what the repo builds, never production's rows:
   // `node scripts/build-preview-d1.mjs` rebuilds them (SETUP.md -> The preview
@@ -173,23 +149,12 @@
       "durable_objects": {
         "bindings": [
           {
-            "name": "P3C5_ROOM",
-            "class_name": "Room",
-            "script_name": "pick3cut5-room"
-          },
-          {
             "name": "TABLE_ROOM",
             "class_name": "TableRoom",
             "script_name": "table-room"
           }
         ]
-      },
-      "services": [
-        {
-          "binding": "PICK3CUT5",
-          "service": "pick3cut5-room"
-        }
-      ]
+      }
     }
   }
 }

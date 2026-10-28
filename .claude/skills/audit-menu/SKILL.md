@@ -268,15 +268,14 @@ is the row you will forget: **add it in the PR that creates the file.**
 | `apps/media-vault/SHARE-AUDIT.md` | `V` | `##` | `## V1 — high — …`. **No other menu here uses `V`**, chosen so a bare number is unambiguous |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
-| `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 | `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
 | `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word, and **every `###` is a finding** (`F38`, 2026-09-04). That file's own header names its sections. |
 | `SHIP-PR-AUDIT.md` | `F` | `###` | `### F1 — …`, no severity word |
 | `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
 Two heading levels, an optional severity word, an em dash, a hyphen or a period,
-and two files where a whole family is **not a heading at all** (`CLASS-AUDIT`'s
-`S` bullets, `pick3cut5/AUDIT`'s `T` paragraph leads, each under its own `##`).
+and one file where a whole family is **not a heading at all** (`CLASS-AUDIT`'s
+`S` bullets, under their own `##`).
 A `###` scan does not see those. **Read; do not pin shape with a check.**
 (`audit-menus.mjs` checks only that a number is used once.)
 

@@ -10,9 +10,8 @@
    tokens this app used to override — --accent, --accent-glow,
    --accent-secondary, --text-muted and --accent-strong (CHANGE-PLAN.md phase
    1). It returns on 2026-09-20 because the RPG suite is being retoned and the
-   other three apps are NOT: Nate asked for brighter for the apps he plays
-   with, and chose to leave FilamentForge, MediaVault and Pick 3 Cut 5 on Ley
-   Verdigris.
+   tools are NOT: Nate asked for brighter for the apps he plays with, and
+   chose to leave FilamentForge and MediaVault on Ley Verdigris.
 
    THIS BLOCK IS THE WHOLE MECHANISM, and it works because of the load order
    in the five RPG pages: every one of them links /shared/styles.css FIRST and

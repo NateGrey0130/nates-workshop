@@ -52,7 +52,6 @@ import { filterFeed } from '../../../workers/table-room/src/visibility.js';
 import { imageRef } from '../../../workers/table-room/src/showing.js';
 
 // No O, 0, I or 1 - read aloud across a room, those are the ones misheard.
-// The same alphabet as Pick 3 Cut 5's codes.
 export const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 4;
 const SESSIONS_MAX = 20;

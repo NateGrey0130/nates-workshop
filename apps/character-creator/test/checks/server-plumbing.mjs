@@ -1136,8 +1136,7 @@ section('Client error reporting');
   }
 
   // Which pages load it: every HTML page under apps/ at any depth, and the
-  // root page, except Pick 3 Cut 5 (see the client's header). Rows 6a and 6b
-  // of the 2026-10-26 plan. It must come first, so it is listening before the
+  // root page. Rows 6a and 6b of the 2026-10-26 plan. It must come first, so it is listening before the
   // other scripts run. The walk is of the directory, not of a list, so a page
   // added without the tag fails here; test/ directories hold fixtures.
   const appsDir = join(repoRoot, 'apps');
@@ -1150,10 +1149,9 @@ section('Client error reporting');
   };
   walk(appsDir, 'apps/');
   const firstScript = (html) => (html.match(/<script\b[^>]*\bsrc="([^"]+)"/) || [])[1];
-  const missing = pages.filter((p) => p.path !== 'apps/pick3cut5/index.html'
-    && firstScript(p.html) !== '/shared/js/client-errors.js').map((p) => p.path);
-  check('every page under apps/ and the root, but Pick 3 Cut 5, loads client-errors.js as its first script',
-    pages.length >= 28 && missing.length === 0, missing.join(', ') || `${pages.length} pages`);
+  const missing = pages.filter((p) => firstScript(p.html) !== '/shared/js/client-errors.js').map((p) => p.path);
+  check('every page under apps/ and the root loads client-errors.js as its first script',
+    pages.length >= 27 && missing.length === 0, missing.join(', ') || `${pages.length} pages`);
   // And every page the hub links is one of them, so a manifest slug whose
   // page sits outside the walk cannot slip past it.
   const manifest = JSON.parse(readFileSync(join(appsDir, 'manifest.json'), 'utf8'));
@@ -1161,9 +1159,6 @@ section('Client error reporting');
   const unwalked = (manifest.apps || []).filter((a) => a.slug && !walked.has(`apps/${a.slug}/index.html`)).map((a) => a.slug);
   check('and every slug apps/manifest.json lists has its page in that walk',
     (manifest.apps || []).some((a) => a.slug) && unwalked.length === 0, unwalked.join(', '));
-  const p3 = pages.find((p) => p.path === 'apps/pick3cut5/index.html');
-  check('and Pick 3 Cut 5 does not, because it would need a sixth Access bypass',
-    p3 && !p3.html.includes('client-errors.js'));
 }
 
 }

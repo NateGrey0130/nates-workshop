@@ -64,21 +64,17 @@ Tissue, because the second file redeclares every token. `verify-ui` and
 context chip, shared by the five RPG pages so that a character or campaign
 carried in the URL survives moving between them. `rendered-ui.mjs` checks each of
 the five has its own page carrying that attribute and a live tile with an icon.
-A standalone app (FilamentForge, MediaVault, Pick 3 Cut 5) links neither.
+A standalone app (FilamentForge, MediaVault) links neither.
 
-## Access, and the one app outside it
+## Access
 
 **A new app is private by default and that needs no work.** The whole site sits
-behind Cloudflare Access; the exception is Pick 3 Cut 5, which is public through
-an exact-path list.
-
-**So do not copy Pick 3 Cut 5's `<head>`.** It deliberately carries **no icon
-links at all** — its Access bypass is a list of exact paths, all five
-destination slots are in use, and `apps/pick3cut5/test/smoke.mjs` derives the
-list from that very head, so an icon link there would demand a sixth slot that
-does not exist. The template's head carries the icon links and a comment saying
-why that app does not. Anything touching that app or its assets is the
-`pick3cut5` skill's business, and an asset is not the same thing as a page.
+behind Cloudflare Access, with no exception. Making a page public is two
+changes that must agree: an Access BYPASS policy on the dashboard for its exact
+paths, its assets included (an asset is not the same thing as a page), and an
+early return in `functions/api/_middleware.js` for any `/api/` route it calls,
+because a bypassed request carries no JWT. Neither exists today; adding them
+opens a hole in the site's only wall, so it is Nate's decision.
 
 ## Splitting an app in two
 

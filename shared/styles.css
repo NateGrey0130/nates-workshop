@@ -25,12 +25,11 @@
 
    THERE IS NO ITALIC, on purpose. IBM Plex Sans ships roman and italic as
    SEPARATE variable files - no single file carries both - and the italic is
-   50,184 bytes to serve the two rules in the whole workshop that ask for one
-   (media-vault's .stats-empty and pick3cut5's .final-empty, both muted labels).
-   Those two get a synthetic oblique instead, which is exactly what they got
-   before: neither face this replaced shipped an italic either. If a real
-   italic is ever wanted, it is one file and one @font-face rule, and the two
-   rules that would benefit are already written.
+   50,184 bytes to serve the one rule in the whole workshop that asks for one
+   (media-vault's .stats-empty, a muted label). It gets a synthetic oblique
+   instead, which is exactly what it got before: neither face this replaced
+   shipped an italic either. If a real italic is ever wanted, it is one file
+   and one @font-face rule, and the rule that would benefit is already written.
 
    Sizes, measured on disk: saira 98,912 + plex roman 45,712 = 141KB, against
    63KB for the Outfit and JetBrains Mono pair. Most of the increase is the
@@ -72,11 +71,11 @@
    FOUR FACES ARE DECLARED HERE AND NO PAGE DOWNLOADS MORE THAN TWO, which is
    why the paragraph above still says two files and is still true of any one
    page. Board & Tissue (2026-09-20) retones the five RPG apps and index.html
-   and deliberately leaves FilamentForge, MediaVault and Pick 3 Cut 5 on Ley
-   Verdigris, so two design systems are live at once. A @font-face is a
+   and deliberately leaves FilamentForge and MediaVault on Ley Verdigris, so
+   two design systems are live at once. A @font-face is a
    declaration, not a request: the browser fetches a face when a rule that
    resolves to it paints, so an RPG page pulls Archivo and Martian Mono, and
-   the other three pull Saira and IBM Plex Sans. Nothing pulls all four.
+   the other two pull Saira and IBM Plex Sans. Nothing pulls all four.
 
    THE PAIR BELOW IS NOT A FREE CHOICE OF FACE. Board & Tissue was designed
    against Barlow Condensed over Barlow, and NEITHER is variable:
@@ -135,12 +134,10 @@
    12 -> 133. "This is a button" stopped competing with "this is a warning".
 
    --accent is 188deg rather than the 166 a verdigris is first drafted at.
-   Three apps already spend emerald #34d399 — pick3cut5's --keep, filament
-   forge's --tag-pla, MediaVault's --tag-physical — and a 166deg accent lands
-   8 degrees and dE00 13.2 from it, which reads as the same colour on a chip.
-   188deg is dE00 26.4 away. It also ends an existing collision rather than
-   trading one for another: pick3cut5's own accent sat dE00 9.8 from its --cut,
-   and the shared accent is 61.6 from it.
+   Two apps already spend emerald #34d399 — FilamentForge's --tag-pla and
+   MediaVault's --tag-physical — and a 166deg accent lands 8 degrees and dE00
+   13.2 from it, which reads as the same colour on a chip. 188deg is dE00 26.4
+   away.
 
    Several values below look like mistakes and are not. --bg-card equals
    --bg-secondary and --bg-input equals --bg-tertiary: this scheme has fewer
@@ -279,7 +276,7 @@ body {
 /* ─── FOCUS RING ───
    Promoted from apps/character-creator/styles.css on 2026-09-10, taking
    UI-AUDIT F36. It was written for the character creator by F16 (2026-08-31,
-   borrowed from pick3cut5), and F16 deliberately kept it app-local because
+   borrowed from a since-retired app), and F16 deliberately kept it app-local because
    promoting it would "hand three other apps a focus ring overnight". F32 held
    the same line on 2026-09-06. Neither filed a number for the promotion, so it
    was never open; F36 is that deferral, numbered and taken.
@@ -291,9 +288,7 @@ body {
    later, so it wins. media-vault has six such rules and filament-forge four,
    and this ring reached none of the controls they cover. It reached bare button,
    a, summary and [tabindex] only, which is real and is not what F36 claimed.
-   THAT IS THE STATE F37 ENDED — see the next paragraph. pick3cut5 was never in
-   it: that app sets no `outline: none` at all, so its inputs have carried the
-   ring since F16, which is the one thing F37 got wrong about its own scope.
+   THAT IS THE STATE F37 ENDED — see the next paragraph.
 
    RAISED TO (0,2,0) ON 2026-09-10, taking UI-AUDIT F37, and that is what the
    doubled `:focus-visible` below is for. It is legal CSS — Chrome accepts it and
@@ -315,8 +310,7 @@ body {
    Removing it has its own cost, stated so nobody restores it by surprise:
    eighteen or so controls across three apps had no radius of their own and were
    borrowing this one for their focus corner. They are square when focused now.
-   That is the smaller of the two changes and it is the one that leaves pick3cut5
-   byte-identical.
+   That is the smaller of the two changes.
 
    The colour is --accent-secondary and NO app overrides it: all four resolve to
    #D9A05B, measured 8.39 on --bg-primary, 7.60 on --bg-secondary and 6.66 on

@@ -93,9 +93,8 @@ an earlier hand-built pass told itself to do.
 
 ## Two menus keep whole families of items where no heading scan will find them
 
-`CLASS-AUDIT`'s `S` items are **bullets** under their own `##` section, and
-`apps/pick3cut5/AUDIT.md`'s `T` items are **bold paragraph leads**. Twenty items
-between them, and a walk of `###` headings does not report them closed — it does
+`CLASS-AUDIT`'s `S` items are **bullets** under their own `##` section, and a
+walk of `###` headings does not report them closed — it does
 not see them at all, and reports nothing. Look for the `##` section, then read
 what is under it, whatever shape it takes.
 

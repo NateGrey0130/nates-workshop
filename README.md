@@ -25,13 +25,12 @@ Creator joined as the sixth on 2026-09-23.
 | [`apps/gm-tools/`](apps/gm-tools/) | The party roster, pools, and NPCs rolled from the books |
 | [`apps/city-creator/`](apps/city-creator/) | A whole city from a seed - districts, shops, named NPCs, rumours - to lock and reroll |
 
-And five that stand alone:
+And four that stand alone:
 
 | | |
 |---|---|
 | [`apps/filament-forge/`](apps/filament-forge/) | 3D print settings engine |
 | [`apps/media-vault/`](apps/media-vault/) | Personal audiobook and film library |
-| [`apps/pick3cut5/`](apps/pick3cut5/) | Party game, playable in a shared room — the only public one |
 | [`apps/the-button/`](apps/the-button/) | One big red button on a black screen |
 | [`apps/marvel-heroes/`](apps/marvel-heroes/) | MARVEL SUPER HEROES: a hero generator, a power browser and a FEAT roller from the Ultimate Powers Book, and a sheet for each hero you save - [its README](apps/marvel-heroes/README.md) holds the rulings where the books disagree |
 

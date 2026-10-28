@@ -13,7 +13,7 @@ description: Take a numbered audit finding the way audit-menu requires, in the o
 > the day it was written.
 
 `/take BOOK-INGEST-AUDIT F76`. The menu is the file's stem (`BOOK-INGEST-AUDIT`,
-`SKILL-AUDIT`, `apps/pick3cut5/AUDIT`) and the id is the finding's own
+`SKILL-AUDIT`, `apps/media-vault/SHARE-AUDIT`) and the id is the finding's own
 (`F76`, `G8`, `M7`). **If either is missing, stop and ask which.** A bare number
 identifies nothing - eleven menus number with `F` (`audit-menu` -> *Which is why
 a finding reference names its menu*).
@@ -72,7 +72,7 @@ grep -rn -i '<subject word>' ~/.claude/projects/*/memory/
 ```
 
 The glob is `*AUDIT*.md`, not `*-AUDIT.md`, because not every menu's name ends
-in `-AUDIT` (`apps/pick3cut5/AUDIT.md`, `DOCS-AUDIT-2.md`).
+in `-AUDIT` (`apps/character-creator/AUDIT.md`, `DOCS-AUDIT-2.md`).
 
 **A closed finding's full text is not in the tree**, and a decision recorded
 there is exactly what this grep exists to find. Its menu keeps a one-line stub
