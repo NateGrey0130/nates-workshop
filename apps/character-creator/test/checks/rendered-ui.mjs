@@ -1678,6 +1678,23 @@ export async function run() {
       /\.pick \.pick-title\s*\{[^}]*font-stretch:\s*75%/.test(css), '.pick .pick-title has no font-stretch: 75%');
   }
 
+  // The four system cards on step 1 are <button>s with the same shape the class
+  // card had: an <h3> and a <p>. Same fix, same classes.
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const code = (src) => src && src.replace(/^\s*\/\/.*$/gm, '');
+    const sys = code(functionBody(app, 'function renderSystem('));
+    check('renderSystem is found', !!sys, 'functionBody could not cut renderSystem out of app.js');
+    const phrasing = new Set(['span', 'b', 'i', 'em', 'strong', 'small', 'abbr', 'code', 'img', 'br', 'svg', 'mark', 'sup', 'sub']);
+    const cards = sys ? [...sys.matchAll(/<button\b[^>]*onclick="pickSystem\([^]*?<\/button>/g)].map((m) => m[0]) : [];
+    check('renderSystem writes the four system cards as buttons', cards.length === 4, cards.length + ' cards found');
+    const flow = [...new Set(cards.flatMap((c) => [...c.matchAll(/<([a-z][a-z0-9]*)\b/g)].map((m) => m[1])).filter((t) => t !== 'button' && !phrasing.has(t)))];
+    check('the system cards hold phrasing content only', cards.length === 4 && !flow.length,
+      flow.length ? 'a <button> may not contain: ' + flow.map((t) => '<' + t + '>').join(', ') : 'no cards read');
+    check('each system card uses .pick-title and .pick-blurb', cards.length === 4 && cards.every((c) => c.includes('class="pick-title"') && c.includes('class="pick-blurb muted"')),
+      'a system card lost its pick-title / pick-blurb span');
+  }
+
   // ---------- The GM dashboard ----------
   // The roster and the GM notes share a row; the journal runs full width under
   // them. Two of these pin things the redesign brief got wrong, so they are

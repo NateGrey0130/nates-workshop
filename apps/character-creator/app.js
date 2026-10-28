@@ -1197,16 +1197,16 @@ function renderSystem() {
     <h2>Choose a game system</h2>
     <div class="grid">
       <button type="button" class="pick ${S.system === 'palladium-fantasy' ? 'sel' : ''}" onclick="pickSystem('palladium-fantasy')">
-        <h3>⚔️ Palladium Fantasy</h3><p class="muted">Swords, sorcery, and the Old Kingdom.</p>
+        <span class="pick-title">⚔️ Palladium Fantasy</span><span class="pick-blurb muted">Swords, sorcery, and the Old Kingdom.</span>
       </button>
       <button type="button" class="pick ${S.system === 'rifts' ? 'sel' : ''}" onclick="pickSystem('rifts')">
-        <h3>☢️ Rifts</h3><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
+        <span class="pick-title">☢️ Rifts</span><span class="pick-blurb muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</span>
       </button>
       <button type="button" class="pick ${S.system === 'heroes-unlimited' ? 'sel' : ''}" onclick="pickSystem('heroes-unlimited')">
-        <h3>⚡ Heroes Unlimited</h3><p class="muted">Super abilities, hardware and magic in the modern world.</p>
+        <span class="pick-title">⚡ Heroes Unlimited</span><span class="pick-blurb muted">Super abilities, hardware and magic in the modern world.</span>
       </button>
       <button type="button" class="pick ${S.system === 'nightbane' ? 'sel' : ''}" onclick="pickSystem('nightbane')">
-        <h3>☾ Nightbane</h3><p class="muted">The Nightlands, and what wears a human face.</p>
+        <span class="pick-title">☾ Nightbane</span><span class="pick-blurb muted">The Nightlands, and what wears a human face.</span>
       </button>
     </div>
   </div>`;
