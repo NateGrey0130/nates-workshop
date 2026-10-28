@@ -29,7 +29,9 @@
 //   ui         - the page's adapter, so no module imports shared/js/ui.js:
 //                  esc(v)         escape for element content and attributes
 //                  escJs(v)       escape for a JS string inside an inline handler
-//                  modal(text)    ask yes/no; returns a promise of a boolean
+//                  modal(text, opts) ask yes/no; returns a promise of a boolean.
+//                                 opts.danger puts focus on Cancel; an adapter
+//                                 that takes text alone may ignore it
 //                  toast(text)    tell the person something went wrong
 //                  undoable(opts) the page's "Removed. Undo" (label, hide,
 //                                 restore, commit) - see

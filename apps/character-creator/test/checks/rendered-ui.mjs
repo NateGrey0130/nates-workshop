@@ -5322,8 +5322,21 @@ export async function run() {
       const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
       check(`${script} hands the views this group's API and its adapter`,
         /C\.init\(\{\s*base: '\/api\/character-creator', campaignId,/.test(src)
-          && /modal: \(text\) => confirmDialog\(text\)/.test(src)
+          && /modal: \(text, opts\) => confirmDialog\(text, opts\)/.test(src)
           && /toast: \(text\) => flash\(text, true\)/.test(src));
+    }
+    // A delete question opens with focus on Cancel: the views pass
+    // { danger: true }, and each page's adapter hands it on to confirmDialog.
+    // Marvel's confirm() adapter takes text alone and ignores the extra argument.
+    for (const [file, ask] of [['setting.js', 'Delete "'], ['table.js', 'Close the table?']]) {
+      const at = code[file].indexOf(ask);
+      check(`${file}: its "${ask}" question is a danger dialog`,
+        at > 0 && /\{ danger: true \}\)\)\) return;/.test(code[file].slice(at, at + 400)));
+    }
+    for (const [page, script] of [['campaign', 'campaign.js'], ['gm-tools', 'dashboard.js']]) {
+      const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
+      check(`${script} clears a failure from #msg when the page reloads after a write`,
+        /reload: \(\) => \{ flash\(''\); return load\(\); \}/.test(src));
     }
     // The views' request helper answers a failure the way this app's api()
     // does, so a caller reading err.status or err.detail (a 409's code, a

@@ -36,11 +36,11 @@ C.init({
   base: '/api/character-creator', campaignId,
   ui: {
     esc: escHtml, escJs, undoable,
-    modal: (text) => confirmDialog(text),
+    modal: (text, opts) => confirmDialog(text, opts),
     toast: (text) => flash(text, true),
   },
   render: () => render(),
-  reload: () => load(),
+  reload: () => { flash(''); return load(); },
   showPeople: () => { D.tab = 'people'; },
 });
 
