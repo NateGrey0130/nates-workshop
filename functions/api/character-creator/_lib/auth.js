@@ -87,8 +87,10 @@ export function forbidden() {
 //
 // Every character endpoint reaches this through characterAccess or
 // requireCharacter, so hiding it here hides it from all of them at once. The
-// three that read a character row WITHOUT this function call isHiddenNpc
-// themselves: the sheet GET, the character list, and a stash claim.
+// three that read a character row WITHOUT this function apply the rule
+// themselves: the sheet GET and a stash claim call isHiddenNpc, and the
+// character list (characters.js) states it in SQL, `characters.kind = 'pc' OR
+// campaigns.gm_email = ?`, so a hidden row is never selected or counted.
 //
 // A DELETED CHARACTER (migration 091) is not there to anybody, its owner and
 // the G.M. included: the DELETE route sets `deleted_at` and leaves the row,
