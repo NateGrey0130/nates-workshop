@@ -25,10 +25,10 @@
 // asking at the end of a working session.
 //
 // TWO HALVES, because this site deploys two ways. Everything above is Pages.
-// `workers/pick3cut5-room` is a standalone Worker deployed by hand, produces no
-// check-run at all, and was invisible to the first version of this script -
-// which printed NOTHING MISSING while saying nothing about it (HEALTH-AUDIT
-// F23). The second section below compares timestamps instead.
+// `workers/table-room` is a standalone Worker deployed by hand, produces no
+// check-run at all, and a Worker was invisible to the first version of this
+// script - which printed NOTHING MISSING while saying nothing about it
+// (HEALTH-AUDIT F23). The second section below compares timestamps instead.
 //
 // DO NOT confuse this with `gh pr checks`, which reads the PR's head commit.
 // That has shown a red "Cloudflare Pages fail" on PRs that deployed perfectly
@@ -257,14 +257,14 @@ if (!bad.length) {
 
 // ── The half a merge does not deploy ────────────────────────────────────────
 //
-// Everything above reads PAGES check-runs. workers/pick3cut5-room has none: it
+// Everything above reads PAGES check-runs. workers/table-room has none: it
 // is a standalone Worker deployed by hand with `wrangler deploy --config`, so
 // no merge produces one and the section above is silent about it by
 // construction rather than by accident.
 //
 // A timestamp is the whole check. If the newest commit touching that directory
 // on origin/main is newer than the active deployment, main has moved since the
-// deploy and party mode may be running something else.
+// deploy and The Table's rooms may be running something else.
 //
 // IT CANNOT TELL WHETHER THE CHANGE MATTERED, and that is the accepted cost. A
 // `$schema` line fires it exactly as loudly as a rewrite of room.js - the first
@@ -276,10 +276,9 @@ if (!bad.length) {
 // The whole directory, not src/: wrangler.jsonc carries the bindings, the vars
 // and the rate-limit numbers, so a config-only change is deploy-relevant too.
 //
-// TWO WORKERS since The Table (workers/table-room). Each is checked the same
-// way and names its own deploy script, because a merge deploys neither.
+// A list, so a second Worker is one more row. Each names its own deploy
+// script, because a merge deploys none of them.
 const WORKERS = [
-  { dir: 'workers/pick3cut5-room', script: 'pick3cut5-room', deploy: 'scripts/deploy-room.mjs' },
   { dir: 'workers/table-room', script: 'table-room', deploy: 'scripts/deploy-table-room.mjs' },
 ];
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -328,15 +327,15 @@ try {
       //
       // The timestamp comparison below cannot tell whether a change mattered -
       // that is stated at length above and is still true. A sha can: deploy
-      // through `scripts/deploy-room.mjs` and the live Worker carries
+      // through `scripts/deploy-table-room.mjs` and the live Worker carries
       // the commit it was built from, as a plain-text binding readable from the
       // API. Then "is it stale" stops being a guess about clocks and becomes
-      // `git log <deployed>..origin/main -- workers/pick3cut5-room`, which is
+      // `git log <deployed>..origin/main -- workers/table-room`, which is
       // empty or it is not.
       //
       // NO PUBLIC ROUTE, deliberately. The obvious shape was a version endpoint
-      // the sweep fetches, but that means a new entry in `PUBLIC_PATHS` and a
-      // hole in the site's only wall for a diagnostic. The binding is already
+      // the sweep fetches, but that means a public route and a hole in the
+      // site's only wall for a diagnostic. The binding is already
       // readable without one - measured 2026-09-03: the environment token
       // returns HTTP 200 for this settings endpoint, which CLAUDE.md's account
       // of that token does not mention.

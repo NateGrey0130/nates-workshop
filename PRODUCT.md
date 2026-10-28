@@ -24,8 +24,7 @@ Five of them are one product in five jobs — the RPG suite, split on 2026-09-19
 | GM Tools | run the table |
 
 The others are unrelated: FilamentForge (3D print settings), MediaVault
-(a media library), Pick 3 Cut 5 (a party game, and the only public one), and
-Marvel Heroes (a hero generator for a different RPG, TSR's MARVEL SUPER HEROES,
+(a media library), and Marvel Heroes (a hero generator for a different RPG, TSR's MARVEL SUPER HEROES,
 built from the *Ultimate Powers Book* and kept apart from the Palladium apps on
 purpose).
 
@@ -69,4 +68,4 @@ Established with Nate, 2026-09-20:
   classic scripts. Merging to `main` IS the deploy.
 - **Cloudflare Pages**, which is why there is no image resizing and no rate
   limiting binding — see `docs/pages-to-workers-migration.md`.
-- **Everything is behind Access** except Pick 3 Cut 5's bypass paths.
+- **Everything is behind Access**, with no public exception.

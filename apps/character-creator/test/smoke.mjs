@@ -4945,8 +4945,8 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
 
   // TWO PALETTES ARE LIVE SINCE 2026-09-20, so this runs twice. Board & Tissue
   // retoned the five RPG apps through a :root in THIS app's stylesheet, which
-  // those five load after shared; FilamentForge, MediaVault and Pick 3 Cut 5
-  // load their own file instead and keep shared's Ley Verdigris. Checking only
+  // those five load after shared; FilamentForge and MediaVault load their own
+  // file instead and keep shared's Ley Verdigris. Checking only
   // shared would have left the palette the RPG suite actually renders with
   // entirely unmeasured - and it is the one that changed.
   //

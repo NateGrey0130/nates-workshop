@@ -44,18 +44,13 @@ second pair of eyes on a run you already did.
 3. **Apply schema and data FIRST**, if the change needs them. See
    [the ordering rule](#the-ordering-rule). This step is wrong by default.
 4. **Verify**, at the layer the change lives in:
-   - **always**, the five smoke suites:
+   - **always**, the three smoke suites:
      `node apps/character-creator/test/smoke.mjs`,
      `node apps/filament-forge/test/smoke.mjs`,
-     `node apps/pick3cut5/test/smoke.mjs`,
-     `node apps/pick3cut5/test/game.mjs`,
      `node apps/media-vault/test/smoke.mjs`.
      `smoke.mjs --section <name>` is for iterating; **the merge gate is the
      flagless run**, and a partial run labels itself `PARTIAL SMOKE PASSED` so
      it cannot be quoted as this step.
-   - **touched anything Pick 3 Cut 5 loads, or an Access policy:**
-     `node apps/pick3cut5/test/smoke.mjs --remote`, the only check that fetches
-     production's assets with no session (`pick3cut5`).
    - **added a class or catalog rows:** update the book's
      `**Rows citing this book:**` line in its survey **in the same commit**, and
      its `**Status:**` line if it moved. `test/regression.mjs` prints the line to
@@ -174,7 +169,7 @@ node scripts/deploy-sweep.mjs
 
 It walks the last twenty first-parent commits on `origin/main`, names any that
 did not ship (including one with no check-run), and says which pending ones a
-later deploy already carried. It also compares `workers/pick3cut5-room`'s
+later deploy already carried. It also compares `workers/table-room`'s
 newest commit with its live `GIT_SHA`, because a merge never deploys that
 Worker. A timestamp gap there says the Worker may be stale, not that it
 matters: read the diff, then deploy or decide not to. Report only; it never
@@ -222,15 +217,9 @@ It compares migrations, data scripts, tables, columns and published classes
 against production. **Run it before the merge as well as after**: an unapplied
 data script shows as `DATA SCRIPT NOT RUN`. A clean run prints `NO DRIFT`.
 
-Then ask production for a string the change added:
-
-```bash
-curl -s https://nates-workshop.pages.dev/apps/pick3cut5/ | grep -c '<a string the change added>'
-```
-
-Most of the site 302s to the Access wall, so that works only on the Pick 3
-Cut 5 bypass paths; elsewhere, load the page in a logged-in browser and look for
-the string.
+Then ask production for a string the change added. The whole site 302s to the
+Access wall without a session, so a bare `curl` sees only the redirect: load
+the page in a logged-in browser and look for the string.
 
 Exit codes from `wrangler d1 execute` are advisory: query the thing back.
 

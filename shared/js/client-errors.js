@@ -20,11 +20,6 @@
 //
 // The field caps here are a courtesy to the network. The server caps every
 // field again, because a browser is not obliged to run this file.
-//
-// NOT loaded by Pick 3 Cut 5. That page sits outside the Access wall, every
-// one of its five Access bypass destinations is in use
-// (apps/pick3cut5/test/smoke.mjs, MAX_ACCESS_DESTINATIONS), and this endpoint
-// is behind the wall. Reporting from it is a decision about a sixth bypass.
 (function (global) {
   var MAX_REPORTS = 5;
   var CAP = { message: 500, source: 500, stack: 2048, page: 500, ua: 300 };

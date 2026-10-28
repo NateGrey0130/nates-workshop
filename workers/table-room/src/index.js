@@ -1,8 +1,8 @@
 // The Table — the room Worker.
 //
 // It exists only to export the TableRoom Durable Object: a Pages project can
-// bind to a Durable Object but cannot define one, which is why Pick 3 Cut 5's
-// room is a Worker of its own too (the root wrangler.jsonc says so at length).
+// bind to a Durable Object but cannot define one (the root wrangler.jsonc says
+// so at length).
 //
 // NOTHING REACHES IT BUT THE PAGES BINDING. `workers_dev` is off and there is
 // no route, so the only way to a room is `env.TABLE_ROOM` in a Pages Function

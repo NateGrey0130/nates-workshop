@@ -1,7 +1,7 @@
 # Moving Nate's Workshop from Pages to Workers
 
 **Status: written up, not taken.** Nothing in the repo depends on this
-document. It exists because Pick 3 Cut 5 forced the question and the answer
+document. It exists because a live room forced the question and the answer
 deserved more than a sentence in a PR description.
 
 *Verified against Cloudflare docs on 2026-08-24.*
@@ -10,7 +10,8 @@ deserved more than a sentence in a PR description.
 
 ## Why the question came up
 
-Pick 3 Cut 5 needs one Durable Object per room. Cloudflare Pages **cannot
+A live room (first a party game since retired, now The Table) needs one
+Durable Object per room. Cloudflare Pages **cannot
 define a Durable Object class** — the docs say so in two places, and Pages DO
 bindings additionally require a `script_name` key that Workers treat as
 optional:
@@ -31,7 +32,7 @@ Not theory — these map onto things already worked around by hand in this repo.
 | Gain | Workers | Pages | Why it matters here |
 |---|:--:|:--:|---|
 | **Durable Objects inline** | ✅ | 🟡 | No second Worker, no `script_name`, no separate deploy step. "Merging is the deploy" becomes true again. |
-| **Rate Limiting binding** | ✅ | ❌ | The correct guardrail for a public generation endpoint. Its absence on Pages is *why* `/solo/generate` lives in the Worker instead of next to the other API routes. |
+| **Rate Limiting binding** | ✅ | ❌ | The correct guardrail for a generation endpoint. Its absence on Pages is why the retired party game's public generation route lived in its Worker instead of next to the other API routes. |
 | **`wrangler dev --remote`** | ✅ | ❌ | `CLAUDE.md` says "`--local` is not a mirror of production. It accumulates. Ask production." Remote dev attacks that at the root instead of documenting around it. |
 | **Workers Logs, Logpush, Tail Workers, source maps** | ✅ | ❌ | Today, debugging the Access JWT middleware or the Anthropic proxy in production means real-time tail only — nothing retained, nothing queryable, no stack traces worth reading. |
 | **Cron Triggers** | ✅ | ❌ | `ofd-refresh.mjs`, `drift-check.mjs`, and `repo-vs-live.mjs` are all run by hand today. |
@@ -106,9 +107,9 @@ Getting this wrong fails open, which is the bad direction.
    `pages_build_output_dir`.
 3. Decide the routing question above and land it — this is the bulk of it.
 4. Move `functions/api/_middleware.js` behind `run_worker_first` for `/api/*`.
-5. Fold `workers/pick3cut5-room/` back into the main Worker: the `Room` class
-   exports inline, both Pages bindings collapse into a plain DO binding, and
-   the separate deploy step and separate `ANTHROPIC_API_KEY` both disappear.
+5. Fold `workers/table-room/` back into the main Worker: the `TableRoom`
+   class exports inline, the Pages binding becomes a plain DO binding, and the
+   separate deploy step disappears.
 6. Recreate the Access application, capture the new AUD, update
    `wrangler.jsonc`.
 7. Set up Workers Builds to deploy on push to `main`, replacing the Pages Git
@@ -153,8 +154,8 @@ Two of the gains in the table above turn out to describe exactly that outage —
 Workers Builds surfaces a build failure as a build failure, and Workers Logs
 would have made the gap between "merged" and "serving" visible rather than
 inferable. So the table understated its own case: **"Merging is the deploy"
-becomes true again** was written about the second deploy command for
-`pick3cut5-room`, and it also covers a deploy that silently does not happen.
+becomes true again** was written about the second deploy command for the
+room Worker, and it also covers a deploy that silently does not happen.
 
 It is still not enough to move. The failure has a guard now
 (`apps/character-creator/test/checks/environment.mjs` §9) and a verification

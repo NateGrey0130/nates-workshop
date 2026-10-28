@@ -9,19 +9,7 @@
      four sizes; /favicon.ico carries 16/32/48 for the tab. The sources are
      shared/icons/logo.svg and logo-small.svg (the 16/32 cut: no stars,
      heavier ring and edges); every PNG and the .ico are renders of them. iOS reads
-     apple-touch-icon for Add to Home Screen and ignores everything else here.
-
-     apps/pick3cut5 deliberately has NO icon links. Its Access bypass is a list
-     of exact paths and all five destination slots are in use, so an icon link
-     IN THAT APP would demand a sixth that does not exist.
-
-     This paragraph used to end "its smoke test derives the list from this very
-     head", which is wrong about the file it sits in and was corrected while
-     taking WORKSHOP-UI-AUDIT W2. apps/pick3cut5/test/smoke.mjs reads its OWN
-     shell - `readFileSync(join(appDir, 'index.html'))`, appDir not repoRoot -
-     so nothing in the head you are reading now can reach that test, and the
-     four links below cost pick3cut5 nothing. The constraint is real; it just
-     lives one directory over. -->
+     apple-touch-icon for Add to Home Screen and ignores everything else here. -->
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">

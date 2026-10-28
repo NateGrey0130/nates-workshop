@@ -2498,9 +2498,9 @@ export async function run() {
     // THE ROOMS THIS DOOR OPENS ONTO ARE THE RPG SUITE, and since 2026-09-20
     // that is no longer shared/styles.css. Board & Tissue retoned the five RPG
     // apps through a :root in apps/character-creator/styles.css and left
-    // FilamentForge, MediaVault and Pick 3 Cut 5 on shared's Ley Verdigris, so
-    // comparing the landing page against shared would now assert that the front
-    // door matches the three apps it is deliberately NOT toned like. The hub is
+    // FilamentForge and MediaVault on shared's Ley Verdigris, so comparing the
+    // landing page against shared would now assert that the front door matches
+    // the two apps it is deliberately NOT toned like. The hub is
     // orange because the suite is.
     const shared = readFileSync(join(appDir, 'styles.css'), 'utf8');
 

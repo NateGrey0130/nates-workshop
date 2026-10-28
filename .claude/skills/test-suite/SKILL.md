@@ -28,8 +28,6 @@ the parser's output, not the parser.
 |---|---|---|
 | `apps/character-creator/test/smoke.mjs` | the machinery: parser, dice, composition, schema, and what the repo says about itself | **`smoke`** |
 | `apps/filament-forge/test/smoke.mjs` | that app's README, its snapshot SQL, its sanitizers | **`smoke`** |
-| `apps/pick3cut5/test/smoke.mjs` | which paths must sit outside the Access wall, and that they are exempted | **`smoke`** |
-| `apps/pick3cut5/test/game.mjs` | all 56 reachable rounds, server budget rules against the client's copy | **`smoke`** |
 | `apps/media-vault/test/smoke.mjs` | the localStorage merge planner, and that no endpoint can replace a library | **`smoke`** |
 | `scripts/menu-check.mjs` | every new claim about another file says where it was read | **`menus`** |
 | `apps/character-creator/test/regression.mjs` | real HTTP against real endpoints, on a D1 built from nothing | **`regression`** |
@@ -37,7 +35,7 @@ the parser's output, not the parser.
 | `apps/character-creator/test/ui-shots.mjs` | that seven pages load in a real headless Chrome at desktop and phone size without a console error, a sideways scroll or sticky chrome over half the screen; keeps a PNG of each | not run by CI; a report, exit 0 unless `--strict` |
 
 The three bold names are required status checks on `main`. **`.github/workflows/tests.yml` runs
-the first five under one job, so a job id is a check-run name: renaming a job
+the first three under one job, so a job id is a check-run name: renaming a job
 leaves a required check that never reports and nothing can merge.** Do not rename
 one without editing the ruleset.
 

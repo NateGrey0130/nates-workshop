@@ -202,8 +202,6 @@ export function runMergeCheck({ repoRoot, tests, remote }) {
         ['smoke', ['apps/character-creator/test/smoke.mjs'], true],
         ['regression', ['apps/character-creator/test/regression.mjs'], group('palladium')],
         ['filament-forge', ['apps/filament-forge/test/smoke.mjs'], group('tools')],
-        ['pick3cut5', ['apps/pick3cut5/test/smoke.mjs'], group('tools')],
-        ['pick3cut5-game', ['apps/pick3cut5/test/game.mjs'], group('tools')],
         ['media-vault', ['apps/media-vault/test/smoke.mjs'], group('tools')],
         ['marvel-heroes', ['apps/marvel-heroes/test/smoke.mjs'], group('marvel')],
       ];

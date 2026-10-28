@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- The tools group's database (DB_TOOLS, nates-workshop-tools): the tables of
--- FilamentForge and MediaVault. Pick 3 Cut 5, the third tool, keeps no tables.
+-- FilamentForge and MediaVault.
 -- groups.json says which group owns what; db/schema.sql is Palladium's
 -- database and holds none of these once each app has moved.
 --

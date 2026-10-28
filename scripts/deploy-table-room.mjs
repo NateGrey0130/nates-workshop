@@ -6,8 +6,7 @@
 //   node scripts/deploy-table-room.mjs --dry-run      # build, print bindings, deploy nothing
 //   node scripts/deploy-table-room.mjs --allow-dirty  # records <sha>-dirty; you almost never want this
 //
-// A MERGE DOES NOT DEPLOY THIS WORKER, exactly as for Pick 3 Cut 5's room. The
-// Pages project binds it by script_name (the root wrangler.jsonc), so it must
+// A MERGE DOES NOT DEPLOY THIS WORKER. The Pages project binds it by script_name (the root wrangler.jsonc), so it must
 // be deployed BEFORE the first merge that binds it, and again after any merge
 // that changes workers/table-room/. `node scripts/deploy-sweep.mjs` names it
 // when main has moved past what is live.

@@ -47,7 +47,6 @@ Build briefs, in rough order:
 | brief | produced |
 |---|---|
 | `claude-code-phase1-prompt.md` | the character creator's first build — the core data model |
-| `pick3cut5-claude-code-prompt.md` | `apps/pick3cut5/` and `workers/pick3cut5-room/` |
 | `filament-forge-standardization-prompt.md` | FilamentForge onto D1 with the `ff_` prefix |
 | `media-vault-standardization-prompt.md` | MediaVault onto D1 |
 | `gm-grants-prompt.md` | `apps/character-creator/docs/plans/19-gm-grants.md`, then the first grants slice |

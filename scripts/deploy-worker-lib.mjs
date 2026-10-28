@@ -1,16 +1,15 @@
 // Deploy one of this repo's standalone Workers, always recording which commit
-// it was built from. Shared by the two scripts that are its only callers:
+// it was built from. Its one caller today:
 //
-//   node scripts/deploy-room.mjs         workers/pick3cut5-room
 //   node scripts/deploy-table-room.mjs   workers/table-room
 //
-// Each takes --dry-run (build, print bindings, deploy nothing) and
+// which takes --dry-run (build, print bindings, deploy nothing) and
 // --allow-dirty (see below; you almost never want it).
 //
 // ONE SCRIPT PER WORKER, NOT A --worker FLAG. A flag retyped from prose is the
-// failure this whole file exists to end (deploy-room.mjs's header has the
-// 2026-09-02 incident), and a forgotten --worker would deploy the OTHER Worker,
-// successfully, with nothing looking wrong.
+// failure this whole file exists to end (a hand-typed `wrangler deploy` once
+// shipped without its sha, 2026-09-02), and a forgotten --worker would deploy
+// the wrong Worker, successfully, with nothing looking wrong.
 //
 // WHAT THE SHA BUYS. `deploy-sweep.mjs` reads the GIT_SHA binding back off the
 // live Worker and answers "is it stale" with `git log <deployed>..origin/main
