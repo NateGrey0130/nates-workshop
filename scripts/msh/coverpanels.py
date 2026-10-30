@@ -1777,6 +1777,17 @@ def coverage(book, entries):
             if (h is None) != (b.get('kind') == 'line' and roster.norm(e['header']) in no_health):
                 lines.append('  HEALTH %r: %s' % (b['health'], e['header']))
                 bad = True
+    # a book whose every full block prints these rows (registry
+    # `rows_printed`: MH9's Karma, Resources and Popularity) holds each one to
+    # a value. A row the stream cut short is otherwise None, which the check
+    # skips: MH9's ten Karma rows printed with no colon (speck_lines) and the
+    # Swordsman's wrapped Resources (joined_lines) each passed silently
+    for label in book.get('rows_printed', []):
+        for e in entries:
+            for b in e['blocks']:
+                if b.get('kind') != 'line' and not b.get(label.lower()):
+                    lines.append('  %s %r: %s' % (label.upper(), b.get(label.lower()), e['header']))
+                    bad = True
     full = sum(1 for e in entries for b in e['blocks'] if b.get('kind') != 'line')
     line = sum(1 for e in entries for b in e['blocks'] if b.get('kind') == 'line')
     # a form grid (registry `form_grids`) and a grid inside a card
