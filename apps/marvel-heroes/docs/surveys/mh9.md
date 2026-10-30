@@ -3,7 +3,8 @@
 Marvel Super Heroes adventure module, Roger E. Moore, 1986. Registry entry:
 `scripts/msh/books.json` -> `mh9`. Measured 2026-10-30.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
+**Rows citing this book:** 190 `msh_book_text` rows over 43 character entries
+in production (`DB_MARVEL`, read back 2026-10-30).
 
 Everything here was measured and read on the page images.
 
