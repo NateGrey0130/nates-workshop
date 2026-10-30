@@ -793,8 +793,19 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             k = i + 2
             while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
                 k += 1
+            body = k
             while k < len(lines) and not (booklet.POWER_HEAD.match(lines[k]['text']) or section.match(lines[k]['text'])):
                 k += 1
+            if cut[0].get('text') == 'card':
+                # the lines skipped are the grid's text (a cut_grids entry's
+                # "text": "card", MH7's Fire Creatures, printed 13, whose
+                # paragraph runs from the foot of column 1 to the next column
+                # at the card's band, which opponents()'s unsplit stream does
+                # not follow): parse() gives them to the grid's entry, after
+                # any bracket its Health line carries
+                cur.setdefault('_cut_text', []).append(
+                    (cut[0]['name'], [lines[x]['health_note'] for x in range(i + 2, body) if lines[x].get('health_note')]
+                     + [lines[x]['text'] for x in range(body, k)]))
             cuts.remove(cut[0])
             i = k
             continue
@@ -1334,6 +1345,15 @@ def parse(book, slug):
                                 ' '.join(x['code'] or '?' for x in a['abilities']), a['health'], a['karma'],
                                 ' '.join(x['code'] or '?' for x in b['abilities']), b['health'], b['karma']))
         entries.remove(hits[0])
+    # a cut grid's text as its card read it (registry cut_grids "text":
+    # "card"): the grid's entry, on the card's page, takes it for its prose
+    for card in [e for e in entries if e.get('_cut_text')]:
+        for name, text in card.pop('_cut_text'):
+            hits = [e for e in entries if e['kind'] == 'opponent' and roster.norm(e['header']) == roster.norm(name)
+                    and e['part'] == card['part'] and set(e['pages']) <= set(card['pages'])]
+            if len(hits) != 1:
+                raise SystemExit('%s: cut_grids gives %s\'s text from %s to %d entries, not 1' % (slug, name, card['header'], len(hits)))
+            hits[0]['prose'] = text
     for e in entries:
         e.pop('_sec', None)
         for p in e['powers']:
