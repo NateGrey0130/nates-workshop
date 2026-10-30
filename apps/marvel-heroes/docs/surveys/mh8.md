@@ -1,7 +1,7 @@
 # Survey: MH8 Fault Line (TSR6866)
 
-> **DRAFT.** Measured up to *Which reader fits*, which is not finished: the
-> trial parse is the next row's. Nothing here is imported yet.
+> **DRAFT.** Measured through *Which reader fits* (the trial parse); the
+> Marvel suite has not yet run on it. Nothing here is imported yet.
 
 Marvel Super Heroes adventure module, Kim Eastland, 1985. Registry entry:
 `scripts/msh/books.json` -> `mh8`. Measured 2026-10-29.
@@ -160,12 +160,112 @@ quote (above) will unbalance the double quotes in several rows.
 
 ## Which reader fits
 
-**Not finished.** The trial parse is the next row's. What is measured: the
-book is MH7's booklet cards (printed 12-16, three columns, rank words, full
-labelled blocks) with no cover panel at all, so `cover-panels`
-(`scripts/msh/coverpanels.py`) reading `character_ranges` with `panels`
-empty is the likely reader, and the shapes above are what it has to be
-taught or told in the registry. This survey sets no `layout`.
+**`cover-panels` (`scripts/msh/coverpanels.py`), reading
+`character_ranges` with `panels` empty, with five things taught to it.**
+Measured, not argued: a scratch copy of `scripts/msh/` and
+`apps/marvel-heroes/data/` at `16481676` (this branch; its scripts are
+`origin/main` `6944ac13`'s) with this entry plus `"layout": "cover-panels"`,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE`, 2026-10-30.
+The stock reader exits 1 at once: the Swordsman's `Equipment/Possessions:`
+is keyed by its own words, a section `npcs.py` writes no row for (it is
+reported under MASTERMIND, item 1 below).
+
+With that keyed, it reads to the end and fails the checklist: 12 entries,
+15 blocks, 4 failing, and the Swordsman, the Living Laser and the SWAT Team
+Member not found. Their blocks are read as Mastermind's second and third
+and the Police's second; the Crooks' block reads no rank at all; the Police's
+Intuition is unread; and the Living Laser's and Juggernaut's Karma fail as
+printed (*Stat blocks*).
+
+With the registry-only workarounds below and four trial-only stand-ins for
+items 1-3 and 5 (each a registry field used for what it was not made for,
+or a patch of the scratch copy), a trial `mh8-overrides.json` holding the
+three Karma misprints, and the checklist's Crooks named as two cards,
+Punks and Hoods (decision 4), `roster.py mh8` **exits 0: 16 entries, 16
+blocks, 13 pass and 3 known from the overrides, all found: yes.** Every
+Health holds on its ranks (the table above).
+
+What the stock reader misses, each with its page and cause.
+
+Told in the registry, no reader change:
+
+- **Sections keyed otherwise than by their words.** `section_keys` as MH7's:
+  `Equipment/Possessions` to `equipment` (the Swordsman's SWORD. is gear,
+  printed 13), `Talent` to `talents` and `Comments` and
+  `Comments and Equipment` to `notes` (Merrir and the Crooks, printed 14;
+  the Police and the SWAT Team Member, printed 16). Without them the reader
+  stops on the first, and would on each of the others.
+- **Juggernaut's background is a run-in** (printed 13, column 3), `BACKGROUND.`
+  inside Powers, and a `NOTE:` follows it. Without a label it is read as a
+  power named Background, the note as its text. `section_labels` with
+  `BACKGROUND` and `NOTE`, keyed `background` and `notes`, reads them as
+  sections (the section regex already takes a full stop).
+- **The note over the three illusion cards** (printed 13, TSV y 126-384 of
+  3197, across all three columns; the card headers start at y 469). The
+  reader takes it column by column, as text of the card above each piece:
+  its first column ends Mastermind's background (printed 12), its second the
+  Swordsman's and its third the Living Laser's ILLUSIONS., and the parse
+  still exits 0. `drop_above` at y 420 on printed 13 leaves it out
+  (decision 8).
+
+What the reader must learn, all in `coverpanels.py` behind the registry,
+with every earlier book's `roster.json`, `book-text.sql` and `npcs.json`
+rows proved byte-identical before and after. Five things:
+
+1. **A header with a status after it.** `SWORDSMAN; dead` and
+   `LIVING LASER; dead` (printed 13, columns 1 and 2), each with its
+   trademark sign read as a closing double quote. The lower case fails
+   `booklet.is_header`, so each card's block is read as Mastermind's
+   second and third, his entry runs on to printed 13, and the checklist
+   misses both. The name is the capitals before the semicolon; the status
+   is kept for the card's prose (decision 6). In the trial a `speck_lines`
+   rewrote each line to the name and its sign, which drops the status.
+2. **A header in mixed case over an identity line.** `SWAT Team Member`
+   (printed 16, column 3) prints no trademark sign, and `plain_headers`
+   takes only capitals right over a `Fighting:` row, where this header has
+   its identity line between. So its block is read as the Police's second
+   and its text as theirs. In the trial a `drop_lines` and a `lost_headers`
+   put it back, which states the TSV does not hold the header when it does.
+3. **One block in two value columns.** CROOKS (printed 14, column 2)
+   prints a `Punks Hoods` line under its header and two values on every
+   row, Fighting to Talents. The reader reads `GOOD EXCELLENT` as no rank,
+   so all seven ranks are unread, and the block's crop gives it the Punks'
+   Health 28. Trial patch: split the rows into two headed blocks, Punks
+   and Hoods, each with its own value column, each re-read from a crop cut
+   at the Hoods' column (a crop of the whole row gives the Hoods the Punks'
+   numbers); the Comments under both then go to the Hoods only, and the
+   reader row decides where (decision 4: a card each, so both). The welded
+   Karma reads 1216 on the Punks' block (a `misprint` override to 12) and
+   nothing on the Hoods' (16 needs a way in: the override's `also`, or a
+   value set by the registry).
+4. **An identity of more than two lines.** The reader keeps two lines of
+   identity and puts the rest in the entry's prose: Mastermind's (printed
+   12, column 3, his name and a role over three lines) loses its last two,
+   and the Wasp's (printed 16, column 1, three lines) its third. The parse
+   exits 0 either way. The identity is every line from the header to the
+   block on a card that prints its block under it.
+5. **A stat label read in lower case.** The Police's `Intuition:` (printed
+   16, column 2) reads `intuition:` in the TSV and in the block's crop, so
+   `booklet.STAT_LINE` does not take it and the block fails `unread: I`.
+   In the trial a `speck_lines` put the capital back, which calls a misread
+   a speck. `STAT_LINE` is shared by every reader, so a fix that folds the
+   label's case is proved on every book, or is a registry line fix of its
+   own.
+
+Left to the data row, no reader change: the SWAT Team Member's weapon
+table (printed 16, column 3) reads its member numbers as one string of
+letters (`OMDONOALWNM`) on a line of its own, its rows out of order, in
+that card's Comments; the Wasp's FLIGHT. reads the fraction one half as
+`'/2` twice; and a trademark sign read as a closing double quote leaves
+Juggernaut's NOTE: with an odd count of double quotes in the parse, which
+`npcs.unpaired` stops the build on unless it is folded first (*Quote
+marks*; `npcs.py` was not run here). Each is a `text` override read off
+the page image, or the table's lines dropped.
+
+No other reader fits: the cards print rank words and no numbers, labelled
+as MH1-7's are, and MH7's booklet cards on printed 12-16 are this book's
+shape (mh7.md, *Which reader fits*). This survey sets no `layout`, as
+MH1-7's did not: that is the parser's choice.
 
 ## Decisions this survey leaves open
 
