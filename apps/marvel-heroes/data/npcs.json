@@ -78,6 +78,11 @@
    "book": "MH8 Fault Line",
    "code": "TSR6866",
    "pages": "Adventure 12-16"
+  },
+  {
+   "book": "MH9 Gates of What If",
+   "code": "TSR6867",
+   "pages": "Adventure 4-40"
   }
  ],
  "books": [
@@ -292,6 +297,17 @@
    ],
    "part": "Adventure",
    "panels": []
+  },
+  {
+   "slug": "mh9",
+   "short": "MH9",
+   "title": "MH9 Gates of What If",
+   "pages": [
+    4,
+    40
+   ],
+   "part": "Adventure",
+   "panels": []
   }
  ],
  "teams": [
@@ -357,7 +373,8 @@
   "Alpha Flight",
   "MH6 Thunder Over Jotunheim",
   "MH7 The Last Resort",
-  "MH8 Fault Line"
+  "MH8 Fault Line",
+  "MH9 Gates of What If"
  ],
  "characters": [
   {
@@ -62357,6 +62374,3825 @@
    ],
    "appearances": [],
    "book": "mh8"
+  },
+  {
+   "id": "a-i-m-soldiers-mh9",
+   "name": "A.I.M. Soldiers",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "a-i-m-soldiers-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "12",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "golden-robots-mh9",
+   "name": "Golden Robots",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "golden-robots-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "155",
+       "karma": "None",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "demons-mh9",
+   "name": "Demons",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "demons-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "42",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "a-i-m-gunmen-mh9",
+   "name": "A.I.M. Gunmen",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "a-i-m-gunmen-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "12",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "guardsmen-robots-mh9",
+   "name": "Guardsmen Robots",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "guardsmen-robots-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "None",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "a-i-m-scientists-mh9",
+   "name": "A.I.M. Scientists",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "a-i-m-scientists-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      20
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         null,
+         null
+        ],
+        [
+         "I",
+         null,
+         null
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": "Variable",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "RI",
+        "printed": "Var"
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "a-i-m-technicians-mh9",
+   "name": "A.I.M. Technicians",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "a-i-m-technicians-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      20
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "16",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "geoff-krubb-mh9",
+   "name": "Geoff Krubb",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "geoff-krubb-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      20
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "super-adaptoid-mh9",
+   "name": "Super-Adaptoid",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "super-adaptoid-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      21
+     ],
+     "identity": [
+      "A.|.M. criminal android",
+      "Mainline MARVEL UNIVERSE villain"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "150 (see below)",
+       "karma": "18",
+       "resources": "Feeble",
+       "popularity": "4",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": 150
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Adaptation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "swordsman-mh9",
+   "name": "Swordsman",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "swordsman-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      21,
+      22
+     ],
+     "identity": [
+      "Real name unknown",
+      "International criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "18",
+       "resources": "Amazing",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "attuma-mh9",
+   "name": "Attuma",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "attuma-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      22
+     ],
+     "identity": [
+      "Barbarian ruler of Atlantis",
+      "Criminal and would-be conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "165",
+       "karma": "20",
+       "resources": "Excellent (A.I.M. backed)",
+       "popularity": "-8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Extraordinary Vision"
+      },
+      {
+       "name": "Swimming Speed"
+      },
+      {
+       "name": "Water Breather"
+      },
+      {
+       "name": "Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "klaw-mh9",
+   "name": "Klaw",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "klaw-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      22
+     ],
+     "identity": [
+      "Ulysses Klaw",
+      "International criminal and scientist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "22",
+       "resources": "Excellent (A.I.M. backed)",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Sound Objects"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "sound-objects-mh9",
+   "name": "Sound Objects",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "sound-objects-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      22
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "72",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "wasp-janet-pym-mh9",
+   "name": "Wasp (Janet Pym)",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "wasp-janet-pym-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      22,
+      23
+     ],
+     "identity": [
+      "Janet Pym",
+      "Retired Defenders East crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "34",
+       "resources": "Excellent",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wasp Sting"
+      },
+      {
+       "name": "Insect Communication/control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "captain-america-jeffrey-mace-mh9",
+   "name": "Captain America (Jeffrey Mace)",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "captain-america-jeffrey-mace-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      23
+     ],
+     "identity": [
+      "Jeffrey Mace",
+      "Retired crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "36",
+       "resources": "Feeble",
+       "popularity": "80 (95 with U.S. government)",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 36,
+        "corrected": 26
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "skrulls-mh9",
+   "name": "Skrulls",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "skrulls-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Alien race",
+      "Divergent Earth villains"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Change"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "super-skrull-mh9",
+   "name": "Super Skrull",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "super-skrull-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Altered Skrull warrior",
+      "Leader of Skrulls on Earth"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "275",
+       "karma": "30",
+       "resources": "Excellent (A.I.M. backed)",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Skrull Shape-Changing"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Acrobatics"
+      },
+      {
+       "name": "Optic Blasts"
+      },
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "henry-pym-mh9",
+   "name": "Henry Pym",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "henry-pym-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Defenders East research scientist",
+      "Divergent Earth hero"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "36",
+       "resources": "Incredible",
+       "popularity": "65",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 70,
+        "corrected": 28,
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": 36,
+          "corrected": 46
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Insect Communication/control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "nick-fury-mh9",
+   "name": "Nick Fury",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "nick-fury-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Executive director of S.H.1.E.L.D.",
+      "Divergent Earth hero"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "50",
+       "resources": "Amazing",
+       "popularity": "75"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "captain-america-jack-monroe-mh9",
+   "name": "Captain America (Jack Monroe)",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "captain-america-jack-monroe-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      26
+     ],
+     "identity": [
+      "Jack Monroe",
+      "New Invaders crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "22",
+       "resources": "Good",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shield"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "hercules-mh9",
+   "name": "Hercules",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "hercules-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      26
+     ],
+     "identity": [
+      "Olympian god; immortal",
+      "Defenders West crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "320",
+       "karma": "50",
+       "resources": "Typical",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Resistance To Fire"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "hulk-mh9",
+   "name": "Hulk",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "hulk-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "formerly Robert Bruce Banner",
+      "International menace"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         150,
+         "ShX"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "285",
+       "karma": "6",
+       "resources": "Feeble",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "mad-thinker-mh9",
+   "name": "Mad Thinker",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "mad-thinker-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "Real name unknown Bie.",
+      "Criminal scientist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": "62",
+       "resources": "Remarkable",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Computer Brain"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "mad-thinker-s-androids-mh9",
+   "name": "Mad Thinker's Androids",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "mad-thinker-s-androids-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "8",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "scarlet-witch-mh9",
+   "name": "Scarlet Witch",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "scarlet-witch-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "Wanda Maximoff",
+      "Defenders East crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "60",
+       "resources": "Good",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Altering Probability Fields"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "victor-mh9",
+   "name": "Victor",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "victor-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Victor von Doom",
+      "Monarch, scientist, crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "140",
+       "resources": "Amazing",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ability Enhancement"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Force Beams"
+      },
+      {
+       "name": "Electrified Armor"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Air Supply"
+      },
+      {
+       "name": "Radio"
+      },
+      {
+       "name": "Amplifier"
+      },
+      {
+       "name": "Skrull Detector"
+      },
+      {
+       "name": "Armor Modifications"
+      },
+      {
+       "name": "Magic"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "mephisto-mh9",
+   "name": "Mephisto",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "mephisto-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Lord of Hell",
+      "Divergent Earth villain"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "rank_only": true,
+       "health": "1225",
+       "karma": "250",
+       "resources": "Unearthly",
+       "popularity": "-100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mystic Force Bolts"
+      },
+      {
+       "name": "Other Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "valor-mh9",
+   "name": "Valor",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "valor-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Valeria von Doom",
+      "Latverian crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "32",
+       "resources": "Amazing",
+       "popularity": "20",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 32,
+        "corrected": 22
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "thing-divergent-earth-mh9",
+   "name": "Thing (Divergent Earth)",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "thing-divergent-earth-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      30,
+      31
+     ],
+     "identity": [
+      "Benjamin J. Grimm",
+      "S.H.I.E.L.D. Special Forces agent"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "220",
+       "karma": "50",
+       "resources": "Excellent",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ability Enhancement"
+      },
+      {
+       "name": "Sensory Protection"
+      },
+      {
+       "name": "Voice Amplifier"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "crystal-mh9",
+   "name": "Crystal",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "crystal-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [
+      "Crystalia Amaquelin Storm",
+      "S.H.I.E.L.D. Special Forces agent"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": "Excellent",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elemental Control"
+      },
+      {
+       "name": "Respiratory Protection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "daredevil-mh9",
+   "name": "Daredevil",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "daredevil-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      31,
+      32
+     ],
+     "identity": [
+      "Matthew M. Murdock",
+      "S.H.I.E.L.D. Special Forces agent"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "91",
+       "resources": "Excellent",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Heightened Senses"
+      },
+      {
+       "name": "Radar Sense"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "human-torch-jim-hammond-mh9",
+   "name": "Human Torch (Jim Hammond)",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "human-torch-jim-hammond-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Jim Hammond (adopted name)",
+      "New Invaders crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "22",
+       "resources": "Excellent",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flame Generation And Control"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Android Physiology"
+      },
+      {
+       "name": "Final Fireball"
+      },
+      {
+       "name": "Water Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "hawkeye-mh9",
+   "name": "Hawkeye",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "hawkeye-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      33,
+      34
+     ],
+     "identity": [
+      "Clint Barton",
+      "Defenders East crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 33,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "22",
+       "resources": "Good",
+       "popularity": "19"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extraordinary Vision"
+      },
+      {
+       "name": "Bow Skill"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "quicksilver-mh9",
+   "name": "Quicksilver",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "quicksilver-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      33
+     ],
+     "identity": [
+      "Pietro Maximoff",
+      "Defenders East crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 33,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "150",
+       "karma": "36",
+       "resources": "Good",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Lightning Speed"
+      },
+      {
+       "name": "Thick Skin"
+      },
+      {
+       "name": "Air Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "flare-mh9",
+   "name": "Flare",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "flare-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      34,
+      35
+     ],
+     "identity": [
+      "Alison Blaire",
+      "Defenders East crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 34,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "20",
+       "resources": "Good",
+       "popularity": "25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Sound/light Conversion"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "nomad-mh9",
+   "name": "Nomad",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "nomad-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      35
+     ],
+     "identity": [
+      "Rick Jones",
+      "Independent crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 35,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "Poor",
+       "popularity": "65"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "invisible-woman-mh9",
+   "name": "Invisible Woman",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "invisible-woman-mh9",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      36
+     ],
+     "identity": [
+      "Susan Storm Richards",
+      "Fantastic Four crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "40",
+       "resources": "Remarkable",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "mister-fantastic-mh9",
+   "name": "Mister Fantastic",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "mister-fantastic-mh9",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      36
+     ],
+     "identity": [
+      "Reed Richards",
+      "Fantastic Four crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": "100",
+       "resources": "Remarkable",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elastic Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Grappling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "she-hulk-mh9",
+   "name": "She-Hulk",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "she-hulk-mh9",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      36,
+      37
+     ],
+     "identity": [
+      "Jennifer Walters",
+      "Fantastic Four crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "175",
+       "karma": "36",
+       "resources": "Excellent",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Disease Immunity"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "human-torch-johnny-storm-mh9",
+   "name": "Human Torch (Johnny Storm)",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "human-torch-johnny-storm-mh9",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      37,
+      38
+     ],
+     "identity": [
+      "Johnny Storm",
+      "Fantastic Four crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 37,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": "Remarkable",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Generate And Control Fire"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Nova Blast"
+      },
+      {
+       "name": "Water Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "thing-mh9",
+   "name": "Thing",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "thing-mh9",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      37
+     ],
+     "identity": [
+      "Benjamin J. Grimm",
+      "Independent hero"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 37,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "200",
+       "karma": "50",
+       "resources": "Remarkable",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "wasp-janet-van-dyne-mh9",
+   "name": "Wasp (Janet Van Dyne)",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "wasp-janet-van-dyne-mh9",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      38,
+      39
+     ],
+     "identity": [
+      "Janet Van Dyne",
+      "Avengers chairperson and crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 38,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "50",
+       "resources": "Excellent",
+       "popularity": "65"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wasp Sting"
+      },
+      {
+       "name": "Insect Communication"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "captain-america-steve-rogers-mh9",
+   "name": "Captain America (Steve Rogers)",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-america-steve-rogers-mh9",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      39
+     ],
+     "identity": [
+      "Steve Rogers",
+      "Avengers crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": "Excellent",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shield"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "spider-man-mh9",
+   "name": "Spider-Man",
+   "team": "MH9 Gates of What If",
+   "versions": [
+    {
+     "id": "spider-man-mh9",
+     "label": null,
+     "team": "MH9 Gates of What If",
+     "part": "Adventure",
+     "pages": [
+      39,
+      40
+     ],
+     "identity": [
+      "Peter Parker",
+      "Independent hero"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "160",
+       "karma": "110",
+       "resources": "Poor",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall Crawling"
+      },
+      {
+       "name": "Spider-Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      },
+      {
+       "name": "Spider Tracers"
+      },
+      {
+       "name": "Spider Beacon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
+  },
+  {
+   "id": "sub-mariner-mh9",
+   "name": "Sub-Mariner",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "sub-mariner-mh9",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      39
+     ],
+     "identity": [
+      "Namor of Atlantis",
+      "Avengers crimefighter"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "185",
+       "karma": "76",
+       "resources": "Good",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh9"
   }
  ]
 }

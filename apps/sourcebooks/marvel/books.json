@@ -267,6 +267,20 @@
     ]
    ],
    "total": 16
+  },
+  {
+   "slug": "mh9",
+   "title": "MH9 Gates of What If",
+   "code": "TSR6867",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     45
+    ]
+   ],
+   "total": 45
   }
  ]
 }

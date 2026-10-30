@@ -372,7 +372,24 @@ def main(slug_arg):
     for name, _p in book.get('index', []):
         index_case[norm(name)] = name
 
+    # A cover-panels card the registry names (MH9's page_names [part, page,
+    # NAME, card name]: three Captains America, two Human Torches, two Wasps
+    # and two Things, survey mh9.md decision 4), and a one-line grid the
+    # registry names because the page prints none (unnamed_grids: MH9's
+    # "A.I.M. Soldiers"): the name is the registry's as written. A page name's
+    # parenthesis is part of the name, not a version label, so each is a card
+    # of its own whose id follows it, as card_names' are. No earlier book sets
+    # page_names, and its unnamed_grids names build the same either way.
+    as_written = ({n[3] for n in book.get('page_names', [])}
+                  | {g['name'] for g in book.get('unnamed_grids', [])}) if panels else set()
+    page_named = {n[3] for n in book.get('page_names', [])} if panels else set()
+
+    def group_name(header):
+        return header if header in page_named else base_name(header)
+
     def display(header):
+        if header in as_written:
+            return header
         b = base_name(header)
         name = index_case.get(norm(b)) or title_case(b)
         if coded:
@@ -439,7 +456,7 @@ def main(slug_arg):
     statted = [e for e in entries if e['blocks']]
     by_name = {}
     for e in statted:
-        by_name.setdefault(norm(name_of(e) if booklet else base_name(e['header'])), []).append(e)
+        by_name.setdefault(norm(name_of(e) if booklet else group_name(e['header'])), []).append(e)
 
     chars, rows, card_part = [], [], {}
 
@@ -652,7 +669,7 @@ def main(slug_arg):
                 members.append({'name': display(m['name']), 'page': m['page']})
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
-                'id': eslug, 'label': variant(e['header']) if grid or not booklet else None,
+                'id': eslug, 'label': variant(e['header']) if (grid or not booklet) and e['header'] not in page_named else None,
                 'team': team_of_panel_card(e) if panels else team_of_entry(e) if booklet
                 else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
@@ -662,7 +679,7 @@ def main(slug_arg):
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
             })
         renamed = built_name(group[0]) in card_names
-        cid = ident(card_name(group[0])) if booklet or renamed else ident(base_name(group[0]['header']))
+        cid = ident(card_name(group[0])) if booklet or renamed else ident(group_name(group[0]['header']))
         card_part[cid] = group[0].get('part')
         chars.append({'id': cid, 'name': card_name(group[0]),
                       'team': versions[0]['team'],
