@@ -1,13 +1,9 @@
 # Survey: MH9 Gates of What If (TSR6867)
 
-> **DRAFT.** Measured up to *Decisions*, but for *Which reader fits*, which
-> is not finished: it needs the trial parse (row 7c). Nothing here is
-> imported yet.
-
 Marvel Super Heroes adventure module, Roger E. Moore, 1986. Registry entry:
 `scripts/msh/books.json` -> `mh9`. Measured 2026-10-30.
 
-**Rows citing this book:** none yet (no data has been built).
+**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
 
 Everything here was measured and read on the page images.
 
