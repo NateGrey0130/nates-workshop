@@ -81,7 +81,8 @@ def stream_of(book, slug, part, first, last):
         # the column beside it (printed 10's map, printed 14's panel); a word
         # whose centre is inside a box is not text. A box that takes no word
         # is stale, and stops the build.
-        for box in [b[2:] for b in book.get('art_boxes', []) if b[0] == part and b[1] == printed]:
+        boxes = [b[2:] for b in book.get('art_boxes', []) if b[0] == part and b[1] == printed]
+        for box in boxes:
             inside = lambda w: box[0] <= w['x'] + w['w'] / 2 < box[2] and box[1] <= w['y'] + w['h'] / 2 < box[3]
             if not any(inside(w) for w in words):
                 raise SystemExit('%s: art_boxes %s p.%d %r takes no word' % (slug, part, printed, box))
@@ -94,11 +95,24 @@ def stream_of(book, slug, part, first, last):
         edges = [0] + roster.gutters(body, W, book['columns']) + [W]
         for c in range(book['columns']):
             col = [w for w in body if edges[c] <= w['x'] + w['w'] / 2 < edges[c + 1]]
+            # MX1 (registry art_box_edge): an art box whose right edge falls
+            # inside this column narrows it, and the lines beside the box (the
+            # Mark VI's Gas Jets and Customization beside printed 10's map, at
+            # x 1272 against a column body at 874-880) start at the box's edge,
+            # not at the column's left, so a flush run-in there reads as flush.
+            # A word beside it boxed over twice the body height (that column's
+            # "areas", 76 px against 32, which sorted it under "away.") is cut
+            # to the body height from its top.
+            beside = [box for box in boxes if edges[c] < box[2] < edges[c + 1]] if book.get('art_box_edge') else []
+            near = lambda box, x, y0, y1: box[2] <= x and y0 < box[3] and y1 > box[1]
+            col = [dict(w, h=int(round(body_h))) if w['h'] > 2 * body_h
+                   and any(near(box, w['x'], w['y'], w['y'] + w['h']) for box in beside) else w for w in col]
             lines = [l for l in roster.lines_of(col) if l['conf'] >= 45 and any(ch.isalnum() for ch in l['text'])]
             if not lines:
                 continue
             left = sorted(l['x0'] for l in lines)[len(lines) // quantile]
             for l in lines:
+                edge = next((box[2] for box in beside if near(box, l['x0'], l['y0'], l['y1'])), None)
                 # MX1 (registry title_case_labels): a run-in label set in title
                 # case ("Known Powers:") is raised to the capitals roster.RUN_IN
                 # and roster.SECTION read
@@ -111,7 +125,7 @@ def stream_of(book, slug, part, first, last):
                     l['text'] = l['text'].replace(phrase, phrase.replace(':', NOT_A_COLON))
                 if bullet:
                     l['text'] = bullet.sub('', l['text'])
-                l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=left, body_h=body_h,
+                l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=max(left, edge or 0), body_h=body_h,
                          col_x0=max(0, edges[c] if c else left - 20), col_x1=edges[c + 1], big=False)
                 stream.append(l)
     # MX1 (registry speck_lines [part, page, as read, as printed], MH9's
