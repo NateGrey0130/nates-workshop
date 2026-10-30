@@ -292,6 +292,41 @@ def rows_from(texts, mends=()):
         # Resource p.9) is turned round
         texts = [re.sub(r'^(\s*\S{1,3})\s+((?:Shift\s?[XYZ]|C[lI1]\s?\d{4}|[A-Z][a-z]))\s+([0-9OolI]{1,4})\b',
                         r'\1 \3 \2', t) for t in texts]
+    if 'code_first_caps' in mends:
+        # MT2 (registry code_first_caps): the code in capitals before the
+        # number, bare ("F RM 30", printed 3-8 and 28-36) or bracketed ("F GD
+        # (10)", printed 52-63); a row letter welded to its code ("EIN 40") is
+        # split first
+        caps = r'(?:FE|PR|TY|GD|EX|RM|IN|AM|MN|UN|[A-Z][a-z])'
+        if 'row_marks' in mends:
+            # MT2 (registry row_marks): marks the crop hangs round a capital
+            # code, and TY read as FY ("AeAFY? 6" and "E*-TY-**\"6": Albert
+            # Einstein's A and E, printed 5, both TY 6 on the page image)
+            texts = [re.sub(r'^(\s*[FASERIP])\S*?(FE|PR|TY|FY|GD|EX|RM|IN|AM|MN|UN)[^\w\s(]*\s*(\d{1,4})\b',
+                            lambda m: '%s %s %s' % (m.group(1), 'TY' if m.group(2) == 'FY' else m.group(2), m.group(3)), t)
+                     for t in texts]
+        texts = [re.sub(r'^(\s*)([FASERIP])(' + caps + r')\s+(?=\(?\s*[0-9OolI])', r'\1\2 \3 ', t) for t in texts]
+        def turn(m):
+            # a 1 read as i inside the brackets (Red Wolf's R, printed 57),
+            # and a 3 read as 8 there ("RM(80)", printed 53, 57, 59, 61) where
+            # the 8 puts the number outside its code's range and a 3 makes it
+            # the code's standard number
+            num, code = m.group(3).replace('i', '1'), canon(m.group(2))
+            std = RANK_NUMBER.get(code) if code else None
+            if std is not None and '8' in num and str(std) == num.replace('8', '3') and not rank_ok({'number': fix_digits(num), 'code': code}):
+                num = num.replace('8', '3')
+            return '%s %s %s' % (m.group(1), num, m.group(2))
+        marks = r'(?:[^\w\s(]|_){0,3}'     # "RM_~ 30", the Vision's P, printed 3
+        texts = [re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')' + marks + r'\s*\(\s*([0-9OolIi]{1,4})\s*\)', turn, t) for t in texts]
+        texts = [re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')' + marks + r'\s*([0-9OolI]{1,4})\b', turn, t) for t in texts]
+        if 'slash_forms' in mends:
+            # MT2 (registry slash_forms): a second form's code and number after
+            # a slash on each row ("F RM 30 /IN- 40": Moon Knight, printed 4)
+            # is read as the row's alternate, and the block's Res: label as
+            # Resources; gridbooks.parse makes the two forms two blocks
+            slash = r'^(\s*\S{1,3}\s+\d{1,4}\s+[A-Z]{2})\s*/\s*([A-Z]{2})[^\w\s(]*\s*([0-9OolI]{1,4})\b'
+            texts = [re.sub(r'\bRes:', 'Resources:', re.sub(slash, r'\1 (\3 \2)', t)) if re.match(slash, t) else t
+                     for t in texts]
     rows = []
     for t in texts:
         m = ROW.match(t)
@@ -320,7 +355,8 @@ class GridReader:
         self.doc = None
         # one book's grid mends, each a registry field of its own (ME3); a
         # book that sets none reads every grid as it always has
-        self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes')
+        self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes',
+                                  'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -409,6 +445,12 @@ def secondary(rows, stream, end, mends=()):
             # ...and before a number, or after a closing bracket (Captain
             # Marvel's Popularity '/) 55' and Resources 'Pr(4) : a')
             out[k.lower()] = re.sub(r'(?<=\))\s+[^\w\s(].*$', '', re.sub(r'^[/|\\)]{1,3}\s*(?=\d)', '', out[k.lower()]))
+        if v and 'bracket_tail' in mends:
+            # MT2 (registry bracket_tail): an underscore and a mark after a
+            # closing bracket (the Twain android's Resources, FE (2), printed
+            # 36), which trailing_marks' rule, a mark that is not a word
+            # character, leaves
+            out[k.lower()] = re.sub(r'(?<=\))[\s\W_]+$', '', out[k.lower()])
     # ME3 (registry popularity_notes): a bracketed line under the grid that
     # opens with a word ('(The above are ...', Resource pp.6 and 8) is a note
     # on the grid, not the rest of its Popularity, which opens with a number
@@ -517,7 +559,7 @@ def parse(slug):
     return book, stream, entries
 
 
-def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
+def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=None, run_on=()):
     """The book's entries from one stream. With opponent set, the stream is an
     adventure's page with a character statted in its prose (ME1's chapters): an
     entry is read from its header through its grid and powers, and ends where
@@ -525,8 +567,12 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
     is not one of the entry's sections - after which lines are dropped until
     the next header. `grid` reads a grid at a Health line, as grid_at does; a
     book that sets its rows another way passes its own (MA4: codegrids.py).
-    `ranges` is rank_ranges(book), for a book whose check takes a rank's range."""
+    `ranges` is rank_ranges(book), for a book whose check takes a rank's range.
+    `labels` (opponent mode only) maps more run-in labels to sections, and
+    `run_on` names entries, as (first page, header), whose own paragraphs are
+    set indented, so an indent does not end them (MT2, gridbooks.parse)."""
     grid = grid or grid_at
+    labels = labels or {}
     entries, cur = [], None
 
     def start(kind, name, line):
@@ -607,17 +653,21 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
             # a paragraph indented right under a one-line grid (ME2's chapters,
             # gridbooks.line_grids) is the chapter again: those grids end on
             # "Karma: 56", not on a sentence
-            resumes = (r and line['x0'] - line['left'] < 40 and not section_of(r.group(1).strip())) or (
+            resumes = (r and line['x0'] - line['left'] < 40
+                       and not (section_of(r.group(1).strip()) or labels.get(r.group(1).strip()))) or (
                 line['x0'] - line['left'] >= 25 and (prev_text.endswith(('.', '!', '?', '"', '\u201d'))
-                                                     or (i and stream[i - 1].get('line_grid'))))
-            if resumes:
+                                                     or (i and stream[i - 1].get('line_grid')))
+                and (cur['pages'][0], cur['header']) not in run_on)
+            # ...but not at a power the registry says is set indented (MT2's
+            # indented_power_heads, gridbooks.stream_of)
+            if resumes and not line.get('indented_head'):
                 cur = None
                 i += 1
                 continue
         add_page(line)
         if m and line['x0'] - line['left'] < 40:
             label = m.group(1).strip()
-            key = section_of(label)
+            key = section_of(label) or (opponent and labels.get(label))
             if key:
                 cur['_sec'] = key
                 cur['sections'].setdefault(key, [])
@@ -644,9 +694,10 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
             prev_text = stream[i - 1]['text'].rstrip() if i else ''
             # A line the registry names as a power head (gridbooks power_heads,
             # ME3 alone) starts one whatever the line before ends on.
-            paragraph_start = (line['x0'] - line['left'] < 25
-                               and (not cur['powers'] or prev_text.endswith(('.', ':', ')', '"', '\u201d', '!'))
-                                    or line.get('power_head', False)))
+            paragraph_start = ((line['x0'] - line['left'] < 25
+                                and (not cur['powers'] or prev_text.endswith(('.', ':', ')', '"', '\u201d', '!'))
+                                     or line.get('power_head', False)))
+                               or line.get('indented_head', False))
             if pm and paragraph_start and len(pm.group(1)) <= 40:
                 cur['powers'].append({'name': pm.group(1), 'text': [pm.group(2)]})
             elif cur['powers']:
