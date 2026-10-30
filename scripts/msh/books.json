@@ -1992,6 +1992,66 @@
       ],
       "repeat_grids_note": "Printed 16 (PDF 19), encounter 153: a second Moltens grid repeats printed 3's (encounter 13) code for code, Ex Rm Ex Rm Pr Pr Gd, Health 100. Survey mh6.md decision 5 (recommended, as MH4's 2 Minions): one card, the second grid checked against it and not an entry.",
       "opponents_note": "Every grid prints a name line in bold above a letter row (F A S E R I P), a code row and a Health line, with no Karma; the Health line may carry one more label (Body Armor, Special attack, Flight and others). Only Flame Wing's grid (printed 8) is printed clear; the other 23 named grids, Moltens' repeat included, are under the MAGIC VIEWER red pattern, and some of their name lines too (Stone Gargoyle, Burning House, Whip Vines, Half-Trolls, Lizard, Wereboar). The cached OCR reads none of them but Wereboar's partly. Each was read on a contrast-stretched 300 dpi render, 2026-10-23 (survey mh6.md, Stat blocks). A 25th grid, a giant bird, sits under the red pattern inside the Egg of the Giantess item description on printed 16, unnamed (survey mh6.md decision 6). The bold Attack, Talk and other choice headers are decision headings, not names."
+    },
+    "mh7": {
+      "title": "MH7 The Last Resort",
+      "short": "MH7",
+      "code": "TSR6864",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6864 MH-7 The Last Resort Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "0bd258caa881a19b6c8daa5fc01758f39b1d7e803bb2bbae1639017a8ce45b20",
+      "pdf_pages": 23,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Inside front cover", "cite": "Inside front cover", "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 18], "offset": 2},
+        {"name": "Inside back cover", "cite": "Inside back cover", "pdf": [19, 19], "offset": null},
+        {"name": "Card sheet (backs)", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Card sheet (fronts)", "cite": null, "pdf": [21, 21], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [22, 22], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [23, 23], "offset": null}
+      ],
+      "offset_evidence": "2026-10-29, scripts/msh/survey.py tsv_folio: 8 pages vote printed = PDF - 2 (PDF 6 and 12-18) and no page votes otherwise. Folios 1, 2, 3, 5, 6, 8 and 9 were read on the page images of PDF 3, 4, 5, 7, 8, 10 and 11, each at the foot of its page in a faint small type; printed 7 (PDF 9) shows none, its chapter art running to the foot. PDF 3 is printed 1, the title page. PDF 18 is printed 16 and prints the product code 6864XXX1501 at the foot of its first column as well as its folio. PDF 3-18 are the 16-page booklet and PDF 2 and 19 the cover's inside panels, all 594 x 767 pt; the panels print no folio and hold two cards each. Which panel faces which the scan does not show; they are named by PDF order, PDF 2 before the booklet and PDF 19 after it (survey mh7.md decision 2). PDF 1 and 22 are the outside of the cover (598 x 772 pt; PDF 22 prints the product code 6864XXX1401). PDF 20 and 21 (552 x 767 pt) are the cut-out character cards, backs (seven cards' stat lines, set sideways) and fronts (seven portraits and an Avengers security identicard). PDF 23 is the map sheet, one PDF page (1515 x 2303 pt).",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Equipment/Possessions", "Talents", "Background"],
+      "section_labels_note": "Every card prints its sections as labels ending in a colon, in no fixed order and with any of them absent: Rick Jones prints Background only; the Mesmerized Scouts print Background before Talents; Plantman prints Equipment/Possessions with no Powers; Mockingbird prints Talents (with run-ins) and Equipment/Possessions with no Powers; Tigra's Equipment/Possessions ends in a full stop. Read on the page images 2026-10-29.",
+      "rank_aliases": {"FEEBLE": "feeble", "POOR": "poor", "TYPICAL": "typical", "GOOD": "good", "EXCELLENT": "excellent", "REMARKABLE": "remarkable", "INCREDIBLE": "incredible", "AMAZING": "amazing", "MONSTROUS": "monstrous", "UNEARTHLY": "unearthly", "Fb": "feeble", "Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent", "Rm": "remarkable", "In": "incredible", "Am": "amazing", "Mn": "monstrous", "Un": "unearthly"},
+      "sections": [
+        ["Introduction", null, 1, "Adventure Book"],
+        ["The Mandarin's Plan", null, 2, "Adventure Book"],
+        ["Chapter 1: The Phantom Jamboree", null, 3, "Adventure Book"],
+        ["Chapter 2: Floral Fiends!", null, 5, "Adventure Book"],
+        ["Chapter 3: Avengers on Ice", null, 6, "Adventure Book"],
+        ["Chapter 4: Beware the Pyro-Maniac!", null, 7, "Adventure Book"],
+        ["Chapter 5: Tornado Alley!", null, 8, "Adventure Book"],
+        ["Chapter 6: If One Should Betray...", null, 9, "Adventure Book"],
+        ["Chapter 7: The Caverns of Chu", null, 10, "Adventure Book"],
+        ["Chapter 8: Vacation's End", null, 11, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, read on the page images 2026-10-29 (Chapter 5's title in the OCR, agreeing with its Table 7): a small CHAPTER N: line over a title in large capitals, which Tesseract reads for every chapter but 6 (its title is set under the chapter's art; Chapter 2's and 3's CHAPTER N: lines are misread). Chapter 4's title is printed in double quotes, left out here. Printed 1 is the title page (no banner; Introduction is this registry name for it) and printed 2 is The Mandarin's Plan, with how to use the map, movement, wildlife and weather. Chapters 1-7 are set as Campaign, Battle and Aftermath subsections, Chapter 7 as Campaign 1, Battle 1, Campaign 2, Battle 2 and Aftermath, and each ends on a Karma table (Tables 3-9); Chapter 8 (printed 11) prints none of them. The cards follow on printed 12-16, unbannered, and on the two inside cover panels; the card sheet repeats seven of the cards.",
+      "columns": 3,
+      "character_ranges": [{"part": "Adventure Book", "pages": [12, 16]}],
+      "panels": ["Inside front cover", "Inside back cover"],
+      "cards": [
+        ["Adventure Book", 12, "Rick Jones"],
+        ["Adventure Book", 12, "Mesmerized Scouts"],
+        ["Adventure Book", 12, "Blizzard"],
+        ["Adventure Book", 13, "Plantman"],
+        ["Adventure Book", 13, "Pyro"],
+        ["Adventure Book", 14, "Radioactive Man"],
+        ["Adventure Book", 14, "Whirlwind"],
+        ["Adventure Book", 15, "Mandarin"],
+        ["Adventure Book", 16, "Iron Man"],
+        ["Inside front cover", null, "Hawkeye"],
+        ["Inside front cover", null, "Tigra"],
+        ["Inside back cover", null, "Mockingbird"],
+        ["Inside back cover", null, "Wonder Man"]
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 13, "names": ["Fire Creatures"]}
+      ],
+      "opponents_note": "The one grid in the book prints no name line: it is inside Pyro's card on printed 13, under his FIRE CONTROL. power, and gives the maximum abilities of the creatures of flame he forms (In In In In and a dash for R, I and P, Health = 160 (maximum)). Named here by what the power calls them: survey mh7.md decision 6. No chapter stats a character: the plants of Chapter 2 and the wildlife of printed 2 are given abilities in prose only. Printed 15 also prints the Mandarin's Mento Intensifier Selective Concentrator as a block of its own (Body, Controls, Size, Complexity, Power Source), an item, not a card (decision 3). Read on the page images 2026-10-29."
     }
   }
 }
