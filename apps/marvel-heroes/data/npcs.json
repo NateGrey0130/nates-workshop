@@ -88,6 +88,11 @@
    "book": "MX1 Nightmares of Futures Past",
    "code": "TSR6873",
    "pages": "Adventure 9-14, 24-25, 28-28"
+  },
+  {
+   "book": "ME3 The Left Hand of Eternity",
+   "code": "TSR6882",
+   "pages": "Adventure 3-5, 11-28; Resource 2-16"
   }
  ],
  "books": [
@@ -341,6 +346,39 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "me3",
+   "short": "ME3",
+   "title": "ME3 The Left Hand of Eternity",
+   "pages": [
+    3,
+    5
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       3,
+       5
+      ],
+      [
+       11,
+       28
+      ]
+     ]
+    },
+    {
+     "part": "Resource",
+     "pages": [
+      [
+       2,
+       16
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -408,7 +446,10 @@
   "MH7 The Last Resort",
   "MH8 Fault Line",
   "MH9 Gates of What If",
-  "MX1 Nightmares of Futures Past"
+  "MX1 Nightmares of Futures Past",
+  "Left Hand of Eternity Heroes",
+  "ME3 The Left Hand of Eternity",
+  "Death Gods"
  ],
  "characters": [
   {
@@ -67844,6 +67885,3164 @@
    ],
    "appearances": [],
    "book": "mx1"
+  },
+  {
+   "id": "gladiator-me3",
+   "name": "Gladiator",
+   "team": "Left Hand of Eternity Heroes",
+   "versions": [
+    {
+     "id": "gladiator-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Adventure",
+     "pages": [
+      3,
+      4
+     ],
+     "identity": [
+      "Shi'ar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         500,
+         "ShZ"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "725",
+       "karma": "675",
+       "resources": "Mn(75)",
+       "popularity": "15 (100 in the Empire)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Psychic Reflection"
+      },
+      {
+       "name": "Heat Beams"
+      },
+      {
+       "name": "Heightened Vision"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "mantis-me3",
+   "name": "Mantis",
+   "team": "Left Hand of Eternity Heroes",
+   "versions": [
+    {
+     "id": "mantis-me3",
+     "label": "Update",
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [
+      "Real Name Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "116",
+       "karma": "76",
+       "resources": "Fe (2)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Plant Control",
+       "upb": "L14"
+      },
+      {
+       "name": "Recovery"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "firelord-me3",
+   "name": "Firelord",
+   "team": "Left Hand of Eternity Heroes",
+   "versions": [
+    {
+     "id": "firelord-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Pyreus Kril of Xandar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "325",
+       "karma": "110",
+       "resources": "Pr(4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Energy Sheath",
+       "upb": "S14"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Staff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "beta-ray-bill-me3",
+   "name": "Beta Ray Bill",
+   "team": "Left Hand of Eternity Heroes",
+   "versions": [
+    {
+     "id": "beta-ray-bill-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "(English Translation of Alien Name)"
+     ],
+     "blocks": [
+      {
+       "label": "Beta Ray Bill",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "form": true,
+       "health": "330",
+       "karma": "100",
+       "resources": "10(Gd)",
+       "popularity": "30"
+      },
+      {
+       "label": "Humanoid form",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "80",
+       "karma": "100",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Resistance"
+      },
+      {
+       "name": "Storm Breaker"
+      },
+      {
+       "name": "Skuttlebutt"
+      },
+      {
+       "name": "Sensor Implant"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "nine-headed-serpent-me3",
+   "name": "Nine-Headed Serpent",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "nine-headed-serpent-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "350",
+       "karma": "34",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "vulture-flock-me3",
+   "name": "Vulture Flock",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "vulture-flock-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "325",
+       "karma": "34",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "keeper-me3",
+   "name": "Keeper",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "keeper-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         150,
+         "ShX"
+        ],
+        [
+         "I",
+         150,
+         "ShX"
+        ],
+        [
+         "P",
+         150,
+         "ShX"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "260",
+       "karma": "450",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "charon-me3",
+   "name": "Charon",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "charon-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Adventure",
+     "pages": [
+      24
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "250",
+       "karma": "130",
+       "resources": "N/A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Navigation"
+      },
+      {
+       "name": "Eye Beams"
+      },
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Immunities"
+      },
+      {
+       "name": "Ferry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "dimensional-shambler-me3",
+   "name": "Dimensional Shambler",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "dimensional-shambler-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "275",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Sting"
+      },
+      {
+       "name": "Tough Hide"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "death-me3",
+   "name": "Death",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "death-me3",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      2,
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         5000,
+         "C-5000"
+        ],
+        [
+         "A",
+         5000,
+         "C-5000"
+        ],
+        [
+         "S",
+         5000,
+         "C-5000"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         5000,
+         "C-5000"
+        ],
+        [
+         "I",
+         5000,
+         "C-5000"
+        ],
+        [
+         "P",
+         5000,
+         "C-5000"
+        ]
+       ],
+       "health": "20,000",
+       "karma": "Unlim.",
+       "resources": "Unlimited",
+       "popularity": "-1000",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "Unlim."
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "eternity-me3",
+   "name": "Eternity",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "eternity-me3",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         5000,
+         "C-5000"
+        ],
+        [
+         "A",
+         5000,
+         "C-5000"
+        ],
+        [
+         "S",
+         5000,
+         "C-5000"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         5000,
+         "C-5000"
+        ],
+        [
+         "I",
+         5000,
+         "C-5000"
+        ],
+        [
+         "P",
+         5000,
+         "C-5000"
+        ]
+       ],
+       "health": "20,000",
+       "karma": "Unlimited",
+       "resources": "Unlimited",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "Unlimited"
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "galactus-me3",
+   "name": "Galactus",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "galactus-me3",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      3,
+      4,
+      5
+     ],
+     "identity": [
+      "Galan of Taa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "health": "4150",
+       "karma": "3000",
+       "resources": "Cl 3000",
+       "popularity": "-1000"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Hyper Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      },
+      {
+       "name": "Power Creation"
+      },
+      {
+       "name": "Serial Immortality",
+       "upb": "M28"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "mephisto-me3",
+   "name": "Mephisto",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "mephisto-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [
+      "aka Satan, Mephistopheles, Lucifer, and \"The Devil\""
+     ],
+     "blocks": [
+      {
+       "label": "Mephisto",
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "3225",
+       "karma": "250",
+       "resources": "Cl 3000",
+       "popularity": "-1000"
+      },
+      {
+       "label": "MEPHISTO (w/Galactus)",
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "health": "4200",
+       "karma": "1175",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Demonic Form"
+      },
+      {
+       "name": "Power Source"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Diminuition"
+      },
+      {
+       "name": "Enchantment",
+       "upb": "MG1"
+      },
+      {
+       "name": "Enlargement",
+       "upb": "MC6"
+      },
+      {
+       "name": "Forced Reincarnation",
+       "upb": "L7"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Magic Control",
+       "upb": "MG4"
+      },
+      {
+       "name": "Matter Control"
+      },
+      {
+       "name": "Neural Manipulation",
+       "upb": "L12"
+      },
+      {
+       "name": "Power Control"
+      },
+      {
+       "name": "Shapechange (others)",
+       "upb": "L17"
+      },
+      {
+       "name": "Sleep (induced)",
+       "upb": "L18"
+      },
+      {
+       "name": "Spirit Storage",
+       "upb": "L19"
+      },
+      {
+       "name": "Summoning",
+       "upb": "L20"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Undead Control",
+       "upb": "L21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "mephisto-s-demonic-thralls-me3",
+   "name": "Mephisto's Demonic Thralls",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "mephisto-s-demonic-thralls-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "180",
+       "karma": "36",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Leathery Skin"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "mephisto-s-footsoldiers-me3",
+   "name": "Mephisto's Footsoldiers",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "mephisto-s-footsoldiers-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "150",
+       "karma": "20",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Leathery Skin"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "pluto-me3",
+   "name": "Pluto",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "pluto-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      8,
+      9
+     ],
+     "identity": [
+      "Hades"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         250,
+         "ShY"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "550",
+       "karma": "275",
+       "resources": "Unearthly(100)",
+       "popularity": "-500"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Energy Mastery"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Strength Drain"
+      },
+      {
+       "name": "Mystical Flame"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Battle Axe"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "hela-me3",
+   "name": "Hela",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "hela-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [
+      "Death Goddess of Asgard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "1200",
+       "karma": "170",
+       "resources": "Mn(75)",
+       "popularity": "-75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Illusion-Casting",
+       "upb": "I2"
+      },
+      {
+       "name": "Death Touch"
+      },
+      {
+       "name": "Age Control"
+      },
+      {
+       "name": "Resurrection"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Hand of Glory"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "pluto-s-footsoldiers-me3",
+   "name": "Pluto's Footsoldiers",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "pluto-s-footsoldiers-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "140",
+       "karma": "40",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "seth-me3",
+   "name": "Seth",
+   "team": "Death Gods",
+   "versions": [
+    {
+     "id": "seth-me3",
+     "label": null,
+     "team": "Death Gods",
+     "part": "Resource",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Heliopolitan God of the Dead"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "230",
+       "karma": "170",
+       "resources": "Mn(75)",
+       "popularity": "-50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Undead Control",
+       "upb": "L21"
+      },
+      {
+       "name": "Dimensional Winds"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "uatu-me3",
+   "name": "Uatu",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "uatu-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [
+      "The Watcher"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "250",
+       "karma": "300",
+       "resources": "Un(100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Clairaudience",
+       "upb": "M1"
+      },
+      {
+       "name": "Clairvoyance",
+       "upb": "M2"
+      },
+      {
+       "name": "Communicate with Animals",
+       "upb": "M3"
+      },
+      {
+       "name": "Communicate with Cybernetics",
+       "upb": "M4"
+      },
+      {
+       "name": "Communicate with Plants",
+       "upb": "M6"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      },
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Force Field Generation"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Linguistics",
+       "upb": "M17"
+      },
+      {
+       "name": "Mental Invisibility",
+       "upb": "M19"
+      },
+      {
+       "name": "Mind Probe"
+      },
+      {
+       "name": "Remote Sensing",
+       "upb": "M26"
+      },
+      {
+       "name": "Self Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Telelocation",
+       "upb": "M31"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Total Memory",
+       "upb": "M33"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "voyd-me3",
+   "name": "Voyd",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "voyd-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         5000,
+         "C-5000"
+        ],
+        [
+         "A",
+         5000,
+         "C-5000"
+        ],
+        [
+         "S",
+         5000,
+         "C-5000"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         3000,
+         "C-3000"
+        ]
+       ],
+       "health": "20,000",
+       "karma": "4050",
+       "resources": "Fe(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "dormammu-me3",
+   "name": "Dormammu",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "dormammu-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      12,
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Dormammu",
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "1275*",
+       "karma": "250",
+       "resources": "Mn(75)",
+       "popularity": "-30",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": "1275*"
+       }
+      },
+      {
+       "label": "DORMAMMU (w/Galactus)",
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         150,
+         "ShX"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         150,
+         "ShX"
+        ]
+       ],
+       "health": "1350",
+       "karma": "300",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magical Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "clea-me3",
+   "name": "Clea",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "clea-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "100",
+       "karma": "170",
+       "resources": "Mn(75)",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magical Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "dark-dimension-inhabitant-typical-me3",
+   "name": "Dark Dimension Inhabitant, Typical",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "dark-dimension-inhabitant-typical-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "26",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magical Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "mindless-ones-me3",
+   "name": "Mindless Ones",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "mindless-ones-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fb"
+        ],
+        [
+         "I",
+         2,
+         "Fb"
+        ],
+        [
+         "P",
+         2,
+         "Fb"
+        ]
+       ],
+       "health": "64",
+       "karma": "6",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Thick Skin"
+      },
+      {
+       "name": "Eye Beam"
+      },
+      {
+       "name": "Mindlessness"
+      },
+      {
+       "name": "Environmental Independence"
+      },
+      {
+       "name": "Inexhaustible"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "captain-marvel-mar-vell-me3",
+   "name": "Captain Marvel (Mar-Vell)",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "captain-marvel-mar-vell-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Mar-Vell of the Kree (deceased)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "130",
+       "karma": "90",
+       "resources": "Pr(4)",
+       "popularity": "55"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Nega-Bands"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      },
+      {
+       "name": "Solar Bolts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "thanos-me3",
+   "name": "Thanos",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "thanos-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Thanos of Titan (deceased)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "305",
+       "karma": "120",
+       "resources": "Am(50)",
+       "popularity": "-100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Energy Blasts"
+      },
+      {
+       "name": "Psionic Attack"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "purple-man-me3",
+   "name": "Purple Man",
+   "team": "ME3 The Left Hand of Eternity",
+   "versions": [
+    {
+     "id": "purple-man-me3",
+     "label": null,
+     "team": "ME3 The Left Hand of Eternity",
+     "part": "Resource",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Zebediah Kilgrave (deceased)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "50",
+       "karma": "40",
+       "resources": "Rm(30)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Pheromones",
+       "upb": "P8"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "doc-strange-me3",
+   "name": "Doc Strange",
+   "team": "Left Hand of Eternity Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "doc-strange-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "66",
+       "karma": "185",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magic"
+      },
+      {
+       "name": "Alter Appearance",
+       "rank": "Am"
+      },
+      {
+       "name": "Astral Projection",
+       "rank": "Un",
+       "upb": "T1"
+      },
+      {
+       "name": "Levitation",
+       "rank": "In",
+       "upb": "T12"
+      },
+      {
+       "name": "Shield",
+       "rank": "Am"
+      },
+      {
+       "name": "Telepathy",
+       "rank": "Un",
+       "upb": "M32"
+      },
+      {
+       "name": "Conjure",
+       "rank": "Am"
+      },
+      {
+       "name": "Forcebeam",
+       "rank": "Am"
+      },
+      {
+       "name": "Dimension Open",
+       "rank": "Mn"
+      },
+      {
+       "name": "Sleep Gas",
+       "rank": "Mn"
+      },
+      {
+       "name": "Cloak of Lev"
+      },
+      {
+       "name": "Eye"
+      },
+      {
+       "name": "Orb"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "nova-me3",
+   "name": "Nova",
+   "team": "Left Hand of Eternity Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "nova-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation and Control",
+       "rank": "ShZ"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Un",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Wrapped in Fire",
+       "rank": "Am"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL3000",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "silver-surfer-me3",
+   "name": "Silver Surfer",
+   "team": "Left Hand of Eternity Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "silver-surfer-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Cosmic"
+      },
+      {
+       "name": "Healing",
+       "rank": "Un"
+      },
+      {
+       "name": "Reconstruct Matter",
+       "rank": "Un"
+      },
+      {
+       "name": "Perceive Energy"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL5000",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Mn",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
+  },
+  {
+   "id": "thor-me3",
+   "name": "Thor",
+   "team": "Left Hand of Eternity Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "thor-me3",
+     "label": null,
+     "team": "Left Hand of Eternity Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "320",
+       "karma": "76",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor-Ex/Ty"
+      },
+      {
+       "name": "Mjolnir"
+      },
+      {
+       "name": "Flight",
+       "rank": "ShX",
+       "upb": "T21"
+      },
+      {
+       "name": "Shield",
+       "rank": "Rm"
+      },
+      {
+       "name": "Weather Control",
+       "rank": "Un",
+       "upb": "MC12"
+      },
+      {
+       "name": "Dimension Travel",
+       "rank": "Un",
+       "upb": "T3"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me3"
   }
  ]
 }

@@ -137,6 +137,16 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: speck_lines finds %r %d times on %s p.%d, not once' % (slug, old, len(hits), part, page))
         hits[0]['text'] = new
+    # ME3 (registry power_heads [part, page, power name]): a run-in power whose
+    # line above ends no sentence (Firelord's Energy Sheath after a list of
+    # forms, Adventure p.4; Mephisto's Enlargement after "Galactus.]",
+    # Resource p.6) is marked as a power head, which roster.read_entries takes
+    # as a new power. Each must be found exactly once on its page.
+    for p, page, head in [d for d in book.get('power_heads', []) if d[0] == part and first <= d[1] <= last]:
+        hits = [l for l in stream if l['printed'] == page and l['text'].startswith(head + ':')]
+        if len(hits) != 1:
+            raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
+        hits[0]['power_head'] = True
     # ME3 (registry health_below): a Health set on the line below its label
     # ("F 5000 Cl5000 Health:", then "20,000" at the column's right: Resource
     # pp.2, 3, 6, 9, 11 and 12), so the grid has no anchor and no header; the

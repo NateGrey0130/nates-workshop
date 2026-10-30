@@ -642,8 +642,11 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
             # a new power is told by the line before it ending a sentence (or
             # the section having just opened), not by indentation.
             prev_text = stream[i - 1]['text'].rstrip() if i else ''
+            # A line the registry names as a power head (gridbooks power_heads,
+            # ME3 alone) starts one whatever the line before ends on.
             paragraph_start = (line['x0'] - line['left'] < 25
-                               and (not cur['powers'] or prev_text.endswith(('.', ':', ')', '"', '\u201d', '!'))))
+                               and (not cur['powers'] or prev_text.endswith(('.', ':', ')', '"', '\u201d', '!'))
+                                    or line.get('power_head', False)))
             if pm and paragraph_start and len(pm.group(1)) <= 40:
                 cur['powers'].append({'name': pm.group(1), 'text': [pm.group(2)]})
             elif cur['powers']:

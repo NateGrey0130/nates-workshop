@@ -2673,6 +2673,23 @@
       "two_line_headers_note": "Headers set on two lines, as read, joined to one line by gridbooks.stream_of: mark_headers marks only the line nearest the grid. Read on the page images 2026-10-30 (survey me3.md, item 10). Not taken: a rule joining any capital line right above a header, which would have to be proved on every earlier book.",
       "header_blocks": [["Resource Book", 6, "MEPHISTO (w/Galactus)"]],
       "header_blocks_note": "Not MA4's block_labels (a code-grids field of another shape). A header over a second grid of the entry above it (Resource p.6): the grid becomes a block of Mephisto's labelled with the header, and the powers under it are his (survey me3.md, item 11 and decision 5). Dormammu's second grid (p.12) prints no header and lands on his entry already; its label is a label override in me3-overrides.json.",
+      "card_names": {"Captain Marvel": "Captain Marvel (Mar-Vell)"},
+      "card_names_note": "Survey me3.md decision 6 (recommended, applied unanswered; Nate 2026-10-30), by Nate's ruling on MA1's and MH1's Ariel (2026-10-21) that each card's name says which person: this book's Captain Marvel is Mar-Vell of the Kree (Resource p.15, his identity line), not the Monica Rambeau of MHSP1, MH2 and MHSP2. Only this card is renamed here: the decision's other half, the three Monica Rambeau cards as Captain Marvel (Monica Rambeau), changes three earlier books' ids and D1 keys, and is not this row's.",
+      "speck_lines": [
+        ["Resource Book", 6, "trols Galactus.]}", "trols Galactus.]"],
+        ["Resource Book", 7, "MEPHISTO\u2019S DEMONIC", "MEPHISTO'S DEMONIC"],
+        ["Resource Book", 7, "MEPHISTO\u2019S", "MEPHISTO'S"],
+        ["Resource Book", 9, "PLUTO\u2019S FOOTSOLDIERS", "PLUTO'S FOOTSOLDIERS"],
+        ["Resource Book", 9, "Iilusion-Casting: Hela can create", "Illusion-Casting: Hela can create"]
+      ],
+      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of (MX1's and MH9's shape), each read on a crop of the page image 2026-10-30 (plan row 6a). Resource p.6, column 2: a speck after the bracket closing Enchantment's Galactus note is read as a brace. p.7 and p.9: the headers' apostrophes are read as U+2019, and are given in ASCII as every other book's card names are (Galactus's \"Cat\", Kang's Minions). p.9, column 2: Hela's power Illusion-Casting, read Iilusion.",
+      "power_heads": [
+        ["Adventure Book", 4, "Energy Sheath"],
+        ["Resource Book", 6, "Enlargement"],
+        ["Resource Book", 6, "Power Control"],
+        ["Resource Book", 8, "Mystical Flame"]
+      ],
+      "power_heads_note": "[part, printed page, power name]: a run-in power whose line above ends no sentence, so roster.read_entries would read it as the power above's text; gridbooks.stream_of marks the line as a power head, and each must be found exactly once. Adventure p.4, Firelord's Energy Sheath: after a list of Energy Conversion's forms, each a line with no stop (Thermal Control). Resource p.6, Mephisto's Enlargement and Power Control, and p.8, Pluto's Mystical Flame: after a bracketed Galactus note that ends on the bracket (Galactus.] and Galactus]). ME2's Pluto card has Mystical Flame. Read on the page images 2026-10-30 (plan row 6a).",
       "reference_summary": {
         "team": "Left Hand of Eternity Heroes",
         "pdf": 53,
