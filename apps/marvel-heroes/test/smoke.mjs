@@ -1526,6 +1526,99 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MX1 is read by scripts/msh/gridbooks.py (mx1-overrides.json), with the
+  // survey's decisions applied as it recommends (mx1.md; Nate 2026-10-30).
+  // Every card is in the Adventure Book (printed 9-14, 24-25 and 28), filed
+  // under the book's title. The registry's card_names, speck_lines and
+  // talents_end each change what is built, so each is pinned here by what it
+  // changes.
+  if (data.npcs.characters.some((c) => c.book === 'mx1')) {
+    const mx1 = data.npcs.characters.filter((c) => c.book === 'mx1');
+    const blocksX = mx1.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blkX = (id) => mx1.find((c) => c.id === id)?.versions[0].blocks[0];
+    const playedX = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MX1: 17 characters, each id ending -mx1 with one version and one block, all filed under the book\'s title, and no name starting The',
+      mx1.length === 17 && mx1.every((c) => c.id.endsWith('-mx1') && c.versions.length === 1 && c.versions[0].blocks.length === 1)
+      && mx1.every((c) => c.team === 'MX1 Nightmares of Futures Past') && !mx1.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mx1.length} ${[...new Set(mx1.map((c) => c.team))]}`);
+    check('MX1: the cards sort by the Adventure page each starts on, 9 to 28, the six sentinels first',
+      mx1.map((c) => c.id).join() === ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'alpha-sentinel', 'nimrod', 'omega-sentinel',
+        'blue', 'mantinels', 'swat-am', 'typical-policeman', 'gerald-gage', 'timbre-morava', 'arthur-faber', 'bernard-carns', 'big-foot',
+        'oliver-pierce', 'typical-rogue'].map((id) => `${id}-mx1`).join(),
+      mx1.map((c) => c.id).join());
+    check('MX1: four one-line grids (the Mantinels, SWAT:AM, the Typical Policeman and the Typical Rogue), ranks only, and 13 full blocks',
+      blocksX.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === ['mantinels', 'swat-am', 'typical-policeman', 'typical-rogue'].map((id) => `${id}-mx1`).join()
+      && blocksX.filter(({ b }) => b.kind === 'line').every(({ b }) => b.rank_only) && blocksX.filter(({ b }) => !b.kind).length === 13,
+      blocksX.map(({ id, b }) => `${id}:${b.kind}`).join());
+    const fixesX = ['nimrod-mx1', 'timbre-morava-mx1', 'big-foot-mx1', 'typical-rogue-mx1'].map((id) => {
+      const o = blkX(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${v(a.printed)}>${v(a.corrected)}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedX(id)}`;
+    });
+    check('MX1: the four misprints keep the printed value and play the corrected one (Nimrod R 30 Ex, I 30 Gd and P 10 Gy as Rm, Rm and Gd; Timbre Morava S 4, R 6 and I 8 as 6, 20 and 6; Big Foot S Ty and I Ty as Pr and Gd; the Typical Rogue Karma 16 as 14)',
+      fixesX.join(' | ') === [
+        'nimrod-mx1 misprint R 30 Ex>30 Rm also misprint I 30 Gd>30 Rm also misprint P 10 Gy>10 Gd plays 300/70',
+        'timbre-morava-mx1 misprint S 4 Ty>6 Ty also misprint R 6 Ex>20 Ex also misprint I 8 Ty>6 Ty plays 22/32',
+        'big-foot-mx1 misprint S 4 Ty>4 Pr also misprint I 8 Ty>8 Gd plays 44/18',
+        'typical-rogue-mx1 misprint karma 16>14 plays 28/14',
+      ].join(' | '),
+      fixesX.join(' | '));
+    const robotsX = ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'alpha-sentinel', 'omega-sentinel'].map((id) => `${id}-mx1`);
+    check('MX1: the five sentinel robots print Karma 0 against R, I and P printed, kept as printed (as_printed karma) and played as 0',
+      robotsX.every((id) => blkX(id)?.override?.verdict === 'as_printed' && blkX(id).override.field === 'karma' && blkX(id).karma === '0')
+      && robotsX.map(playedX).join() === '165/0,190/0,250/0,290/0,290/0',
+      robotsX.map(playedX).join());
+    const ovX = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx1-overrides.json'), 'utf8')).overrides;
+    const textX = ovX.filter((o) => o.verdict === 'text');
+    check('MX1: thirteen overrides: four misprints, five as printed and four text verdicts (the Mark VI\'s Gas Jets and Customization, the Mark V\'s Cold Beams, the Mantinels\' Automatic Escape), and only the nine overridden blocks carry one',
+      ovX.length === 13 && ovX.filter((o) => o.verdict === 'misprint').length === 4 && ovX.filter((o) => o.verdict === 'as_printed').length === 5
+      && textX.map((o) => o.match.row).join() === ['mark-vi-sentinel-mx1:power:6', 'mark-vi-sentinel-mx1:power:7', 'mark-v-sentinel-mx1:power:7',
+        'mantinels-mx1:power:5'].map((k) => `mx1:${k}`).join()
+      && blocksX.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === [...robotsX, 'nimrod-mx1', 'timbre-morava-mx1', 'big-foot-mx1', 'typical-rogue-mx1'].sort().join(),
+      JSON.stringify(ovX.map((o) => [o.verdict, o.match])));
+    check('MX1: SWAT:AM keeps its printed capitals (card_names) and Blue\'s identity line reads Blumal, not the OCR\'s Biumal (speck_lines)',
+      mx1.find((c) => c.id === 'swat-am-mx1')?.name === 'SWAT:AM' && mx1.find((c) => c.id === 'blue-mx1')?.versions[0].identity.join() === 'Hugh Blumal, mutant hound',
+      `${mx1.find((c) => c.id === 'swat-am-mx1')?.name} | ${mx1.find((c) => c.id === 'blue-mx1')?.versions[0].identity}`);
+    check('MX1: 65 powers, 17 of them linked to the UPB',
+      mx1.flatMap((c) => c.versions[0].powers).length === 65 && mx1.flatMap((c) => c.versions[0].powers).filter((p) => p.upb).length === 17,
+      `${mx1.flatMap((c) => c.versions[0].powers).length} ${mx1.flatMap((c) => c.versions[0].powers).filter((p) => p.upb).length}`);
+    const bookX = data.npcs.books.find((b) => b.slug === 'mx1');
+    check('MX1: the book reads Adventure 9-14, 24-25 and 28, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookX?.ranges) === '[{"part":"Adventure","pages":[[9,14],[24,25],[28,28]]}]'
+      && tagline(bookNpc({ character: 'mark-iv-sentinel-mx1' }).snapshot).startsWith('MX1 Nightmares of Futures Past, Adventure p.9;')
+      && tagline(bookNpc({ character: 'typical-rogue-mx1' }).snapshot).startsWith('MX1 Nightmares of Futures Past, Adventure p.28;')
+      && mx1.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(bookX)} ${tagline(bookNpc({ character: 'typical-rogue-mx1' }).snapshot)}`);
+    check('MX1: cards play their printed Health and Karma (Blue 64/109, Gerald Gage 20/22, Oliver Pierce 16/16, the Mantinels 70/18)',
+      ['blue-mx1', 'gerald-gage-mx1', 'oliver-pierce-mx1', 'mantinels-mx1'].map(playedX).join() === '64/109,20/22,16/16,70/18',
+      ['blue-mx1', 'gerald-gage-mx1', 'oliver-pierce-mx1', 'mantinels-mx1'].map(playedX).join());
+    // The text verdicts and talents_end move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by
+    // the overrides' own fragments, never a sentence of the book in this file.
+    const sqlX = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mx1', 'book-text.sql');
+    if (!existsSync(sqlX)) {
+      check(`MX1: skipped the text checks: no ${rel(sqlX) || sqlX}`, true);
+    } else {
+      const rowsX = [...readFileSync(sqlX, 'utf8').matchAll(/VALUES \('([^']+)', 'mx1', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      check('MX1 text: 95 rows over 16 entries (the Typical Rogue prints none), and no row with an odd count of double quotes',
+        rowsX.length === 95 && new Set(rowsX.map((r) => r.key.split(':')[1])).size === 16
+        && !rowsX.some((r) => r.key.startsWith('mx1:typical-rogue-mx1:'))
+        && !rowsX.some((r) => (r.body.match(/"/g) || []).length % 2),
+        `${rowsX.length} ${new Set(rowsX.map((r) => r.key.split(':')[1])).size}`);
+      const countX = (row, s) => (rowsX.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsX = textX.map((o) => `${o.match.row} ${countX(o.match.row, o.printed)}/${countX(o.match.row, o.read)}`);
+      check('MX1 text: each of the four text verdicts is applied, its printed fragment once in its row and the misread gone',
+        textX.length === 4 && verdictsX.every((v) => v.endsWith(' 1/0')), verdictsX.join(' | '));
+      const talentsX = ['typical-policeman-mx1', 'swat-am-mx1'].map((id) => rowsX.find((r) => r.key === `mx1:${id}:talents`)?.body);
+      check('MX1 text: the Typical Policeman\'s and SWAT:AM\'s talents rows are their TALENT: lines alone, what follows them is prose (talents_end)',
+        talentsX.join(' | ') === 'Law Enforcement | Law Enforcement, Marksmanship'
+        && ['typical-policeman-mx1', 'swat-am-mx1'].every((id) => rowsX.some((r) => r.key === `mx1:${id}:prose`)),
+        talentsX.join(' | '));
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
@@ -2322,7 +2415,13 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const known = (b, field) => b.kind === 'table' || (b.override && (b.override.field === field
     || (b.override.also || []).some((x) => x.field === field)));
   const num = (s) => (/^-?\d+$/.test(String(s ?? '').trim()) ? Number(s) : null);
-  const sum = (b, from, to) => b.abilities.slice(from, to).reduce((t, a) => t + a[1], 0);
+  // A misprinted ability NUMBER (MX1's Timbre Morava, printed 24: S 4, R 6
+  // and I 8 for Ty, Ex and Ty) is summed as corrected, since Health and
+  // Karma hold on the corrected numbers and the override says so; a corrected
+  // code alone changes no number.
+  const fixedNumber = (b, a) => [b.override, ...(b.override?.also || [])]
+    .find((o) => o?.verdict === 'misprint' && o.field === a[0] && Number.isInteger(o.corrected?.number))?.corrected.number ?? a[1];
+  const sum = (b, from, to) => b.abilities.slice(from, to).reduce((t, a) => t + fixedNumber(b, a), 0);
   const health = blocks.filter(({ b }) => num(b.health) !== null && num(b.health) !== sum(b, 0, 4) && !known(b, 'health'));
   check('Health = F+A+S+E on every block, or its override says the page misprints it',
     health.length === 0, health.map(({ c, b }) => `${c.id} ${b.health}`).join(', '));
