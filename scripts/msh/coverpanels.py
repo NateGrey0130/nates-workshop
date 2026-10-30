@@ -419,8 +419,25 @@ def mend(book, slug, part, first, last, out):
                    two words (MH4's TASKMASTER, "TASKMASTE" and "R" with the
                    trademark sign 7 px apart), matched once by its cleaned
                    text and joined, the sign kept
+      plain_headers [part, page, NAME]: a card's header in capitals set as
+                   the text is, with no trademark sign, which booklet.is_header
+                   does not take (MH7's MESMERIZED SCOUTS, printed 12): matched
+                   once, as printed, on the line right over a Fighting: row, and
+                   made the card's header
+      health_equals [part, page]: a one-line grid's "Health = 160 (maximum)"
+                   (MH7's Fire Creatures, printed 13), read by health_equals()
     Pages are printed pages, or null on a panel."""
     here = lambda p: p[0] == part and (p[1] is None or first <= p[1] <= last)
+    for p, page, name in [d for d in book.get('plain_headers', []) if here(d)]:
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and l['text'].strip() == name and roster.is_caps(name)
+                and n + 1 < len(out) and re.match(r'^\W{0,2}Fighting\s*[:;.]', out[n + 1]['text'])]
+        if len(hits) != 1:
+            raise SystemExit('%s: plain_headers finds %r over a Fighting: row %d times on %s p.%s, not once' % (slug, name, len(hits), part, page))
+        if booklet.is_header(out[hits[0]]):
+            raise SystemExit('%s: plain_headers: %r is read as a header without it, %s p.%s' % (slug, name, part, page))
+        out[hits[0]] = dict(out[hits[0]], named_header=True)
+    for p, page in [d for d in book.get('health_equals', []) if here(d)]:
+        out = health_equals(slug, part, page, out)
     for p, page, old, new in [d for d in book.get('split_headers', []) if here(d)]:
         hits = [n for n, l in enumerate(out) if l['printed'] == page and booklet.clean_name(l['text']) == old]
         if len(hits) != 1:
@@ -691,6 +708,15 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     cuts = [c for c in book.get('cut_grids', []) if c['part'] == part and any(l['printed'] == c['page'] for l in lines)]
     inner = {(roster.norm(s['entry']), roster.norm(s['power'])): {roster.norm(h) for h in s['heads']}
              for s in book.get('inner_runins', [])}
+    # a section label keyed otherwise than by its own words (registry
+    # `section_keys`: MH7's Equipment/Possessions: is MH4's equipment, so its
+    # run-ins are gear as the Punisher's are)
+    keys = book.get('section_keys') or {}
+    # a run-in power printed with neither a full stop nor a colon, by its head
+    # as printed (registry `runin_heads` [part, page, HEAD]: MH7's Hawkeye,
+    # inside front cover, "MARKSMAN, BOW Hawkeye has ..."), which no head
+    # pattern takes
+    heads = [h for h in book.get('runin_heads', []) if h[0] == part and any(l['printed'] == h[1] for l in lines)]
     while i < len(lines):
         line = lines[i]
         text = line['text'].strip()
@@ -811,7 +837,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             i += 1
             continue
         if m:
-            key = m.group(1).lower().replace(' ', '_')
+            key = keys.get(m.group(1)) or m.group(1).lower().replace(' ', '_')
             cur['_sec'] = key
             cur['sections'].setdefault(key, [])
             if m.group(2):
@@ -827,6 +853,11 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             # the same way and carry their section
             mine = [p for p in cur['powers'] if (p.get('section') or 'powers') == sec]
             pm = booklet.POWER_HEAD.match(text) or COLON_HEAD.match(text) or WHOLE_HEAD.match(text) or MIXED_HEAD.match(text)
+            head = [h for h in heads if h[1] == line['printed'] and re.match(re.escape(h[2]) + r'\s', text)]
+            if head and not pm:
+                pm = re.match('(' + re.escape(head[0][2]) + r')\s+(.*)$', text)
+            else:
+                head = []
             # a run-in inside a power's text, no power of its own (registry
             # `inner_runins`: MH5's Melter, whose MELTING DEVICE. prints its
             # four settings as METAL:, STONE:, WOOD: and FLESH:)
@@ -850,6 +881,8 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
                 cur['powers'].append(power)
                 mine.append(power)
                 text = pm.group(2)
+                if head:
+                    heads.remove(head[0])
             sink = mine[-1]['text'] if mine else cur['sections'][sec]
         elif sec in cur['sections']:
             sink = cur['sections'][sec]
@@ -863,6 +896,9 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     if cuts:
         raise SystemExit('%s: cut_grids names %s on %s, found in no card'
                          % (slug, ', '.join(c['name'] for c in cuts), part))
+    if heads:
+        raise SystemExit('%s: runin_heads names %s on %s, found as no power'
+                         % (slug, ', '.join(h[2] for h in heads), part))
     if grids:
         # card_grids names a grid no letter row in that card was read as
         raise SystemExit('%s: card_grids names %s on %s that no one-line grid in the card matched'
@@ -959,9 +995,66 @@ def code_row_letters(lines, ranks, title):
     return out
 
 
-def opponents(book, slug, part, page, ranks):
+def health_equals(slug, part, page, lines):
+    """A one-line grid's Health printed with an equals sign and a note in
+    brackets (registry `health_equals` [part, page]: MH7's Fire Creatures,
+    printed 13, "Health = 160 (maximum)"), which booklet.STAT_LINE, taking a
+    colon, does not read. The line is read as "Health: 160", and the bracket
+    is kept as the line's `health_note`, which the grid's prose opens with.
+    An error where the page prints no such line, or two."""
+    out, hit = [], 0
+    for l in lines:
+        m = re.match(r'^Health\s*=\s*(\d[\d,]*)\s*(\([^)]*\))?\s*$', l['text'].strip())
+        if m and l['printed'] == page:
+            hit += 1
+            l = dict(l, text='Health: ' + m.group(1), **({'health_note': m.group(2)} if m.group(2) else {}))
+        out.append(l)
+    if hit != 1:
+        raise SystemExit('%s: health_equals finds %d Health = lines on %s p.%s, not 1' % (slug, hit, part, page))
+    return out
+
+
+def ink_dashes(book, block, line, codes, title, reader, slug, name):
+    """The codes of a one-line grid that the TSV lost or misread where the
+    page prints a dash (registry `grid_ink_dashes` [part, page, name]: MH7's
+    Fire Creatures, printed 13, whose R, I and P are dashes the TSV reads as
+    "oe" and nothing). Each code read as no rank is looked at on the page
+    image, a box under its letter as high as the code row: where the ink
+    there is one short level bar, the code is a dash; anything else stops
+    the reader. Tesseract reads none of the three as a dash from a crop
+    (2026-10-29), so the ink is measured, not read."""
+    import pymupdf
+    if reader.doc is None:
+        reader.doc = pymupdf.open(reader.pdf_path)
+    xs = letter_xs(line, title)
+    s = 72 / 300
+    found = []
+    for n, a in enumerate(block['abilities']):
+        if a['number'] is not None or a.get('printed_code') == '-':
+            continue
+        x0, y0, x1, y1 = int(xs[n] - 40), int(codes['y0'] - 8), int(xs[n] + 40), int(codes['y1'] + 8)
+        pix = reader.doc[line['pdf'] - 1].get_pixmap(dpi=300, clip=pymupdf.Rect(x0 * s, y0 * s, x1 * s, y1 * s),
+                                                     colorspace=pymupdf.csGRAY)
+        dark = [(i % pix.width, i // pix.width) for i, v in enumerate(pix.samples) if v < 128]
+        if not dark:
+            raise SystemExit('%s: grid_ink_dashes: %s prints no ink under %s, %s' % (slug, name, a['letter'], line['part']))
+        w = max(p[0] for p in dark) - min(p[0] for p in dark) + 1
+        h = max(p[1] for p in dark) - min(p[1] for p in dark) + 1
+        if not (h <= 10 and w >= 15 and w >= 3 * h):
+            raise SystemExit('%s: grid_ink_dashes: the ink under %s in %s is %d x %d px, no dash'
+                             % (slug, a['letter'], name, w, h))
+        a.update(number=None, code=None, printed_code='-', ink_dash=True)
+        found.append(a['letter'])
+    if not found:
+        raise SystemExit('%s: grid_ink_dashes: %s reads every code, no dash to look for' % (slug, name))
+    block['check'] = check(block)
+    return found
+
+
+def opponents(book, slug, part, page, ranks, reader=None):
     """The one-line grids on one chapter page, each an entry of its own."""
     lines = stream(book, slug, part, page, page, split_at_rules=False)
+    inked = [d for d in book.get('grid_ink_dashes', []) if (d[0], d[1]) == (part, page)]
     # MH6 (registry `health_labels`): any label on a grid's Health line
     labels = bool(book.get('health_labels'))
     if book.get('code_row_letters'):
@@ -1021,6 +1114,12 @@ def opponents(book, slug, part, page, ranks):
             block, k, note = line_block(lines, i, title, ranks, part, page, slug, name, notes=True, labels=labels)
         else:
             block, k = line_block(lines, i, title, ranks, part, page, slug, name, labels=labels)
+        for d in [d for d in inked if roster.norm(d[2]) == roster.norm(name)]:
+            ink_dashes(book, block, line, lines[i + 1], title, reader, slug, name)
+            inked.remove(d)
+        # the bracket printed after an equals-sign Health (registry
+        # `health_equals`: MH7's "(maximum)") is the grid's prose
+        note = note + [lines[x]['health_note'] for x in range(i + 2, k) if lines[x].get('health_note')]
         # the text: the Powers: or Special: line and the paragraph it opens,
         # or the paragraph right under the grid; it ends at a paragraph break.
         # The first line may sit a grid's row gap under a grid with no Health
@@ -1133,6 +1232,8 @@ def opponents(book, slug, part, page, ranks):
         raise SystemExit('%s: form_grids names %d grid(s) on %s p.%d that no unnamed grid matched' % (slug, len(forms), part, page))
     if unnamed:
         raise SystemExit('%s: unnamed_grids names %d grid(s) on %s p.%d that no unnamed grid matched' % (slug, len(unnamed), part, page))
+    if inked:
+        raise SystemExit('%s: grid_ink_dashes names %s on %s p.%d, found as no grid' % (slug, ', '.join(d[2] for d in inked), part, page))
     return entries
 
 
@@ -1200,7 +1301,7 @@ def parse(book, slug):
     pages = [(o['part'], o['page']) for o in book['opponents']]
     pages += [(f['part'], f['page']) for f in book.get('form_grids', []) if (f['part'], f['page']) not in pages]
     for part, page in pages:
-        entries += opponents(book, slug, part, page, ranks)
+        entries += opponents(book, slug, part, page, ranks, reader)
     for g in book.get('carried_grids', []):
         if any(e['kind'] == 'opponent' and (e['part'], e['pages']) == (g['part'], [g['page']])
                and roster.norm(e['header']) == roster.norm(g['name']) for e in entries):
