@@ -38,7 +38,7 @@ and listed by --failures; the fix is an override citing the page, never a
 change to the parser to make one block pass. The book itself misprints some
 (survey: Northstar's Health, Poltergeist's S), and an override records the
 printed value beside the corrected one. A book whose registry entry sets
-rank_ranges (ME2 alone) takes any number inside its rank's range
+rank_ranges (ME2 and ME3 alone) takes any number inside its rank's range
 (apps/marvel-heroes/data/ranks.json min and max), not only the standard one.
 """
 import argparse, collections, io, json, os, re, statistics, sys
@@ -261,7 +261,7 @@ def fix_digits(s):
 ANCHOR = re.compile(r'Heal?th' + EQ + r'?\s*\d')      # "Heath: 80", ME1 printed 18
 
 
-def rows_from(texts):
+def rows_from(texts, mends=()):
     """The grid's rows from its lines. A line that is not a row is the tail of
     a value that wrapped ('Resources: Ex' then '(20)'), so it joins the row
     above rather than breaking the run.
@@ -269,7 +269,8 @@ def rows_from(texts):
     Three ways ME1's crops read, mended first: a Shift rank set on two lines
     ("I 500 Shift" / "Z"), a row letter set against its number ("R150 Shift X",
     "A2 Fe"), and Incredible set against its number ("40In"), whose I the
-    number would otherwise take as a 1."""
+    number would otherwise take as a 1. `mends` is GridReader.mends: the
+    registry's own mends for one book (ME3), none for every other."""
     texts = list(texts)
     for n in range(len(texts) - 1, 0, -1):
         nxt = re.match(r'^\s*([XYZ0])\b\s*(.*)$', texts[n])
@@ -280,6 +281,17 @@ def rows_from(texts):
     # a Class rank's l read twice ("F 5000 CIl5000": ME2's Death and Galactus,
     # Resource pp.2 and 4), which the code pattern reads as a bare C
     texts = [re.sub(r'(?<=\d )C[Il1|]{2}\s?(?=\d{4}\b)', 'Cl ', t) for t in texts]
+    if 'class_mark' in mends:
+        # ME3 (registry class_mark): the same with a mark of the art before it
+        # (Dormammu's E, Resource p.12: a copyright sign, read as a sign or a
+        # c, 'cCI1000'), which leaves the code unread
+        texts = [re.sub(r'(?<=\d )(?:[^\w\s]|c)C[Il1|]{1,2}\s?(?=\d{4}\b)', 'Cl ', t) for t in texts]
+    if 'code_first_rows' in mends:
+        # ME3 (registry code_first_rows): a row printing its code before its
+        # number ("F Am 50": Charon, Adventure p.24; Pluto's Footsoldiers,
+        # Resource p.9) is turned round
+        texts = [re.sub(r'^(\s*\S{1,3})\s+((?:Shift\s?[XYZ]|C[lI1]\s?\d{4}|[A-Z][a-z]))\s+([0-9OolI]{1,4})\b',
+                        r'\1 \3 \2', t) for t in texts]
     rows = []
     for t in texts:
         m = ROW.match(t)
@@ -306,6 +318,10 @@ class GridReader:
         os.makedirs(self.dir, exist_ok=True)
         self.pdf_path = os.path.join(book['source_pdf_dir'], book['source_pdf'])
         self.doc = None
+        # one book's grid mends, each a registry field of its own (ME3); a
+        # book that sets none reads every grid as it always has
+        self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes')
+                      if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
         x0, y0, x1, y1 = (int(v) for v in box)
@@ -346,21 +362,31 @@ def grid_at(stream, i, reader):
     # line with, so the box starts a line higher; the line it may take in from
     # above is prose, and rows_from ignores lines before the first row.
     top = line['y0'] - 45
-    box = (line['col_x0'], top, line['col_x1'], stream[j]['y1'] + 10)
-    rows = rows_from(reader.read(line['pdf'], box))
+    mends = getattr(reader, 'mends', ())
+    bottom = stream[j]['y1']
+    if 'popularity_below' in mends and j + 1 < len(stream) and stream[j + 1]['pdf'] == line['pdf'] \
+            and stream[j + 1]['col'] == line['col'] and re.search(r'Popularity:\s*\S{0,4}$', stream[j]['text']) \
+            and stream[j + 1]['x0'] > stream[j]['x0'] + 200:
+        # ME3 (registry popularity_below): the Popularity's value set on the
+        # line below its label, at the column's right ("Popularity:" then
+        # "-1000"), which a crop ending at the label's line cuts off
+        bottom = stream[j + 1]['y1']
+    box = (line['col_x0'], top, line['col_x1'], bottom + 10)
+    rows = rows_from(reader.read(line['pdf'], box), mends)
     if len(rows) != 7:
-        rows = rows_from([s['text'] for s in stream[i:j + 1]])
+        rows = rows_from([s['text'] for s in stream[i:j + 1]], mends)
     end = j + 1
     # skip stream lines that are the grid's sideways junk or its split columns
     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
-            and stream[end]['y0'] < stream[j]['y1'] and not RUN_IN.match(stream[end]['text']):
+            and stream[end]['y0'] < bottom and not RUN_IN.match(stream[end]['text']):
         end += 1
     return (rows[:7] if len(rows) >= 7 else None), end
 
 
-def secondary(rows, stream, end):
+def secondary(rows, stream, end, mends=()):
     """Health, Karma, Resources, Popularity as printed, from the text beside the
-    rows, plus a Popularity that wraps to the line after the grid."""
+    rows, plus a Popularity that wraps to the line after the grid. `mends` is
+    GridReader.mends."""
     text = ' '.join(r['rest'] for r in rows)
     out = {}
     for k in LABELS:
@@ -374,7 +400,21 @@ def secondary(rows, stream, end):
         # printed 6; '0 or': the Grandmaster, Resource p.9)
         if v and k in ('Health', 'Karma', 'Popularity'):
             out[k.lower()] = re.sub(r'(?<=\d)(?:\s+[A-Za-z]{1,2})+$', '', out[k.lower()])
-    if end < len(stream) and stream[end]['text'].startswith('(') and out.get('popularity'):
+            if 'trailing_marks' in mends:
+                # ME3 (registry trailing_marks): a mark of the art and what
+                # follows it ('90 = R': Captain Marvel's Karma, Resource p.15;
+                # a quote mark after the Mindless Ones' Health, p.14)
+                out[k.lower()] = re.sub(r'(?<=\d)\s+[^\w\s(][^\d]*$', '', out[k.lower()])
+        if v and 'trailing_marks' in mends:
+            # ...and before a number, or after a closing bracket (Captain
+            # Marvel's Popularity '/) 55' and Resources 'Pr(4) : a')
+            out[k.lower()] = re.sub(r'(?<=\))\s+[^\w\s(].*$', '', re.sub(r'^[/|\\)]{1,3}\s*(?=\d)', '', out[k.lower()]))
+    # ME3 (registry popularity_notes): a bracketed line under the grid that
+    # opens with a word ('(The above are ...', Resource pp.6 and 8) is a note
+    # on the grid, not the rest of its Popularity, which opens with a number
+    # (Gladiator's '15' then '(100 in the', Adventure p.3)
+    note = 'popularity_notes' in mends and end < len(stream) and re.match(r'^\(\s*[A-Za-z]', stream[end]['text'])
+    if end < len(stream) and stream[end]['text'].startswith('(') and out.get('popularity') and not note:
         out['popularity'] += ' ' + stream[end]['text']
         end += 1
     if end < len(stream) and out.get('popularity') and out['popularity'].count('(') > out['popularity'].count(')') \
@@ -519,7 +559,7 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
             if prev and not prev['big'] and prev['text'].upper() == prev['text'] and any(c.isalpha() for c in prev['text']) \
                     and cur['blocks'] + [None] and not RUN_IN.match(prev['text']):
                 label = prev['text'].strip()
-            sec, end = secondary(rows, stream, nxt)
+            sec, end = secondary(rows, stream, nxt, getattr(reader, 'mends', ()))
             block = {'label': label, 'page': line['printed'], 'pdf': line['pdf'], 'col': line['col'],
                      'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code', 'alt', 'read_as') if k in r}
                                    for r in rows]}

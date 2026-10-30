@@ -137,6 +137,30 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: speck_lines finds %r %d times on %s p.%d, not once' % (slug, old, len(hits), part, page))
         hits[0]['text'] = new
+    # ME3 (registry health_below): a Health set on the line below its label
+    # ("F 5000 Cl5000 Health:", then "20,000" at the column's right: Resource
+    # pp.2, 3, 6, 9, 11 and 12), so the grid has no anchor and no header; the
+    # value is joined to its label's line
+    k = 0
+    while book.get('health_below') and k + 1 < len(stream):
+        a, b = stream[k], stream[k + 1]
+        if re.search(r'Heal?th:\s*$', a['text']) and (b['pdf'], b['col']) == (a['pdf'], a['col']) \
+                and b['x0'] > a['x0'] + 200 and re.match(r'^\d[\d,]*\*?$', b['text'].strip()):
+            stream[k] = dict(a, text=a['text'].rstrip() + ' ' + b['text'].strip())
+            del stream[k + 1]
+        k += 1
+    # ME3 (registry two_line_headers [part, page, first line, second line], as
+    # read): a header set on two lines ("MEPHISTO'S DEMONIC" / "THRALLS",
+    # Resource p.7), of which mark_headers marks only the line nearest the
+    # grid, is joined to one line. Each must be found exactly once.
+    for p, page, first_t, second_t in [d for d in book.get('two_line_headers', []) if d[0] == part and first <= d[1] <= last]:
+        at = [k for k in range(len(stream) - 1) if stream[k]['printed'] == page
+              and roster.norm(stream[k]['text']) == roster.norm(first_t) and roster.norm(stream[k + 1]['text']) == roster.norm(second_t)]
+        if len(at) != 1:
+            raise SystemExit('%s: two_line_headers finds %r / %r %d times on %s p.%d, not once' % (slug, first_t, second_t, len(at), part, page))
+        k = at[0]
+        stream[k] = dict(stream[k], text=stream[k]['text'].strip() + ' ' + stream[k + 1]['text'].strip(), y1=stream[k + 1]['y1'])
+        del stream[k + 1]
     return stream
 
 
@@ -207,10 +231,12 @@ def place_headers(book, stream):
     """A header Tesseract did not read at all (ME2's BALDER, YMIR and GAL: in
     neither the TSV nor the text) is placed above its grid from the registry's
     `grid_headers`, each naming its grid by booklet, printed page and Health.
-    Read off the page images; nothing but the grid sits under each."""
+    Read off the page images; nothing but the grid sits under each. A
+    `health_printed` (ME3's VOYD: "20,000") is the Health as the line reads."""
     for g in book.get('grid_headers', []):
+        health = re.escape(g['health_printed']) if 'health_printed' in g else '%d' % g['health']
         at = [i for i, l in enumerate(stream) if l['part'] == g['part'] and l['printed'] == g['page']
-              and re.search(r'Heal?th' + roster.EQ + r'?\s*%d\b' % g['health'], l['text'])]
+              and re.search(r'Heal?th' + roster.EQ + r'?\s*' + health + r'\b', l['text'])]
         if not at:
             continue                    # another range's page
         if len(at) != 1:
@@ -311,6 +337,21 @@ def line_grids(book, stream, keyed, labelled):
     if not any(k in pages for k in want):
         return stream
     letters = LETTERS_MARKS if book.get('letters_marks') else LETTERS
+    # ME3 (a grid's `wrapped`: the serpent, Adventure p.11 column 2): a grid
+    # wrapped after R, letters "F A S E R" / "I P" and codes "Un Mn Mn Un Fe" /
+    # "Rm Fe", is joined to one line of each on the pages of such a grid
+    wrapped = {k for k, gs in want.items() if any(g.get('wrapped') for g in gs)}
+    wrap_a, wrap_b = re.compile(r'^F\s+A\s+\S{1,2}\s+E\s+R$'), re.compile(r'^\S{1,2}\s+P$')
+    k = 0
+    while wrapped and k + 3 < len(stream):
+        if (stream[k]['part'], stream[k]['printed']) in wrapped and wrap_a.match(stream[k]['text'].strip()) \
+                and wrap_b.match(stream[k + 1]['text'].strip()) \
+                and len(stream[k + 2]['text'].split()) == 5 and len(stream[k + 3]['text'].split()) == 2:
+            stream[k] = dict(stream[k], text=stream[k]['text'].strip() + ' ' + stream[k + 1]['text'].strip())
+            stream[k + 2] = dict(stream[k + 2], text=stream[k + 2]['text'].strip() + ' ' + stream[k + 3]['text'].strip())
+            del stream[k + 3]
+            del stream[k + 1]
+        k += 1
     out, i = [], 0
     while i < len(stream):
         l = stream[i]
@@ -364,11 +405,24 @@ def line_grids(book, stream, keyed, labelled):
     return out
 
 
-def grid(stream, i, reader, code_rows=False):
+def grid(stream, i, reader, code_rows=False, end_at_p=False):
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
     rows, end = roster.grid_at(stream, i, reader)
+    if rows is None and end == i and end_at_p and roster.ANCHOR.search(line['text']):
+        # ME3 (registry grids_end_at_p): a grid that prints no Resources and
+        # no Popularity (Mephisto's Thralls and Footsoldiers, Resource p.7; the
+        # Mindless Ones, p.14; the second grids) ends at its P row, not at a
+        # Popularity line, which roster.grid_at wants
+        p = next((j for j in range(i + 1, min(len(stream), i + 9)) if stream[j]['pdf'] == line['pdf']
+                  and stream[j]['col'] == line['col'] and re.match(r'^\s*P\s+\S', stream[j]['text'])), None)
+        if p is not None:
+            box = (line['col_x0'], line['y0'] - 45, line['col_x1'], stream[p]['y1'] + 10)
+            got = roster.rows_from(reader.read(line['pdf'], box), reader.mends)
+            if len(got) < 7:
+                got = roster.rows_from([s['text'] for s in stream[i:p + 1]], reader.mends)
+            return (got[:7] if len(got) >= 7 else None), p + 1
     if rows is None and end > i and code_rows:
         # MX1 (registry code_rows): a grid of the code then the number in
         # brackets ("F Gd (10) Health: 64"), MA4's order, read by
@@ -422,10 +476,31 @@ def parse(book, slug):
         mark_headers(s, cards)
         streams.append((s, True))
     stream, entries = [], []
-    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=True)) if book.get('code_rows') else grid
+    code_rows, end_at_p = bool(book.get('code_rows')), bool(book.get('grids_end_at_p'))
+    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p)) if code_rows or end_at_p else grid
     for s, opponent in streams:
         stream += s
         got = roster.read_entries(s, reader, opponent=opponent, grid=read_grid, ranges=ranges)
+        # ME3 (registry header_blocks [part, page, header as read]): a header
+        # over a second grid of the entry above ("MEPHISTO (w/Galactus)",
+        # Resource p.6) labels that grid, and what is under it is the entry's.
+        # Each must be found exactly once in its booklet.
+        for p, page, head in book.get('header_blocks', []):
+            if s[0]['part'] != p or not any(l['printed'] == page for l in s):
+                continue
+            at = [n for n, e in enumerate(got) if n and e['pages'][0] == page and e['header'] == head]
+            if len(at) != 1:
+                raise SystemExit('header_blocks: %r is %d entries of %s p.%d, not 1' % (head, len(at), p, page))
+            e, prev = got[at[0]], got[at[0] - 1]
+            for b in e['blocks']:
+                b['label'] = head
+            prev['blocks'] += e['blocks']
+            for k in ('identity', 'powers', 'members', 'prose'):
+                prev[k] += e[k]
+            for k, v in e['sections'].items():
+                prev['sections'].setdefault(k, []).extend(v)
+            prev['pages'] += [x for x in e['pages'] if x not in prev['pages']]
+            del got[at[0]]
         subheads = {id(e) for e in got for l in s if l.get('subhead') and l['text'] == e['header'] and l['printed'] == e['pages'][0]}
         for e in got:
             if id(e) in subheads:
@@ -570,7 +645,20 @@ def coverage(book, entries, overrides):
                 if roster.as_int((b[k] or '').replace(',', '')) is None and k not in explained:
                     lines.append('  %s IS NOT A NUMBER: %s %s p.%s: %r' % (k.upper(), e['header'], e['part'], b['page'], b[k]))
                     bad = True
-    marked = {(o['match']['summary'], o['field']): o for o in overrides if 'summary' in o['match']}
+            # ME3 (registry popularity_numbers): every grid that prints
+            # Resources prints a Popularity, a number with a sign or a dash
+            # before it and at most a bracket that opens with a number
+            # (Gladiator's '15 (100 in the Empire)', Adventure p.3). A value
+            # cut off below its label (popularity_below) reads as nothing, and
+            # a note under the grid joined to it (popularity_notes) opens with
+            # a word, so neither passes unseen. A field of its own, so that
+            # turning either mend off turns this red; ME1 and ME2 print words
+            # in a Popularity ('0 (And dropping)', ME1 Adventure p.15)
+            if book.get('popularity_numbers') and b.get('resources') \
+                    and not re.match(r'^[^\w\s(]?\s*\d+(?:\s*\(\d[^)]*\))?$', (b.get('popularity') or '').strip()):
+                lines.append('  POPULARITY IS NOT A NUMBER: %s %s p.%s: %r' % (e['header'], e['part'], b['page'], b.get('popularity')))
+                bad = True
+    marked ={(o['match']['summary'], o['field']): o for o in overrides if 'summary' in o['match']}
     used = set()
     rows = summary['heroes']
     for name, values, health, karma, _powers in rows:

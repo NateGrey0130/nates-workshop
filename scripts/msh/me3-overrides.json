@@ -1,0 +1,30 @@
+{
+  "about": [
+    "Hand decisions about ME3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the entry's own booklet, and the start of the entry's header; codes, the seven rank codes, where one entry prints two grids on the page (Dormammu's, Resource p.12)",
+    "            {summary}: a Pregenerated Heroes Summary row (PDF 53), by the name the chart prints",
+    "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            summary_misprint  the chart prints a value its own ranks contradict and the character's block does not; 'printed' is the chart's, 'corrected' the block's",
+    "            label             a grid the page sets with no header of its own, labelled as the note says",
+    "  checked   the date the page image was read",
+    "A number inside its rank's range but not its standard (Pluto's 250 Shift Y, Resource p.8) needs no override: the registry's rank_ranges (scripts/msh/books.json, the me3 entry) has the check take the range for this book alone (survey decision 3, apps/marvel-heroes/docs/surveys/me3.md)."
+  ],
+  "overrides": [
+    {"match": {"page": 2, "header": "Death"}, "verdict": "as_printed", "field": "karma",
+     "printed": "Unlim.", "checked": "2026-10-30",
+     "note": "Printed Karma: Unlim. (survey me3.md decision 4), as ME2's Death prints Unlimited."},
+    {"match": {"page": 3, "header": "Eternity"}, "verdict": "as_printed", "field": "karma",
+     "printed": "Unlimited", "checked": "2026-10-30",
+     "note": "Printed Karma: Unlimited (survey me3.md decision 4)."},
+    {"match": {"page": 12, "header": "DORMAMMU", "codes": ["Un", "Un", "Mn", "C-1000", "Mn", "Mn", "Un"]}, "verdict": "as_printed", "field": "health",
+     "printed": "1275*", "checked": "2026-10-30",
+     "note": "Printed Health: 1275*, the asterisk keying the note under the grid (survey me3.md item 12); the number adds up."},
+    {"match": {"page": 12, "header": "DORMAMMU", "codes": ["Un", "Un", "ShX", "C-1000", "Mn", "Mn", "ShX"]}, "verdict": "label",
+     "label": "DORMAMMU (w/Galactus)", "checked": "2026-10-30",
+     "note": "His second grid prints no header: the prose above it gives it as his figures while he controls Galactus. Labelled as Mephisto's second grid is headed, MEPHISTO (w/Galactus), p.6 (survey me3.md decision 5)."},
+    {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
+     "printed": 90, "corrected": 110, "checked": "2026-10-30",
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.4) prints 110. ME1's and ME2's charts have the same misprint (survey me3.md decision 4)."}
+  ]
+}
