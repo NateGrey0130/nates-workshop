@@ -645,7 +645,20 @@ def coverage(book, entries, overrides):
                 if roster.as_int((b[k] or '').replace(',', '')) is None and k not in explained:
                     lines.append('  %s IS NOT A NUMBER: %s %s p.%s: %r' % (k.upper(), e['header'], e['part'], b['page'], b[k]))
                     bad = True
-    marked = {(o['match']['summary'], o['field']): o for o in overrides if 'summary' in o['match']}
+            # ME3 (registry popularity_numbers): every grid that prints
+            # Resources prints a Popularity, a number with a sign or a dash
+            # before it and at most a bracket that opens with a number
+            # (Gladiator's '15 (100 in the Empire)', Adventure p.3). A value
+            # cut off below its label (popularity_below) reads as nothing, and
+            # a note under the grid joined to it (popularity_notes) opens with
+            # a word, so neither passes unseen. A field of its own, so that
+            # turning either mend off turns this red; ME1 and ME2 print words
+            # in a Popularity ('0 (And dropping)', ME1 Adventure p.15)
+            if book.get('popularity_numbers') and b.get('resources') \
+                    and not re.match(r'^[^\w\s(]?\s*\d+(?:\s*\(\d[^)]*\))?$', (b.get('popularity') or '').strip()):
+                lines.append('  POPULARITY IS NOT A NUMBER: %s %s p.%s: %r' % (e['header'], e['part'], b['page'], b.get('popularity')))
+                bad = True
+    marked ={(o['match']['summary'], o['field']): o for o in overrides if 'summary' in o['match']}
     used = set()
     rows = summary['heroes']
     for name, values, health, karma, _powers in rows:

@@ -2663,6 +2663,8 @@
       "trailing_marks_note": "Art beside a grid reads as a mark after a number (Captain Marvel's Karma, Resource p.15; the Mindless Ones' Health, p.14); roster.secondary strips a trailing mark and what follows it, a mark before a number and what follows a closing bracket (Captain Marvel's Popularity and Resources, printed 55 and Pr(4), read on the page image; survey me3.md, item 7).",
       "popularity_notes": true,
       "popularity_notes_note": "A bracketed note set right under Mephisto's (Resource p.6) and Pluto's (p.8) grids is not the rest of the Popularity, which a wrapped one is (Gladiator's, Adventure p.3, opening with a number); roster.secondary leaves a bracketed line that opens with a word to the entry's text (survey me3.md, item 8).",
+      "popularity_numbers": true,
+      "popularity_numbers_note": "The check behind popularity_below and popularity_notes (plan row 5b, 2026-10-30): gridbooks.coverage holds every grid that prints Resources to a Popularity that reads as a number, a sign or dash before it and at most a bracket opening with a number. Either mend turned off reads a Popularity as nothing or with the note joined, and turns roster.py red. A field of its own because ME1 and ME2 print words in one.",
       "two_line_headers": [
         ["Resource Book", 7, "MEPHISTO'S DEMONIC", "THRALLS"],
         ["Resource Book", 7, "MEPHISTO'S", "FOOTSOLDIERS"],
