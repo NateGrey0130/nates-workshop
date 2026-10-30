@@ -1649,6 +1649,127 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${death?.health} ${death?.karma}`);
   }
 
+  // ME3 is laid out as ME1 and ME2 are (scripts/msh/gridbooks.py,
+  // me3-overrides.json), with the survey's decisions applied as it recommends
+  // (me3.md; Nate 2026-10-30). The registry's card_names, speck_lines,
+  // power_heads and header_blocks each change what is built, so each is
+  // pinned here by what it changes.
+  if (data.npcs.characters.some((c) => c.book === 'me3')) {
+    const me3 = data.npcs.characters.filter((c) => c.book === 'me3');
+    const blocks3 = me3.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blk3 = (id, i = 0) => me3.find((c) => c.id === id)?.versions[0].blocks[i];
+    const ver3 = (id) => me3.find((c) => c.id === id)?.versions[0];
+    const team3 = (t) => me3.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const played3 = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('ME3: 32 characters, each id ending -me3 with one version, filed under the Resource Book\'s banners without The (Entities, Death Gods), the eight heroes as Left Hand of Eternity Heroes (four on the Summary alone) and the rest under the book\'s title, and no name starting The',
+      me3.length === 32 && me3.every((c) => c.id.endsWith('-me3') && c.versions.length === 1)
+      && team3('Entities') === 'Death,Eternity,Galactus'
+      && team3('Death Gods') === 'Hela,Mephisto,Mephisto\'s Demonic Thralls,Mephisto\'s Footsoldiers,Pluto,Pluto\'s Footsoldiers,Seth'
+      && team3('Left Hand of Eternity Heroes') === 'Beta Ray Bill,Doc Strange,Firelord,Gladiator,Mantis,Nova,Silver Surfer,Thor'
+      && me3.filter((c) => c.summary_only).map((c) => c.name).sort().join() === 'Doc Strange,Nova,Silver Surfer,Thor'
+      && me3.filter((c) => c.team === 'ME3 The Left Hand of Eternity').length === 14
+      && !me3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${me3.length} ${[...new Set(me3.map((c) => c.team))]}`);
+    check('ME3: the cards sort as the book prints them, the Adventure Book\'s from p.3 to p.28, then the Resource Book\'s from p.2 to p.16, then the Summary\'s four',
+      me3.map((c) => c.id).join() === ['gladiator', 'mantis', 'firelord', 'beta-ray-bill', 'nine-headed-serpent', 'vulture-flock', 'keeper', 'charon',
+        'dimensional-shambler', 'death', 'eternity', 'galactus', 'mephisto', 'mephisto-s-demonic-thralls', 'mephisto-s-footsoldiers', 'pluto',
+        'hela', 'pluto-s-footsoldiers', 'seth', 'uatu', 'voyd', 'dormammu', 'clea', 'dark-dimension-inhabitant-typical', 'mindless-ones',
+        'captain-marvel-mar-vell', 'thanos', 'purple-man', 'doc-strange', 'nova', 'silver-surfer', 'thor'].map((id) => `${id}-me3`).join(),
+      me3.map((c) => c.id).join());
+    check('ME3: 35 blocks: five one-line grids of ranks only (Beta Ray Bill\'s humanoid form, the Nine-Headed Serpent, the Vulture Flock, the Keeper, the Dimensional Shambler), four Summary rows and 26 full blocks',
+      blocks3.length === 35
+      && blocks3.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === ['beta-ray-bill', 'nine-headed-serpent', 'vulture-flock', 'keeper',
+        'dimensional-shambler'].map((id) => `${id}-me3`).join()
+      && blocks3.filter(({ b }) => b.kind === 'line').every(({ b }) => b.rank_only)
+      && blocks3.filter(({ b }) => b.kind === 'summary').map(({ id }) => id).join() === ['doc-strange', 'nova', 'silver-surfer', 'thor'].map((id) => `${id}-me3`).join()
+      && blocks3.filter(({ b }) => !b.kind).length === 26,
+      blocks3.map(({ id, b }) => `${id}:${b.kind}`).join());
+    const bill3 = bookNpc({ character: 'beta-ray-bill-me3' }).snapshot;
+    check('ME3: Mephisto\'s grid headed MEPHISTO (w/Galactus) is a second block on his card (header_blocks) and Dormammu\'s unheaded second grid one labelled DORMAMMU (w/Galactus) (a label override), each a GM choice of its own; Beta Ray Bill\'s humanoid form is a form on his card (330 and 80), as on ME2\'s',
+      me3.filter((c) => c.versions[0].blocks.length > 1).map((c) => `${c.id} ${c.versions[0].blocks.map((b) => b.label).join('+')}`).join(' | ')
+        === 'beta-ray-bill-me3 Beta Ray Bill+Humanoid form | mephisto-me3 Mephisto+MEPHISTO (w/Galactus) | dormammu-me3 Dormammu+DORMAMMU (w/Galactus)'
+      && ['mephisto-me3', 'dormammu-me3'].every((id) => choices.filter((c) => c.character === id).length === 2)
+      && ['mephisto-me3', 'dormammu-me3'].map((id) => `${played3(id, 0)} ${played3(id, 1)}`).join() === '3225/250 4200/1175,1275/250 1350/300'
+      && choices.filter((c) => c.character === 'beta-ray-bill-me3').length === 1
+      && bill3?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Beta Ray Bill 330,Humanoid form 80',
+      me3.filter((c) => c.versions[0].blocks.length > 1).map((c) => `${c.id} ${c.versions[0].blocks.map((b) => b.label).join('+')}`).join(' | ')
+        + ` ${['mephisto-me3', 'dormammu-me3'].map((id) => `${played3(id, 0)} ${played3(id, 1)}`)} ${JSON.stringify(bill3?.forms?.map((f) => [f.name, f.health]))}`);
+    const fixes3 = ['death-me3', 'eternity-me3', 'dormammu-me3'].map((id) => {
+      const o = blk3(id)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${o?.printed} block ${blk3(id)?.health}/${blk3(id)?.karma} plays ${played3(id, id === 'dormammu-me3' ? 0 : undefined)}`;
+    });
+    check('ME3: three blocks kept as printed: Death\'s Karma Unlim. and Eternity\'s Unlimited, played as unset beside their Health 20,000, and Dormammu\'s Health 1275*, the asterisk keying the note under his grid',
+      fixes3.join(' | ') === [
+        'death-me3 as_printed karma Unlim. block 20,000/Unlim. plays 20000/null',
+        'eternity-me3 as_printed karma Unlimited block 20,000/Unlimited plays 20000/null',
+        'dormammu-me3 as_printed health 1275* block 1275*/250 plays 1275/250',
+      ].join(' | '),
+      fixes3.join(' | '));
+    const ov3 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'me3-overrides.json'), 'utf8')).overrides;
+    const text3 = ov3.filter((o) => o.verdict === 'text');
+    check('ME3: eight overrides: three as printed, Dormammu\'s second grid\'s label, the Summary\'s Firelord Karma 90 as 110, and three text verdicts (Captain Marvel\'s Nega-Bands, Galactus\'s Serial Immortality, the end of Seth\'s background), and only the three as-printed blocks carry one',
+      ov3.length === 8 && ov3.filter((o) => o.verdict === 'as_printed').length === 3 && ov3.filter((o) => o.verdict === 'label').length === 1
+      && JSON.stringify(ov3.filter((o) => o.verdict === 'summary_misprint').map((o) => [o.match.summary, o.field, o.printed, o.corrected])) === '[["Firelord","karma",90,110]]'
+      && text3.map((o) => o.match.row).join() === ['captain-marvel-mar-vell-me3:power:1', 'galactus-me3:power:9', 'seth-me3:background'].map((k) => `me3:${k}`).join()
+      && blocks3.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === 'death-me3,dormammu-me3,eternity-me3',
+      JSON.stringify(ov3.map((o) => [o.verdict, o.match])));
+    check('ME3: Firelord plays his block\'s Karma 110, not the Summary\'s misprinted 90, and Pluto\'s Endurance 250, inside Shift Y\'s range, plays as printed (rank_ranges)',
+      played3('firelord-me3') === '325/110'
+      && bookNpc({ character: 'pluto-me3' }).snapshot?.abilities.endurance.rank === 'shift-y' && bookNpc({ character: 'pluto-me3' }).snapshot.abilities.endurance.number === 250,
+      `${played3('firelord-me3')} ${JSON.stringify(bookNpc({ character: 'pluto-me3' }).snapshot?.abilities.endurance)}`);
+    check('ME3: this book\'s Captain Marvel is named for Mar-Vell (card_names), and the three earlier books\' Captain Marvel cards keep their names',
+      me3.some((c) => c.id === 'captain-marvel-mar-vell-me3' && c.name === 'Captain Marvel (Mar-Vell)')
+      && data.npcs.characters.filter((c) => c.book !== 'me3' && /^Captain Marvel/.test(c.name)).map((c) => `${c.id} ${c.name}`).join()
+        === 'captain-marvel-mhsp1 Captain Marvel,captain-marvel-mh2 Captain Marvel,captain-marvel-mhsp2 Captain Marvel',
+      data.npcs.characters.filter((c) => /^Captain Marvel/.test(c.name)).map((c) => c.id).join());
+    check('ME3: the three possessive card names in ASCII, not as the headers\' curly apostrophes read (speck_lines), Mephisto\'s first identity line whole (a hyphen-split word joined), and Hela\'s Illusion-Casting spelled as printed',
+      ['mephisto-s-demonic-thralls-me3', 'mephisto-s-footsoldiers-me3', 'pluto-s-footsoldiers-me3'].map((id) => me3.find((c) => c.id === id)?.name).join()
+        === 'Mephisto\'s Demonic Thralls,Mephisto\'s Footsoldiers,Pluto\'s Footsoldiers'
+      && ver3('mephisto-me3')?.identity[0] === 'aka Satan, Mephistopheles, Lucifer, and "The Devil"'
+      && ver3('hela-me3')?.powers.some((p) => p.name === 'Illusion-Casting'),
+      `${ver3('mephisto-me3')?.identity[0]} | ${ver3('hela-me3')?.powers.map((p) => p.name)}`);
+    const heads3 = [['firelord-me3', 'Energy Sheath'], ['mephisto-me3', 'Enlargement'], ['mephisto-me3', 'Power Control'], ['pluto-me3', 'Mystical Flame']];
+    check('ME3: the four run-in powers whose line above ends no sentence are powers of their own (power_heads): Firelord\'s Energy Sheath, Mephisto\'s Enlargement and Power Control, Pluto\'s Mystical Flame',
+      heads3.every(([id, n]) => ver3(id)?.powers.filter((p) => p.name === n).length === 1),
+      heads3.map(([id, n]) => `${id} ${n} ${ver3(id)?.powers.filter((p) => p.name === n).length}`).join(' | '));
+    const pw3 = me3.flatMap((c) => c.versions[0].powers);
+    check('ME3: 173 powers, 82 of them linked to the UPB', pw3.length === 173 && pw3.filter((p) => p.upb).length === 82,
+      `${pw3.length} ${pw3.filter((p) => p.upb).length}`);
+    const book3 = data.npcs.books.find((b) => b.slug === 'me3');
+    const one3 = me3.filter((c) => !['mephisto-me3', 'dormammu-me3'].includes(c.id));
+    check('ME3: the book reads Adventure 3-5 and 11-28 and Resource 2-16, a card cites its booklet and page and a Summary-only hero the Summary, and every other card is one GM choice',
+      JSON.stringify(book3?.ranges) === '[{"part":"Adventure","pages":[[3,5],[11,28]]},{"part":"Resource","pages":[[2,16]]}]'
+      && tagline(bookNpc({ character: 'gladiator-me3' }).snapshot).startsWith('ME3 The Left Hand of Eternity, Adventure p.3;')
+      && tagline(bookNpc({ character: 'purple-man-me3' }).snapshot).startsWith('ME3 The Left Hand of Eternity, Resource p.16;')
+      && tagline(bookNpc({ character: 'nova-me3' }).snapshot).startsWith('ME3 The Left Hand of Eternity, Pregenerated Heroes Summary;')
+      && one3.length === 30 && one3.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(book3)} ${tagline(bookNpc({ character: 'purple-man-me3' }).snapshot)} ${tagline(bookNpc({ character: 'nova-me3' }).snapshot)}`);
+    check('ME3: cards play their printed Health and Karma (Galactus 4150/3000, Hela 1200/170, Uatu 250/300, Thanos 305/120, the Keeper 260/450)',
+      ['galactus-me3', 'hela-me3', 'uatu-me3', 'thanos-me3', 'keeper-me3'].map((id) => played3(id)).join() === '4150/3000,1200/170,250/300,305/120,260/450',
+      ['galactus-me3', 'hela-me3', 'uatu-me3', 'thanos-me3', 'keeper-me3'].map((id) => played3(id)).join());
+    // The text verdicts move only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by the overrides' own
+    // fragments, never a sentence of the book in this file.
+    const sql3 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'me3', 'book-text.sql');
+    if (!existsSync(sql3)) {
+      check(`ME3: skipped the text checks: no ${rel(sql3) || sql3}`, true);
+    } else {
+      const rows3 = [...readFileSync(sql3, 'utf8').matchAll(/VALUES \('([^']+)', 'me3', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const ents3 = new Set(rows3.map((r) => r.key.split(':')[1]));
+      check('ME3 text: 195 rows over 25 entries (the Nine-Headed Serpent, the Vulture Flock, the Keeper and the Summary\'s four print none), and no row with an odd count of double quotes',
+        rows3.length === 195 && ents3.size === 25
+        && me3.filter((c) => !ents3.has(c.id)).map((c) => c.id).join() === ['nine-headed-serpent', 'vulture-flock', 'keeper', 'doc-strange', 'nova',
+          'silver-surfer', 'thor'].map((id) => `${id}-me3`).join()
+        && !rows3.some((r) => (r.body.match(/"/g) || []).length % 2),
+        `${rows3.length} ${ents3.size} ${me3.filter((c) => !ents3.has(c.id)).map((c) => c.id)}`);
+      const count3 = (row, s) => (rows3.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts3 = text3.map((o) => `${o.match.row} ${count3(o.match.row, o.printed)}/${count3(o.match.row, o.read)}`);
+      check('ME3 text: each of the three text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text3.length === 3 && verdicts3.every((v) => v.endsWith(' 1/0')), verdicts3.join(' | '));
+    }
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
