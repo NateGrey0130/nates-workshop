@@ -1,7 +1,8 @@
 # Survey: MX1 Nightmares of Futures Past (TSR6873)
 
-> **DRAFT.** Measured up to *Which reader fits*, which is not finished: the
-> trial parse that settles it is the next row's. Nothing here is data yet.
+> **DRAFT.** Measured through *Which reader fits* (the trial parse ran
+> 2026-10-30); the Marvel suite has not run on it yet. Nothing here is data
+> yet.
 
 Official Advanced Game Adventure for Marvel Super Heroes, Steve Winter, 1987.
 Registry entry: `scripts/msh/books.json` -> `mx1`. Measured 2026-10-30.
@@ -261,15 +262,139 @@ a name ending in s are real; the Contents' `Sentinels'` is one.
 
 ## Which reader fits
 
-**Not finished.** The next row runs the trial parse. What it starts from,
-measured above: three grid shapes (*Columns, labels and ranks*); headers in
-title case, not capitals, and three subheads in the same type with no
-identity line; an `=` on the sentinels' labels and a `:` on
-everyone else's; two Resources lines wrapped and one with no number; the
-Omega's `U` row; five grids with no header and identity line; and one
-booklet, as MH9's. ME2's `grid-booklets` reads shape 1's order but `Health:`;
-MA4's `codegrids.py` reads shape 2's order; MH9's `cover-panels` reads rank
-words. None is chosen here, and the entry sets no `layout`.
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with MA4's code-first row
+reader borrowed from `scripts/msh/codegrids.py` and things taught to both.**
+Measured, not argued: a scratch copy of `scripts/msh/` and
+`apps/marvel-heroes/data` at `bd1e7ad6` (`main`'s scripts at `a5f16e8f` plus
+this entry), the entry given `"layout": "grid-booklets"`, run on a copy of
+the cache under its own `WORKSHOP_MSH_CACHE` (no page re-OCR'd; only grid
+crops were added, to the copy).
+
+- **Stock, `layout` alone:** `roster.py mx1` stops with a `KeyError` on
+  `reference_summary`, exit 1.
+- **Stock, with the three registry fields `gridbooks.py` requires** (an
+  empty `reference_summary`, empty `roster_sections`, the cards as `tiers`):
+  it runs to the end and exits 1. 15 entries, 14 blocks, **none passing**:
+  the six character grids and Oliver Pierce's unread (shape 2), the four
+  codes-only grids not found, Blue's grid read twice, the Mark VI merged into
+  the Mark V, every NPC entry named by its identity line, and no section or
+  power in any entry.
+- **With the registry workarounds and reader changes below:** exit 0.
+
+| measure | trial, last run |
+|---|---|
+| entries | 20: 17 with a block, 3 without (the headings The Tools of Oppression, Non-Player Characters and Sentinel Surveillance Base) |
+| stat blocks | 17 of 17, every value as *Stat blocks* lists it |
+| blocks passing every check | 8, and 9 known from trial overrides (5 `as_printed`, 4 `misprint`): the survey's nine, each matching one block; failing 0 |
+| powers | 64 across 10 entries (the six sentinels, the Mantinels, Blue, Faber, Pierce) |
+| checklist | 2 opponents and 15 names, all found |
+| exit code | 0 |
+
+The overrides are the survey's (decisions 4 and 5) written for the trial
+only, not re-read on the images; the data row writes the real file.
+
+**Registry-only workarounds** (no reader change; each worked in the trial):
+
+1. **`reference_summary` and `roster_sections` are required.** MX1 has no
+   Summary chart and no Contents line naming a character. The trial set an
+   empty `reference_summary` (`heroes: []`) and empty `roster_sections`;
+   reader item 9 makes them optional instead.
+2. **The checklist.** `gridbooks.coverage` reads the Contents' sub-entries,
+   `opponents` and `tiers`, not `cards`. The trial listed the 12 cards and
+   the three printed-13 grids as `tiers` (ME1's field for its typical
+   warriors); reader item 9 reads `cards`.
+3. **Printed 13 is both a character page and an opponents page.** With
+   `opponents` on printed 13 inside `character_ranges` 9-14, Blue's grid is
+   read in both streams, twice. The trial kept the range and named the three
+   printed-13 grids in `one_line_grids` instead, leaving `opponents` printed
+   28 only.
+4. **The four codes-only grids** (printed 13: Typical Policeman, SWAT:AM,
+   Mantinels; printed 28: Typical Rogue) are ME2's `one_line_grids`, each
+   with a `name`: letters row, codes row, then `Health: n Karma: n` on one
+   line. Read right once reader item 5 is in.
+5. **Oliver Pierce's grid has no name line** (printed 28): `grid_headers`
+   (Health 16) places it.
+6. **A title outside the Contents.** Printed 12 prints a heading `Sentinel
+   Surveillance Base` the Contents does not list, so Nimrod's entry took the
+   whole page (his last power, Shockweb, at 5,285 characters). The trial
+   added it to `sections` as a sub-entry of Project Wideawake, which ends the
+   entry; that bends the Contents' transcription, so reader item 10 is the
+   better home.
+7. **The misprints and the robots' `Karma = 0`**: overrides, as above.
+
+**What the reader must learn: ten things**, the first five applied in the
+trial (`gridbooks.py` 41 lines, `codegrids.py` 7), the last five not, or not
+in their place:
+
+1. **Shape 2's rows, code then number in brackets** (Blue, the five NPCs,
+   Oliver Pierce: 7 grids). `roster.ROW` reads only number then code. The
+   trial falls back to `codegrids.grid_at` when `roster.grid_at` finds a
+   grid and reads no rows, with three changes to `codegrids.py`'s row
+   pattern: case-insensitive (MA4 prints `GD`, MX1 `Gd`); `FB` among its
+   codes (MA4 prints `FE`; Oliver Pierce's F is `Fb (2)`); and a mixed-case
+   code with no number is not a row (a prose line above the grid, `ere eee`,
+   read as code `Re` and shifted Big Foot's rows by one). And when
+   `codegrids.grid_at` finds no Karma line, because the stream dropped it
+   under confidence 45 (Bernard Carns, printed 25: his A and S lines are
+   missing from the stream), the trial reads `roster.grid_at`'s own box,
+   Health line to Popularity line, with `codegrids.rows_from`.
+2. **Headers in title case over an identity line** (`Blue` over `Hugh Blumal,
+   mutant hound`; the five NPCs). `mark_headers` wants capitals, so it falls
+   back to the short line right above the grid, the identity line. The trial
+   names the header from `cards`, which also finds the Mark VI's
+   `Mark VI Sentinel:` (a colon fails `short()`, and the entry had merged into
+   the Mark V's). The header keeps its colon in the trial; strip it.
+3. **Title-case section labels.** `roster.RUN_IN` and `SECTION` take
+   capitals (`KNOWN POWERS:`), so no entry had a section or a power. The
+   trial raises the registry's `section_labels` to capitals at a line's
+   start: 0 powers became 56, then 64 with item 4.
+4. **The column's left edge.** On printed 10 the art's lettering welds onto
+   five of column 2's 37 lines (x 734-836 against a body at 874-880), so the
+   tenth-percentile `left` is 805 and the Alpha Sentinel's `KNOWN POWERS:`
+   (x 877) reads as indented: no powers. The trial takes the quarter
+   percentile. Prove ME1's and ME2's builds unmoved before keeping that.
+5. **The letters row with a mark in it.** SWAT:AM's reads `F A` then three
+   characters for S (a mark, S, a mark), and `LETTERS` allows two. The miss is
+   silent: `line_grids` pops the names in page order, so the Mantinels' grid
+   took the name SWAT:AM and only `one_line_grids not found: Mantinels`
+   stopped it. The trial allows three; the parser should also tie each name
+   to its grid (by Health, as `grid_headers` does) rather than by order.
+6. **A codes-only grid's name and text are above it.** Each printed-13 grid
+   sits under its subhead (The Blue Knight, SWAT:AM, Mantinels) and the
+   paragraph that introduces it, but `one_line_grids` puts the header at the
+   letters row, so each grid's subhead and introduction land in the entry
+   before, and its entry takes whatever follows: the policeman's talents run
+   on through his equipment list and patrol notes, and the Typical Rogue's
+   text (printed 28) is the vigilantes paragraph after his grid. The subhead
+   is where the entry starts, and the next subhead ends it.
+7. **`SWAT:AM` read as a run-in.** A line starting `SWAT:AM` matches
+   `RUN_IN` as a label `SWAT` (twice: the subhead, filed as a member note in
+   the policeman's entry, and a line of Blue's Background, which splits it
+   into a note). Not applied.
+8. **An opponent's text running past its page.** Oliver Pierce's text runs on
+   past the art of printed 29 to printed 30; an `opponents` stream is one
+   page, so his entry stops at printed 28 with no Background. Not applied.
+9. **`cards` as the checklist, and `reference_summary` and
+   `roster_sections` optional** (registry items 1 and 2).
+10. **A heading that is not a character and not in the Contents** (printed
+   12), as `codegrids.py`'s `headings` does for MA4 (registry item 6).
+
+Read and fine as it is: the sentinels' shape 1 (number then code, `Health =`)
+reads with `roster.grid_at` unchanged, `Shift X` included; the Omega's `U`
+row is taken by position; Nimrod's Resources `In` / `(40)` and the wrapped
+`Ex` / `(20)` of Morava and Carns join their rows; Oliver Pierce's `Fb` with
+no number is kept as `Fb`. Not a reader matter: the OCR reads Blue's identity
+line `Biumal` (printed `Blumal`, *Stat blocks*), and art lettering beside
+his grid lands in his prose: a `text` verdict and a drop for the data row.
+
+The other readers fit less: `codegrids.py` (MA4) reads one offset and
+`page_stream`, not booklet `parts`, and does not read shape 1;
+`roster.py` (MA1) reads shape 1 only; `booklet.py`, `rosterbook.py` and
+`coverpanels.py` read rank words. The entry still sets no `layout`: that is
+the parser row's to write, with items 1-10 behind the registry and every
+earlier book's build proved byte-identical. The scratch registry patch,
+the trial overrides, both reader diffs (CRs stripped) and the last run's
+output are kept in the plan store, `trial\mx1\`.
 
 ## Decisions this survey leaves open
 
