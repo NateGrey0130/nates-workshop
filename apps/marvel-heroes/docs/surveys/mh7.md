@@ -1,7 +1,7 @@
 # Survey: MH7 The Last Resort (TSR6864)
 
-> **DRAFT.** Measured up to *Which reader fits*, which is not finished: the
-> trial parse is the next row's. Nothing here is data yet.
+> **DRAFT.** Every section is measured, *Which reader fits* by a trial parse;
+> the Marvel suite has not yet been run over it. Nothing here is data yet.
 
 Marvel Super Heroes adventure module, Kim Eastland. Registry entry:
 `scripts/msh/books.json` -> `mh7`. Measured 2026-10-29.
@@ -111,13 +111,21 @@ row, `In In In In` with a dash for each of R, I and P, and `Health = 160
 - Pyro's Popularity is negative (`-10`);
 - the Mandarin's MAKLUAN RINGS. power holds `Left hand:` and `Right hand:`
   and ten ring entries, each a name, a dash and a finger;
-- Hawkeye's ARROWS. holds a list of fourteen arrow types, one per line;
+- Hawkeye's ARROWS. holds a list of eleven arrow types, one per line,
+  three of them wrapped onto a second, indented line (fourteen lines);
+- Hawkeye's MARKSMAN, BOW prints a comma and no full stop;
 - Iron Man's powers run from printed 16's first column past its folio into
   the third column (IMAGE PROJECTOR., DIGGING ABILITY.);
-- **specks**: a small mark after `BATTLE` in Mockingbird's BATTLE STAVE.
-  head (read `BATTLE'`; seen on the page image), and two stray single marks
-  read in the OCR and not yet looked at, at the start of a line of Wonder
-  Man's ENVIRONMENTAL INDEPENDENCE. and after Iron Man's header.
+- the Mesmerized Scouts' header prints no trademark sign, the one card
+  header that does not, and is set no taller than the text;
+- **specks**, each seen on the page image as a dot of the scan with
+  nothing printed: after `BATTLE` in Mockingbird's BATTLE STAVE. head
+  (read `BATTLE'`), at the start of a line of Wonder Man's ENVIRONMENTAL
+  INDEPENDENCE. (read as an opening single quote), after Iron Man's header
+  (a 4 x 3 px dot read as a single quote), in a justified gap of
+  Whirlwind's TORNADO. (read `_`), between two words of Tigra's background
+  (read `_`) and after the last word of her TALISMAN. (read as a second
+  full stop).
 
 **Printed 15 also prints an item block**, the Mandarin's Mento Intensifier
 Selective Concentrator (Body, Controls, Size, Complexity, Power Source and a
@@ -165,19 +173,113 @@ every card's name and many names in the prose.
 
 ## Which reader fits
 
-**Not finished.** The trial parse is row 1b's. What is measured so far:
+**`cover-panels` (`scripts/msh/coverpanels.py`), with five things taught
+to it.** Measured, not argued: a scratch copy of `scripts/msh/` and
+`apps/marvel-heroes/data/` at `fa74c9c9` (this branch; its scripts are
+`origin/main` `e314d3f8`'s) with this entry plus `"layout": "cover-panels"`,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE`, 2026-10-29.
 
-- **The panels are cropped close at the top**, as MH5's are: MOCKINGBIRD on
-  PDF 19 boxes at 2.4% of the page's height, above the 3% head band
-  `booklet.stream_of` keeps (MH5's `panel_head`). HAWKEYE (4.4%), TIGRA and
-  WONDER MAN are inside it. No panel line falls below the 95.5% foot.
-- On the booklet pages every header is inside the band (3.7-4.3% at the
-  top of a column).
-- The candidate is `cover-panels` (`scripts/msh/coverpanels.py`), MH5's and
-  MH6's reader: the cards are on the cover's panels and the booklet's last
-  five pages, in rank words with no ability numbers.
+The stock reader stops twice before it reads to the end:
 
-This survey sets no `layout`: that is the parser row's choice.
+1. `a block with no header above it, Inside back cover PDF 19`: MOCKINGBIRD
+   boxes at 2.4% of the page's height, above the 3% head band
+   `booklet.stream_of` keeps. With `panel_head` (below) it reads her.
+2. `a one-line grid with no name above it, Adventure Book p.13`: the Fire
+   Creatures' grid in Pyro's card. With `unnamed_grids` and `cut_grids`
+   (below) it reads it.
+
+It then reads to the end and fails: 13 entries, 14 blocks, 1 failing, the
+Mesmerized Scouts in no entry (their block read as Rick Jones' second) and
+the Fire Creatures' `HEALTH None`.
+
+With registry-only workarounds in the scratch copy and four trial-only
+patches (items 2-5), `roster.py mh7` exits 0: **14 entries, 14 blocks, 14
+pass, all found: yes**, 55 run-ins across 11 entries. `npcs.py mh7` on the
+same copy exits 0: 14 characters, 48 powers and 7 gear rows, 73 text rows.
+The Fire Creatures' Health holds on its codes (4 x 40 = 160).
+
+What the registry does, with no reader change:
+
+- **`panel_head`**, as MH5: MOCKINGBIRD (above). HAWKEYE (4.4%), TIGRA and
+  WONDER MAN are inside the band, and no panel line falls below the 95.5%
+  foot, so no `panel_foot`. On the booklet pages every header is inside
+  the band (3.7-4.3% at the top of a column).
+- **`unnamed_grids` and `cut_grids`** for Fire Creatures on printed 13, in
+  Pyro's card under FIRE CONTROL., as MH5's Humanoids in the Leader's card
+  (decision 6): the grid and the sentence under it become the entry, and
+  Pyro's FIRE CONTROL. ends on the line before the grid.
+- **`faint_rules`** at y 995 of printed 12 (TSV pixels): the rule between
+  Rick Jones and the Mesmerized Scouts crosses columns 2-3 only (column 1
+  is Rick's portrait), so `booklet.rules` does not see it (seen on the page
+  image). Without it column 2 is read whole before column 3, and the end
+  of Rick's background, at the top of column 3, lands in the Scouts'.
+- **`drop_corner`** at x 1600, y 0 of printed 15: the Mento Intensifier
+  Selective Concentrator fills column 3 (decision 9, an item). Without it
+  its Body to Power Source lines land in the Mandarin's background and its
+  AMPLIFICATION. becomes a power of his.
+- **`speck_lines`**, six: Iron Man's header (read as `IRON MAN '`), Tigra's
+  background and TALISMAN., Whirlwind's TORNADO., Mockingbird's BATTLE
+  STAVE. (read as a power `Battle' Stave`) and Wonder Man's ENVIRONMENTAL
+  INDEPENDENCE.: the specks of *Shapes the parser must accept*.
+- **`teams`**, for decision 1 (not set in the trial, so every card read
+  under the book's title). No other field: no override (decision 4),
+  and Mockingbird's nickname, read with a curly opening double and two
+  closing singles, pairs as a double quote in `npcs.py` as it stands.
+
+What the reader must learn, all in `coverpanels.py` behind the registry,
+with MH1-6's `roster.json`, `book-text.sql` and `npcs.json` rows proved
+byte-identical before and after. Five things:
+
+1. **A header with no trademark sign and no taller type.** The Mesmerized
+   Scouts' name (printed 12, column 2) boxes at 28-29 px, the body's height,
+   and prints no sign, so `booklet.is_header` fails it: the Scouts' block
+   is read as Rick Jones' second, and the checklist finds the name in no
+   entry. (`prose_cards` does not serve: it matches the name in the case
+   given, and reads its page as a range of its own, which printed 12
+   already is in `character_ranges`.) In the trial a
+   `speck_lines` added the sign. The reader should take a capitals line
+   directly over a `Fighting:` row as a header, or a registry list of such
+   names.
+2. **A grid's Health printed with `=`.** The Fire Creatures' line is
+   `Health = 160 (maximum)`; `booklet.STAT_LINE` takes a colon, so the
+   grid's Health is None and the block fails. In the trial a `speck_lines`
+   wrote a colon, and the Health was stored as `160 (maximum)`: the reader
+   should take `=` and keep the bracket as a note, so the Health is 160.
+3. **Dashes the TSV loses on a one-line grid.** The same grid prints a dash
+   under R, I and P (seen on the page image); the TSV holds no word under
+   I or P and reads R's as `oe` (a 36 x 4 px box at confidence 30), so the
+   block fails `unread: R I P`. `crop_dashes` reads a full block's dashes
+   from a crop; a one-line grid's code row needs the same. Trial patch: the
+   three set as dashes by letter. Decision 10 then leaves them unset.
+4. **`Equipment/Possessions:` as the gear section.** The reader keys a
+   section by its label, so this one is `equipment/possessions`: its
+   run-ins (Hawkeye's ARROWS., Tigra's TALISMAN., Plantman's PLANT
+   PSI-FIELD PROJECTOR., Mockingbird's three, Wonder Man's FLIGHT.) are one
+   undivided text, and `npcs.py` writes no row for a key it does not know,
+   so five cards' gear is dropped while it still exits 0. Trial patch: the
+   key read as `equipment`, MH4's, so the seven run-ins are gear rows. A
+   label-to-key alias in the registry would do it for any book.
+5. **A run-in head with a comma and no full stop.** Hawkeye's MARKSMAN, BOW
+   (inside front cover) prints neither the stop `booklet.POWER_HEAD` needs
+   nor a head without a comma, so its text is read as the end of POOR
+   HEARING. Trial: a `speck_lines` added the stop and `POWER_HEAD` took a
+   comma. The parser row decides between a registry list of run-ins as
+   printed and widening the head pattern with every book re-proved.
+
+Not counted, because nothing is lost: Hawkeye's eleven arrows and the
+Mandarin's ten rings (under `Left hand:` and `Right hand:`) are lists
+printed a line each, and both are read into one paragraph of their power;
+`gear_text` keeps a line break only after a line ending in a colon. The
+parser row may keep them a line each. Mockingbird's Talents run-ins
+(ACROBATICS., CONTACTS., BIOLOGY.) stay her talents' text, as printed under
+Talents.
+
+No other reader fits: the cards print rank words and no ability numbers and
+are on the cover's panels and the booklet's last five pages, as MH1-6's
+are (mh4.md, *Which reader fits*).
+
+This survey sets no `layout`, as MH1-6's did not: that is the parser's
+choice.
 
 ## Decisions this survey leaves open
 
