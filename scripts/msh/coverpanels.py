@@ -435,8 +435,54 @@ def mend(book, slug, part, first, last, out):
                    made the card's header
       health_equals [part, page]: a one-line grid's "Health = 160 (maximum)"
                    (MH7's Fire Creatures, printed 13), read by health_equals()
+      status_headers [part, page, NAME, status]: a card's header in capitals
+                   with a status after a semicolon (MH8's "SWORDSMAN; dead",
+                   printed 13, its trademark sign read as a closing quote),
+                   which booklet.is_header does not take for the lower case:
+                   matched once, made the card's header with the name alone,
+                   and the status kept for the card's prose
+      named_headers [part, page, name]: a card's header as printed, in mixed
+                   case and with no trademark sign, over its identity line
+                   (MH8's "SWAT Team Member", printed 16), which neither
+                   booklet.is_header nor plain_headers takes: matched once,
+                   with a Fighting: row within the three lines under it and no
+                   stat line or header before that row, and made the header
+      lower_labels [part, page, Label]: a stat label Tesseract read in lower
+                   case, in the TSV and in the block's crop (MH8's Police,
+                   printed 16: "intuition: TYPICAL"), which booklet.STAT_LINE
+                   does not take: the one line on the page opening with it
+                   gets its capital back
     Pages are printed pages, or null on a panel."""
     here = lambda p: p[0] == part and (p[1] is None or first <= p[1] <= last)
+    for p, page, name, status in [d for d in book.get('status_headers', []) if here(d)]:
+        pat = re.compile('^' + re.escape(name) + r'([' + booklet.TM + r'"\u201d]*)\s*;\s*' + re.escape(status) + '$')
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and pat.match(l['text'].strip())]
+        if len(hits) != 1:
+            raise SystemExit('%s: status_headers finds %r with %r after it %d times on %s p.%s, not once' % (slug, name, status, len(hits), part, page))
+        if booklet.is_header(out[hits[0]]):
+            raise SystemExit('%s: status_headers: %r is read as a header without it, %s p.%s' % (slug, name, part, page))
+        sign = pat.match(out[hits[0]]['text'].strip()).group(1)
+        out[hits[0]] = dict(out[hits[0]], text=name + sign, named_header=True, status=status)
+    for p, page, name in [d for d in book.get('named_headers', []) if here(d)]:
+        def over_block(n):
+            for x in out[n + 1:n + 4]:
+                if re.match(r'^\W{0,2}Fighting\s*[:;.]', x['text']):
+                    return True
+                if booklet.STAT_LINE.match(x['text']) or booklet.is_header(x):
+                    return False
+            return False
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and l['text'].strip() == name and over_block(n)]
+        if len(hits) != 1:
+            raise SystemExit('%s: named_headers finds %r over a block %d times on %s p.%s, not once' % (slug, name, len(hits), part, page))
+        if booklet.is_header(out[hits[0]]):
+            raise SystemExit('%s: named_headers: %r is read as a header without it, %s p.%s' % (slug, name, part, page))
+        out[hits[0]] = dict(out[hits[0]], named_header=True)
+    for p, page, label in [d for d in book.get('lower_labels', []) if here(d)]:
+        pat = re.compile(r'^(\W{0,2})' + re.escape(label.lower()) + r'(?=\s*[:;.,])')
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and pat.match(l['text'])]
+        if len(hits) != 1:
+            raise SystemExit('%s: lower_labels finds %r in lower case %d times on %s p.%s, not once' % (slug, label, len(hits), part, page))
+        out[hits[0]] = dict(out[hits[0]], text=pat.sub(lambda m: m.group(1) + label, out[hits[0]]['text']))
     for p, page, name in [d for d in book.get('plain_headers', []) if here(d)]:
         hits = [n for n, l in enumerate(out) if l['printed'] == page and l['text'].strip() == name and roster.is_caps(name)
                 and n + 1 < len(out) and re.match(r'^\W{0,2}Fighting\s*[:;.]', out[n + 1]['text'])]
@@ -726,6 +772,16 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     # inside front cover, "MARKSMAN, BOW Hawkeye has ..."), which no head
     # pattern takes
     heads = [h for h in book.get('runin_heads', []) if h[0] == part and any(l['printed'] == h[1] for l in lines)]
+    # one block printed in two value columns (registry `column_blocks`: MH8's
+    # CROOKS, Punks and Hoods), read as a card each
+    columns = [c for c in book.get('column_blocks', []) if c['part'] == part and any(l['printed'] == c['page'] for l in lines)]
+    for c in columns:
+        lines = column_block(lines, c, section, reader, slug)
+    # a card that prints its block under its header (registry
+    # `identity_to_block`: MH8's Mastermind, three lines of identity under his
+    # name line) keeps every line from the header to the block as its
+    # identity, not the first two
+    whole_identity = book.get('identity_to_block')
     while i < len(lines):
         line = lines[i]
         text = line['text'].strip()
@@ -837,6 +893,11 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             cur = {'kind': 'entry', 'header': re.sub(r'(?<=[A-Z])- (?=[A-Z])', '-', booklet.clean_name(text)), 'part': part,
                    'pages': [line['printed']] if line['printed'] else [], 'identity': [], 'blocks': [],
                    'sections': {}, 'powers': [], 'members': [], 'prose': [], '_sec': None}
+            if line.get('status'):
+                # the status after the header's name (registry status_headers)
+                cur['prose'].append(line['status'])
+            if line.get('column_of'):
+                cur['_column_of'] = line['column_of']
             entries.append(cur)
             i += 1
             continue
@@ -869,7 +930,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             i += 1
             continue
         sec = cur['_sec']
-        if sec is None and not cur['blocks'] and len(cur['identity']) < 2:
+        if sec is None and not cur['blocks'] and (whole_identity or len(cur['identity']) < 2):
             sink = cur['identity']
         elif sec in ('powers', 'equipment'):
             # the run-ins under Powers:, and under MH4's Equipment: (the
@@ -927,10 +988,86 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
         # card_grids names a grid no letter row in that card was read as
         raise SystemExit('%s: card_grids names %s on %s that no one-line grid in the card matched'
                          % (slug, ', '.join('%s (%s)' % (g['entry'], g['label']) for g in grids), part))
+    for c in columns:
+        # the text under a column block's rows (the CROOKS' Comments) is every
+        # column's: read under the last column's card, it is copied to each
+        # card before it that prints no section of that name
+        group = [e for e in entries if e.get('_column_of') == c['header']]
+        if [e['header'] for e in group] != c['names'] or any(len(e['blocks']) != 1 for e in group):
+            raise SystemExit('%s: column_blocks reads %s as %s, not %s with a block each'
+                             % (slug, c['header'], [e['header'] for e in group], c['names']))
+        for e in group[:-1]:
+            for key, v in group[-1]['sections'].items():
+                if key not in e['sections']:
+                    e['sections'][key] = list(v)
     for e in entries:
+        e.pop('_column_of', None)
         for b in e['blocks']:
             b['part'] = part
     return entries
+
+
+def column_block(lines, spec, section, reader, slug):
+    """One block printed in two value columns under one header (registry
+    `column_blocks` {part, page, header, names}: MH8's CROOKS, printed 14, a
+    "Punks Hoods" line under the header and two values on every row from
+    Fighting: to Talents:). full_grid reads "GOOD EXCELLENT" as no rank, so
+    the lines are rewritten as one card per column: a header named for the
+    column, then each row with that column's value alone. A column's value is
+    the TSV's words starting at that column's name (within a body line's
+    height); a row whose words do not all start at a column ends the split,
+    and the text after it (the Comments) goes on under the last column's card.
+    A row a column prints nothing in (the Hoods' Karma: the one number, 1216,
+    is set in the Punks' column) is left out of that column's block. The
+    first column's block is re-read by full_grid from a crop cut at the second
+    column; a later column's crop holds no label, so its values are the TSV's,
+    held to the crop of its column read in the same order."""
+    at = [n for n, l in enumerate(lines) if l['printed'] == spec['page'] and booklet.is_header(l)
+          and booklet.clean_name(l['text']) == spec['header']]
+    if len(at) != 1 or at[0] + 1 >= len(lines):
+        raise SystemExit('%s: column_blocks finds %s %d times on %s p.%s, not once' % (slug, spec['header'], len(at), spec['part'], spec['page']))
+    n = at[0]
+    names = lines[n + 1]
+    nw = sorted(names['words'], key=lambda w: w['x'])
+    if [w['t'] for w in nw] != spec['names']:
+        raise SystemExit('%s: column_blocks: the line under %s reads %r, not the names %s' % (slug, spec['header'], names['text'], spec['names']))
+    tol = names['body_h']
+    lo = [w['x'] - tol for w in nw]
+    hi = lo[1:] + [names['col_x1']]
+    rows, k = [], n + 2
+    while k < len(lines) and (lines[k]['pdf'], lines[k]['col']) == (names['pdf'], names['col']) \
+            and (booklet.STAT_LINE.match(lines[k]['text']) or section.match(lines[k]['text'])):
+        ws = sorted(lines[k]['words'], key=lambda w: w['x'])
+        label = [w for w in ws if w['x'] < lo[0]]
+        vals = [w for w in ws if w['x'] >= lo[0]]
+        if not label or not vals or any(min(abs(w['x'] - x['x']) for x in nw) > tol for w in vals):
+            break
+        rows.append((lines[k], label, vals))
+        k += 1
+    got = {booklet.STAT_LINE.match(r['text']).group(1) for r, _l, _v in rows if booklet.STAT_LINE.match(r['text'])}
+    if not set(booklet.ABILITY_LABELS + ['Health']) <= got:
+        raise SystemExit('%s: column_blocks reads only %s under %s' % (slug, sorted(got), spec['header']))
+    out = []
+    for c, name in enumerate(spec['names']):
+        out.append(dict(lines[n], text=name, named_header=True, column_of=spec['header']))
+        mine = []
+        for row, label, vals in rows:
+            vs = [w for w in vals if lo[c] <= w['x'] < hi[c]]
+            if not vs:
+                continue
+            ws = label + vs
+            mine.append(dict(row, text=' '.join(w['t'] for w in ws), words=ws, x1=max(w['x'] + w['w'] for w in ws),
+                             col_x0=row['col_x0'] if c == 0 else lo[c], col_x1=hi[c]))
+        if c:
+            stats = [l for l in mine if booklet.STAT_LINE.match(l['text'])]
+            read = reader.read(names['pdf'], (lo[c], stats[0]['y0'] - 15, min(hi[c], max(l['x1'] for l in stats) + 60), stats[-1]['y1'] + 45))
+            want = [booklet.STAT_LINE.match(l['text']).group(2).strip() for l in stats]
+            seen = [t.strip() for t in read if t.strip() in want]
+            if seen != want:
+                raise SystemExit('%s: column_blocks: %s\'s %s column reads %r on the TSV and %r in its crop'
+                                 % (slug, spec['header'], name, want, read))
+        out += mine
+    return lines[:n] + out + lines[k:]
 
 
 def line_block(lines, i, title, ranks, part, page, slug, name, notes=False, labels=False):
