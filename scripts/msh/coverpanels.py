@@ -905,9 +905,14 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             continue
         split = [d for d in split_blocks if cur and (d[0], d[1]) == (part, line['printed'])
                  and roster.norm(d[2]) == roster.norm(cur['header']) and not cur['blocks']]
+        # where crop_dashes crops the block: a split block's second column,
+        # which holds its Resources and Popularity (a box from the first line
+        # to the last would run up the page)
+        dash_at = i
         if split and re.match(r'^\W{0,2}Fighting\s*[:;.]', line['text']):
             block, nxt = split_grid(lines, i, ranks, reader, slug, cur['header'])
             split_blocks.remove(split[0])
+            dash_at = next(n for n in range(i, nxt) if lines[n]['col'] != line['col'])
         else:
             block, nxt = booklet.full_grid(lines, i, ranks, reader)
         if block and book.get('round_alternates'):
@@ -931,7 +936,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
                 block.setdefault('read_off_image', []).append(key)
             if roster.norm(cur['header']) in {roster.norm(n) for n in book.get('second_reason', [])}:
                 second_reason(block, lines[i:nxt], cur['header'], slug)
-            crop_dashes(block, lines, i, nxt, ranks, reader)
+            crop_dashes(block, lines, dash_at, nxt, ranks, reader)
             wrapped_alternates(block, lines[i:nxt], ranks)
             marked_ranks(block, ranks)
             block['check'] = check_alt_karma(block, booklet.block_check(block))
