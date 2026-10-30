@@ -2397,6 +2397,68 @@
       "powers_prose_note": "Printed 29: Valor's Known Powers: is a paragraph with no run-in head (her powers are her armor's), over her four-code FASE row (survey mh9.md decision 7), so she is exempt by name from the check that a Powers: section with text has a run-in power, as MH5's Justin Hammer is. Survey mh9.md, Which reader fits.",
       "teams": {"Fantastic Four": ["Mister Fantastic", "Invisible Woman", "She-Hulk", "Human Torch (Johnny Storm)", "Thing"], "Avengers": ["Wasp (Janet Van Dyne)", "Sub-Mariner", "Captain America (Steve Rogers)"]},
       "teams_note": "No team sections; THE FANTASTIC FOUR and THE AVENGERS (printed 36 and 38) are subheads. Survey mh9.md decision 1 (recommended, applied unanswered; Nate 2026-10-29: take the survey's recommendations): Fantastic Four for the five cards under THE FANTASTIC FOUR, the Thing of printed 37 included (MA4 and MH3 file him there), and Avengers for the Wasp (Janet Van Dyne), the Sub-Mariner and Captain America (Steve Rogers), whose identity lines name the team; every other card, Spider-Man and the whole divergent Earth included, under the book's title, MH9 Gates of What If. Not taken: the divergent teams the identity lines name as new filter groups. Decision 2 (characters only) is why the entry has no item_pages."
+    },
+    "mx1": {
+      "title": "MX1 Nightmares of Futures Past",
+      "short": "MX1",
+      "code": "TSR6873",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6873 MX1 Nightmares of Futures Past Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "6fff612787a43b2465e4d6c21b501938d4677856ad0dd9e8de1cf6e604be72d4",
+      "pdf_pages": 37,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Search Flow Chart", "cite": null, "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 34], "offset": 2},
+        {"name": "Sentinels' Surveillance Base", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [36, 36], "offset": null},
+        {"name": "Map sheet", "cite": null, "pdf": [37, 37], "offset": null}
+      ],
+      "offset_evidence": "2026-10-30, scripts/msh/survey.py tsv_folio: 22 pages vote printed = PDF - 2 (PDF 9-34 but 10, 11, 19 and 31). PDF 4, 5, 6, 8, 10 and 11 print their folios (2, 3, 4, 6, 8 and 9), read on the page images, Tesseract missing them; PDF 7, 19 and 31 (printed 5, 17 and 29) are full-page art and print no folio; PDF 3 is printed 1, the title and Contents page, which prints no folio. PDF 36's vote of 8 (k = 28) is the bar code's digits, not a folio. So PDF 3-34 are the 32-page booklet (594 x 767 pt), printed 1-32, and the back cover says the package is a 32-page book and one map. PDF 1 (601 x 779 pt) is the front cover and PDF 36 (601 x 779) the back cover (product code 6873, ISBN 0-88038-402-6); PDF 2 (598 x 770) is an inside cover printing the Search Flow Chart and PDF 35 (598 x 770) the other, printing the Sentinels' Base map, both named in the Contents as inside cover; PDF 37 (2344 x 1520 pt) is the map sheet (a suburban neighbourhood and the Mutant Internment Center). None of PDF 1, 2 and 35-37 prints a folio or a stat block. Survey mx1.md, The scan.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Two spellings, read on the page images 2026-10-30. The six sentinel blocks (printed 9-11) print Health =, Karma =, Resources = and Popularity = with an equals sign, beside seven rows of number and code, as MA1's do; Popularity = 0 on all six, and Karma = 0 and Resources = 0 on every sentinel but Nimrod (Karma = 70, Resources = In with (40) on a second line). Every other block prints Health:, Karma:, Resources: and Popularity: with a colon: the character blocks of printed 13 and 24-28 beside seven rows of code and number in brackets, and the codes-only grids of printed 13 and 28 with Health: and Karma: on one line under the codes. Resources: wraps its number onto a second line on Timbre Morava's and Bernard Carns's blocks (Ex / (20)); Oliver Pierce's prints Fb with no number.",
+      "section_labels": ["Known Powers", "Talents", "Talent", "Contacts", "Background"],
+      "section_labels_note": "Counted on the OCR of printed 9-14 and 24-30 and read on the page images of printed 9, 13, 24 and 25 (2026-10-30): each a bold run-in ending in a colon, in title case. Known Powers: 14 times (four of them Known Powers: none.), Talents: 8, Contacts: 7, Background: 7, and Talent: once (the typical policeman, printed 13). The sentinels print Known Powers: only; their powers are run-in heads in title case ending in a colon. No Weakness, Equipment or Personality label is printed.",
+      "rank_aliases": {"Fb": "feeble", "Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent", "Rm": "remarkable", "In": "incredible", "Am": "amazing", "Mn": "monstrous", "Un": "unearthly", "Shift X": "shift-x"},
+      "rank_aliases_note": "The codes every block and grid prints, read on the page images 2026-10-30: Fb (Feeble, never Fe: Blue's and Big Foot's Resources, Oliver Pierce's Fighting and Resources), Pr, Ty, Gd, Ex, Rm, In, Am, Mn, Un (the Mark V's Endurance) and Shift X (four sentinels' Endurance, 150). Nimrod's Psyche prints Gy (printed 11), a misprint of Gd, not an alias (survey mx1.md decision 4). No Fe, Cl or Shift Y code is printed.",
+      "sections": [
+        ["Welcome To My Nightmare", null, 2, "Adventure Book"],
+        ["The Mutant Affairs Control Act", null, 3, "Adventure Book"],
+        ["The X-Factor", null, 6, "Adventure Book"],
+        ["Project Wideawake", null, 8, "Adventure Book"],
+        ["The Tools of Oppression", null, 13, "Adventure Book"],
+        ["Mutants Underground", null, 15, "Adventure Book"],
+        ["Special Rules", null, 19, "Adventure Book"],
+        ["Night & Fog", null, 20, "Adventure Book"],
+        ["Non-Player Characters", null, 24, "Adventure Book"],
+        ["Scenarios and Events", null, 26, "Adventure Book"]
+      ],
+      "contents_note": "The Contents on printed 1 (PDF 3), transcribed from the page image 2026-10-30 (the OCR mangles the dot leaders), in two columns: the ten entries here, then Sentinels' Surveillance Base and Search Flow Chart, each at inside cover (PDF 35 and 2, parts of their own). Every entry was read on its page image and its banner is on the page the Contents gives, at the top of column 1. One banner's words differ: printed 26 prints EVENTS AND SCENARIOS where the Contents says Scenarios and Events; the registry keeps the Contents as printed, and no page differs, so there is no contents_errata. No index: the coverage checklist is this survey's list (survey mx1.md, Stat blocks).",
+      "columns": 3,
+      "columns_note": "Three columns on every booklet page read (printed 9-11, 13, 24, 25 and 28), a block's rows and its labels as two sub-columns of one column. Read on the page images 2026-10-30.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [9, 14]}, {"part": "Adventure Book", "pages": [24, 25]}],
+      "character_ranges_note": "Every block with a header of its own: the six sentinels in Project Wideawake (printed 9-11, a header in bold title case and no identity line; the Mark VI's header ends in a colon), Blue in The Tools of Oppression (printed 13, his text running on to 14), and the five Non-Player Characters (printed 24-25, a header and an identity line in bold). The grids with no header of their own (printed 13 and 28) are opponents. Survey mx1.md, Stat blocks. Read on the OCR of every booklet page and the page images 2026-10-30.",
+      "cards": [
+        ["Adventure Book", 9, "Mark IV Sentinel"],
+        ["Adventure Book", 9, "Mark V Sentinel"],
+        ["Adventure Book", 9, "Mark VI Sentinel"],
+        ["Adventure Book", 10, "Alpha Sentinel"],
+        ["Adventure Book", 11, "Omega Sentinel"],
+        ["Adventure Book", 11, "Nimrod"],
+        ["Adventure Book", 13, "Blue"],
+        ["Adventure Book", 24, "Gerald Gage"],
+        ["Adventure Book", 24, "Timbre Morava"],
+        ["Adventure Book", 25, "Big Foot"],
+        ["Adventure Book", 25, "Bernard Carns"],
+        ["Adventure Book", 25, "Arthur Faber"]
+      ],
+      "cards_note": "The 12 headers with a block under them, as printed (the Mark VI's without its colon), read on the page images 2026-10-30. Two grid shapes: the sentinels print MA1's number then code (20 Ex) with Health =; Blue and the five NPCs print the code then the number in brackets (Gd (10)) with Health:. Survey mx1.md, Stat blocks.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 13, "names": ["Typical Policeman", "SWAT:AM", "Mantinels"]},
+        {"part": "Adventure Book", "page": 28, "names": ["Typical Rogue", "Oliver Pierce"]}
+      ],
+      "opponents_note": "Every grid with a Health line that has no header with an identity line, named as survey mx1.md decision 3 recommends. Printed 13: three codes-only grids (an F A S E R I P row, a row of codes, then Health: and Karma: on one line), under the bold title-case subheads The Blue Knight (the grid introduced by the text as a typical policeman's), SWAT:AM and Mantinels, set in the same type as a card's header but with no identity line. Printed 28: a codes-only grid under the line Typical Rogue (not bold), and Oliver Pierce's grid of code and number in brackets, with Health: beside it and no name line: the prose names him (a variant Olive Pierce is offered for a female mutant, decision 7); his text runs on past the art of printed 29 to printed 30. Read on the OCR and the page images 2026-10-30."
     }
   }
 }
