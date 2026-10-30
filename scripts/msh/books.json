@@ -74,6 +74,7 @@
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "  second_blocks   a grid-booklets book: [{part, page, name, label}]: a one_line_grids character that is a second block on the card of that name in another booklet (ME2's Titans and Zeus in Hades), labelled, its run-in powers going to D1 as the card's (scripts/msh/npcs.py)",
     "  rank_ranges     true: scripts/msh/roster.py's check passes a number anywhere inside its rank's range (apps/marvel-heroes/data/ranks.json min and max), not only the standard number (ME2, Nate 2026-10-21). Absent, a number must be its rank's standard or an override must say why",
+    "  ME3's grid mends (grid-booklets, each true, each its own _note in the me3 entry): health_below, popularity_below, grids_end_at_p, code_first_rows, class_mark, trailing_marks, popularity_notes; with two_line_headers [part, page, first line, second line as read], header_blocks [part, page, header as read] (a header over a second grid of the entry above), a one_line_grids grid's wrapped (its letters and codes set on two lines each) and a grid_headers health_printed (the Health as the line reads it, 20,000)",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -2617,7 +2618,7 @@
         {"part": "Adventure Book", "pages": [3, 5]},
         {"part": "Resource Book", "pages": [2, 16]}
       ],
-      "character_ranges_note": "The card pages, read on the page images 2026-10-30 (plan row 4b): the four pregenerated heroes on Adventure printed 3-5 (Mantis's header on 3 after the Introduction's Rollcall paragraph, Beta Ray Bill's entry ending on 5 before Chapter 1 on 6), and every page of the Resource Book after its title page, the 19 Contents names over printed 2-16 (printed 4 and 5 are Galactus's text and art, with no grid). Chapter pages that stat a being inside the prose are opponents, not card pages: printed 11, 14, 24 and 28. Not a registry layout yet: that is the reader row's (survey me3.md, Which reader fits).",
+      "character_ranges_note": "The card pages, read on the page images 2026-10-30 (plan row 4b): the four pregenerated heroes on Adventure printed 3-5 (Mantis's header on 3 after the Introduction's Rollcall paragraph, Beta Ray Bill's entry ending on 5 before Chapter 1 on 6), and every page of the Resource Book after its title page, the 19 Contents names over printed 2-16 (printed 4 and 5 are Galactus's text and art, with no grid). Chapter pages that stat a being inside the prose are opponents, not card pages: printed 11, 14, 24 and 28. Read by the grid-booklets layout (layout_note).",
       "opponents": [
         {"part": "Adventure Book", "page": 11, "names": ["Vulture Flock", "Nine-Headed Serpent"]},
         {"part": "Adventure Book", "page": 14, "names": ["Keeper"]},
@@ -2628,15 +2629,53 @@
       "one_line_grids": [
         {"part": "Adventure Book", "page": 5, "entry": "Beta Ray Bill", "label": "Humanoid form"},
         {"part": "Adventure Book", "page": 11, "name": "Vulture Flock"},
-        {"part": "Adventure Book", "page": 11, "name": "Nine-Headed Serpent"},
+        {"part": "Adventure Book", "page": 11, "name": "Nine-Headed Serpent", "wrapped": true},
         {"part": "Adventure Book", "page": 14, "name": "Keeper"},
         {"part": "Adventure Book", "page": 28, "name": "Dimensional Shambler"}
       ],
-      "one_line_grids_note": "Each is the seven letters F A S E R I P, a row of rank codes and no numbers, then Health: and Karma: on one line, read on the page images 2026-10-30. The serpent's (printed 11, column 2) wraps after R: letters F A S E R then I P, codes Un Mn Mn Un Fe then Rm Fe. Beta Ray Bill's humanoid form (printed 5) is inside his entry, as in ME2. The Resource Book prints none: its 21 grids are all full seven-row blocks (plan row 4b, 2026-10-30).",
+      "one_line_grids_note": "Each is the seven letters F A S E R I P, a row of rank codes and no numbers, then Health: and Karma: on one line, read on the page images 2026-10-30. The serpent's (printed 11, column 2) wraps after R: letters F A S E R then I P, codes Un Mn Mn Un Fe then Rm Fe. Beta Ray Bill's humanoid form (printed 5) is inside his entry, as in ME2. The Resource Book prints none: its 21 grids are all full seven-row blocks (plan row 4b, 2026-10-30). wrapped (the serpent's alone) has gridbooks.line_grids join the two halves of its letters and of its codes on that grid's page (survey me3.md, Which reader fits, item 1).",
+      "layout": "grid-booklets",
+      "layout_note": "ME1's and ME2's reader, scripts/msh/gridbooks.py, with the mends below, each a field of this entry so that no earlier book's parse moves (survey me3.md, Which reader fits, items 1-11; measured by plan row 4c's trial 2026-10-30, applied by row 5a).",
+      "rank_ranges": true,
+      "rank_ranges_note": "Survey me3.md decision 3 (recommended, applied unanswered; Nate 2026-10-30: take the survey's recommendations): ME2's ruling for this book too, so Pluto's 250 Shift Y (Resource p.8), the E ME2's Pluto card prints, passes as printed. Not taken: one override, as ME1's Superkree has.",
+      "roster_sections": ["Pregenerated Heroes", "The Entities", "The Death Gods", "Other Characters"],
+      "teams": [
+        ["Adventure Book", 3, "Left Hand of Eternity Heroes"],
+        ["Adventure Book", 6, "ME3 The Left Hand of Eternity"],
+        ["Resource Book", 2, "Entities"],
+        ["Resource Book", 6, "Death Gods"],
+        ["Resource Book", 11, "ME3 The Left Hand of Eternity"]
+      ],
+      "teams_note": "Survey me3.md decision 1 (recommended, applied unanswered; Nate 2026-10-30): the Resource Book's banners without the leading The, Entities (ME2's group already) and Death Gods (new); Other Characters (Resource p.11 on) names no team, so those file under the book's title, as the chapters' opponents (Adventure p.6 on) do; the four heroes and the Summary's four are Left Hand of Eternity Heroes, as ME2's are Ragnarok and Roll Heroes. Not taken: one group shared by the three books' eight heroes.",
+      "grid_headers": [{"part": "Resource Book", "page": 11, "health": 20000, "health_printed": "20,000", "name": "VOYD"}],
+      "grid_headers_note": "VOYD (Resource p.11) is read at confidence 38 and dropped, so a header goes in above the grid whose Health line reads 20,000 (with the comma: health_printed). Read on the page image 2026-10-30 (survey me3.md, item 9).",
+      "health_below": true,
+      "health_below_note": "Eight Resource Book grids print the Health value on the line below its label, at the column's right (Death p.2, Eternity and Galactus 3, Mephisto's two grids 6, Hela 9, Voyd 11, Dormammu's second grid 12); gridbooks.stream_of joins the value to its label's line, so the grid is anchored (survey me3.md, item 2).",
+      "popularity_below": true,
+      "popularity_below_note": "Every Resource Book grid that prints a Popularity (14) sets its value on the line below the label; roster.grid_at takes that line into the grid's crop and skips it after the grid (survey me3.md, item 3).",
+      "grids_end_at_p": true,
+      "grids_end_at_p_note": "Seven Resource Book grids print no Resources and no Popularity (Mephisto's second grid 6, the Thralls and Footsoldiers 7, Pluto's Footsoldiers 9, Dormammu's second grid 12, the Mindless Ones and the Dark Dimension Inhabitant 14); gridbooks.grid ends such a grid at its P row (survey me3.md, item 4).",
+      "code_first_rows": true,
+      "code_first_rows_note": "Charon (Adventure p.24) and Pluto's Footsoldiers (Resource p.9) print each row's code before its number (F Am 50); roster.rows_from turns such a row round (survey me3.md, item 5).",
+      "class_mark": true,
+      "class_mark_note": "Dormammu's E (Resource p.12) reads with a mark of the art before its Class code; roster.rows_from allows one mark there, as ME2's CIl5000 mend allows none (survey me3.md, item 6).",
+      "trailing_marks": true,
+      "trailing_marks_note": "Art beside a grid reads as a mark after a number (Captain Marvel's Karma, Resource p.15; the Mindless Ones' Health, p.14); roster.secondary strips a trailing mark and what follows it, a mark before a number and what follows a closing bracket (Captain Marvel's Popularity and Resources, printed 55 and Pr(4), read on the page image; survey me3.md, item 7).",
+      "popularity_notes": true,
+      "popularity_notes_note": "A bracketed note set right under Mephisto's (Resource p.6) and Pluto's (p.8) grids is not the rest of the Popularity, which a wrapped one is (Gladiator's, Adventure p.3, opening with a number); roster.secondary leaves a bracketed line that opens with a word to the entry's text (survey me3.md, item 8).",
+      "two_line_headers": [
+        ["Resource Book", 7, "MEPHISTO'S DEMONIC", "THRALLS"],
+        ["Resource Book", 7, "MEPHISTO'S", "FOOTSOLDIERS"],
+        ["Resource Book", 14, "DARK DIMENSION", "INHABITANT, Typical"]
+      ],
+      "two_line_headers_note": "Headers set on two lines, as read, joined to one line by gridbooks.stream_of: mark_headers marks only the line nearest the grid. Read on the page images 2026-10-30 (survey me3.md, item 10). Not taken: a rule joining any capital line right above a header, which would have to be proved on every earlier book.",
+      "header_blocks": [["Resource Book", 6, "MEPHISTO (w/Galactus)"]],
+      "header_blocks_note": "Not MA4's block_labels (a code-grids field of another shape). A header over a second grid of the entry above it (Resource p.6): the grid becomes a block of Mephisto's labelled with the header, and the powers under it are his (survey me3.md, item 11 and decision 5). Dormammu's second grid (p.12) prints no header and lands on his entry already; its label is a label override in me3-overrides.json.",
       "reference_summary": {
+        "team": "Left Hand of Eternity Heroes",
         "pdf": 53,
         "part": "Pregenerated Heroes Summary",
-        "note": "The Pregenerated Heroes Summary, printed sideways. Transcribed by eye 2026-10-30 (plan row 4b) from a render turned 90 degrees; Tesseract reads the page sideways. Every value and power name agrees with ME2's chart, row for row, Firelord's Karma 90 included: his ranks give 110, and his block (Adventure p.4) prints 110. Power names are the chart's, with its abbreviations spelled out and each power's own rank where it prints one; a power the chart qualifies at length keeps its name only. No team yet: survey me3.md decision 1.",
+        "note": "The Pregenerated Heroes Summary, printed sideways. Transcribed by eye 2026-10-30 (plan row 4b) from a render turned 90 degrees; Tesseract reads the page sideways. Every value and power name agrees with ME2's chart, row for row, Firelord's Karma 90 included: his ranks give 110, and his block (Adventure p.4) prints 110. Power names are the chart's, with its abbreviations spelled out and each power's own rank where it prints one; a power the chart qualifies at length keeps its name only. Its team is decision 1's (teams_note).",
         "heroes": [
           ["Mantis", ["40 In", "40 In", "6 Ty", "30 Rm", "6 Ty", "20 Ex", "50 Am"], 116, 76, ["Empathy-Am", "Healing-Un", "Life Support-Shift Z", "Plant Control-Un", "Recovery-Am", "Resistances-Am", "Teleport-In"]],
           ["Gladiator", ["75 Mn", "50 Am", "100 Un", "500 Shift Z", "100 Un", "75 Mn", "500 Shift Z"], 725, 675, ["Invulnerability-Un/Shift Z", "Environmental Independence-Shift Z", "Flight-Cl 5000", "Psychic Reflection-Spc", "Heat Beams-Mn", "Heightened Vision-Am"]],
