@@ -1,11 +1,5 @@
 # Survey: ME3 The Left Hand of Eternity (TSR6882)
 
-> **DRAFT.** Measured 2026-10-30 over two plan rows: 4a the scan, the parts
-> and offsets, the authority lists and the Adventure Book's stat blocks; 4b
-> the Resource Book's blocks, the Pregenerated Heroes Summary, the names the
-> Codex already has, the quote marks and the decisions. *Which reader fits*
-> is the trial parse's (row 4c).
-
 Official Advanced Game Adventure for Marvel Super Heroes, Ray Winninger, 1988.
 Registry entry: `scripts/msh/books.json` -> `me3`. Measured 2026-10-30.
 
