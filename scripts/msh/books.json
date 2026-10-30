@@ -2364,7 +2364,28 @@
         ["Adventure Book", 22, "SUB-MARINER"]
       ],
       "no_block_headers_note": "The divergent Sub-Mariner (printed 22): a header and identity lines with no block, whose text points at the Marvel Universe Namor's block (printed 39). No card (survey mh9.md decision 5).",
-      "repeat_grids_note": "Printed 20, column 1: the A.I.M. base's soldiers' grid repeats printed 4's code for code, GD TY TY GD TY PR FE, Health 32 and Karma 12 (the Karma read in the OCR away from its line, and on the same TSV line as the Health). Survey mh9.md decision 3 (recommended, as MH4's 2 Minions and MH6's Moltens): one card, the second grid checked against it and not an entry."
+      "repeat_grids_note": "Printed 20, column 1: the A.I.M. base's soldiers' grid repeats printed 4's code for code, GD TY TY GD TY PR FE, Health 32 and Karma 12 (the Karma read in the OCR away from its line, and on the same TSV line as the Health). Survey mh9.md decision 3 (recommended, as MH4's 2 Minions and MH6's Moltens): one card, the second grid checked against it and not an entry.",
+      "speck_lines": [
+        ["Adventure Book", 21, "Health: - 70", "Health: 70"],
+        ["Adventure Book", 27, "Intuition: Feeble vi", "Intuition: Feeble"],
+        ["Adventure Book", 27, "Known Powers: { ud", "Known Powers:"],
+        ["Adventure Book", 27, "Psyche: Typical 7, / \\ |", "Psyche: Typical"],
+        ["Adventure Book", 29, "Karma 250", "Karma: 250"],
+        ["Adventure Book", 36, "Karma 100", "Karma: 100"],
+        ["Adventure Book", 36, "Karma 40", "Karma: 40"],
+        ["Adventure Book", 36, "Karma 36", "Karma: 36"],
+        ["Adventure Book", 37, "Karma 50", "Karma: 50"],
+        ["Adventure Book", 37, "Karma 26", "Karma: 26"],
+        ["Adventure Book", 38, "Karma 50", "Karma: 50"],
+        ["Adventure Book", 39, "Karma 76", "Karma: 76"],
+        ["Adventure Book", 39, "Karma 60", "Karma: 60"],
+        ["Adventure Book", 39, "Karma 110", "Karma: 110"]
+      ],
+      "speck_lines_note": "[part, printed page, as read, as printed], each matched once whole and replaced. Printed 21, column 3, the Swordsman's Health: a dot of the scan before the 70 is read as a dash, which booklet.value() reads as no value (HEALTH None); once cleared his Health of 70 holds (Rm 30 + Gd 10 + Gd 10 + Ex 20). Printed 27: the Hulk's portrait (column 2) and the Mad Thinker's (column 3) print beside their blocks, and their marks are read after the rank word of the Hulk's Intuition and the Mad Thinker's Psyche, which parse_rank takes whole (unread I and P); the page prints Feeble and Typical, and the Karmas then hold (Fe 2 + Fe 2 + Fe 2 = 6; Am 50 + Ty 6 + Ty 6 = 62). The Hulk's portrait is also read after his Known Powers: label, which put his first run-in, DENSE FLESH:, in the section's text and no power (the check passes, LEAPING: being one); the page prints the label alone. The Hulk's two are not in the survey's list (its trial read them clean). Ten Karma rows print no colon (Mephisto, printed 29, and nine on printed 36-39): booklet.STAT_LINE needs a colon or stop, so full_grid's row loop ended at Karma and the block lost Karma, Resources and Popularity silently (the check skips a None); the colon is added rather than STAT_LINE loosened for every booklet book. Survey mh9.md, Which reader fits. Read on the page images 2026-10-30.",
+      "powers_prose": ["Valor"],
+      "powers_prose_note": "Printed 29: Valor's Known Powers: is a paragraph with no run-in head (her powers are her armor's), over her four-code FASE row (survey mh9.md decision 7), so she is exempt by name from the check that a Powers: section with text has a run-in power, as MH5's Justin Hammer is. Survey mh9.md, Which reader fits.",
+      "teams": {"Fantastic Four": ["Mister Fantastic", "Invisible Woman", "She-Hulk", "Human Torch (Johnny Storm)", "Thing"], "Avengers": ["Wasp (Janet Van Dyne)", "Sub-Mariner", "Captain America (Steve Rogers)"]},
+      "teams_note": "No team sections; THE FANTASTIC FOUR and THE AVENGERS (printed 36 and 38) are subheads. Survey mh9.md decision 1 (recommended, applied unanswered; Nate 2026-10-29: take the survey's recommendations): Fantastic Four for the five cards under THE FANTASTIC FOUR, the Thing of printed 37 included (MA4 and MH3 file him there), and Avengers for the Wasp (Janet Van Dyne), the Sub-Mariner and Captain America (Steve Rogers), whose identity lines name the team; every other card, Spider-Man and the whole divergent Earth included, under the book's title, MH9 Gates of What If. Not taken: the divergent teams the identity lines name as new filter groups. Decision 2 (characters only) is why the entry has no item_pages."
     }
   }
 }

@@ -1,0 +1,28 @@
+{
+  "about": [
+    "Hand decisions about MH9 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card or one-line grid; page is the printed Adventure page, header the start of the entry's header",
+    "  verdict   misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the ranks give; 'also' a second value of the same block",
+    "            as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 21, "header": "Super-Adaptoid"}, "verdict": "as_printed", "field": "health",
+     "printed": 150, "checked": "2026-10-30",
+     "note": "Printed 21, the card: every rank Typical, so F+A+S+E is 6 + 6 + 6 + 6 = 24, and the card prints Health 150 with see below beside it; its Known Powers fix the android's Health at 150 whatever form it copies, as MH3's Super-Adaptoid (mh3-overrides.json). Karma 18 = Ty 6 + Ty 6 + Ty 6 as printed. Survey mh9.md decision 9 (recommended, applied unanswered): kept as printed (not taken: derive 24)."},
+    {"match": {"page": 23, "header": "Captain America (Jeffrey Mace)"}, "verdict": "misprint", "field": "karma",
+     "printed": 36, "corrected": 26, "checked": "2026-10-30",
+     "note": "Printed 23, the card: Reason Good, Intuition Good, Psyche Typical, so R+I+P is 10 + 10 + 6 = 26, and the card prints Karma 36 (read on the page image). Health 36 = Ex 20 + Ty 6 + Ty 6 + Pr 4 as printed. Survey mh9.md decision 9 (recommended, applied unanswered): a misprint override with both values (not taken: as_printed)."},
+    {"match": {"page": 25, "header": "Henry Pym"}, "verdict": "misprint", "field": "health",
+     "printed": 70, "corrected": 28, "checked": "2026-10-30",
+     "also": [{"verdict": "misprint", "field": "karma", "printed": 36, "corrected": 46}],
+     "note": "Printed 25, the card: Fighting Typical, Agility Typical, Strength Typical, Endurance Good, so F+A+S+E is 6 + 6 + 6 + 10 = 28, and the card prints Health 70; Reason Remarkable, Intuition Good, Psyche Typical, so R+I+P is 30 + 10 + 6 = 46, and it prints Karma 36 (both read on the page image). The printed Health is Nick Fury's, the block above his on the same page. Survey mh9.md decision 9 (recommended, applied unanswered): the Health as the override and the Karma in its also."},
+    {"match": {"page": 29, "header": "Valor"}, "verdict": "misprint", "field": "karma",
+     "printed": 32, "corrected": 22, "checked": "2026-10-30",
+     "note": "Printed 29, the card: Reason Typical, Intuition Typical, Psyche Good, so R+I+P is 6 + 6 + 10 = 22, and the card prints Karma 32 (read on the page image). Health 100 = Ex 20 + Rm 30 + Ex 20 + Rm 30 as printed. Survey mh9.md decision 9 (recommended, applied unanswered): a misprint override with both values (not taken: as_printed)."},
+    {"match": {"page": 20, "header": "A.I.M. Scientists"}, "verdict": "as_printed", "field": "RI",
+     "printed": "Var", "checked": "2026-10-30",
+     "note": "Printed 20, Chapter 8: the scientists' grid prints Var for Reason and Intuition (the text under it gives each a range) and Karma: Variable, so no Karma can be checked. Survey mh9.md decision 6 (recommended, applied unanswered, as MH5 decision 10 and MH6 decision 11): R and I left unset as printed, and the Karma with them; the Health holds on the codes printed (Ty 6 + Ty 6 + Ty 6 + Ty 6 = 24). Not taken: counting Var as the block check counts a printed dash."}
+  ]
+}
