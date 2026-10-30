@@ -628,7 +628,8 @@ def parse(book, slug):
         # MT2 (a named grid's `host`): a card's grid set inside another
         # card's entry (Lobo inside Red Wolf's KNOWN POWERS, printed 57) is
         # followed by the host's own sections, which the grid's entry would
-        # take: they go back to the host, and the grid's entry keeps its
+        # take: they go back to the host, with the run-ins read as members
+        # (Red Wolf's role-playing notes), and the grid's entry keeps its
         # block and the text under the grid
         e = [e for e in entries if e['part'] == g['part'] and g['page'] in e['pages'] and base(e['header']) == roster.norm(g['name'])]
         h = [e for e in entries if e['part'] == g['part'] and g['page'] in e['pages'] and base(e['header']) == roster.norm(g['host'])]
@@ -641,6 +642,8 @@ def parse(book, slug):
                 raise SystemExit('one_line_grids: %s already has a %s section for %s to give back' % (g['host'], k, g['name']))
             h['sections'][k] = v
         e['sections'] = {}
+        h['members'] += e['members']
+        e['members'] = []
         h['pages'] += [x for x in e['pages'] if x not in h['pages']]
         e['pages'] = [g['page']]
     slash_forms(book, entries, ranges)

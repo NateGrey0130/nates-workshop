@@ -2805,7 +2805,7 @@
       "rank_ranges_note": "TODO",
       "teams": [
         ["Adventure Book", 3, "Weird, Weird West Heroes"],
-        ["Adventure Book", 5, "MT2 The Weird, Weird West", "Non-Player Characters"],
+        ["Adventure Book", 5, "MT2 The Weird, Weird West", "Friendly NPCs"],
         ["Adventure Book", 52, "Western Heroes"]
       ],
       "teams_note": "TODO",
@@ -2827,7 +2827,7 @@
         {"part": "Adventure Book", "page": 24, "name": "Cavemen"},
         {"part": "Adventure Book", "page": 33, "name": "Khan's Champion"},
         {"part": "Adventure Book", "page": 53, "entry": "Ghost Rider IV", "label": "Hamilton Slade"},
-        {"part": "Adventure Book", "page": 57, "name": "Lobo"}
+        {"part": "Adventure Book", "page": 57, "name": "Lobo", "host": "Red Wolf"}
       ],
       "one_line_grids_note": "TODO",
       "card_headers": true,
@@ -2873,9 +2873,15 @@
       "health_sentence_note": "TODO",
       "speck_lines": [
         ["Adventure Book", 52, "GHOST RIDER I & Ill", "GHOST RIDER I & II"],
-        ["Adventure Book", 28, "**Faro\u201d\u2019 John Hobart", "\"Faro\" John Hobart"]
+        ["Adventure Book", 28, "**Faro\u201d\u2019 John Hobart", "\"Faro\" John Hobart"],
+        ["Adventure Book", 36, "Boay Armor: The android\u2019s con-", "Body Armor: The android\u2019s con-"]
       ],
-      "speck_lines_note": "TODO"
+      "speck_lines_note": "TODO",
+      "indented_power_heads": [
+        ["Adventure Book", 36, "Body Armor"],
+        ["Adventure Book", 36, "Radio Communication"]
+      ],
+      "indented_power_heads_note": "TODO"
     }
   }
 }
