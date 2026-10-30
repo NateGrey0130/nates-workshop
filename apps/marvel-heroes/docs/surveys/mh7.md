@@ -1,12 +1,10 @@
 # Survey: MH7 The Last Resort (TSR6864)
 
-> **DRAFT.** Every section is measured, *Which reader fits* by a trial parse;
-> the Marvel suite has not yet been run over it. Nothing here is data yet.
-
 Marvel Super Heroes adventure module, Kim Eastland. Registry entry:
 `scripts/msh/books.json` -> `mh7`. Measured 2026-10-29.
 
-**Rows citing this book:** none yet (no data imported).
+**Rows citing this book:** 0 `msh_book_text` rows in production (no data
+imported yet; this is the survey).
 
 Everything here was measured and read on the page images unless it says it
 was read in the OCR.
