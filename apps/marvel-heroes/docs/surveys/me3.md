@@ -364,7 +364,125 @@ the headers (`MEPHISTO'S`, `PLUTO'S`) are real.
 
 ## Which reader fits
 
-Not finished.
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with things taught to it**,
+as ME2's was. Measured 2026-10-30 (plan row 4c): a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at this branch's `042f868f`,
+the me3 entry given `"layout": "grid-booklets"`, `rank_ranges: true`
+(decision 3), `roster_sections` (Pregenerated Heroes, The Entities, The
+Death Gods, Other Characters) and trial `teams` (decision 1), and a trial
+`me3-overrides.json` holding decision 4's three, run on a copy of the cache
+under its own `WORKSHOP_MSH_CACHE`.
+
+**The stock reader stops.** `roster.py me3` exits 1 at
+`one_line_grids not found: Nine-Headed Serpent` (item 1) and writes nothing.
+Past that one stop it runs to the end:
+
+| measure | stock, past the stop | with every trial change |
+|---|---|---|
+| entries | 34: 21 with a block, 13 without | 33: 32 with a block, 1 without (The Entities' banner) |
+| stat blocks | 22 | 35: 26 full grids, 5 codes-only grids, 4 Summary-only heroes |
+| blocks passing every check | 21 | 32, and 3 known from the overrides |
+| failing | 1 (Charon, unread) | 0 |
+| Contents names with no entry | 11 | 0 |
+| opponents with no entry | 0 of 5 | 0 of 5 |
+| Health or Karma not a number | 5 | 0 |
+| Summary | 8 of 8 placed; Firelord's Karma matched to its override | the same |
+| exit code | 1 | **0** |
+
+What the reader row needs. Items 1-11 are reader changes (each was made in
+the scratch copy, marked as the trial's, except 7's remainder and 8); 12 and
+13 are overrides only:
+
+1. **A codes-only grid wrapped after R** (Adventure p.11, column 2, the
+   serpent): its letters and its codes are each set on two lines.
+   `line_grids` wants the seven letters on one line, so the stock reader
+   stops. Reader: join the two halves of each.
+2. **A Health set on the line below its label** (`Health:`, then the value
+   at the column's right): Death (Resource p.2), Eternity and Galactus (3),
+   Mephisto and his second grid (6), Hela (9), Voyd (11) and Dormammu's
+   second grid (12), 8 grids. With no number after the label
+   `roster.ANCHOR` finds no grid, so `mark_headers` finds no header either,
+   and each grid's lines fall into the entry above as its identity or text.
+   Reader: join the value to its label's line.
+3. **A Popularity set on the line below its label**, on every Resource Book
+   grid that prints one (14: Death, Eternity, Galactus, Mephisto, Pluto,
+   Hela, Seth, Voyd, Uatu, Dormammu, Clea, Thanos, Captain Marvel, the
+   Purple Man). `roster.grid_at`'s crop ends at the label's line, so the
+   value is cut off and every one reads as none. Reader: take the value's
+   line into the crop, and skip it after the grid.
+4. **Grids that print no Resources and no Popularity**: Mephisto's second
+   grid (6), Mephisto's Demonic Thralls and Mephisto's Footsoldiers (7),
+   Pluto's Footsoldiers (9), Dormammu's second grid (12), the Mindless Ones
+   and the Dark Dimension Inhabitant (14), 7 grids. `grid_at` ends a grid at
+   its Popularity line and, finding none, reads no grid. Reader: end such a
+   grid at its P row.
+5. **Rows that print the code before the number** (`F Am 50`): Charon
+   (Adventure 24) and Pluto's Footsoldiers (Resource 9). `roster.ROW` wants
+   the number first, so Charon's block is unread and his Health and Karma
+   take in the next rows. MA4's `code_rows` reads a code then a bracketed
+   number, not this. Reader: turn such a row round.
+6. **A Class code read with a mark before it** (a copyright sign, then
+   `ClI1000`: Dormammu's E, Resource 12). The mend for ME2's `CIl5000` wants the code right after the
+   number, so E's code is unread and the rest of its row welds onto the
+   Karma (`250 I1000`). Reader: allow one mark before it.
+7. **Marks of the art beside a grid, after a number**: Captain Marvel's
+   Karma `90 = R` (Resource 15) and the Mindless Ones' Health `64` with a
+   quote mark after it (14). `secondary()` strips trailing letters, not
+   marks. Reader: strip a trailing mark and what follows it. **Left by the
+   trial:** Captain Marvel's Resources still read `Pr(4) : a` and his
+   Popularity `/) 55`, the same art read beside his rows.
+8. **A bracketed note right under a grid joined onto its Popularity**
+   (Mephisto 6, Pluto 8). `secondary()` takes a line opening with a bracket
+   after the grid as the rest of a wrapped Popularity, which Gladiator's is
+   (Adventure 3, three lines). **Left by the trial.** Reader: tell the two
+   apart.
+9. **A header Tesseract misread**: `VOYD` (Resource 11) is read at
+   confidence 38 and dropped, so his grid lands in the Other Characters
+   banner's entry. Registry: ME2's `grid_headers`, but its Health match
+   reads no comma (`20,000`), so one reader line too.
+10. **Headers set on two lines**: `MEPHISTO'S DEMONIC` / `THRALLS` and
+    `MEPHISTO'S` / `FOOTSOLDIERS` (7), `DARK DIMENSION` /
+    `INHABITANT, Typical` (14). `mark_headers` marks only the line nearest
+    the grid, so the entries were `THRALLS`, `FOOTSOLDIERS` and
+    `DARK DIMENSION`, which match no Contents name. Reader: a way to join
+    them. The trial used a registry list of the two lines as read
+    (`two_line_headers`, the trial's name); a rule (a capital line right
+    above the header joins it) is the alternative, proved on every earlier
+    book before it ships.
+11. **A header that labels a second grid**: `MEPHISTO (w/Galactus)` (6)
+    becomes an entry of its own that takes every power printed under it,
+    leaving Mephisto's entry none. Reader: fold it into the entry above as a
+    labelled block (the trial: a registry list, `block_labels`). `npcs.py`'s
+    `second_blocks` joins a chapter's grid to a card in the other booklet,
+    not this.
+12. **Dormammu's `Health:1275*`** (12), the asterisk keying the note under
+    his grid. Override only: `as_printed` on his first grid's Health,
+    matched by its codes, since his second grid shares the page and header.
+13. **Death's `Unlim.` and Eternity's `Unlimited` Karma, and the Summary's
+    Firelord Karma.** Overrides only, decision 4, as ME2's.
+
+**Read right with nothing changed:** the four heroes and Beta Ray Bill's
+humanoid form; the vulture flock, the Keeper and the Dimensional Shambler
+through `one_line_grids` (the flock's letters read with marks for S and I,
+and still match); Dormammu's second grid with no header, which lands as a
+second block on his entry, as decision 5 wants (its label is the reader
+row's); the inverted Dark Dimension Inhabitant name; the swapped Clea and
+Dormammu pages; `Health: 20,000` with a comma, once anchored (ME2's); and
+the Summary's eight rows.
+
+**So the reader must learn 11 things** (items 1-11, item 9 a single line
+beside a registry field), and the overrides file holds 4 entries. The trial
+did not judge the power run-ins (Death, Eternity and Voyd read none;
+Dormammu, Clea, the Dark Dimension Inhabitant and the Purple Man one each)
+or run `npcs.py`. The trial's registry patch, its two reader diffs and its
+last run are kept in the plan's store (row 4c, `trial/me3/`), not the repo.
+
+The other readers fit less: `roster.py` (MA1) reads one offset, not two
+booklets; `codegrids.py` (MA4) reads every row code first with the number
+bracketed; `booklet.py` (MHSP1), `rosterbook.py` (MHSP2) and
+`coverpanels.py` (MH1, MH2) read rank words with no numbers.
+
+This survey sets no `layout`, as ME2's did not: that is the reader row's.
 
 ## Decisions this survey leaves open
 
