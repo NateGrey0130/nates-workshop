@@ -1,9 +1,5 @@
 # Survey: MX1 Nightmares of Futures Past (TSR6873)
 
-> **DRAFT.** Measured through *Which reader fits* (the trial parse ran
-> 2026-10-30); the Marvel suite has not run on it yet. Nothing here is data
-> yet.
-
 Official Advanced Game Adventure for Marvel Super Heroes, Steve Winter, 1987.
 Registry entry: `scripts/msh/books.json` -> `mx1`. Measured 2026-10-30.
 
