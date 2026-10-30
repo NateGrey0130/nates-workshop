@@ -51,6 +51,12 @@ JUNK = '[\\s_=~,.\'"`' + chr(0x2014) + chr(0x2019) + chr(0xac) + chr(0xfffd) + '
 CODE = r'(?:C[L1lIt]?\s?[135]000|Shift\s?[0XYZ]|N/?A\.?|FE|PR|TY|GD|EX|RM|RE|IN|AM|MN|UN|[XYZ])'
 ROW = re.compile(r'^\s*(\S{0,3}?)\s*[~_=-]*\s*(' + CODE + r')(?![A-Za-z0-9])' + JUNK
                  + r'(?:[(\[{]?\s*([\d$]{1,4})\s*[)\]}]?)?\s*(.*)$')
+# MX1's rows, read through scripts/msh/gridbooks.py (registry code_rows): the
+# same order set in title case ("Gd (10)"), with Feeble printed Fb
+ROW_TITLE_CASE = re.compile(ROW.pattern.replace('|FE|', '|FE|FB|'), re.IGNORECASE)
+# a code that must print a number to be a row: with none, the line is prose
+# (a mixed-case line above MX1's grids, 'ere eee', reads as Re)
+BARE = r'^(?:FE|FB|PR|TY|GD|EX|RM|RE|IN|AM|MN|UN|[XYZ])$'
 SHIFT = {'X': 'ShX', 'Y': 'ShY', 'Z': 'ShZ'}
 DASH = chr(0x2013) + chr(0x2014) + '-'
 
@@ -87,14 +93,14 @@ def number_of(code, raw):
     return n, None
 
 
-def rows_from(texts):
+def rows_from(texts, pattern=ROW):
     """The grid's rows from the crop's lines, in order. A line that is not a
     row after the first is the tail of a value that wrapped, and joins the row
-    above, as in roster.rows_from."""
+    above, as in roster.rows_from. `pattern` is ROW, or MX1's ROW_TITLE_CASE."""
     rows = []
     for t in texts:
-        m = ROW.match(t)
-        ok = m and (m.group(3) or not re.match(r'^(?:FE|PR|TY|GD|EX|RM|RE|IN|AM|MN|UN|[XYZ])$', m.group(2)))
+        m = pattern.match(t)
+        ok = m and (m.group(3) or not re.match(BARE, m.group(2), pattern.flags & re.IGNORECASE))
         if ok and len(rows) < 7:
             code = code_of(m.group(2))
             number, read_as = number_of(code, m.group(3))
@@ -110,7 +116,7 @@ def rows_from(texts):
     return rows
 
 
-def grid_at(stream, i, reader):
+def grid_at(stream, i, reader, pattern=ROW):
     """If stream[i] is a grid's Health line, return (rows, first index after
     the grid), as roster.grid_at does. The box runs from a line above the
     Health label to the Popularity line in the same column, or seven row
@@ -127,9 +133,9 @@ def grid_at(stream, i, reader):
     pitch = (stream[karma]['y0'] - line['y0']) / 2 or 60
     bottom = stream[pop]['y1'] + 10 if pop is not None else line['y0'] + 7 * pitch + 10
     box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
-    rows = rows_from(reader.read(line['pdf'], box))
+    rows = rows_from(reader.read(line['pdf'], box), pattern)
     if len(rows) != 7:
-        rows = rows_from([s['text'] for s in stream[i:(pop if pop is not None else karma) + 5]])
+        rows = rows_from([s['text'] for s in stream[i:(pop if pop is not None else karma) + 5]], pattern)
     end = i + 1
     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
             and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
