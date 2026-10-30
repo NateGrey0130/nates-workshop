@@ -2192,8 +2192,8 @@
       "stat_labels_note": "The booklet's blocks print Health:, Karma:, Resources: and Popularity: as labels in a column beside their values, under seven rank rows. Mephisto's Karma (printed 29) prints no colon. The chapters' one-line grids print Health: and Karma: (or Karma: None) on a line under their codes. Read on the page images 2026-10-30; row 7b reads every block.",
       "section_labels": ["Known Powers", "Talents", "Equipment/Possessions", "Background", "Personality", "Background and personality"],
       "section_labels_note": "Counted on the OCR of printed 21-40 (Known Powers: 33 times, Background: and Personality: 22, Talents: 21, Background and personality: 13, Equipment/Possessions: 5) and read on the page images of printed 23 and 29 (2026-10-30): each a bold label ending in a colon. Background and personality is one label on some blocks (Valor's, printed 29) and two on others (the Wasp's, printed 23). Row 7b reads the order and absence on every block.",
-      "rank_aliases": {"Feeble": "feeble", "Poor": "poor", "Typical": "typical", "Good": "good", "Excellent": "excellent", "Remarkable": "remarkable", "Incredible": "incredible", "Amazing": "amazing", "Monstrous": "monstrous", "Unearthly": "unearthly", "Shift X": "shift-x", "Class 1000": "class-1000", "FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "GO": "good", "EX": "excellent", "RM": "remarkable", "RE": "remarkable", "IN": "incredible"},
-      "rank_aliases_note": "The booklet's blocks print their ranks as words in title case (Fighting: Excellent), with Shift X (a Strength, printed 27) and Class 1000 (an Endurance, printed 29). The chapters' one-line grids print two-letter codes in capitals under an F A S E R I P row: FE, PR, TY, GD, EX, RM and IN in the OCR of the grids' code rows (13 read, three of them four-code FASE rows inside blocks), and two spellings of their own, RE for Remarkable (four on the guardsmen robots' grid, printed 10, which adds to its Health of 120) and GO for Good (three on Valor's FASE row, printed 29, where every other grid read prints GD), each read on the page image 2026-10-30. No AM, MN or UN code is in the OCR; row 7b adds any the grids print.",
+      "rank_aliases": {"Feeble": "feeble", "Poor": "poor", "Typical": "typical", "Good": "good", "Excellent": "excellent", "Remarkable": "remarkable", "Incredible": "incredible", "Amazing": "amazing", "Monstrous": "monstrous", "Unearthly": "unearthly", "Shift X": "shift-x", "Class 1000": "class-1000", "FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "GO": "good", "EX": "excellent", "RM": "remarkable", "RE": "remarkable", "IN": "incredible", "MN": "monstrous"},
+      "rank_aliases_note": "The booklet's blocks print their ranks as words in title case (Fighting: Excellent), with Shift X (a Strength, printed 27) and Class 1000 (an Endurance, printed 29). The one-line grids print two-letter codes in capitals under an F A S E R I P row: FE, PR, TY, GD, EX, RM, IN and MN (MN once, the golden robots' Endurance, printed 7, which the OCR reads as IN-~ beside it and the page image prints clean), and two spellings of their own, RE for Remarkable (four on the guardsmen robots' grid, printed 10, which adds to its Health of 120) and GO for Good (three on Valor's FASE row, printed 29, where every other grid prints GD), each read on the page image 2026-10-30. The A.I.M. scientists' grid (printed 20) prints Var for Reason and Intuition, which is no rank (survey mh9.md decision 6). No AM or UN code is printed: every one of the 12 grids and 3 FASE rows was read (survey mh9.md, Stat blocks).",
       "sections": [
         ["Judge's Introduction", null, 2, "Adventure Book"],
         ["Chapter 1: Night Moves", null, 4, "Adventure Book"],
@@ -2212,7 +2212,61 @@
       "columns": 3,
       "columns_note": "Three columns on every booklet page read (the chapter openings, printed 21 and 23), a block's labels and values as two sub-columns of one column. Read on the page images 2026-10-30.",
       "panels": [],
-      "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1 and 42-46 holds no Health, Karma or rank row, and their images show the cover art and blurb and five maps. The scan holds no cover-panel card. Survey mh9.md, Cover-panel cards."
+      "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1 and 42-46 holds no Health, Karma or rank row, and their images show the cover art and blurb and five maps. The scan holds no cover-panel card. Survey mh9.md, Cover-panel cards.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [21, 40]}],
+      "character_ranges_note": "Every labelled block is on printed 21-40: the Non-Player Character Roster (21-29, under CHAPTER N subheads), New PC Heroes (30-35) and Marvel Universe PC Heroes (36-40, THE FANTASTIC FOUR and THE AVENGERS subheads). Printed 40 holds the end of Spider-Man's card and no header. No chapter page (printed 1-20) prints a labelled block: their statistics are one-line grids, read through opponents. Survey mh9.md, Stat blocks. Read on the OCR of every booklet page and the page images 2026-10-30.",
+      "cards": [
+        ["Adventure Book", 21, "Super-Adaptoid"],
+        ["Adventure Book", 21, "Swordsman"],
+        ["Adventure Book", 22, "Attuma"],
+        ["Adventure Book", 22, "Klaw"],
+        ["Adventure Book", 22, "Wasp"],
+        ["Adventure Book", 23, "Captain America"],
+        ["Adventure Book", 24, "Super Skrull"],
+        ["Adventure Book", 24, "Skrulls"],
+        ["Adventure Book", 25, "Nick Fury"],
+        ["Adventure Book", 25, "Henry Pym"],
+        ["Adventure Book", 26, "Captain America"],
+        ["Adventure Book", 26, "Hercules"],
+        ["Adventure Book", 27, "Scarlet Witch"],
+        ["Adventure Book", 27, "Hulk"],
+        ["Adventure Book", 27, "Mad Thinker"],
+        ["Adventure Book", 28, "Victor"],
+        ["Adventure Book", 29, "Valor"],
+        ["Adventure Book", 29, "Mephisto"],
+        ["Adventure Book", 30, "Thing"],
+        ["Adventure Book", 31, "Crystal"],
+        ["Adventure Book", 31, "Daredevil"],
+        ["Adventure Book", 32, "Human Torch"],
+        ["Adventure Book", 33, "Quicksilver"],
+        ["Adventure Book", 33, "Hawkeye"],
+        ["Adventure Book", 34, "Flare"],
+        ["Adventure Book", 35, "Nomad"],
+        ["Adventure Book", 36, "Mister Fantastic"],
+        ["Adventure Book", 36, "Invisible Woman"],
+        ["Adventure Book", 36, "She-Hulk"],
+        ["Adventure Book", 37, "Thing"],
+        ["Adventure Book", 37, "Human Torch"],
+        ["Adventure Book", 38, "Wasp"],
+        ["Adventure Book", 39, "Sub-Mariner"],
+        ["Adventure Book", 39, "Captain America"],
+        ["Adventure Book", 39, "Spider-Man"]
+      ],
+      "cards_note": "The 35 card headers, as printed in title case (THE THING, printed 37, with its leading The dropped), each with a block under it; Skrulls (printed 24) is the one whose block is a one-line grid (Typical Skrull Warrior). Four names are printed twice or three times, the divergent Earth's and the Marvel Universe's: Captain America (printed 23 Jeffrey Mace, 26 Jack Monroe, 39 Steve Rogers), Thing (30 and 37), Human Torch (32 Jim Hammond, 37 Johnny Storm) and Wasp (22 Janet Pym, 38 Janet Van Dyne), so the names alone do not give one id each; survey mh9.md decision 4 recommends how to tell them apart. Not a card: the divergent SUB-MARINER on printed 22, a header and identity lines with no block (its text says it is the Marvel Universe Namor's, printed 39), survey mh9.md decision 5; and the art captions, which print a character's name in the header's type beside its portrait (KLAW, SWORDSMAN, SUB-MARINER, SUPER-ADAPTOID and ATTUMA on printed 21, CAPTAIN AMERICA (JEFFREY MACE) on 23 and others), which the reader row has to tell from headers. HERCULES (printed 26) prints its trademark sign as a closing double quote in the OCR. Read on the OCR and the page images 2026-10-30.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 4, "names": ["A.I.M. Soldiers"]},
+        {"part": "Adventure Book", "page": 7, "names": ["Golden Robots"]},
+        {"part": "Adventure Book", "page": 8, "names": ["Demons"]},
+        {"part": "Adventure Book", "page": 10, "names": ["Guardsmen Robots", "A.I.M. Gunmen"]},
+        {"part": "Adventure Book", "page": 20, "names": ["A.I.M. Scientists", "A.I.M. Technicians", "Geoff Krubb"]},
+        {"part": "Adventure Book", "page": 22, "names": ["Sound Objects"]},
+        {"part": "Adventure Book", "page": 27, "names": ["Mad Thinker's Androids"]}
+      ],
+      "opponents_note": "Every one-line grid with a Health line that is not a card's own block. None prints a name line: each is introduced by a sentence of the prose, so every name here is this registry's, taken from what the text calls them (survey mh9.md decision 3, recommended): printed 4 the two A.I.M. men on the roof (A.I.M. soldiers on printed 5 and 20), printed 7 the two golden-armored robots, printed 8 the demons, printed 10 the guardsmen robots and the four A.I.M. gunmen, printed 20 the nine scientists, the seven technicians/mechanics and the base commander, Geoff Krubb (his name printed in the prose). Printed 22 and 27 are grids inside a card, as MH5's Humanoids and MH7's Fire Creatures: Klaw's SOUND OBJECTS power and the Mad Thinker's androids. Every Health holds on its codes; the robots print Karma: None and the scientists Karma: Variable over Var for Reason and Intuition (survey mh9.md decision 6). Not opponents: the four-code FASE rows inside Victor's (printed 28), Valor's (29) and the Thing's (30) cards, each the character out of armor with no Health line (decision 7), and the people given ranks in prose only (decision 8). Read on the OCR and the page images 2026-10-30.",
+      "repeat_grids": [
+        {"part": "Adventure Book", "page": 20, "name": "A.I.M. Soldiers", "of": "A.I.M. Soldiers"}
+      ],
+      "repeat_grids_note": "Printed 20, column 1: the A.I.M. base's soldiers' grid repeats printed 4's code for code, GD TY TY GD TY PR FE, Health 32 and Karma 12 (the Karma read in the OCR away from its line, and on the same TSV line as the Health). Survey mh9.md decision 3 (recommended, as MH4's 2 Minions and MH6's Moltens): one card, the second grid checked against it and not an entry."
     }
   }
 }
