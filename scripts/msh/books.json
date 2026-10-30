@@ -2360,6 +2360,12 @@
         ["Adventure Book", 37, "Human Torch (Johnny Storm)"]
       ],
       "split_blocks_note": "Three blocks whose rows go on at the top of the next column: the Super-Adaptoid (printed 21, F to E in column 1, the rest in column 2), Klaw (22) and the Human Torch (Johnny Storm) (37), F to P and then Health to Popularity. Named as the card is named, after page_names. Survey mh9.md, Which reader fits, item 7.",
+      "prefer_text": [
+        ["Adventure Book", 21, "SWORDSMAN", "Popularity", "-5"],
+        ["Adventure Book", 21, "SWORDSMAN", "Resources"],
+        ["Adventure Book", 22, "KLAW", "Popularity"]
+      ],
+      "prefer_text_note": "Values a block's crop misreads, read off the page images (booklet.prefer): the Swordsman's Popularity -5 (printed 21), which the crop and the TSV both read as 5, and his Resources, whose second line the crop loses and the TSV keeps; Klaw's Popularity -2 (printed 22), read as 2. [part, page, card, label] takes the page TSV's value; a fifth item is the value as printed, where the TSV lacks it too. An error where an entry changes nothing.",
       "no_block_headers": [
         ["Adventure Book", 22, "SUB-MARINER"]
       ],

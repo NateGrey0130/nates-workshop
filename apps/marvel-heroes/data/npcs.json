@@ -63112,8 +63112,8 @@
        "rank_only": true,
        "health": "70",
        "karma": "18",
-       "resources": "Amazing",
-       "popularity": "5"
+       "resources": "Amazing (backed by A.I.M. and Mephisto)",
+       "popularity": "-5"
       }
      ],
      "powers": [],
@@ -63284,7 +63284,7 @@
        "health": "36",
        "karma": "22",
        "resources": "Excellent (A.I.M. backed)",
-       "popularity": "2"
+       "popularity": "-2"
       }
      ],
      "powers": [
