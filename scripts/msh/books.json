@@ -2553,7 +2553,7 @@
         "Cl 3000": "class-3000",
         "Cl 5000": "class-5000"
       },
-      "rank_aliases_note": "Read on the Adventure Book's page images 2026-10-30: Fe, Ty, Gd, Ex, Rm, In, Am, Mn, Un and Shift Z (Gladiator's E and P, printed 3, with a space) in the grids, and ShX in the Keeper's codes-only grid (printed 14). The rest are counted on the Resource Book's OCR (Pr, Fb once on PDF 48, Shift X, Shift Y, Cl1000, Cl 3000 and Cl 5000) and are to be read on its page images with its blocks.",
+      "rank_aliases_note": "Read on the Adventure Book's page images 2026-10-30: Fe, Ty, Gd, Ex, Rm, In, Am, Mn, Un and Shift Z (Gladiator's E and P, printed 3, with a space) in the grids, and ShX in the Keeper's codes-only grid (printed 14). Read on the Resource Book's page images 2026-10-30 (plan row 4b): Pr (Mephisto's Footsoldiers' R, printed 7; Captain Marvel's Resources Pr(4), 15), Fb (the Mindless Ones' R, I and P, 14), Shift X (Dormammu's second grid, 12), Shift Y (Pluto's E, 8), and Cl 1000, Cl 3000 and Cl 5000, each printed with a space (Tesseract drops it, so Cl1000 is kept too).",
       "sections": [
         ["Introduction", null, 2, "Adventure Book"],
         ["Pregenerated Heroes", "Mantis", 3, "Adventure Book"],
@@ -2598,7 +2598,26 @@
         ["Other Characters", "Captain Marvel", 15, "Resource Book"],
         ["Other Characters", "The Purple Man", 16, "Resource Book"]
       ],
-      "contents_note": "Both booklets print a Contents on their printed page 1 (PDF 3 and PDF 35), transcribed from the page images 2026-10-30 (the OCR mangles the dot leaders) and stored as printed, with the booklet as the fourth field, the inverted Dark Dimension Inhabitant, Typical included. Every Adventure Book entry was read on its page image and agrees on its page: the Introduction, the 14 chapter banners and the Epilogue, and the four heroes' headers. The Epilogue's banner prints EPILOGUE: ETERNAL THANKS, where the Contents prints Epilogue alone. The Contents prints Pregenerated Heroes: as a heading with no page, and no such heading is printed: the four blocks follow the Introduction's Rollcall paragraph (printed 2), so there is no null-subsection line for it. The three Resource Book section banners were read on their pages and agree (The Entities 2, The Death Gods 6, Other Characters 11); its character headers are read with its blocks. The Contents also names the Map of the Iron Labyrinth and the Map of Mephisto's Realm (inside cover, PDF 2), the Pregenerated Heroes Summary (PDF 53), Mephisto's Hourglass (PDF 51-52), and the Map of the Dark Dimension, the Map of Death's Inner Sanctum and Landscape Maps #1 and #2, all four on the one map sheet (PDF 55). Printed Adventure 9 also prints a Referee's Map: Landscape #1 of its own.",
+      "contents_note": "Both booklets print a Contents on their printed page 1 (PDF 3 and PDF 35), transcribed from the page images 2026-10-30 (the OCR mangles the dot leaders) and stored as printed, with the booklet as the fourth field, the inverted Dark Dimension Inhabitant, Typical included. Every Adventure Book entry was read on its page image and agrees on its page: the Introduction, the 14 chapter banners and the Epilogue, and the four heroes' headers. The Epilogue's banner prints EPILOGUE: ETERNAL THANKS, where the Contents prints Epilogue alone. The Contents prints Pregenerated Heroes: as a heading with no page, and no such heading is printed: the four blocks follow the Introduction's Rollcall paragraph (printed 2), so there is no null-subsection line for it. The three Resource Book section banners were read on their pages and agree (The Entities 2, The Death Gods 6, Other Characters 11), and so do 17 of its 19 character headers (plan row 4b, 2026-10-30); Clea and Dormammu are swapped, in contents_errata. The Contents also names the Map of the Iron Labyrinth and the Map of Mephisto's Realm (inside cover, PDF 2), the Pregenerated Heroes Summary (PDF 53), Mephisto's Hourglass (PDF 51-52), and the Map of the Dark Dimension, the Map of Death's Inner Sanctum and Landscape Maps #1 and #2, all four on the one map sheet (PDF 55). Printed Adventure 9 also prints a Referee's Map: Landscape #1 of its own.",
+      "contents_errata": [
+        {
+          "section": "Dormammu",
+          "contents_page": 13,
+          "page": 12,
+          "note": "Resource Book: the header DORMAMMU and his grid are on printed 12 (PDF 46, column 2, under the end of Uatu's entry), read on the page image 2026-10-30"
+        },
+        {
+          "section": "Clea",
+          "contents_page": 12,
+          "page": 13,
+          "note": "Resource Book: the header CLEA and her grid are on printed 13 (PDF 47, column 3, after Dormammu's entry), read on the page image 2026-10-30; the Contents swaps the two pages, and the sections list keeps the Contents' order"
+        }
+      ],
+      "character_ranges": [
+        {"part": "Adventure Book", "pages": [3, 5]},
+        {"part": "Resource Book", "pages": [2, 16]}
+      ],
+      "character_ranges_note": "The card pages, read on the page images 2026-10-30 (plan row 4b): the four pregenerated heroes on Adventure printed 3-5 (Mantis's header on 3 after the Introduction's Rollcall paragraph, Beta Ray Bill's entry ending on 5 before Chapter 1 on 6), and every page of the Resource Book after its title page, the 19 Contents names over printed 2-16 (printed 4 and 5 are Galactus's text and art, with no grid). Chapter pages that stat a being inside the prose are opponents, not card pages: printed 11, 14, 24 and 28. Not a registry layout yet: that is the reader row's (survey me3.md, Which reader fits).",
       "opponents": [
         {"part": "Adventure Book", "page": 11, "names": ["Vulture Flock", "Nine-Headed Serpent"]},
         {"part": "Adventure Book", "page": 14, "names": ["Keeper"]},
@@ -2613,7 +2632,22 @@
         {"part": "Adventure Book", "page": 14, "name": "Keeper"},
         {"part": "Adventure Book", "page": 28, "name": "Dimensional Shambler"}
       ],
-      "one_line_grids_note": "Each is the seven letters F A S E R I P, a row of rank codes and no numbers, then Health: and Karma: on one line, read on the page images 2026-10-30. The serpent's (printed 11, column 2) wraps after R: letters F A S E R then I P, codes Un Mn Mn Un Fe then Rm Fe. Beta Ray Bill's humanoid form (printed 5) is inside his entry, as in ME2. The Resource Book's are read with its blocks."
+      "one_line_grids_note": "Each is the seven letters F A S E R I P, a row of rank codes and no numbers, then Health: and Karma: on one line, read on the page images 2026-10-30. The serpent's (printed 11, column 2) wraps after R: letters F A S E R then I P, codes Un Mn Mn Un Fe then Rm Fe. Beta Ray Bill's humanoid form (printed 5) is inside his entry, as in ME2. The Resource Book prints none: its 21 grids are all full seven-row blocks (plan row 4b, 2026-10-30).",
+      "reference_summary": {
+        "pdf": 53,
+        "part": "Pregenerated Heroes Summary",
+        "note": "The Pregenerated Heroes Summary, printed sideways. Transcribed by eye 2026-10-30 (plan row 4b) from a render turned 90 degrees; Tesseract reads the page sideways. Every value and power name agrees with ME2's chart, row for row, Firelord's Karma 90 included: his ranks give 110, and his block (Adventure p.4) prints 110. Power names are the chart's, with its abbreviations spelled out and each power's own rank where it prints one; a power the chart qualifies at length keeps its name only. No team yet: survey me3.md decision 1.",
+        "heroes": [
+          ["Mantis", ["40 In", "40 In", "6 Ty", "30 Rm", "6 Ty", "20 Ex", "50 Am"], 116, 76, ["Empathy-Am", "Healing-Un", "Life Support-Shift Z", "Plant Control-Un", "Recovery-Am", "Resistances-Am", "Teleport-In"]],
+          ["Gladiator", ["75 Mn", "50 Am", "100 Un", "500 Shift Z", "100 Un", "75 Mn", "500 Shift Z"], 725, 675, ["Invulnerability-Un/Shift Z", "Environmental Independence-Shift Z", "Flight-Cl 5000", "Psychic Reflection-Spc", "Heat Beams-Mn", "Heightened Vision-Am"]],
+          ["Firelord", ["75 Mn", "100 Un", "50 Am", "100 Un", "30 Rm", "50 Am", "30 Rm"], 325, 90, ["Stellar Flame-Cl 1000", "Body Armor-Am", "Flight-Cl 1000", "Staff-Un"]],
+          ["Beta Ray Bill", ["100 Un", "30 Rm", "100 Un", "100 Un", "30 Rm", "20 Ex", "50 Am"], 330, 100, ["Body Armor-Ex", "Invulnerability", "Resistance-Shift X", "Storm Breaker", "Weather Control-Un", "Dimension Travel-Un", "Flight-Am", "Shield-Rm", "Skuttlebutt"]],
+          ["Nova", ["50 Am", "75 Mn", "100 Un", "100 Un", "20 Ex", "75 Mn", "40 In"], 325, 135, ["Fire Generation and Control-Shift Z", "Body Armor-Un", "Invulnerability", "Wrapped in Fire-Am", "Flight-Cl 3000"]],
+          ["Thor", ["100 Un", "20 Ex", "100 Un", "100 Un", "6 Ty", "20 Ex", "50 Am"], 320, 76, ["Body Armor-Ex/Ty", "Mjolnir", "Flight-Shift X", "Shield-Rm", "Weather Control-Un", "Dimension Travel-Un"]],
+          ["Silver Surfer", ["50 Am", "75 Mn", "100 Un", "100 Un", "20 Ex", "75 Mn", "40 In"], 325, 135, ["Power Cosmic", "Healing-Un", "Reconstruct Matter-Un", "Perceive Energy", "Flight-Cl 5000", "Body Armor-Mn"]],
+          ["Doc Strange", ["10 Gd", "20 Ex", "6 Ty", "30 Rm", "10 Gd", "75 Mn", "100 Un"], 66, 185, ["Magic", "Alter Appearance-Am", "Astral Projection-Un", "Levitation-In", "Shield-Am", "Telepathy-Un", "Conjure-Am", "Forcebeam-Am", "Dimension Open-Mn", "Sleep Gas-Mn", "Cloak of Lev", "Eye", "Orb"]]
+        ]
+      }
     }
   }
 }

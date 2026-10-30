@@ -1,9 +1,10 @@
 # Survey: ME3 The Left Hand of Eternity (TSR6882)
 
-> **DRAFT.** The first half, measured 2026-10-30 (plan row 4a): the scan,
-> the parts and offsets, the authority lists and the Adventure Book's stat
-> blocks. The Resource Book's blocks, the Pregenerated Heroes Summary and
-> every section marked *Not finished* are the next row's.
+> **DRAFT.** Measured 2026-10-30 over two plan rows: 4a the scan, the parts
+> and offsets, the authority lists and the Adventure Book's stat blocks; 4b
+> the Resource Book's blocks, the Pregenerated Heroes Summary, the names the
+> Codex already has, the quote marks and the decisions. *Which reader fits*
+> is the trial parse's (row 4c).
 
 Official Advanced Game Adventure for Marvel Super Heroes, Ray Winninger, 1988.
 Registry entry: `scripts/msh/books.json` -> `me3`. Measured 2026-10-30.
@@ -93,15 +94,21 @@ the same `cite`s: `Adventure`, `Resource`, `Pregenerated Heroes Summary`.
   (11: Voyd 11, Uatu 11, Clea 12, Dormammu 13, Mindless Ones 14, Dark
   Dimension Inhabitant, Typical 14, Thanos 15, Captain Marvel 15, The Purple
   Man 16). It inverts one name (`Dark Dimension Inhabitant, Typical`). The
-  three section banners were read on their pages and agree; the character
-  headers are read with the Resource Book's blocks (*Not finished*).
+  three section banners were read on their pages and agree, and so do 17 of
+  the 19 character headers. **Two are swapped**: `DORMAMMU` is printed on 12
+  (PDF 46, column 2, after Uatu's entry) and `CLEA` on 13 (PDF 47, column 3),
+  where the Contents prints Clea 12 and Dormammu 13. Recorded as
+  `contents_errata`, the page winning; `sections` keeps the Contents' order.
 - **No index.** As in ME2, the Resource Book's Contents is that booklet's
   checklist, and neither Contents names the opponents statted inside the
   chapters (below), which the registry lists as `opponents`.
-- **The Pregenerated Heroes Summary** (PDF 53) is *Not finished*. The
-  Adventure Book's text (printed 3) sends the judge to pages of a Judge's
-  Book, not this box, for Thor, the Silver Surfer, Nova and Doctor Strange, so expect those four
-  on the Summary alone, as in ME1 and ME2.
+- **The Pregenerated Heroes Summary** (PDF 53), transcribed by eye from a
+  render turned 90 degrees, is the registry's `reference_summary`: the eight
+  heroes in the order Mantis, Gladiator, Firelord, Beta Ray Bill, Nova,
+  Thor, Silver Surfer, Doc Strange. The Adventure Book's text (printed 3)
+  sends the judge to pages of a Judge's Book, not this box, for the last
+  four, so they are on the Summary alone, as in ME1 and ME2 (*Stat blocks:
+  the Resource Book*, below).
 
 ## What an entry looks like
 
@@ -134,7 +141,7 @@ Counted on the OCR of all 55 pages: `KNOWN POWERS:` 25, `BACKGROUND:` 18
 | a codes-only one-line grid wrapped after R, letters and codes on two lines each | the nine-headed serpent (11) |
 | `Resources: N/A` | Charon (24) |
 
-## Stat blocks: the Adventure Book (the Resource Book's are *Not finished*)
+## Stat blocks: the Adventure Book
 
 | where | blocks |
 |---|---|
@@ -153,7 +160,7 @@ Counted on the OCR of all 55 pages: `KNOWN POWERS:` 25, `BACKGROUND:` 18
 | Dimensional Shambler | 28, column 1 | 12 | `DIMENSIONAL SHAMBLER`, a codes-only grid, `KNOWN POWERS:` in column 2 | 275 | 22 |
 
 The two names with no name line are this registry's, from what the prose
-calls them; that is a decision left to the next row. No other chapter page
+calls them (decision 5). No other chapter page
 prints a grid: the OCR of PDF 8-34 holds no other `Health` line or row of
 codes, and contact sheets of PDF 8-34 (about 210 pixels a page) show no
 other grid.
@@ -189,23 +196,171 @@ Bill's seven numbers and codes, Health, Karma and Popularity are ME2's
 cards', value for value (`apps/marvel-heroes/data/npcs.json`, the `-me2`
 rows), Beta Ray Bill's humanoid form included. Two Resources differ in
 print: Gladiator's `Mn(75)` here against `Mn(175)` on his ME2 card, and Beta
-Ray Bill's `10(Gd)` here against `Gd(10)`. Which is right is a question for
-the next row's *Names the Codex already has*.
+Ray Bill's `10(Gd)` here against `Gd(10)`; *Names the Codex already has*
+reads both.
 
 `survey.py`, unchanged, finds **0** blocks in this book. It keys on
 `Health =`, and this book prints `Health:`, as ME1 and ME2 do.
 
 ## Stat blocks: the Resource Book
 
-Not finished.
+| where | blocks |
+|---|---|
+| The Entities (printed 2-5) | 3: Death, Eternity, Galactus |
+| The Death Gods (printed 6-10) | 8: Mephisto, `MEPHISTO (w/Galactus)`, Mephisto's Demonic Thralls, Mephisto's Footsoldiers, Pluto, Pluto's Footsoldiers, Hela, Seth |
+| Other Characters (printed 11-16) | 10: Voyd, Uatu, Dormammu, Dormammu's second grid, Clea, Mindless Ones, Dark Dimension Inhabitant (Typical), Thanos, Captain Marvel, The Purple Man |
+| **full grids** | **21**: the 19 Contents names and two second blocks |
+
+Every grid was found from a `Health:` word in the TSV of PDF 36-50, and a
+contact sheet of the 15 pages (34 dpi) shows no other. Each was read on a
+crop of the page image at 120 dpi. The Resource Book prints no one-line or
+codes-only grid.
+
+**Two second blocks**, each a full grid for the being while it holds
+Galactus's power:
+- `MEPHISTO (w/Galactus)`, printed 6, column 1, a header of its own under
+  Mephisto's first grid.
+- Dormammu's second grid, printed 12, column 2, with **no header**: the
+  sentence before it introduces it, and a note after it says his bracketed
+  power ranks apply only while he holds Galactus.
+
+**Two being changes stated in prose, not blocks:** a paragraph under Pluto's
+grid (printed 8) gives other values in prose (his Health among them), and
+Dormammu's powers print a second rank in brackets. Neither is a grid.
+
+| block | printed | F A S E R I P | Health | Karma | Resources | Popularity | holds |
+|---|---|---|---|---|---|---|---|
+| Death | 2 | 5000 Cl 5000 seven times | 20,000 | Unlim. | Unlimited | -1000 | Health yes; Karma printed so |
+| Eternity | 3 | 5000 Cl 5000 seven times | 20,000 | Unlimited | Unlimited | 0 | Health yes; Karma printed so |
+| Galactus | 3 | 75 Mn, 75 Mn, 1000 Cl 1000, 3000 Cl 3000, 1000 Cl 1000, 1000 Cl 1000, 1000 Cl 1000 | 4150 | 3000 | Cl 3000 | -1000 | yes |
+| Mephisto | 6 | 75 Mn, 75 Mn, 75 Mn, 3000 Cl 3000, 75 Mn, 75 Mn, 100 Un | 3225 | 250 | Cl 3000 | -1000 | yes |
+| Mephisto (w/Galactus) | 6 | 100 Un, 100 Un, 1000 Cl 1000, 3000 Cl 3000, 75 Mn, 100 Un, 1000 Cl 1000 | 4200 | 1175 | - | - | yes |
+| Mephisto's Demonic Thralls | 7 | 50 Am, 50 Am, 50 Am, 30 Rm, 6 Ty, 10 Gd, 20 Ex | 180 | 36 | - | - | yes |
+| Mephisto's Footsoldiers | 7 | 40 In, 40 In, 40 In, 30 Rm, 4 Pr, 6 Ty, 10 Gd | 150 | 20 | - | - | yes |
+| Pluto | 8 | 100 Un, 100 Un, 100 Un, 250 Shift Y, 75 Mn, 100 Un, 100 Un | 550 | 275 | Unearthly(100) | -500 | yes |
+| Pluto's Footsoldiers | 9 | **code first**: Rm 30, Rm 30, In 40, In 40, Gd 10, Gd 10, Ex 20 | 140 | 40 | - | - | yes |
+| Hela | 9 | 50 Am, 50 Am, 100 Un, 1000 Cl 1000, 30 Rm, 40 In, 100 Un | 1200 | 170 | Mn(75) | -75 | yes |
+| Seth | 10 | 40 In, 40 In, 75 Mn, 75 Mn, 30 Rm, 40 In, 100 Un | 230 | 170 | Mn(75) | -50 | yes |
+| Voyd | 11 | 5000 Cl 5000 four times, 50 Am, 1000 Cl 1000, 3000 Cl 3000 | 20,000 | 4050 | Fe(2) | 0 | yes |
+| Uatu | 11 | 50 Am, 50 Am, 50 Am, 100 Un, 100 Un, 100 Un, 100 Un | 250 | 300 | Un(100) | 0 | yes |
+| Dormammu | 12 | 100 Un, 100 Un, 75 Mn, 1000 Cl 1000, 75 Mn, 75 Mn, 100 Un | 1275* | 250 | Mn(75) | -30 | yes |
+| Dormammu, second grid | 12 | 100 Un, 100 Un, 150 Shift X, 1000 Cl 1000, 75 Mn, 75 Mn, 150 Shift X | 1350 | 300 | - | - | yes |
+| Clea | 13 | 20 Ex, 20 Ex, 30 Rm, 30 Rm, 20 Ex, 50 Am, 100 Un | 100 | 170 | Mn(75) | 70 | yes |
+| Mindless Ones | 14 | 30 Rm, 4 Pr, 10 Gd, 20 Ex, 2 Fb, 2 Fb, 2 Fb | 64 | 6 | - | - | yes |
+| Dark Dimension Inhabitant, Typical | 14 | 6 Ty, 10 Gd, 6 Ty, 6 Ty, 6 Ty, 10 Gd, 10 Gd | 28 | 26 | - | - | yes |
+| Thanos | 15 | 75 Mn, 30 Rm, 100 Un, 100 Un, 50 Am, 20 Ex, 50 Am | 305 | 120 | Am(50) | -100 | yes |
+| Captain Marvel | 15 | 30 Rm, 30 Rm, 40 In, 30 Rm, 10 Gd, 50 Am, 30 Rm | 130 | 90 | Pr(4) | 55 | yes |
+| The Purple Man | 16 | 10 Gd, 10 Gd, 10 Gd, 20 Ex, 20 Ex, 10 Gd, 10 Gd | 50 | 40 | Rm(30) | -10 | yes |
+
+Identity lines, bold mixed case under the header, where one is printed:
+Galactus (Galan of Taa), Mephisto (an aka line of four names), Pluto
+(Hades), Hela (Death Goddess of Asgard), Seth (Heliopolitan God of the
+Dead), Uatu (The Watcher), Thanos (Thanos of Titan, deceased), Captain
+Marvel (Mar-Vell of the Kree, deceased), the Purple Man (Zebediah Kilgrave,
+deceased). The rest print none.
+
+**Values the parser must accept as printed, in the Resource Book:**
+
+| printed | where |
+|---|---|
+| `Health:` / `20,000`, with a comma | Death (2), Eternity (3), Voyd (11) |
+| `Karma:` / `Unlim.`, abbreviated, and `Unlimited` | Death (2); Eternity (3) |
+| `Resources:` / `Cl 3000`, `Unearthly(100)` (the rank word spelled out), `Fe(2)` | Galactus (3), Mephisto (6); Pluto (8); Voyd (11) |
+| `Health:1275*`, no space, an asterisk keying a note under the grid | Dormammu (12) |
+| a full block printing each **code before its number** (`F Rm 30`) | Pluto's Footsoldiers (9), as Charon (Adventure 24) |
+| a header over two lines, its second line mixed case (`DARK DIMENSION` / `INHABITANT, Typical`) | 14 |
+| a header with an apostrophe over two lines (`MEPHISTO'S DEMONIC` / `THRALLS`, `MEPHISTO'S` / `FOOTSOLDIERS`); Tesseract reads the mark as U+2019 | 7 |
+| a header with a qualifier, `MEPHISTO (w/Galactus)` | 6 |
+| a full grid with no header (Dormammu's second) | 12 |
+| `Cl 1000`, `Cl 3000`, `Cl 5000` with a space, read by Tesseract as `Cl1000`, `CI5000`, `ClI3000` and `cCI1000` | throughout |
+
+**The book checks itself**, each block held to Health = F+A+S+E, Karma =
+R+I+P and each number to its rank code (`apps/marvel-heroes/data/ranks.json`):
+
+| measure | count |
+|---|---|
+| full grids, Health = F+A+S+E | **21 of 21** |
+| full grids, Karma = R+I+P, or printed otherwise | **21**: 19 hold; Death prints `Unlim.` and Eternity `Unlimited` (R, I and P 5000 each), as ME2's Death prints `Unlimited` |
+| every number its rank code's standard | **20 of 21**: Pluto's E `250 Shift Y` is inside Shift Y's range (176-350), not its standard 200, and his Health 550 adds it; ME2's Pluto card prints the same E |
+| every number within its rank code's range | **21 of 21** |
+
+**No misprint in the Resource Book's blocks.**
+
+**The Pregenerated Heroes Summary** (PDF 53, sideways), transcribed by eye
+from a render turned 90 degrees into the registry's `reference_summary`.
+Its eight rows are ME2's chart's, value for value and power for power.
+
+| measure | count |
+|---|---|
+| Summary rows passing their own arithmetic | **7 of 8** (Firelord's Karma) |
+| Summary rows with a block, agreeing with it in all nine values (a repeat) | **3 of 4** (Firelord's Karma) |
+
+**The book's misprints**, page:name:field printed->corrected, each read on
+the page image:
+
+| misprint | the book's own arithmetic |
+|---|---|
+| Summary:Firelord:Karma 90->110 | his chart row's R 30, I 50 and P 30 sum to 110, and his block (Adventure 4) prints 110; ME1's and ME2's charts print the same 90 |
+
+**Over the whole book:** 26 full blocks (the four heroes, Charon and the
+Resource Book's 21), 5 codes-only one-line grids (Beta Ray Bill's humanoid
+form, the vulture flock, the nine-headed serpent, the Keeper and the
+Dimensional Shambler) and 8 Summary rows, four of them repeats of the
+heroes' blocks. No chapter grid repeats a Resource Book block. **Card pages:**
+Adventure 3-5 and Resource 2-16 (`character_ranges`); **chapter pages that
+stat a being inside the prose:** Adventure 11, 14, 24 and 28 (`opponents`,
+set by row 4a). One misprint, the Summary's Firelord Karma.
 
 ## Names the Codex already has
 
-Not finished.
+By the rule #1520 pinned (Nate, 2026-09-28), each is a card of its own with
+a `-me3` id. Checked against `apps/marvel-heroes/data/npcs.json`:
+
+- **All eight heroes are ME1's and ME2's.** The four with a block print
+  ME2's seven numbers and codes, Health, Karma and Popularity, and the
+  Summary is ME2's chart. Two Resources differ in print:
+  - Gladiator: `Mn(75)` here, `Mn (175)` on ME1's card and `Mn(175)` on
+    ME2's. 75 is Monstrous's standard and 175 is outside its range (63-87),
+    so this book's print is the consistent one. Resources are not held to
+    any arithmetic, and each card shows its own book's print, so nothing
+    here is corrected. Whether ME1's and ME2's 175 is a misprint is a
+    question about those books, not this one.
+  - Beta Ray Bill: `10(Gd)` here, `Gd(10)` on ME2's card. The same value,
+    number first: a format the parser accepts, not a difference.
+- **The same values as an existing card:** Galactus (MA4, ME2), Mephisto
+  (MA4), Pluto (ME2), Hela (ME2), Death (ME2) and Uatu (MA4 and MHSP2,
+  each filed as `Watcher` with the identity Uatu; this book prints the
+  header `UATU` and the identity The Watcher).
+- **Other values than an existing card:** Eternity (MHSP2: Class 1000
+  throughout, Health 4000), Death (MHSP2), Mephisto (MHSP2 and MH9: E
+  Class 1000, Health 1225), Galactus (MHSP1) and Charon (ME2's, Adventure
+  18, another grid with other numbers).
+- **Captain Marvel is a different person.** MHSP1's, MH2's and MHSP2's are
+  Monica Rambeau (identity lines on MH2 and MHSP2); this book's is Mar-Vell
+  of the Kree, deceased. Decision 6.
+- MHSP2's Vulture (Adrian Toomes) and MH6's Giant Vulture and Crystal
+  Serpent are other beings than the vulture flock and the nine-headed
+  serpent here.
+
+Every other name is new to the Codex: Mephisto's Demonic Thralls, Mephisto's
+Footsoldiers, Pluto's Footsoldiers, Seth, Voyd, Dormammu, Clea, the Mindless
+Ones, the Dark Dimension Inhabitant, Thanos, the Purple Man, the Keeper, the
+Dimensional Shambler, the vulture flock and the nine-headed serpent.
 
 ## Quote marks
 
-Not finished.
+**No single-quoted phrase of the book's own was found.** Measured on the OCR
+of all 55 pages: 147 double marks (76 opening, 71 closing), 43 opening
+singles, 354 closing singles (apostrophes, nearly all) and 10 straight
+marks. On the card pages (Adventure 3-5, Resource 2-16) and the opponents'
+pages (Adventure 11, 14, 24 and 28) there are 12 opening singles, on four
+pages: PDF 40 (6), 41 (2), 44 (2) and 16 (2). Every one is an opening double
+read as two singles, or as a double and a single: Mephisto's aka line and a
+word on printed 6 were read on the page image and print doubles, and the
+rest are paired singles before a word closed by a double. The opponents'
+pages 11, 24 and 28 hold none. So the rule is MHSP1's, ME1's and ME2's:
+every single that is not an apostrophe is half of a double. Apostrophes in
+the headers (`MEPHISTO'S`, `PLUTO'S`) are real.
 
 ## Which reader fits
 
@@ -213,7 +368,48 @@ Not finished.
 
 ## Decisions this survey leaves open
 
-Not finished.
+Each has a recommendation, and each recommends what ME2 (the nearest book)
+did. Nate, 2026-10-30: take the survey's recommendations when a decision
+arises. None is written to the registry until the row that applies it.
+
+1. **Teams.** Recommendation: the Resource Book's banners without the
+   leading The, as ME2's were: **Entities** (ME2's group already) and
+   **Death Gods** (new). `Other Characters` names no team, so those ten
+   file under the book's title, **ME3 The Left Hand of Eternity**, as the
+   chapters' opponents do (ME1's and ME2's rule for a chapter's opponent).
+   The four heroes and the Summary's four as **Left Hand of Eternity
+   Heroes**, as ME2's are Ragnarok and Roll Heroes. The alternative for the
+   heroes is one group shared by the three books' eight.
+2. **Page citations.** Recommendation: ME2's shape, `ME3 Adventure p.3`,
+   `ME3 Resource p.12`, and `ME3 Pregenerated Heroes Summary` with no page.
+3. **Pluto's in-range number** (`250 Shift Y`, Resource 8). Recommendation:
+   ME2's ruling, `rank_ranges: true` for this book, so the number passes as
+   printed; it is the same E ME2's Pluto card prints. The alternative is one
+   override, as ME1's Superkree has.
+4. **The misprint and the unlimited Karmas.** Recommendation: an override
+   keeping printed and corrected for the Summary's Firelord Karma (90 to
+   110), as ME2's; Death's `Unlim.` and Eternity's `Unlimited` kept as
+   printed (`as_printed`), as ME2's Death.
+5. **Second blocks and the grids with no name line.** Recommendation:
+   `MEPHISTO (w/Galactus)` and Dormammu's second grid as second blocks on
+   their cards, each labelled for Galactus, and Beta Ray Bill's humanoid
+   form as a second block on his, as ME2's Titans, Zeus and humanoid form
+   are. The vulture flock and the nine-headed serpent as entries of their
+   own named as the registry has them (`Vulture Flock`,
+   `Nine-Headed Serpent`, from the prose), as ME2 named its grids with no
+   name line; the Keeper (the leading The dropped), Charon and the
+   Dimensional Shambler as entries of their own.
+6. **Names.** Recommendation: as printed, the leading The dropped (Purple
+   Man) and the inverted `Dark Dimension Inhabitant, Typical` kept, as ME2
+   kept `Olympian, Typical`; Uatu as printed, not MA4's and MHSP2's
+   `Watcher`. **Captain Marvel:** Nate's ruling on MA1's and MH1's Ariel
+   (2026-10-21) was that each card's name says which person, so this
+   book's card as `Captain Marvel (Mar-Vell)` and the three Monica Rambeau
+   cards (MHSP1, MH2, MHSP2) as `Captain Marvel (Monica Rambeau)`, through
+   `card_names`. The option that ruling did not take is to label the new
+   card only, which leaves the three other books untouched.
+7. **The four Summary-only heroes.** Recommendation: cards marked
+   Summary-only, as ME1's and ME2's four are.
 
 ## How to reproduce
 
