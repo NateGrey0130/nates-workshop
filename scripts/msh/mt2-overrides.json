@@ -2,8 +2,8 @@
   "overrides": [
     {"match": {"page": 6, "header": "Genghis Khan"}, "verdict": "misprint", "field": "A", "printed": "GD", "corrected": "TY",
      "also": [{"field": "S", "printed": "GD", "corrected": "TY"}], "checked": "2026-10-30",
-     "note": "TODO"},
+     "note": "Printed A GD 6 and S GD 6 (printed 6, column 2): 6 is Typical's number, outside Good's range (8-15), and Health 52 = 20+6+6+20 agrees with the 6s, so the code is the misprint: TY for both. Survey mt2.md decision 7 (recommended, applied unanswered; Nate 2026-10-30), read on the page image."},
     {"match": {"page": 33, "header": "Khan's Champion"}, "verdict": "misprint", "field": "karma", "printed": 10, "corrected": 14, "checked": "2026-10-30",
-     "note": "TODO"}
+     "note": "Printed Karma: 10 (printed 33, column 2, a one-line grid with no name line): R+I+P = 4+6+4 = 14 and every number agrees with its code, so the total is the misprint; Health 50 holds. Survey mt2.md decision 7 (recommended, applied unanswered; Nate 2026-10-30), read on the page image."}
   ]
 }
