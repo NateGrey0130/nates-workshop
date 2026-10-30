@@ -1413,6 +1413,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MH9 is laid out as MH1-MH8 are (scripts/msh/coverpanels.py,
+  // mh9-overrides.json). The rest of its block goes beside this check.
+  if (data.npcs.characters.some((c) => c.book === 'mh9')) {
+    const blk9 = (id) => data.npcs.characters.find((c) => c.id === id)?.versions[0].blocks[0];
+    const read9 = ['swordsman-mh9', 'klaw-mh9'].map((id) => `${id} ${blk9(id)?.resources} / ${blk9(id)?.popularity}`).join(' | ');
+    check('MH9: the Swordsman\'s Popularity -5 and both lines of his Resources, and Klaw\'s Popularity -2, as printed and not as their blocks\' crops read them (registry prefer_text)',
+      blk9('swordsman-mh9')?.popularity === '-5' && blk9('swordsman-mh9')?.resources === 'Amazing (backed by A.I.M. and Mephisto)'
+      && blk9('klaw-mh9')?.popularity === '-2', read9);
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
