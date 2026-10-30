@@ -2085,6 +2085,65 @@
       "teams": {"West Coast Avengers": ["Hawkeye", "Tigra", "Mockingbird", "Wonder Man", "Iron Man"]},
       "teams_note": "No team sections. Survey mh7.md decision 1 (recommended, applied unanswered; Nate 2026-10-29: take the survey's recommendations): West Coast Avengers for Hawkeye, Tigra, Mockingbird, Wonder Man and Iron Man (James Rhodes), the team MHSP2 already files them under, and every other card, Rick Jones included, under the book's title, MH7 The Last Resort. Decision 3 (characters only) is why the entry has no item_pages.",
       "opponents_note": "The one grid in the book prints no name line: it is inside Pyro's card on printed 13, under his FIRE CONTROL. power, and gives the maximum abilities of the creatures of flame he forms (In In In In and a dash for R, I and P, Health = 160 (maximum)). Named here by what the power calls them: survey mh7.md decision 6. No chapter stats a character: the plants of Chapter 2 and the wildlife of printed 2 are given abilities in prose only. Printed 15 also prints the Mandarin's Mento Intensifier Selective Concentrator as a block of its own (Body, Controls, Size, Complexity, Power Source), an item, not a card (decision 3). Read on the page images 2026-10-29."
+    },
+    "mh8": {
+      "title": "MH8 Fault Line",
+      "short": "MH8",
+      "code": "TSR6866",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6866 MH-8 Fault Line Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "7d1dc23b68d735f156d92510ba8ed3a41568120eb42e8f34b0c546a832e2d936",
+      "pdf_pages": 22,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 17], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [18, 18], "offset": null},
+        {"name": "Fold-up figure instructions", "cite": null, "pdf": [19, 19], "offset": null},
+        {"name": "Fold-up figures", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Daily Bugle", "cite": null, "pdf": [21, 21], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [22, 22], "offset": null}
+      ],
+      "offset_evidence": "2026-10-29, scripts/msh/survey.py tsv_folio: 12 pages vote printed = PDF - 1 (PDF 4-8 and 11-17) and no page votes otherwise. Folios 2, 8 and 9 were read on the page images of PDF 3, 9 and 10, each at the foot of its page in a faint small type; printed 1 (PDF 2) is the title page, which also prints the product code 6866XXX1501. PDF 2-17 are the 16-page booklet (594 x 767 pt). PDF 1 and 18 are the outside of the cover (601 x 774 pt; PDF 18 prints the product code 6866XXX1401 and lists the package as the booklet, a city map and the fold-up figures). The scan holds no inside cover. PDF 19 (612 x 792 pt) is the instructions for the fold-up figures and PDF 20 (612 x 791 pt) the figure sheet itself: 19 cut-out stand-ups, every card's character but Joseph Merrir, the Police split into Policeman Type A and B, the Crooks into Punk Type A and B and Hood Type A and B, no SWAT member, and a crowd and a bomb; it prints no statistics. PDF 21 (1188 x 767 pt) is a double-width spread of a Daily Bugle newspaper prop, the handout printed 3 tells the Judge to give the players. PDF 22 is the map sheet, City Map 3, one PDF page (2335 x 1511 pt). None of them prints a folio. Survey mh8.md, The scan.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Talents", "Talent", "Equipment/Possessions", "Important People", "Background", "Comments", "Comments and Equipment"],
+      "section_labels_note": "Every card prints its sections as labels ending in a colon, in no fixed order and with any absent: the Swordsman prints Talents, Equipment/Possessions, Important People and Background and no Powers; Joseph Merrir and the Crooks print Comments; the Police and the SWAT Team Member print Talent (singular) and Comments and Equipment, and no Karma, Resources, Popularity or Powers; Juggernaut prints his background as a run-in, BACKGROUND., inside Powers, with a NOTE: after it. Read on the page images 2026-10-29.",
+      "rank_aliases": {"FEEBLE": "feeble", "POOR": "poor", "TYPICAL": "typical", "GOOD": "good", "EXCELLENT": "excellent", "REMARKABLE": "remarkable", "INCREDIBLE": "incredible", "AMAZING": "amazing", "MONSTROUS": "monstrous", "UNEARTHLY": "unearthly"},
+      "rank_aliases_note": "Every card prints its ranks as words in capitals; the book prints no rank code and no one-line grid. The Hoods' Popularity is a rank word (TYPICAL), the one Popularity not a number. Read on the page images 2026-10-29.",
+      "sections": [
+        ["How to Use the Setting", null, 1, "Adventure Book"],
+        ["Section 1: The Adventure", null, 2, "Adventure Book"],
+        ["Initial Encounters", null, 3, "Adventure Book"],
+        ["Clues & Information", null, 4, "Adventure Book"],
+        ["Adventure Timetable", null, 5, "Adventure Book"],
+        ["Section 2: Events", null, 6, "Adventure Book"],
+        ["Section 3: Location Descriptions", null, 9, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-29: printed 1 the title page, with a HOW TO USE THE SETTING heading; SECTION 1: THE ADVENTURE (printed 2, with INTRODUCTION under it), INITIAL ENCOUNTERS (3), CLUES & INFORMATION (4) and ADVENTURE TIMETABLE (5, a timetable by day and hour); SECTION 2: EVENTS (6, Events 1-11 over printed 6-8, then The Matter of Karma and The Final Event); SECTION 3: LOCATION DESCRIPTIONS (9, City Map 1 and City Map 3 descriptions, to printed 11). The cards follow on printed 12-16, unbannered. Tesseract reads every banner; SECTION 3 is read as sections.",
+      "columns": 3,
+      "character_ranges": [{"part": "Adventure Book", "pages": [12, 16]}],
+      "panels": [],
+      "panels_note": "The scan holds no inside cover, and no page outside the booklet prints a stat block: every card is on printed 12-16. Survey mh8.md, The scan.",
+      "cards": [
+        ["Adventure Book", 12, "Grim Reaper"],
+        ["Adventure Book", 12, "Thunderball"],
+        ["Adventure Book", 12, "Mastermind"],
+        ["Adventure Book", 13, "Swordsman"],
+        ["Adventure Book", 13, "Living Laser"],
+        ["Adventure Book", 13, "Juggernaut"],
+        ["Adventure Book", 14, "Frankie the Snitch"],
+        ["Adventure Book", 14, "Joseph Merrir"],
+        ["Adventure Book", 14, "Crooks"],
+        ["Adventure Book", 15, "Black Knight"],
+        ["Adventure Book", 15, "Spider-Man"],
+        ["Adventure Book", 15, "Captain America"],
+        ["Adventure Book", 16, "Wasp"],
+        ["Adventure Book", 16, "Police"],
+        ["Adventure Book", 16, "SWAT Team Member"]
+      ],
+      "cards_note": "The 15 card headers, as printed, with a leading The dropped and the Swordsman's and the Living Laser's ; dead left out of the name (survey mh8.md decision 6). CROOKS prints one block of two columns, Punks and Hoods, each a full set of ranks with its own Health; survey mh8.md decision 4 recommends a card for each. Read on the page images 2026-10-29.",
+      "opponents": [],
+      "opponents_note": "No character is statted outside the cards: the book prints no one-line grid, and the events and locations give a rank in prose only (two sales reps' Fighting, printed 5). Read on the OCR of every booklet page and the page images 2026-10-29."
     }
   }
 }
