@@ -237,11 +237,15 @@
    "title": "MH7 The Last Resort",
    "code": "TSR6864",
    "status": "imported",
-   "date": null,
+   "date": "2026-10-29",
    "added": [
     [
      "Characters",
      14
+    ],
+    [
+     "Rows of the book's text",
+     73
     ]
    ],
    "total": 14
