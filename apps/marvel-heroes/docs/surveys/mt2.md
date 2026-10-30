@@ -1,13 +1,10 @@
 # Survey: MT2 The Weird, Weird West (TSR6886)
 
-> **DRAFT.** Measured through *Which reader fits*, both trials run.
-> Nothing here is imported yet.
-
 Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1988,
 the second module of the three-part Time Warp series. Registry entry:
 `scripts/msh/books.json` -> `mt2`. Measured 2026-10-30.
 
-**Rows citing this book:** none yet (no data has been built).
+**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
 
 Everything here was measured and read on the page images.
 
