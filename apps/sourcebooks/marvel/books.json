@@ -231,6 +231,20 @@
     ]
    ],
    "total": 30
+  },
+  {
+   "slug": "mh7",
+   "title": "MH7 The Last Resort",
+   "code": "TSR6864",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     14
+    ]
+   ],
+   "total": 14
   }
  ]
 }
