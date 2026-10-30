@@ -3,8 +3,8 @@
 Marvel Super Heroes adventure module, Kim Eastland. Registry entry:
 `scripts/msh/books.json` -> `mh7`. Measured 2026-10-29.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production (no data
-imported yet; this is the survey).
+**Rows citing this book:** 73 `msh_book_text` rows over 14 character entries
+in production (`DB_MARVEL`, read back 2026-10-29).
 
 Everything here was measured and read on the page images unless it says it
 was read in the OCR.

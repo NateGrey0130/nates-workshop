@@ -1,0 +1,18 @@
+{
+  "about": [
+    "Hand decisions about MH7 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card or one-line grid; page is the printed Adventure page, or null for a card on a cover panel (which prints no page)",
+    "  verdict   rows              the grid prints fewer than seven ranks; 'abilities' are its rows as the page gives them, a row it prints no rank for as null, and 'corrected' is how that row is played (null: not played, so the block is on the Codex card and not offered to the GM); health, karma, resources and popularity as printed",
+    "            text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops.",
+    "  checked   the date the page image was read",
+    "No misprint and no text verdict: every block adds up (survey mh7.md decision 4), and every quote mark on the 73 rows of book-text.sql was read on the page images 2026-10-29 and is as printed."
+  ],
+  "overrides": [
+    {"match": {"page": 13, "header": "Fire Creatures"}, "verdict": "rows", "field": "RIP",
+     "abilities": [["F", 40, "In"], ["A", 40, "In"], ["S", 40, "In"], ["E", 40, "In"], ["R", null, null], ["I", null, null], ["P", null, null]],
+     "health": "160", "karma": null, "resources": null, "popularity": null,
+     "printed": "a dash under R, I and P", "corrected": null, "checked": "2026-10-29",
+     "note": "Printed 13, inside Pyro's card under FIRE CONTROL.: the grid of the creatures he forms prints In In In In and a dash under each of R, I and P, and Health = 160 (maximum), which is 4 x 40 (seen on the page image; the registry's grid_ink_dashes measures the three dashes). The three are left unset, as printed (survey mh7.md decision 10, recommended, applied unanswered), so the grid is partial, as MHSP2's Psycho-Man suits and Valkyrie's steed are."}
+  ]
+}

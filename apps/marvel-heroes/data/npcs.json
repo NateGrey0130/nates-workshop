@@ -68,6 +68,11 @@
    "book": "MH6 Thunder Over Jotunheim",
    "code": "TSR6862",
    "pages": "Adventure 3-15; Inside cover"
+  },
+  {
+   "book": "MH7 The Last Resort",
+   "code": "TSR6864",
+   "pages": "Adventure 12-16; Inside front cover; Inside back cover"
   }
  ],
  "books": [
@@ -257,6 +262,20 @@
    "panels": [
     "Inside cover"
    ]
+  },
+  {
+   "slug": "mh7",
+   "short": "MH7",
+   "title": "MH7 The Last Resort",
+   "pages": [
+    12,
+    16
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
   }
  ],
  "teams": [
@@ -320,7 +339,8 @@
   "MH4 Lone Wolves",
   "MH5 Cat's Paw",
   "Alpha Flight",
-  "MH6 Thunder Over Jotunheim"
+  "MH6 Thunder Over Jotunheim",
+  "MH7 The Last Resort"
  ],
  "characters": [
   {
@@ -59761,6 +59781,1229 @@
    ],
    "appearances": [],
    "book": "mh6"
+  },
+  {
+   "id": "hawkeye-mh7",
+   "name": "Hawkeye",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "hawkeye-mh7",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Clint Francis Barton",
+      "Adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "45"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extraordinary Vision"
+      },
+      {
+       "name": "Poor Hearing"
+      },
+      {
+       "name": "Marksman, Bow"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "tigra-mh7",
+   "name": "Tigra",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "tigra-mh7",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Greer Grant Nelson",
+      "Adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "56",
+       "resources": "TYPICAL",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extraordinary Senses"
+      },
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Running Speed"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "blizzard-mh7",
+   "name": "Blizzard",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "blizzard-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Gregor Shapanka;",
+      "scientist, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "44",
+       "resources": "GOOD",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Battlesuit"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Gloves"
+      },
+      {
+       "name": "Backpack"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "mesmerized-scouts-mh7",
+   "name": "Mesmerized Scouts",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "mesmerized-scouts-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "12"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "rick-jones-mh7",
+   "name": "Rick Jones",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "rick-jones-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "musician, honorary Avenger"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "8"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "fire-creatures-mh7",
+   "name": "Fire Creatures",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "fire-creatures-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         null,
+         null
+        ],
+        [
+         "I",
+         null,
+         null
+        ],
+        [
+         "P",
+         null,
+         null
+        ]
+       ],
+       "rank_only": true,
+       "health": "160",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "RIP",
+        "printed": "a dash under R, I and P",
+        "corrected": null
+       },
+       "kind": "partial"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "plantman-mh7",
+   "name": "Plantman",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "plantman-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Samuel Smithers;",
+      "gardener, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "7"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "pyro-mh7",
+   "name": "Pyro",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "pyro-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "St. John Allerdyce;",
+      "mutant, journalist, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "26",
+       "resources": "POOR",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "radioactive-man-mh7",
+   "name": "Radioactive Man",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "radioactive-man-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Dr. Chen Lu;",
+      "nuclear physicist, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "32",
+       "resources": "TYPICAL",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gamma Beams"
+      },
+      {
+       "name": "Area Blast"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Radioactivity"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "whirlwind-mh7",
+   "name": "Whirlwind",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "whirlwind-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "David Cannon;",
+      "criminal mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Spinning"
+      },
+      {
+       "name": "Lightning Speed"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Tornado"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "mandarin-mh7",
+   "name": "Mandarin",
+   "team": "MH7 The Last Resort",
+   "versions": [
+    {
+     "id": "mandarin-mh7",
+     "label": null,
+     "team": "MH7 The Last Resort",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "real name unknown;",
+      "conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "50",
+       "resources": "AMAZING",
+       "popularity": "12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hard Hitting"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Holo-Belt"
+      },
+      {
+       "name": "Makluan Rings"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "iron-man-mh7",
+   "name": "Iron Man",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "iron-man-mh7",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "James Rhodes; bodyguard, pilot"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "155",
+       "karma": "36",
+       "resources": "TYPICAL",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Repulsors"
+      },
+      {
+       "name": "Unibeam"
+      },
+      {
+       "name": "Air Supply"
+      },
+      {
+       "name": "Fire Extinguisher"
+      },
+      {
+       "name": "Energy Absorption"
+      },
+      {
+       "name": "Overide"
+      },
+      {
+       "name": "Energy Pods"
+      },
+      {
+       "name": "Sonic"
+      },
+      {
+       "name": "Tractor Beam"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "Freon Tablets"
+      },
+      {
+       "name": "Electronic Counter Measures"
+      },
+      {
+       "name": "Reverse Magnetism"
+      },
+      {
+       "name": "Roller Skates"
+      },
+      {
+       "name": "Eye Protection"
+      },
+      {
+       "name": "Image Projector"
+      },
+      {
+       "name": "Digging Ability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "mockingbird-mh7",
+   "name": "Mockingbird",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "mockingbird-mh7",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Barbara \"Bobbi\" Morse Barton",
+      "Adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "32",
+       "resources": "TYPICAL",
+       "popularity": "50"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
+  },
+  {
+   "id": "wonder-man-mh7",
+   "name": "Wonder Man",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "wonder-man-mh7",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Simon Williams",
+      "actor, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "215",
+       "karma": "18",
+       "resources": "POOR",
+       "popularity": "45"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Environmental Independence"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh7"
   }
  ]
 }

@@ -530,7 +530,11 @@ def main(slug_arg):
                     **({'carried': True} if panels and b.get('carried') else {}),
                     **({'read_off_image': b['read_off_image']} if panels and b.get('read_off_image') else {}),
                     **({'override': b['override']} if b.get('override') else {}),
-                    **({'kind': 'partial' if rbook and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
+                    # a cover-panels book's grid that prints a dash for R, I
+                    # and P (MH7's Fire Creatures, a `rows` override in
+                    # mh7-overrides.json) is partial as a roster book's is; no
+                    # earlier cover-panels book has a `rows` override
+                    **({'kind': 'partial' if (rbook or panels) and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),
                 })
                 if panels and b['health'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_health:

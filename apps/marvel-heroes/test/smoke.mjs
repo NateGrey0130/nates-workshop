@@ -1235,6 +1235,93 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         === '320/76,150/115,245/36,285/50');
   }
 
+  // MH7 is laid out as MH1-MH6 are (scripts/msh/coverpanels.py,
+  // mh7-overrides.json), with the survey's decisions applied as it recommends
+  // (mh7.md; Nate 2026-10-29). Its registry entry carries eight fixes the
+  // reader does not stop without (runin_heads, faint_rules, drop_corner and
+  // speck_lines: roster.py exits 0 with each turned off, and different data),
+  // so each is pinned here by what it changes.
+  if (data.npcs.characters.some((c) => c.book === 'mh7')) {
+    const mh7 = data.npcs.characters.filter((c) => c.book === 'mh7');
+    const blocks7 = mh7.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blk7 = (id) => mh7.find((c) => c.id === id)?.versions[0].blocks[0];
+    const ver7 = (id) => mh7.find((c) => c.id === id)?.versions[0];
+    const powers7 = (id) => ver7(id)?.powers.map((p) => p.name).join();
+    const team7 = (t) => mh7.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    check('MH7: 14 characters, each id ending -mh7 with one block, five as West Coast Avengers and the rest (Rick Jones too) under the book\'s title, and no name starting The',
+      mh7.length === 14 && mh7.every((c) => c.id.endsWith('-mh7') && c.versions.length === 1) && blocks7.length === 14
+      && team7('West Coast Avengers') === 'Hawkeye,Iron Man,Mockingbird,Tigra,Wonder Man'
+      && mh7.filter((c) => c.team === 'MH7 The Last Resort').length === 9 && mh7.find((c) => c.id === 'rick-jones-mh7')?.team === 'MH7 The Last Resort'
+      && !mh7.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh7.length} ${[...new Set(mh7.map((c) => c.team))]}`);
+    check('MH7: the inside front cover\'s two cards sort first, then the Adventure Book by page, then the inside back cover\'s two',
+      mh7.map((c) => c.id).join() === ['hawkeye', 'tigra', 'blizzard', 'mesmerized-scouts', 'rick-jones', 'fire-creatures', 'plantman', 'pyro',
+        'radioactive-man', 'whirlwind', 'mandarin', 'iron-man', 'mockingbird', 'wonder-man'].map((id) => `${id}-mh7`).join(),
+      mh7.map((c) => c.id).join());
+    const ov7 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh7-overrides.json'), 'utf8')).overrides;
+    const fire = blk7('fire-creatures-mh7');
+    check('MH7: no misprint and no text verdict; the one override is the Fire Creatures\' rows (a dash under R, I and P), and theirs is the only block that carries one',
+      ov7.length === 1 && ov7[0].verdict === 'rows' && !ov7.some((o) => o.verdict === 'misprint' || o.verdict === 'text')
+      && fire?.override?.verdict === 'rows' && fire.override.field === 'RIP'
+      && blocks7.filter(({ b }) => b.override).map(({ id }) => id).join() === 'fire-creatures-mh7',
+      JSON.stringify(ov7.map((o) => [o.verdict, o.match])));
+    check('MH7: the Fire Creatures are a partial grid on a card of their own (p.13), R, I and P unset, Health 160 on four In, prose only, and not offered to the GM',
+      fire?.kind === 'partial' && fire.abilities.map((a) => a.slice(1).join(' ')).join() === '40 In,40 In,40 In,40 In, , , '
+      && fire.health === '160' && fire.karma === null && ver7('fire-creatures-mh7').pages.join() === '13'
+      && ver7('fire-creatures-mh7').text.join() === 'prose' && !choices.some((c) => c.character === 'fire-creatures-mh7'),
+      `${fire?.kind} ${JSON.stringify(fire?.abilities)} ${fire?.health} ${ver7('fire-creatures-mh7')?.text}`);
+    check('MH7: Pyro\'s card keeps its three powers with the Fire Creatures\' grid cut out of it (cut_grids)',
+      powers7('pyro-mh7') === 'Fire Control,Fire Resistance,Fire Generation', powers7('pyro-mh7'));
+    check('MH7: Hawkeye\'s MARKSMAN, BOW is a power of its own (runin_heads), not the end of Poor Hearing',
+      powers7('hawkeye-mh7') === 'Extraordinary Vision,Poor Hearing,Marksman, Bow', powers7('hawkeye-mh7'));
+    check('MH7: the Mandarin\'s four powers, and no Amplification: the Mento Intensifier\'s column is not his (drop_corner)',
+      powers7('mandarin-mh7') === 'Hard Hitting,Force Field,Holo-Belt,Makluan Rings', powers7('mandarin-mh7'));
+    const gear7 = ['Arrows', 'Talisman', 'Plant Psi-Field Projector', 'Protective Suit', 'Battle Stave', 'Avengers Transceiver'];
+    check('MH7: the five cards that print Equipment/Possessions carry it as text, and none of their seven gear rows is a power (Wonder Man\'s Flight among them)',
+      mh7.filter((c) => c.versions[0].text.includes('equipment')).map((c) => c.id).sort().join()
+        === 'hawkeye-mh7,mockingbird-mh7,plantman-mh7,tigra-mh7,wonder-man-mh7'
+      && !mh7.some((c) => c.versions[0].powers.some((p) => gear7.includes(p.name)))
+      && powers7('wonder-man-mh7') === 'Body Armor,Environmental Independence',
+      mh7.filter((c) => c.versions[0].text.includes('equipment')).map((c) => c.id).join());
+    const marks = mh7.flatMap((c) => [c.name, ...c.versions[0].powers.map((p) => p.name)]).filter((s) => !/^[A-Za-z][A-Za-z ,-]*$/.test(s));
+    check('MH7: every name and power name is letters, spaces, commas and hyphens: no speck read as a mark (Iron Man\'s header, speck_lines)',
+      marks.length === 0 && mh7.find((c) => c.id === 'iron-man-mh7')?.name === 'Iron Man', JSON.stringify(marks));
+    check('MH7: 48 powers, 11 of them linked to the UPB',
+      mh7.flatMap((c) => c.versions[0].powers).length === 48 && mh7.flatMap((c) => c.versions[0].powers).filter((p) => p.upb).length === 11);
+    const book7 = data.npcs.books.find((b) => b.slug === 'mh7');
+    check('MH7: the book reads Adventure 12-16 and both inside covers, a panel card cites its panel with no page and an Adventure card its page',
+      JSON.stringify([book7?.part, book7?.pages, book7?.panels]) === '["Adventure",[12,16],["Inside front cover","Inside back cover"]]'
+      && tagline(bookNpc({ character: 'hawkeye-mh7' }).snapshot).startsWith('MH7 The Last Resort, Inside front cover;')
+      && tagline(bookNpc({ character: 'mockingbird-mh7' }).snapshot).startsWith('MH7 The Last Resort, Inside back cover;')
+      && tagline(bookNpc({ character: 'rick-jones-mh7' }).snapshot).startsWith('MH7 The Last Resort, Adventure p.12;')
+      && tagline(bookNpc({ character: 'iron-man-mh7' }).snapshot).startsWith('MH7 The Last Resort, Adventure p.16;'),
+      `${JSON.stringify(book7)} ${tagline(bookNpc({ character: 'iron-man-mh7' }).snapshot)}`);
+    check('MH7: cards play their printed Health and Karma (Hawkeye 70/22, Tigra 130/56, Iron Man 155/36, Wonder Man 215/18), and Pyro his Popularity -10',
+      ['hawkeye-mh7', 'tigra-mh7', 'iron-man-mh7', 'wonder-man-mh7'].map((id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; }).join()
+        === '70/22,130/56,155/36,215/18' && bookNpc({ character: 'pyro-mh7' }).snapshot?.abilities.popularity.number === -10);
+    // The rest of the eight fixes move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys, lengths
+    // and marks, never a word of it.
+    const sql7 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh7', 'book-text.sql');
+    if (!existsSync(sql7)) {
+      check(`MH7: skipped the text checks: no ${rel(sql7) || sql7}`, true);
+    } else {
+      const rows7 = [...readFileSync(sql7, 'utf8').matchAll(/VALUES \('([^']+)', 'mh7', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const len7 = (key) => rows7.find((r) => r.key === key)?.body.length || 0;
+      check('MH7 text: 73 rows over 14 entries, the Fire Creatures\' one, and no Amplification row',
+        rows7.length === 73 && new Set(rows7.map((r) => r.key.split(':')[1])).size === 14
+        && rows7.some((r) => r.key === 'mh7:fire-creatures-mh7:prose') && !rows7.some((r) => /amplification/i.test(r.name)),
+        `${rows7.length} ${new Set(rows7.map((r) => r.key.split(':')[1])).size}`);
+      check('MH7 text: Rick Jones\' background is longer than the Mesmerized Scouts\' (faint_rules: without it the end of his lands in theirs)',
+        len7('mh7:rick-jones-mh7:background') > len7('mh7:mesmerized-scouts-mh7:background') && len7('mh7:mesmerized-scouts-mh7:background') > 0,
+        `${len7('mh7:rick-jones-mh7:background')} ${len7('mh7:mesmerized-scouts-mh7:background')}`);
+      const specks = rows7.filter((r) => /['"]/.test(r.name) || /_|\.\s+\.|[a-z]- [a-z]/.test(r.body)).map((r) => r.key);
+      check('MH7 text: no speck read as a mark (speck_lines): no underscore, no doubled full stop, no word split at a hyphen, no quote in a power or gear name',
+        specks.length === 0, specks.join());
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
