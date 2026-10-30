@@ -1414,13 +1414,116 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   }
 
   // MH9 is laid out as MH1-MH8 are (scripts/msh/coverpanels.py,
-  // mh9-overrides.json). The rest of its block goes beside this check.
+  // mh9-overrides.json), with the survey's decisions applied as it recommends
+  // (mh9.md; Nate 2026-10-29). Every card is in the Adventure Book (printed
+  // 4-40) and none on a cover panel. The registry's prefer_text and
+  // speck_lines each change what is built, so each is pinned here by what it
+  // changes.
   if (data.npcs.characters.some((c) => c.book === 'mh9')) {
+    const mh9 = data.npcs.characters.filter((c) => c.book === 'mh9');
+    const blocks9 = mh9.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
     const blk9 = (id) => data.npcs.characters.find((c) => c.id === id)?.versions[0].blocks[0];
+    const ver9 = (id) => mh9.find((c) => c.id === id)?.versions[0];
+    const team9 = (t) => mh9.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const played9 = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MH9: 45 characters, each id ending -mh9 with one block, five as Fantastic Four, three as Avengers and the rest (Spider-Man too) under the book\'s title, and no name starting The',
+      mh9.length === 45 && mh9.every((c) => c.id.endsWith('-mh9') && c.versions.length === 1) && blocks9.length === 45
+      && team9('Fantastic Four') === 'Human Torch (Johnny Storm),Invisible Woman,Mister Fantastic,She-Hulk,Thing'
+      && team9('Avengers') === 'Captain America (Steve Rogers),Sub-Mariner,Wasp (Janet Van Dyne)'
+      && mh9.filter((c) => c.team === 'MH9 Gates of What If').length === 37 && mh9.find((c) => c.id === 'spider-man-mh9')?.team === 'MH9 Gates of What If'
+      && !mh9.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh9.length} ${[...new Set(mh9.map((c) => c.team))]}`);
+    check('MH9: the cards sort by the Adventure page each starts on, 4 to 39, and each name the book prints more than once (three Captain Americas, two Human Torches, two Things, two Wasps) a card of its own',
+      mh9.map((c) => c.id).join() === ['a-i-m-soldiers', 'golden-robots', 'demons', 'a-i-m-gunmen', 'guardsmen-robots', 'a-i-m-scientists',
+        'a-i-m-technicians', 'geoff-krubb', 'super-adaptoid', 'swordsman', 'attuma', 'klaw', 'sound-objects', 'wasp-janet-pym',
+        'captain-america-jeffrey-mace', 'skrulls', 'super-skrull', 'henry-pym', 'nick-fury', 'captain-america-jack-monroe', 'hercules',
+        'hulk', 'mad-thinker', 'mad-thinker-s-androids', 'scarlet-witch', 'victor', 'mephisto', 'valor', 'thing-divergent-earth', 'crystal',
+        'daredevil', 'human-torch-jim-hammond', 'hawkeye', 'quicksilver', 'flare', 'nomad', 'invisible-woman', 'mister-fantastic',
+        'she-hulk', 'human-torch-johnny-storm', 'thing', 'wasp-janet-van-dyne', 'captain-america-steve-rogers', 'spider-man',
+        'sub-mariner'].map((id) => `${id}-mh9`).join(),
+      mh9.map((c) => c.id).join());
+    check('MH9: ten one-line grids (the A.I.M. Soldiers\' printed twice is one card), one partial grid and 34 full blocks',
+      blocks9.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === ['a-i-m-soldiers', 'golden-robots', 'demons', 'a-i-m-gunmen',
+        'guardsmen-robots', 'a-i-m-technicians', 'geoff-krubb', 'sound-objects', 'skrulls', 'mad-thinker-s-androids'].map((id) => `${id}-mh9`).join()
+      && blocks9.filter(({ b }) => b.kind === 'partial').map(({ id }) => id).join() === 'a-i-m-scientists-mh9'
+      && blocks9.filter(({ b }) => !b.kind).length === 34,
+      blocks9.map(({ id, b }) => `${id}:${b.kind}`).join());
+    const fixes9 = ['captain-america-jeffrey-mace-mh9', 'henry-pym-mh9', 'valor-mh9', 'super-adaptoid-mh9'].map((id) => {
+      const o = blk9(id)?.override;
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${a.printed}>${a.corrected}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${o?.printed}${o?.corrected === undefined ? '' : `>${o.corrected}`}${also} block ${blk9(id)?.health}/${blk9(id)?.karma} plays ${played9(id)}`;
+    });
+    check('MH9: the three misprints keep the printed value and play the ranks\' (Captain America (Jeffrey Mace) Karma 36 as 26, Henry Pym Health 70 as 28 and Karma 36 as 46, Valor Karma 32 as 22), and the Super-Adaptoid\'s Health 150 is kept as printed and plays',
+      fixes9.join(' | ') === [
+        'captain-america-jeffrey-mace-mh9 misprint karma 36>26 block 36/36 plays 36/26',
+        'henry-pym-mh9 misprint health 70>28 also misprint karma 36>46 block 70/36 plays 28/46',
+        'valor-mh9 misprint karma 32>22 block 100/32 plays 100/22',
+        'super-adaptoid-mh9 as_printed health 150 block 150 (see below)/18 plays 150/18',
+      ].join(' | '),
+      fixes9.join(' | '));
+    const ov9 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh9-overrides.json'), 'utf8')).overrides;
+    const text9 = ov9.filter((o) => o.verdict === 'text');
+    check('MH9: ten overrides: three misprints, one as printed, the A.I.M. Scientists\' rows and five text verdicts (the A.I.M. Technicians\' prose one, Captain America (Jeffrey Mace)\'s background two, the Thing (Divergent Earth)\'s background one, Hawkeye\'s equipment one), and only those five blocks carry one',
+      ov9.length === 10 && ov9.filter((o) => o.verdict === 'misprint').length === 3 && ov9.filter((o) => o.verdict === 'as_printed').length === 1
+      && ov9.filter((o) => o.verdict === 'rows').length === 1
+      && text9.map((o) => o.match.row).join() === ['a-i-m-technicians-mh9:prose', 'captain-america-jeffrey-mace-mh9:background',
+        'captain-america-jeffrey-mace-mh9:background', 'thing-divergent-earth-mh9:background', 'hawkeye-mh9:equipment'].map((k) => `mh9:${k}`).join()
+      && blocks9.filter(({ b }) => b.override).map(({ id }) => id).sort().join()
+        === 'a-i-m-scientists-mh9,captain-america-jeffrey-mace-mh9,henry-pym-mh9,super-adaptoid-mh9,valor-mh9',
+      JSON.stringify(ov9.map((o) => [o.verdict, o.match])));
+    const sci = blk9('a-i-m-scientists-mh9');
+    check('MH9: the A.I.M. Scientists are a partial grid (Var under Reason and Intuition), R and I unset, Health 24 on four Ty, Karma Variable, and not offered to the GM',
+      sci?.kind === 'partial' && sci.override?.verdict === 'rows' && sci.override.field === 'RI'
+      && sci.abilities.map((a) => a.slice(1).join(' ')).join() === '6 Ty,6 Ty,6 Ty,6 Ty, , ,6 Ty'
+      && sci.health === '24' && sci.karma === 'Variable' && !choices.some((c) => c.character === 'a-i-m-scientists-mh9'),
+      `${sci?.kind} ${JSON.stringify(sci?.abilities)} ${sci?.health} ${sci?.karma}`);
+    check('MH9: the Golden Robots and the Guardsmen Robots print Karma None and play none',
+      blk9('golden-robots-mh9')?.karma === 'None' && blk9('guardsmen-robots-mh9')?.karma === 'None'
+      && played9('golden-robots-mh9') === '155/null' && played9('guardsmen-robots-mh9') === '120/null'
+      && blocks9.filter(({ b }) => b.karma === 'None').length === 2,
+      `${played9('golden-robots-mh9')} ${played9('guardsmen-robots-mh9')}`);
     const read9 = ['swordsman-mh9', 'klaw-mh9'].map((id) => `${id} ${blk9(id)?.resources} / ${blk9(id)?.popularity}`).join(' | ');
     check('MH9: the Swordsman\'s Popularity -5 and both lines of his Resources, and Klaw\'s Popularity -2, as printed and not as their blocks\' crops read them (registry prefer_text)',
       blk9('swordsman-mh9')?.popularity === '-5' && blk9('swordsman-mh9')?.resources === 'Amazing (backed by A.I.M. and Mephisto)'
       && blk9('klaw-mh9')?.popularity === '-2', read9);
+    check('MH9: the Super-Adaptoid\'s, Nick Fury\'s and the Mad Thinker\'s first identity lines as printed, no bar or digit for an I and no portrait speck (speck_lines)',
+      ver9('super-adaptoid-mh9')?.identity[0] === 'A.I.M. criminal android'
+      && ver9('nick-fury-mh9')?.identity[0] === 'Executive director of S.H.I.E.L.D.'
+      && ver9('mad-thinker-mh9')?.identity[0] === 'Real name unknown',
+      ['super-adaptoid-mh9', 'nick-fury-mh9', 'mad-thinker-mh9'].map((id) => ver9(id)?.identity[0]).join(' | '));
+    check('MH9: 94 powers, 26 of them linked to the UPB',
+      mh9.flatMap((c) => c.versions[0].powers).length === 94 && mh9.flatMap((c) => c.versions[0].powers).filter((p) => p.upb).length === 26);
+    const book9 = data.npcs.books.find((b) => b.slug === 'mh9');
+    check('MH9: the book reads Adventure 4-40 and no cover panel, and a card cites its Adventure page',
+      JSON.stringify([book9?.part, book9?.pages, book9?.panels]) === '["Adventure",[4,40],[]]'
+      && tagline(bookNpc({ character: 'a-i-m-soldiers-mh9' }).snapshot).startsWith('MH9 Gates of What If, Adventure p.4;')
+      && tagline(bookNpc({ character: 'sub-mariner-mh9' }).snapshot).startsWith('MH9 Gates of What If, Adventure p.39;')
+      && mh9.filter((c) => c.id !== 'a-i-m-scientists-mh9').every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(book9)} ${tagline(bookNpc({ character: 'sub-mariner-mh9' }).snapshot)}`);
+    check('MH9: cards play their printed Health and Karma (Mephisto 1225/250, Victor 120/140, Captain America (Steve Rogers) 140/60, Spider-Man 160/110), and Mephisto his Popularity -100',
+      ['mephisto-mh9', 'victor-mh9', 'captain-america-steve-rogers-mh9', 'spider-man-mh9'].map(played9).join() === '1225/250,120/140,140/60,160/110'
+      && bookNpc({ character: 'mephisto-mh9' }).snapshot?.abilities.popularity.number === -100);
+    // The text verdicts move only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by the overrides'
+    // own fragments, never a word of the book in this file.
+    const sql9 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh9', 'book-text.sql');
+    if (!existsSync(sql9)) {
+      check(`MH9: skipped the text checks: no ${rel(sql9) || sql9}`, true);
+    } else {
+      const rows9 = [...readFileSync(sql9, 'utf8').matchAll(/VALUES \('([^']+)', 'mh9', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const odd9 = rows9.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key);
+      check('MH9 text: 190 rows over 43 entries (the Sound Objects and the Mad Thinker\'s Androids print none), and the only rows with an odd count of double quotes are the five whose one mark is an inch mark after a figure',
+        rows9.length === 190 && new Set(rows9.map((r) => r.key.split(':')[1])).size === 43
+        && odd9.join() === ['wasp-janet-pym-mh9:power:1', 'henry-pym-mh9:power:1', 'hawkeye-mh9:equipment',
+          'wasp-janet-van-dyne-mh9:power:1', 'wasp-janet-van-dyne-mh9:power:2'].map((k) => `mh9:${k}`).join()
+        && odd9.every((k) => /^[^"]*\d" [^"]*$/.test(rows9.find((r) => r.key === k).body)),
+        `${rows9.length} ${new Set(rows9.map((r) => r.key.split(':')[1])).size} ${odd9.join()}`);
+      const count9 = (row, s) => (rows9.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts9 = text9.map((o) => `${o.match.row} ${count9(o.match.row, o.printed)}/${count9(o.match.row, o.read)}`);
+      check('MH9 text: each of the five text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text9.length === 5 && verdicts9.every((v) => v.endsWith(' 1/0')), verdicts9.join(' | '));
+    }
   }
 
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
