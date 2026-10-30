@@ -775,7 +775,7 @@ def prose_card(book, slug, part, page, name, ranks, reader, spec=None):
     return entries
 
 
-def split_grid(stream, i, ranks, reader, slug, name):
+def split_grid(stream, i, ranks, reader, slug, name, prefer_text=None):
     """booklet.full_grid for a block whose rows go on at the top of the next
     column (registry `split_blocks`: MH9's Super-Adaptoid, printed 21, F to E
     at the foot of column 1 and R to Popularity at the top of column 2; Klaw,
@@ -817,6 +817,7 @@ def split_grid(stream, i, ranks, reader, slug, name):
             if at:
                 v = booklet.stat_rows(reader.read(line['pdf'], (at['x0'] - 10, at['y0'] - 12, rights[id(at)], at['y1'] + 12), psm='7')).get(label)
             v = v if good(v) else crop.get(label) or tsv.get(label)
+        v = booklet.prefer(label, v, tsv, prefer_text, good, '%s PDF %d' % (name, line['pdf']))
         (rows if label in booklet.ABILITY_LABELS else sec)[label] = v or ''
     abilities = []
     for n, label in enumerate(booklet.ABILITY_LABELS):
@@ -909,12 +910,20 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
         # which holds its Resources and Popularity (a box from the first line
         # to the last would run up the page)
         dash_at = i
+        # a value the block's crop misreads (registry `prefer_text` [part,
+        # page, card, label] and the value as printed where the TSV lacks it:
+        # MH9's Swordsman and Klaw, booklet.prefer); None for every other book
+        prefer_text = {p[3]: (p[4] if len(p) > 4 else None) for p in book.get('prefer_text', [])
+                       if cur and not cur['blocks'] and p[0] == part and p[1] == line['printed']
+                       and roster.norm(p[2]) == roster.norm(cur['header'])} or None
         if split and re.match(r'^\W{0,2}Fighting\s*[:;.]', line['text']):
-            block, nxt = split_grid(lines, i, ranks, reader, slug, cur['header'])
+            block, nxt = split_grid(lines, i, ranks, reader, slug, cur['header'], prefer_text)
             split_blocks.remove(split[0])
             dash_at = next(n for n in range(i, nxt) if lines[n]['col'] != line['col'])
         else:
-            block, nxt = booklet.full_grid(lines, i, ranks, reader)
+            block, nxt = booklet.full_grid(lines, i, ranks, reader, prefer_text)
+        if block and prefer_text:
+            block['prefer_text'] = sorted(prefer_text)
         if block and book.get('round_alternates'):
             round_alternates(block, lines[i:nxt + 1], ranks)
         if block:
@@ -1594,6 +1603,10 @@ def parse(book, slug):
         if not any(roster.norm(e['header']) == roster.norm(lv[2]) and lv[3].lower() in b.get('read_off_image', [])
                    for e in entries for b in e['blocks']):
             raise SystemExit('%s: lost_values names %s %s, found in no block' % (slug, lv[2], lv[3]))
+    for p in book.get('prefer_text', []):
+        if not any(roster.norm(e['header']) == roster.norm(p[2]) and p[3] in b.get('prefer_text', [])
+                   for e in entries for b in e['blocks']):
+            raise SystemExit('%s: prefer_text names %s %s, found in no block' % (slug, p[2], p[3]))
     # a header with no block that is no card, on its page (registry
     # `no_block_headers` [part, page, NAME]: MH9's divergent SUB-MARINER,
     # printed 22, whose text sends the reader to the Marvel Universe Namor's

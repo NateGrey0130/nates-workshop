@@ -500,14 +500,30 @@ def stat_rows(texts):
     return rows
 
 
-def full_grid(stream, i, ranks, reader):
+def prefer(label, v, tsv, prefer_text, good, where):
+    """A value the crop reads that is not the one printed (registry
+    `prefer_text`, coverpanels.read_cards: MH9's Swordsman, printed 21, whose
+    crop reads Popularity -5 as 5 and loses the second line of his Resources).
+    prefer_text is {label: value as printed, or None to take the TSV's}; a
+    label it does not name keeps v. An error where the rule changes nothing,
+    so a fixed reader shows the entry is no longer needed."""
+    if not prefer_text or label not in prefer_text:
+        return v
+    got = prefer_text[label] or tsv.get(label)
+    if not good(got) or got == v:
+        raise SystemExit('prefer_text: %s %s reads %r and the rule gives %r: no longer needed' % (where, label, v, got))
+    return got
+
+
+def full_grid(stream, i, ranks, reader, prefer_text=None):
     """If stream[i] is 'Fighting: ...', read the seven rows and the four values
     after them. The page's TSV places a value beside its label only when both
     box the same height, and the labels box tall on some pages (46-66 px
     against 26 on Cyclops's, printed 2), so the block is re-read from a crop of
     the page image at --psm 6, as roster.py's GridReader does for MA1's grids.
-    A value the crop cannot read is taken from the TSV. Returns (block, next
-    index)."""
+    A value the crop cannot read is taken from the TSV. prefer_text (None but
+    for a registry `prefer_text` entry, see prefer) names a value the crop
+    misreads. Returns (block, next index)."""
     line = stream[i]
     if not re.match(r'^\W{0,2}Fighting\s*[:;.]', line['text']):
         return None, i
@@ -535,6 +551,7 @@ def full_grid(stream, i, ranks, reader):
             if at:
                 v = stat_rows(reader.read(line['pdf'], (at['x0'] - 10, at['y0'] - 12, right, at['y1'] + 12), psm='7')).get(label)
             v = v if good(v) else crop.get(label) or tsv.get(label)
+        v = prefer(label, v, tsv, prefer_text, good, 'PDF %d' % line['pdf'])
         (rows if label in ABILITY_LABELS else sec)[label] = v or ''
     abilities = []
     for n, label in enumerate(ABILITY_LABELS):
