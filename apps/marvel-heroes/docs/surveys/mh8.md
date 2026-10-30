@@ -1,12 +1,10 @@
 # Survey: MH8 Fault Line (TSR6866)
 
-> **DRAFT.** Measured through *Which reader fits* (the trial parse); the
-> Marvel suite has not yet run on it. Nothing here is imported yet.
-
 Marvel Super Heroes adventure module, Kim Eastland, 1985. Registry entry:
 `scripts/msh/books.json` -> `mh8`. Measured 2026-10-29.
 
-**Rows citing this book:** none yet (no data has been built).
+**Rows citing this book:** 0 `msh_book_text` rows in production (no data
+imported yet; this is the survey).
 
 Everything here was measured and read on the page images.
 
