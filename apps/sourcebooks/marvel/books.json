@@ -291,11 +291,15 @@
    "title": "MX1 Nightmares of Futures Past",
    "code": "TSR6873",
    "status": "imported",
-   "date": null,
+   "date": "2026-10-30",
    "added": [
     [
      "Characters",
      17
+    ],
+    [
+     "Rows of the book's text",
+     95
     ]
    ],
    "total": 17

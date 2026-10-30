@@ -3,7 +3,8 @@
 Official Advanced Game Adventure for Marvel Super Heroes, Steve Winter, 1987.
 Registry entry: `scripts/msh/books.json` -> `mx1`. Measured 2026-10-30.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
+**Rows citing this book:** 95 `msh_book_text` rows over 16 character entries
+in production (`DB_MARVEL`, read back 2026-10-30).
 
 Everything here was measured and read on the page images.
 
