@@ -2793,7 +2793,7 @@
         {"part": "Adventure Book", "page": 12, "names": ["Tyrannosaur"]},
         {"part": "Adventure Book", "page": 21, "names": ["Hoplites"]},
         {"part": "Adventure Book", "page": 24, "names": ["Cavemen"]},
-        {"part": "Adventure Book", "page": 28, "names": ["\"Faro\" John Hobart"]},
+        {"part": "Adventure Book", "page": 28, "names": ["\"Faro\" John Hobart"], "runs_on": [29]},
         {"part": "Adventure Book", "page": 29, "names": ["Average Rifleman", "Average Mounted Desperado"]},
         {"part": "Adventure Book", "page": 33, "names": ["Khan's Champion"]},
         {"part": "Adventure Book", "page": 36, "names": ["Twain Android"]}
@@ -2881,7 +2881,11 @@
         ["Adventure Book", 36, "Body Armor"],
         ["Adventure Book", 36, "Radio Communication"]
       ],
-      "indented_power_heads_note": "TODO"
+      "indented_power_heads_note": "TODO",
+      "opponent_section_labels": {"ROLE PLAYING NOTES": "notes"},
+      "opponent_section_labels_note": "{run-in label: section}, read in the chapters' blocks (opponent mode) alone, where a run-in that opens no section is the chapter resuming and ends the entry. The Hobart Gang's three blocks (printed 28-29) print Role Playing Notes: as a bold run-in with no hyphen, raised to capitals by title_case_labels; roster.SECTION has no such label, so all three lost their notes. Read as notes. The Western Heroes' ROLE-PLAYING NOTES (subhead_labels, printed 52-63) are card pages and not affected. Read on the page images of printed 28 and 29, 2026-10-30.",
+      "opponent_indented_paragraphs": [["Adventure Book", 28, "\"Faro\" John Hobart"]],
+      "opponent_indented_paragraphs_note": "[part, printed page, header]: an opponent entry whose own second paragraphs are set indented like the chapter's, so an indented line after a sentence's end does not end it (the entry ends at the next header or at a run-in that opens no section). Hobart (printed 28, column 3) indents the second paragraph of his Talents and of his Background, and lost everything from the first. His text then runs on to printed 29, column 1, through his Role Playing Notes, above Average Rifleman (2): his opponent's runs_on [29] reads that page too and leaves the entries that start on it to the page 29 opponent. Read on the page images of printed 28 and 29, 2026-10-30. Each must be found once, or the build stops."
     }
   }
 }

@@ -559,7 +559,7 @@ def parse(slug):
     return book, stream, entries
 
 
-def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
+def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=None, run_on=()):
     """The book's entries from one stream. With opponent set, the stream is an
     adventure's page with a character statted in its prose (ME1's chapters): an
     entry is read from its header through its grid and powers, and ends where
@@ -567,8 +567,12 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
     is not one of the entry's sections - after which lines are dropped until
     the next header. `grid` reads a grid at a Health line, as grid_at does; a
     book that sets its rows another way passes its own (MA4: codegrids.py).
-    `ranges` is rank_ranges(book), for a book whose check takes a rank's range."""
+    `ranges` is rank_ranges(book), for a book whose check takes a rank's range.
+    `labels` (opponent mode only) maps more run-in labels to sections, and
+    `run_on` names entries, as (first page, header), whose own paragraphs are
+    set indented, so an indent does not end them (MT2, gridbooks.parse)."""
     grid = grid or grid_at
+    labels = labels or {}
     entries, cur = [], None
 
     def start(kind, name, line):
@@ -649,9 +653,11 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
             # a paragraph indented right under a one-line grid (ME2's chapters,
             # gridbooks.line_grids) is the chapter again: those grids end on
             # "Karma: 56", not on a sentence
-            resumes = (r and line['x0'] - line['left'] < 40 and not section_of(r.group(1).strip())) or (
+            resumes = (r and line['x0'] - line['left'] < 40
+                       and not (section_of(r.group(1).strip()) or labels.get(r.group(1).strip()))) or (
                 line['x0'] - line['left'] >= 25 and (prev_text.endswith(('.', '!', '?', '"', '\u201d'))
-                                                     or (i and stream[i - 1].get('line_grid'))))
+                                                     or (i and stream[i - 1].get('line_grid')))
+                and (cur['pages'][0], cur['header']) not in run_on)
             # ...but not at a power the registry says is set indented (MT2's
             # indented_power_heads, gridbooks.stream_of)
             if resumes and not line.get('indented_head'):
@@ -661,7 +667,7 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
         add_page(line)
         if m and line['x0'] - line['left'] < 40:
             label = m.group(1).strip()
-            key = section_of(label)
+            key = section_of(label) or (opponent and labels.get(label))
             if key:
                 cur['_sec'] = key
                 cur['sections'].setdefault(key, [])

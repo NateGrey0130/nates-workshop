@@ -546,23 +546,49 @@ def parse(book, slug):
     for r in book['character_ranges']:
         s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
         s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled))
-        streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards)), False))
+        streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards)), False, ()))
     for o in book['opponents']:
         s = stream_of(book, slug, o['part'], o['page'], o['page'])
         # MX1: an opponent's text that runs on past the art of the next page
         # (Oliver Pierce, printed 28 to 30) reads the pages it names too
         for page in o.get('continues', []):
             s += stream_of(book, slug, o['part'], page, page)
+        # MT2 (an opponent's `runs_on`): an opponent's text that runs on to
+        # the next page, where another opponent of the registry starts (Hobart,
+        # printed 28, into 29): that page is read too, and the entries that
+        # start on it are left to its own opponent
+        for page in o.get('runs_on', []):
+            s += stream_of(book, slug, o['part'], page, page)
         s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled))
         mark_headers(s, cards)
-        streams.append((s, True))
+        streams.append((s, True, tuple(o.get('runs_on', []))))
     stream, entries = [], []
     code_rows, end_at_p = bool(book.get('code_rows')), bool(book.get('grids_end_at_p'))
     read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p)) if code_rows or end_at_p else grid
     unlabelled = [0]
-    for s, opponent in streams:
-        stream += s
-        got = roster.read_entries(s, reader, opponent=opponent, grid=read_grid, ranges=ranges)
+    # MT2 (registry opponent_section_labels {label: section}): a run-in that
+    # opens a section in a chapter's block and in no other book (ROLE PLAYING
+    # NOTES, printed 28-29), read as that section in opponent mode alone, where
+    # a run-in that is no section ends the entry. MT2 (registry
+    # opponent_indented_paragraphs [part, page, header]): an opponent whose
+    # own second paragraphs are set indented (Hobart's Talents and Background,
+    # printed 28), so an indent after a sentence does not end it
+    labels = book.get('opponent_section_labels') or {}
+    run_on = book.get('opponent_indented_paragraphs', [])
+    found = collections.Counter()
+    for s, opponent, runs_on in streams:
+        stream += [l for l in s if l['printed'] not in runs_on]
+        part = s[0]['part']
+        got = roster.read_entries(s, reader, opponent=opponent, grid=read_grid, ranges=ranges, labels=labels,
+                                  run_on={(page, head) for p, page, head in run_on if p == part} if opponent else ())
+        if runs_on:
+            got = [e for e in got if e['pages'][0] not in runs_on]
+        for p, page, head in run_on:
+            found[(p, page, head)] += sum(1 for e in got if opponent and part == p and e['pages'][0] == page and e['header'] == head)
+        for lab in labels if opponent else ():
+            # each label must open a section somewhere, or it is stale
+            if any(l['text'].startswith(lab + ':') for l in s):
+                found[('label', lab)] += 1
         # ME3 (registry header_blocks [part, page, header as read]): a header
         # over a second grid of the entry above ("MEPHISTO (w/Galactus)",
         # Resource p.6) labels that grid, and what is under it is the entry's.
@@ -613,6 +639,13 @@ def parse(book, slug):
                 if ',' in (b['health'] or '') and b['check'].get('health') is None:
                     b['check'] = roster.check(dict(b, health=b['health'].replace(',', '')), ranges)
         entries += got
+    for p, page, head in run_on:
+        if found[(p, page, head)] != 1:
+            raise SystemExit('opponent_indented_paragraphs: %r is %d opponent entries of %s p.%d, not 1'
+                             % (head, found[(p, page, head)], p, page))
+    for lab in labels:
+        if not found[('label', lab)]:
+            raise SystemExit('opponent_section_labels: no opponent page prints %r' % (lab + ':'))
     for t in [t for t in book.get('teams', []) if len(t) > 3]:
         if not any(e['part'] == t[0] and e['pages'][0] == t[1] and e['header'] == t[3] for e in entries):
             raise SystemExit('teams: %s starts at %r, which is no entry on %s p.%d' % (t[2], t[3], t[0], t[1]))
