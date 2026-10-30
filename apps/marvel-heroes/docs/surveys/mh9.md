@@ -312,7 +312,125 @@ several rows.
 
 ## Which reader fits
 
-**Not finished.** This survey sets no `layout`.
+**`cover-panels` (`scripts/msh/coverpanels.py`), with eight things taught
+to it.** Measured, not argued: a scratch copy of `scripts/msh/` at
+`07d27bce` (this branch; its scripts are `origin/main` `caa78fe3`'s) with
+this entry plus `"layout": "cover-panels"`, run on a copy of the cache under
+its own `WORKSHOP_MSH_CACHE` (2026-10-30). The stock reader exits 1 at once:
+`SUPER-ADAPTOID's Known Powers: is keyed 'known_powers'`, because the
+book's section labels are not the series' (*Columns, labels and ranks*).
+
+With registry-only workarounds in the scratch copy (below) and three
+trial-only patches (items 1 to 3), it reads to the end: **46 entries, 44
+blocks, 39 pass, 5 fail, exit 1** on the checklist. The first run, before
+the speck, Karma and art-mark lines below, passed 37. Of the five that
+fail, three are the misprints (*Stat blocks*: Captain America (Jeffrey
+Mace), Henry Pym, Valor), one is the A.I.M. scientists' `Var` (R and I
+read as unread; decision 6) and one is the Super-Adaptoid (item 7). Klaw's
+and Johnny Storm's blocks pass only because nothing past their column's
+foot is read (item 7). The A.I.M. soldiers' repeat (printed 20) is read
+and checked against printed 4's, not an entry. 93 powers across 30
+entries.
+
+What the stock reader misses that the registry settles, each with its page
+and cause (no reader change):
+
+- **`section_keys`**: Known Powers to powers, Equipment/Possessions to
+  equipment, and Personality and Background and personality both to
+  background, since the reader has no personality key.
+- **`opponent_names: "title"`**, with all 11 grids named in
+  `unnamed_grids` (printed 4, 7, 8, 10 twice, 20 four times, 22, 27); the
+  A.I.M. soldiers' second is the repeat (decision 3).
+- **`cut_grids`** for the two grids set inside a card: the Sound Objects
+  in Klaw's (printed 22) and the androids in the Mad Thinker's (printed
+  27).
+- **`code_row_letters`** (MH6's field): the Demons' letter row (printed 8)
+  reads as `F A Ss E R | Pp`, so the columns come from the code row.
+- **`lost_headers`** for the Swordsman (printed 21), the Skrulls (24) and
+  the Mad Thinker (27): each header reads below confidence 45 (art beside
+  it, or the trademark sign read as a quote mark), and the Fighting row is
+  four lines under it, past the window of three.
+- **`drop_lines`**, 29 of them: the art captions in header type (*Shapes
+  the parser must accept*) and the second lines of two-line captions, and
+  the CHAPTER N subheads of printed 21-25. Seven need a y (item 2).
+- **`not_characters`** for five banners and subheads: New PC Heroes, Marvel Universe, PC Heroes, The Fantastic
+  Four, The Avengers.
+- **`cards` reads "The Thing" for printed 37**, as the header prints it;
+  `Thing` there leaves the checklist name unfound and the entry on no
+  checklist (decision 10 drops the The on the card).
+- **`speck_lines`**, 13 of them:
+  - the Swordsman's Health (printed 21): a speck before the value, read as
+    a dash, which `booklet.value()` reads as nothing; once cleared, his
+    Health of 70 holds;
+  - **`Karma` with no colon** on Mephisto's block (printed 29) and all nine
+    of printed 36-39: `booklet.STAT_LINE` needs a colon or stop, so
+    `full_grid`'s row loop ends at Karma and Karma, Resources and
+    Popularity are lost silently (the check skips a None). Ten
+    `speck_lines` add the colon; then nine of the ten read K, R and P and
+    pass, the tenth (Johnny Storm) waiting on item 7. Loosening
+    `STAT_LINE` instead would change it for every booklet book;
+  - two marks of the Mad Thinker's portrait (printed 27), right of his
+    Intuition and Psyche values and read after the rank word, which
+    `parse_rank` takes whole and `marked_ranks` strips only in front.
+- **`powers_prose: ["Valor"]`**: her Known Powers (printed 29) is a
+  paragraph with no run-in head (her powers are her armor's), over her
+  four-code FASE row (decision 7).
+- **Overrides**: the four misprinted values as `misprint` (decision 9), the
+  Super-Adaptoid's Health of 150 as `as_printed`, and the scientists' `Var`
+  as `as_printed` (decision 6), unless the parser row prefers to count
+  `Var` as printed the way the block check already counts a printed dash.
+
+What the reader must learn, all in `coverpanels.py` behind the registry,
+with MH1-8's `roster.json`, `book-text.sql` and `npcs.json` rows proved
+byte-identical before and after. Eight things:
+
+1. **The page foot.** Text runs below `booklet.stream_of`'s hard-coded
+   95.5% of the height on 36 of 40 booklet pages, and the folios sit at
+   about 97.8%. `panel_foot` restores the foot of a panel only. Without it
+   the Super-Adaptoid loses its Endurance. Trial patch: a registry foot of
+   0.977 in `stream_of`, which restored the lost lines.
+2. **`drop_lines` with a y.** The captions are set in the header's type
+   (22-28 px high against 31-37 for headers) and some names stand twice on
+   a page, a caption and a header (the Swordsman and Attuma on printed 21,
+   Captain America on 23, Nick Fury and Henry Pym on 25, Flare on 34, the
+   Human Torch on 37). Trial patch: an optional fourth field, the line's y,
+   matched within 6 px.
+3. **A `cut_grids` skip that stops at a colon run-in head.** The skip
+   after a cut grid runs on to the next power or section head; the Mad
+   Thinker's RADIO LINK: (printed 27) is neither, so it joins the
+   androids' grid. Trial patch: stop at a colon head too.
+4. **Names printed more than once** (Captain America three times, the
+   Human Torch and the Wasp twice): the checklist fails (`CHECKLIST NAME
+   IN 3 ENTRIES, not 1`) until each card is named by its page (decision 4).
+5. **A card whose only block is a one-line grid.** The Skrulls (printed 24)
+   end with no block (`ENTRY WITH NO BLOCK: SKRULLS`, and the name in no
+   entry).
+6. **A header with no block** that is not a card: the divergent
+   Sub-Mariner (printed 22; decision 5), now `ENTRY WITH NO BLOCK`.
+7. **A block that changes column mid-grid.** The Super-Adaptoid (printed
+   21: F to E at the foot of column 1, R to Popularity at the top of column
+   2), Klaw (22: F to P in column 2, Health to Popularity in column 3) and
+   the Human Torch (Johnny Storm) (37: the same as Klaw's), confirmed on
+   the render of printed 22. `booklet.full_grid`'s row loop stops at the
+   column change and its crop is one column wide, so the rest is lost and
+   the stat lines fall into the card's prose (`HEALTH None` for all
+   three). `moves` cannot help (a moved line keeps its column), and
+   `lost_values` could set Klaw's and Johnny's four values but not the
+   Super-Adaptoid's R, I and P, and leaves the lines in the prose: not
+   recommended. Once read, the Super-Adaptoid's Health needs its
+   `as_printed` (above).
+8. **A value that wraps.** The Swordsman's Resources (printed 21) runs
+   onto a second line, which ends `full_grid`'s loop, so his Popularity
+   (-5) is lost silently into the prose. A `drop_lines` on the wrap would
+   cut the Resources note, so it is the reader's.
+
+The other readers do not fit, for MH1-8's reasons (mh4.md, *Which reader
+fits*): the blocks print rank words and no ability numbers. That this
+book's cards are on booklet pages and not on the cover's panels changes
+nothing: `cover-panels` reads booklet pages through `character_ranges`.
+
+This survey sets no `layout`, as MH1-8's did not: that is the parser's
+choice.
 
 ## Decisions this survey leaves open
 
