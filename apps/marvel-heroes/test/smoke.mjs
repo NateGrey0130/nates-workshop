@@ -2550,7 +2550,8 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   check('Karma = R+I+P on every block, or its override records it as printed',
     karma.length === 0, karma.map(({ c, b }) => `${c.id} ${b.karma}`).join(', '));
   // A book whose registry sets rank_ranges (ME2, Nate 2026-10-21; ME3, its
-  // survey's decision 3, 2026-10-30) means a
+  // survey's decision 3, 2026-10-30; MT2, its survey's decision 8,
+  // 2026-10-30) means a
   // number anywhere inside its rank's range (ranks.json min and max), as
   // scripts/msh/roster.py's check takes it; every other book, the standard.
   const ranged = new Set(Object.entries(JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'books.json'), 'utf8')).books)
@@ -2563,7 +2564,7 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const codes = blocks.filter(({ c, b }) => b.abilities.some((a, i) => !agrees(c, a) && !known(b, 'FASERIP'[i]) && !unprinted(b, a) && !beyond(b, a)));
   check('every number agrees with its rank code (inside its range, for a book whose registry sets rank_ranges), or its override names the misprint',
     codes.length === 0, codes.map(({ c }) => c.id).join(', '));
-  check(`only ME2's and ME3's registry entries set rank_ranges (${[...ranged]})`, [...ranged].join() === 'me2,me3', [...ranged].join());
+  check(`only ME2's, ME3's and MT2's registry entries set rank_ranges (${[...ranged]})`, [...ranged].join() === 'me2,me3,mt2', [...ranged].join());
   const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
   check('each misprint keeps both the printed value and the corrected one',
     misprints.length > 0 && misprints.every(({ b }) => 'printed' in b.override && 'corrected' in b.override), String(misprints.length));
