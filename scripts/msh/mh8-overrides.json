@@ -1,0 +1,23 @@
+{
+  "about": [
+    "Hand decisions about MH8 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card; page is the printed Adventure page",
+    "  verdict   misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the ranks give",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 13, "header": "Living Laser"}, "verdict": "misprint", "field": "karma",
+     "printed": 32, "corrected": 18, "checked": "2026-10-30",
+     "note": "Printed 13, the card: Reason Typical, Intuition Typical, Psyche Typical, so R+I+P is 6 + 6 + 6 = 18, and the card prints Karma 32 (read on the page image). Health 50 = Gd 10 + Gd 10 + Gd 10 + Ex 20 as printed. Survey mh8.md decision 3 (recommended, applied unanswered): a misprint override with both values (not taken: as_printed)."},
+    {"match": {"page": 13, "header": "Juggernaut"}, "verdict": "misprint", "field": "karma",
+     "printed": 30, "corrected": 20, "checked": "2026-10-30",
+     "note": "Printed 13, the card: Reason Typical, Intuition Poor, Psyche Good, so R+I+P is 6 + 4 + 10 = 20, and the card prints Karma 30 (read on the page image). Health 234 = Rm 30 + Pr 4 + Un 100 + Un 100 as printed. Survey mh8.md decision 3 (recommended, applied unanswered)."},
+    {"match": {"page": 14, "header": "Punks"}, "verdict": "misprint", "field": "karma",
+     "printed": 1216, "corrected": 12, "checked": "2026-10-30",
+     "note": "Printed 14, the CROOKS card, one block in two value columns (registry column_blocks): its Karma row prints one number, 1216, in the Punks' column and nothing in the Hoods' (read on the page image). Punks: Reason Poor, Intuition Poor, Psyche Poor, so R+I+P is 4 + 4 + 4 = 12, the first two digits; Health 28 = Gd 10 + Ty 6 + Ty 6 + Ty 6 as printed. The two values set together, not a wrong value. Survey mh8.md decision 4 (recommended, applied unanswered): a card each, each with its own Karma."},
+    {"match": {"page": 14, "header": "Hoods"}, "verdict": "misprint", "field": "karma",
+     "printed": 1216, "corrected": 16, "checked": "2026-10-30",
+     "note": "Printed 14, the CROOKS card's Hoods' column, which prints no Karma of its own: the row's one number, 1216, is set in the Punks' column (read on the page image), so the block reads no Karma. Hoods: Reason Typical, Intuition Typical, Psyche Poor, so R+I+P is 6 + 6 + 4 = 16, the last two digits; Health 50 = Ex 20 + Gd 10 + Gd 10 + Gd 10 as printed. Survey mh8.md decision 4 (recommended, applied unanswered)."}
+  ]
+}
