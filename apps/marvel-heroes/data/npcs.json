@@ -73,6 +73,11 @@
    "book": "MH7 The Last Resort",
    "code": "TSR6864",
    "pages": "Adventure 12-16; Inside front cover; Inside back cover"
+  },
+  {
+   "book": "MH8 Fault Line",
+   "code": "TSR6866",
+   "pages": "Adventure 12-16"
   }
  ],
  "books": [
@@ -276,6 +281,17 @@
     "Inside front cover",
     "Inside back cover"
    ]
+  },
+  {
+   "slug": "mh8",
+   "short": "MH8",
+   "title": "MH8 Fault Line",
+   "pages": [
+    12,
+    16
+   ],
+   "part": "Adventure",
+   "panels": []
   }
  ],
  "teams": [
@@ -340,7 +356,8 @@
   "MH5 Cat's Paw",
   "Alpha Flight",
   "MH6 Thunder Over Jotunheim",
-  "MH7 The Last Resort"
+  "MH7 The Last Resort",
+  "MH8 Fault Line"
  ],
  "characters": [
   {
@@ -61004,6 +61021,1342 @@
    ],
    "appearances": [],
    "book": "mh7"
+  },
+  {
+   "id": "grim-reaper-mh8",
+   "name": "Grim Reaper",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "grim-reaper-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Eric Williams; criminal hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "18",
+       "resources": "EXCELLENT",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Scythe"
+      },
+      {
+       "name": "Power Blaster"
+      },
+      {
+       "name": "Gliding",
+       "upb": "T7"
+      },
+      {
+       "name": "Buzzsaw"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Paralyzing Touch"
+      },
+      {
+       "name": "Knock-Out Gas"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "mastermind-mh8",
+   "name": "Mastermind",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "mastermind-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Jason Wyngarde",
+      "Mutant; former member of the Brotherhood of Evil Mutants; former member of the Hellfire Club"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "rank_only": true,
+       "health": "44",
+       "karma": "120",
+       "resources": "GOOD",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Illusion Generation",
+       "upb": "I2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "thunderball-mh8",
+   "name": "Thunderball",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "thunderball-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Dr. Elliot Franklin, physicist",
+      "criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "juggernaut-mh8",
+   "name": "Juggernaut",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "juggernaut-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Cain Marko",
+      "Altered Human; partner of Black Tom"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "234",
+       "karma": "30",
+       "resources": "TYPICAL",
+       "popularity": "-30",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 30,
+        "corrected": 20
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "living-laser-mh8",
+   "name": "Living Laser",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "living-laser-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Arthur Parks; ex-scientist, criminal",
+      "altered human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": "32",
+       "resources": "POOR",
+       "popularity": "6",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 32,
+        "corrected": 18
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Laser Beams"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Illusions",
+       "upb": "I2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "swordsman-mh8",
+   "name": "Swordsman",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "swordsman-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Real name unknown; circus performer",
+      "human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "30"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "equipment",
+      "important-people",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "frankie-the-snitch-mh8",
+   "name": "Frankie the Snitch",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "frankie-the-snitch-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Frank Harlon, informant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "22",
+       "karma": "40",
+       "resources": "TYPICAL",
+       "popularity": "8"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "hoods-mh8",
+   "name": "Hoods",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "hoods-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": null,
+       "resources": "EXCELLENT",
+       "popularity": "TYPICAL",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 1216,
+        "corrected": 16
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "joseph-merrir-mh8",
+   "name": "Joseph Merrir",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "joseph-merrir-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "24",
+       "resources": "REMARKABLE",
+       "popularity": "15"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "punks-mh8",
+   "name": "Punks",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "punks-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "1216",
+       "resources": "POOR",
+       "popularity": "5",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 1216,
+        "corrected": 12
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "black-knight-mh8",
+   "name": "Black Knight",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "black-knight-mh8",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Dane Whitman; scientist",
+      "hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "22",
+       "resources": "EXCELLENT",
+       "popularity": "60"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleport",
+       "upb": "T16"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Ebony Sword"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "captain-america-mh8",
+   "name": "Captain America",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-america-mh8",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Steve Rogers; freelance illustrator",
+      "altered human"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": "EXCELLENT",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shield"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "spider-man-mh8",
+   "name": "Spider-Man",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "spider-man-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Peter Parker",
+      "Photographer, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "160",
+       "karma": "110",
+       "resources": "POOR",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Spider-Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      },
+      {
+       "name": "Spider Tracers"
+      },
+      {
+       "name": "Spider Beacon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "police-mh8",
+   "name": "Police",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "police-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "New York's Finest"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": null,
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "swat-team-member-mh8",
+   "name": "SWAT Team Member",
+   "team": "MH8 Fault Line",
+   "versions": [
+    {
+     "id": "swat-team-member-mh8",
+     "label": null,
+     "team": "MH8 Fault Line",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Special Weapons & Tactics officer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": null,
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
+  },
+  {
+   "id": "wasp-mh8",
+   "name": "Wasp",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "wasp-mh8",
+     "label": null,
+     "team": "Avengers",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Avengers founder",
+      "Janet Van Dyne; heiress hi-tech wonder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "50",
+       "resources": "EXCELLENT",
+       "popularity": "65"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wasp Sting"
+      },
+      {
+       "name": "Insect Communication/control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh8"
   }
  ]
 }

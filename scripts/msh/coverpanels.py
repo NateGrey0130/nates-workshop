@@ -939,10 +939,14 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             mine = [p for p in cur['powers'] if (p.get('section') or 'powers') == sec]
             pm = booklet.POWER_HEAD.match(text) or COLON_HEAD.match(text) or WHOLE_HEAD.match(text) or MIXED_HEAD.match(text)
             head = [h for h in heads if h[1] == line['printed'] and re.match(re.escape(h[2]) + r'\s', text)]
+            # a head the registry names that a head pattern takes too (MH8's
+            # Spider-Man, printed 15: SPIDER-SENSE. after a power whose text
+            # the book ends with no full stop, "... an Agility FEAT roll") is
+            # kept, and opens its power below whatever the line before it ends
+            # with. No earlier book's runin_heads names such a head: each would
+            # have stopped the build below as found as no power.
             if head and not pm:
                 pm = re.match('(' + re.escape(head[0][2]) + r')\s+(.*)$', text)
-            else:
-                head = []
             # a run-in inside a power's text, no power of its own (registry
             # `inner_runins`: MH5's Melter, whose MELTING DEVICE. prints its
             # four settings as METAL:, STONE:, WOOD: and FLESH:)
@@ -959,7 +963,7 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             # a name in capitals inside the Powers: prose ("... such as
             # ANNIHILUS and / NICHOLAS SCRATCH. These powers", MH3's Franklin
             # Richards) is no power: a first power opens the section or a line
-            if pm and (not mine and not cur['sections'][sec] or prev.endswith(SENTENCE_END) or line.get('after_sets')):
+            if pm and (not mine and not cur['sections'][sec] or prev.endswith(SENTENCE_END) or line.get('after_sets') or head):
                 power = {'name': booklet.power_name(pm.group(1)), 'text': []}
                 if sec != 'powers':
                     power['section'] = sec

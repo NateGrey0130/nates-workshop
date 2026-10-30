@@ -1322,6 +1322,97 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MH8 is laid out as MH1-MH7 are (scripts/msh/coverpanels.py,
+  // mh8-overrides.json), with the survey's decisions applied as it recommends
+  // (mh8.md; Nate 2026-10-29). Every card is in the Adventure Book (printed
+  // 12-16) and none on a cover panel. The registry's runin_heads,
+  // identity_to_block and card_names each change what is built, so each is
+  // pinned here by what it changes.
+  if (data.npcs.characters.some((c) => c.book === 'mh8')) {
+    const mh8 = data.npcs.characters.filter((c) => c.book === 'mh8');
+    const blocks8 = mh8.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blk8 = (id) => mh8.find((c) => c.id === id)?.versions[0].blocks[0];
+    const ver8 = (id) => mh8.find((c) => c.id === id)?.versions[0];
+    const powers8 = (id) => ver8(id)?.powers.map((p) => p.name).join();
+    const team8 = (t) => mh8.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const played8 = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MH8: 16 characters, each id ending -mh8 with one block, three as Avengers and the rest (Spider-Man too) under the book\'s title, and no name starting The',
+      mh8.length === 16 && mh8.every((c) => c.id.endsWith('-mh8') && c.versions.length === 1) && blocks8.length === 16
+      && team8('Avengers') === 'Black Knight,Captain America,Wasp'
+      && mh8.filter((c) => c.team === 'MH8 Fault Line').length === 13 && mh8.find((c) => c.id === 'spider-man-mh8')?.team === 'MH8 Fault Line'
+      && !mh8.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh8.length} ${[...new Set(mh8.map((c) => c.team))]}`);
+    check('MH8: the cards sort by Adventure page, 12 to 16, the Crooks\' two cards on p.14',
+      mh8.map((c) => c.id).join() === ['grim-reaper', 'mastermind', 'thunderball', 'juggernaut', 'living-laser', 'swordsman', 'frankie-the-snitch',
+        'hoods', 'joseph-merrir', 'punks', 'black-knight', 'captain-america', 'spider-man', 'police', 'swat-team-member', 'wasp'].map((id) => `${id}-mh8`).join(),
+      mh8.map((c) => c.id).join());
+    const fixes8 = ['living-laser-mh8', 'juggernaut-mh8', 'punks-mh8', 'hoods-mh8'].map((id) => {
+      const o = blk8(id)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${o?.printed}>${o?.corrected} block ${blk8(id)?.karma} plays ${played8(id)}`;
+    });
+    check('MH8: the four misprints keep the printed Karma and play the ranks\' (the Living Laser 32 as 18, the Juggernaut 30 as 20, the Crooks\' welded 1216 as the Punks\' 12 and the Hoods\' 16), and no other block carries an override',
+      fixes8.join(' | ') === [
+        'living-laser-mh8 misprint karma 32>18 block 32 plays 50/18',
+        'juggernaut-mh8 misprint karma 30>20 block 30 plays 234/20',
+        'punks-mh8 misprint karma 1216>12 block 1216 plays 28/12',
+        'hoods-mh8 misprint karma 1216>16 block null plays 50/16',
+      ].join(' | ')
+      && blocks8.filter(({ b }) => b.override).length === 4,
+      fixes8.join(' | '));
+    const ov8 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh8-overrides.json'), 'utf8')).overrides;
+    const text8 = ov8.filter((o) => o.verdict === 'text');
+    check('MH8: six text verdicts, the Juggernaut\'s notes one, the Wasp\'s Flight two and the SWAT Team Member\'s notes three, and no other verdict but the four misprints',
+      text8.map((o) => o.match.row).join() === ['juggernaut-mh8:notes', 'wasp-mh8:power:2', 'wasp-mh8:power:2',
+        'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes'].map((k) => `mh8:${k}`).join()
+      && ov8.length === 10 && ov8.filter((o) => o.verdict === 'misprint').length === 4,
+      JSON.stringify(ov8.map((o) => [o.verdict, o.match])));
+    check('MH8: the Police and the SWAT Team Member print no Karma and play none, and the Hoods\' Popularity, printed as a rank word, plays no number',
+      played8('police-mh8') === '36/null' && played8('swat-team-member-mh8') === '50/null'
+      && blk8('police-mh8')?.karma === null && blk8('swat-team-member-mh8')?.karma === null
+      && blk8('hoods-mh8')?.popularity === 'TYPICAL' && bookNpc({ character: 'hoods-mh8' }).snapshot?.abilities.popularity.number === null,
+      `${played8('police-mh8')} ${played8('swat-team-member-mh8')} ${blk8('hoods-mh8')?.popularity}`);
+    check('MH8: Spider-Man\'s SPIDER-SENSE is a power of its own (runin_heads), not the end of Wall-Crawling',
+      powers8('spider-man-mh8') === 'Wall-Crawling,Spider-Sense,Web-Shooters,Spider Tracers,Spider Beacon', powers8('spider-man-mh8'));
+    check('MH8: Mastermind\'s and the Wasp\'s identities are two lines each, joined where the page wraps them (identity_to_block), and neither card has a prose row',
+      ver8('mastermind-mh8')?.identity.length === 2 && ver8('wasp-mh8')?.identity.length === 2
+      && ver8('mastermind-mh8').identity[0] === 'Jason Wyngarde'
+      && !ver8('mastermind-mh8').text.includes('prose') && !ver8('wasp-mh8').text.includes('prose'),
+      `${JSON.stringify(ver8('mastermind-mh8')?.identity)} ${JSON.stringify(ver8('wasp-mh8')?.identity)} ${ver8('mastermind-mh8')?.text} ${ver8('wasp-mh8')?.text}`);
+    check('MH8: the SWAT Team Member is named with SWAT in capitals, as printed (card_names)',
+      mh8.find((c) => c.id === 'swat-team-member-mh8')?.name === 'SWAT Team Member', mh8.find((c) => c.id === 'swat-team-member-mh8')?.name);
+    check('MH8: 28 powers, 9 of them linked to the UPB',
+      mh8.flatMap((c) => c.versions[0].powers).length === 28 && mh8.flatMap((c) => c.versions[0].powers).filter((p) => p.upb).length === 9);
+    const book8 = data.npcs.books.find((b) => b.slug === 'mh8');
+    check('MH8: the book reads Adventure 12-16 and no cover panel, and a card cites its Adventure page',
+      JSON.stringify([book8?.part, book8?.pages, book8?.panels]) === '["Adventure",[12,16],[]]'
+      && tagline(bookNpc({ character: 'grim-reaper-mh8' }).snapshot).startsWith('MH8 Fault Line, Adventure p.12;')
+      && tagline(bookNpc({ character: 'wasp-mh8' }).snapshot).startsWith('MH8 Fault Line, Adventure p.16;')
+      && mh8.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(book8)} ${tagline(bookNpc({ character: 'wasp-mh8' }).snapshot)}`);
+    check('MH8: cards play their printed Health and Karma (the Grim Reaper 36/18, Mastermind 44/120, Captain America 140/60, Spider-Man 160/110), and the Juggernaut his Popularity -30',
+      ['grim-reaper-mh8', 'mastermind-mh8', 'captain-america-mh8', 'spider-man-mh8'].map(played8).join() === '36/18,44/120,140/60,160/110'
+      && bookNpc({ character: 'juggernaut-mh8' }).snapshot?.abilities.popularity.number === -30);
+    // The text verdicts move only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by the overrides'
+    // own fragments, never a word of the book in this file.
+    const sql8 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh8', 'book-text.sql');
+    if (!existsSync(sql8)) {
+      check(`MH8: skipped the text checks: no ${rel(sql8) || sql8}`, true);
+    } else {
+      const rows8 = [...readFileSync(sql8, 'utf8').matchAll(/VALUES \('([^']+)', 'mh8', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      check('MH8 text: 58 rows over 16 entries, Spider-Sense\'s among them, and no row with an odd count of double quotes',
+        rows8.length === 58 && new Set(rows8.map((r) => r.key.split(':')[1])).size === 16
+        && rows8.find((r) => r.key === 'mh8:spider-man-mh8:power:2')?.name === 'Spider-Sense'
+        && !rows8.some((r) => (r.body.match(/"/g) || []).length % 2),
+        `${rows8.length} ${new Set(rows8.map((r) => r.key.split(':')[1])).size}`);
+      const count8 = (row, s) => (rows8.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts8 = text8.map((o) => `${o.match.row} ${count8(o.match.row, o.printed)}/${count8(o.match.row, o.read)}`);
+      check('MH8 text: each of the six text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text8.length === 6 && verdicts8.every((v) => v.endsWith(' 1/0')), verdicts8.join(' | '));
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).

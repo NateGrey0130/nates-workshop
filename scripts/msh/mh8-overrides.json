@@ -4,6 +4,7 @@
     "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: a card; page is the printed Adventure page",
     "  verdict   misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the ranks give",
+    "            text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -18,6 +19,24 @@
      "note": "Printed 14, the CROOKS card, one block in two value columns (registry column_blocks): its Karma row prints one number, 1216, in the Punks' column and nothing in the Hoods' (read on the page image). Punks: Reason Poor, Intuition Poor, Psyche Poor, so R+I+P is 4 + 4 + 4 = 12, the first two digits; Health 28 = Gd 10 + Ty 6 + Ty 6 + Ty 6 as printed. The two values set together, not a wrong value. Survey mh8.md decision 4 (recommended, applied unanswered): a card each, each with its own Karma."},
     {"match": {"page": 14, "header": "Hoods"}, "verdict": "misprint", "field": "karma",
      "printed": 1216, "corrected": 16, "checked": "2026-10-30",
-     "note": "Printed 14, the CROOKS card's Hoods' column, which prints no Karma of its own: the row's one number, 1216, is set in the Punks' column (read on the page image), so the block reads no Karma. Hoods: Reason Typical, Intuition Typical, Psyche Poor, so R+I+P is 6 + 6 + 4 = 16, the last two digits; Health 50 = Ex 20 + Gd 10 + Gd 10 + Gd 10 as printed. Survey mh8.md decision 4 (recommended, applied unanswered)."}
+     "note": "Printed 14, the CROOKS card's Hoods' column, which prints no Karma of its own: the row's one number, 1216, is set in the Punks' column (read on the page image), so the block reads no Karma. Hoods: Reason Typical, Intuition Typical, Psyche Poor, so R+I+P is 6 + 6 + 4 = 16, the last two digits; Health 50 = Ex 20 + Gd 10 + Gd 10 + Gd 10 as printed. Survey mh8.md decision 4 (recommended, applied unanswered)."},
+    {"match": {"row": "mh8:juggernaut-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Wasp\"'s sting", "printed": "Wasp's sting",
+     "note": "Printed 13, column 3, Juggernaut's NOTE: the trademark sign after Wasp, before its 's, is read as a closing double quote, which left the row with an odd count of double quotes. The page prints the sign and no quote mark (seen on a 130 dpi crop of PDF 14); Cap's and Spidey's signs in the same line fold to nothing."},
+    {"match": {"row": "mh8:wasp-mh8:power:2"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "reaches '/2 inch", "printed": "reaches 1/2 inch",
+     "note": "Printed 16, column 1, the Wasp's FLIGHT.: the page prints the fraction one half, read as a single quote, a slash and a 2 (seen on a 130 dpi crop of PDF 17)."},
+    {"match": {"row": "mh8:wasp-mh8:power:2"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "about '/2 ounce", "printed": "about 1/2 ounce",
+     "note": "Printed 16, column 1, the Wasp's FLIGHT.: the second fraction one half in the same power, read the same way."},
+    {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Member Weapon Number Type  -  Rifle Rifle", "printed": "Member Number, Weapon Type: 1 Rifle 2 Rifle",
+     "note": "Printed 16, column 3, the SWAT Team Member's weapon table: a Member Number column (1 to 9, then Gunner) beside a Weapon Type column, each headed over two lines. The OCR reads the two heads across as one line, the numbers 1 to 9 as a dash and later as one string of letters, and the weapons in their printed order (seen on a 150 dpi crop of PDF 17). This and the next two verdicts put each number back before its weapon."},
+    {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Rifle Sub-Machine Gun Sub-Machine Gun OMDONOALWNM Shotgun", "printed": "Rifle 3 Sub-Machine Gun 4 Sub-Machine Gun 5 Shotgun",
+     "note": "Printed 16, column 3, the weapon table, members 3 to 5: the letters OMDONOALWNM are the number column read as one line."},
+    {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Shotgun Rifle Sub-Machine Gun Rifle LAW", "printed": "Shotgun 6 Rifle 7 Sub-Machine Gun 8 Rifle 9 LAW",
+     "note": "Printed 16, column 3, the weapon table, members 6 to 9; the tenth row, Gunner, is read as printed."}
   ]
 }

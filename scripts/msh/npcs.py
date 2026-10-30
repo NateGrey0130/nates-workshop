@@ -625,6 +625,24 @@ def main(slug_arg):
             prose = e['prose']
             # A roster-book entry of tiers alone (Kingpin's Organization) opens
             # with a sentence, not a name: that is prose too.
+            # A book whose reader keeps every line from the header to the block
+            # (registry identity_to_block) prints no opening paragraph there,
+            # only a name and a status set over more lines: MH8's Mastermind
+            # (printed 12) is his name over a status wrapped across three full
+            # lines, and the Wasp (printed 16) a role, then a name and status
+            # whose last line starts in lower case. A line goes on from the one
+            # before when that one is full (40 characters or more; MH8's
+            # unwrapped lines are 36 at most) or it starts in lower case, as
+            # the Codex joins them. Only an identity of three lines or more,
+            # and no earlier book sets the field.
+            if panels and book.get('identity_to_block') and len(identity) >= 3:
+                joined = []
+                for x in identity:
+                    if joined and (len(joined[-1]) >= 40 or x[:1].islower()):
+                        joined[-1] += ' ' + x
+                    else:
+                        joined.append(x)
+                identity = joined
             if len(identity) >= 3 or (rbook and identity and all(b.get('kind') == 'line' for b in e['blocks'])):
                 prose = ' '.join(e['identity']) + ' ' + prose
                 identity = []

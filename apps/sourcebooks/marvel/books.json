@@ -249,6 +249,24 @@
     ]
    ],
    "total": 14
+  },
+  {
+   "slug": "mh8",
+   "title": "MH8 Fault Line",
+   "code": "TSR6866",
+   "status": "imported",
+   "date": "2026-10-30",
+   "added": [
+    [
+     "Characters",
+     16
+    ],
+    [
+     "Rows of the book's text",
+     58
+    ]
+   ],
+   "total": 16
   }
  ]
 }
