@@ -1,9 +1,21 @@
 {
+  "about": [
+    "Hand decisions about MT2 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/mt2.md, Stat blocks; decision 7); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the Adventure Book, and the start of the entry's header",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
+    "  checked   the date the page image was read",
+    "A number inside its rank's range but not its standard (the Hobart Gang's, printed 28-29) needs no override: the registry's rank_ranges (scripts/msh/books.json, the mt2 entry) has the check take the range for this book alone (survey decision 8)."
+  ],
   "overrides": [
-    {"match": {"page": 6, "header": "Genghis Khan"}, "verdict": "misprint", "field": "A", "printed": "GD", "corrected": "TY",
-     "also": [{"field": "S", "printed": "GD", "corrected": "TY"}], "checked": "2026-10-30",
-     "note": "Printed A GD 6 and S GD 6 (printed 6, column 2): 6 is Typical's number, outside Good's range (8-15), and Health 52 = 20+6+6+20 agrees with the 6s, so the code is the misprint: TY for both. Survey mt2.md decision 7 (recommended, applied unanswered; Nate 2026-10-30), read on the page image."},
-    {"match": {"page": 33, "header": "Khan's Champion"}, "verdict": "misprint", "field": "karma", "printed": 10, "corrected": 14, "checked": "2026-10-30",
-     "note": "Printed Karma: 10 (printed 33, column 2, a one-line grid with no name line): R+I+P = 4+6+4 = 14 and every number agrees with its code, so the total is the misprint; Health 50 holds. Survey mt2.md decision 7 (recommended, applied unanswered; Nate 2026-10-30), read on the page image."}
+    {"match": {"page": 6, "header": "Genghis Khan"}, "verdict": "misprint", "field": "A",
+     "printed": {"number": 6, "code": "Gd"}, "corrected": {"number": 6, "code": "Ty"}, "checked": "2026-10-30",
+     "also": [{"verdict": "misprint", "field": "S", "printed": {"number": 6, "code": "Gd"}, "corrected": {"number": 6, "code": "Ty"}}],
+     "note": "Printed A GD 6 and S GD 6 (printed 6, column 2): 6 is Typical's number, outside Good's range (8-15), and Health 52 = 20 + 6 + 6 + 20 holds on the 6s, so the codes are the misprint. Survey decision 7."},
+    {"match": {"page": 33, "header": "Khan's Champion"}, "verdict": "misprint", "field": "karma",
+     "printed": 10, "corrected": 14, "checked": "2026-10-30",
+     "note": "Printed Karma: 10 (printed 33, column 2, a one-line grid with no name line): R + I + P = 4 + 6 + 4 = 14, and every number agrees with its code, so the total is the misprint; Health 50 = 10 + 10 + 10 + 20 holds. Survey decision 7."}
   ]
 }
