@@ -265,8 +265,13 @@ def stream(book, slug, part, first, last, split_at_rules):
         faint.setdefault(booklet.pdf_of(offsets(book), p, page), []).append(y)
     booklet.mend_fused = lambda _book, _slug, lines: lines
     booklet.rules = lambda b, pdf, height: sorted(orig_rules(b, pdf, height) + faint.get(pdf, []))
+    # a booklet whose text runs lower than booklet.stream_of's 95.5% (registry
+    # `page_foot`: MH9's, on 36 of its 40 pages, with the folios at about
+    # 97.8%; without it the Super-Adaptoid's Endurance row, printed 21, is
+    # lost). A folio is two digits, which stream_of drops as a mark
+    foot = {'foot': book['page_foot']} if book.get('page_foot') else {}
     try:
-        lines = booklet.stream_of(offsets(book), slug, part, first, last, split_at_rules)
+        lines = booklet.stream_of(offsets(book), slug, part, first, last, split_at_rules, **foot)
     finally:
         booklet.mend_fused, booklet.rules = orig, orig_rules
     if panel:
@@ -452,6 +457,14 @@ def mend(book, slug, part, first, last, out):
                    printed 16: "intuition: TYPICAL"), which booklet.STAT_LINE
                    does not take: the one line on the page opening with it
                    gets its capital back
+      joined_lines [part, page, line, next line]: a block's value that wraps
+                   onto a line of its own (MH9's Swordsman, printed 21:
+                   "Resources: Amazing (backed by A.I.M." / "and Mephisto)"),
+                   which ends booklet.full_grid's rows before Popularity: the
+                   two lines, one under the other in one column, made one
+    drop_lines takes an optional fourth field, the line's y0 within 6 px (MH9's
+    portrait captions, which print a card's name in its header's type on the
+    page that prints the header).
     Pages are printed pages, or null on a panel."""
     here = lambda p: p[0] == part and (p[1] is None or first <= p[1] <= last)
     for p, page, name, status in [d for d in book.get('status_headers', []) if here(d)]:
@@ -504,8 +517,20 @@ def mend(book, slug, part, first, last, out):
         if len(hits) != 1:
             raise SystemExit('%s: speck_lines finds %r %d times on %s p.%s, not once' % (slug, old, len(hits), part, page))
         out[hits[0]] = dict(out[hits[0]], text=new)
-    for p, page, text in [d for d in book.get('drop_lines', []) if here(d)]:
-        hits = [l for l in out if l['printed'] == page and l['text'].strip() == text]
+    for d in [d for d in book.get('joined_lines', []) if here(d)]:
+        p, page, head, rest = d
+        hits = [n for n, l in enumerate(out[:-1]) if l['printed'] == page and l['text'].strip() == head
+                and out[n + 1]['text'].strip() == rest and out[n + 1]['col'] == l['col']]
+        if len(hits) != 1:
+            raise SystemExit('%s: joined_lines finds %r over %r %d times on %s p.%s, not once' % (slug, head, rest, len(hits), part, page))
+        n = hits[0]
+        out[n:n + 2] = [dict(out[n], text=head + ' ' + rest, y1=out[n + 1]['y1'], words=out[n]['words'] + out[n + 1]['words'])]
+    for d in [d for d in book.get('drop_lines', []) if here(d)]:
+        # an optional fourth field, the line's y0 within 6 px (MH9: a card's
+        # header and its portrait's caption print one name on one page)
+        p, page, text = d[:3]
+        hits = [l for l in out if l['printed'] == page and l['text'].strip() == text
+                and (len(d) < 4 or abs(l['y0'] - d[3]) <= 6)]
         if len(hits) != 1:
             raise SystemExit('%s: drop_lines finds %r %d times on %s p.%s, not once' % (slug, text, len(hits), part, page))
         out.remove(hits[0])
@@ -750,6 +775,67 @@ def prose_card(book, slug, part, page, name, ranks, reader, spec=None):
     return entries
 
 
+def split_grid(stream, i, ranks, reader, slug, name):
+    """booklet.full_grid for a block whose rows go on at the top of the next
+    column (registry `split_blocks`: MH9's Super-Adaptoid, printed 21, F to E
+    at the foot of column 1 and R to Popularity at the top of column 2; Klaw,
+    printed 22, and the Human Torch, printed 37, F to P and then Health to
+    Popularity). full_grid's rows stop at the column's change and its crop is
+    one column wide, so the rest was lost into the card's prose. Here the rows
+    are read through one change of column, each column's run from a crop of
+    its own, and a value is chosen as full_grid chooses it. An error unless
+    the rows run on into a second column."""
+    line = stream[i]
+    segs, j = [[]], i
+    while j < len(stream) and stream[j]['pdf'] == line['pdf'] and j < i + 14:
+        m = booklet.STAT_LINE.match(stream[j]['text'])
+        if not m and j > i + 7:
+            break
+        if segs[-1] and stream[j]['col'] != segs[-1][-1]['col']:
+            segs.append([])
+        segs[-1].append(stream[j])
+        j += 1
+        if m and m.group(1) == 'Popularity':
+            break
+    if len(segs) != 2:
+        raise SystemExit('%s: split_blocks: %s\'s rows are in %d column(s), not 2' % (slug, name, len(segs)))
+    tsv = booklet.stat_rows(s['text'] for s in stream[i:j])
+    crop, rights = {}, {}
+    for seg in segs:
+        right = min(seg[0]['col_x1'], max(s['x1'] for s in seg) + 60)
+        for s in seg:
+            rights[id(s)] = right
+        rows = booklet.stat_rows(reader.read(line['pdf'], (seg[0]['col_x0'], seg[0]['y0'] - 15, right, seg[-1]['y1'] + 45)))
+        for k, v in rows.items():
+            crop.setdefault(k, v)
+    rows, sec = {}, {}
+    for label in booklet.ABILITY_LABELS + list(roster.LABELS):
+        good = lambda v: v and (booklet.parse_rank(v, ranks)[0] if label in booklet.ABILITY_LABELS else booklet.value(v))
+        v = crop.get(label) if good(crop.get(label)) else tsv.get(label) if good(tsv.get(label)) else None
+        if v is None:
+            at = next((s for s in stream[i:j] if s['text'].startswith(label[:6])), None)
+            if at:
+                v = booklet.stat_rows(reader.read(line['pdf'], (at['x0'] - 10, at['y0'] - 12, rights[id(at)], at['y1'] + 12), psm='7')).get(label)
+            v = v if good(v) else crop.get(label) or tsv.get(label)
+        (rows if label in booklet.ABILITY_LABELS else sec)[label] = v or ''
+    abilities = []
+    for n, label in enumerate(booklet.ABILITY_LABELS):
+        base, alt, note = booklet.parse_rank(rows.get(label, ''), ranks)
+        a = {'letter': roster.ABILITIES[n], 'number': base[1] if base else None, 'code': base[0] if base else None,
+             'printed_code': rows.get(label)}
+        if alt:
+            a['alt'] = {'number': alt[1], 'code': alt[0]}
+        if note:
+            a['note'] = note
+        abilities.append(a)
+    block = {'label': None, 'page': line['printed'], 'part': line['part'], 'pdf': line['pdf'], 'col': line['col'],
+             'abilities': abilities, 'rank_only': True}
+    for k in roster.LABELS:
+        block[k.lower()] = booklet.value(sec.get(k))
+    block['check'] = booklet.block_check(block)
+    return block, j
+
+
 def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False):
     """The entries in a run of card lines: a header, its block, its text.
     `grids` is the registry's card_grids for the run, or None. With
@@ -782,6 +868,15 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     # name line) keeps every line from the header to the block as its
     # identity, not the first two
     whole_identity = book.get('identity_to_block')
+    # MH9's three shapes, each [part, page, name] and each an error unless
+    # found once: a card named by its page (`page_names`, the name its fourth
+    # field), a card whose only block is a one-line grid (`grid_cards`: the
+    # Skrulls, printed 24) and a block whose rows go on in the next column
+    # (`split_blocks`: the Super-Adaptoid, Klaw, the Human Torch)
+    on_run = lambda d: d[0] == part and any(l['printed'] == d[1] for l in lines)
+    page_names = [d for d in book.get('page_names', []) if on_run(d)]
+    grid_cards = [d for d in book.get('grid_cards', []) if on_run(d)]
+    split_blocks = [d for d in book.get('split_blocks', []) if on_run(d)]
     while i < len(lines):
         line = lines[i]
         text = line['text'].strip()
@@ -808,7 +903,13 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
                 lines = lines[:k] + [dict(lines[k], after_sets=True)] + lines[k + 1:]
             i = k
             continue
-        block, nxt = booklet.full_grid(lines, i, ranks, reader)
+        split = [d for d in split_blocks if cur and (d[0], d[1]) == (part, line['printed'])
+                 and roster.norm(d[2]) == roster.norm(cur['header']) and not cur['blocks']]
+        if split and re.match(r'^\W{0,2}Fighting\s*[:;.]', line['text']):
+            block, nxt = split_grid(lines, i, ranks, reader, slug, cur['header'])
+            split_blocks.remove(split[0])
+        else:
+            block, nxt = booklet.full_grid(lines, i, ranks, reader)
         if block and book.get('round_alternates'):
             round_alternates(block, lines[i:nxt + 1], ranks)
         if block:
@@ -859,7 +960,12 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
                 k += 1
             body = k
-            while k < len(lines) and not (booklet.POWER_HEAD.match(lines[k]['text']) or section.match(lines[k]['text'])):
+            # a cut_grids entry's "colon_heads" (MH9, whose run-in powers end
+            # in a colon: the Mad Thinker's RADIO LINK:, printed 27) ends the
+            # skip at a colon head too
+            colon = cut[0].get('colon_heads')
+            while k < len(lines) and not (booklet.POWER_HEAD.match(lines[k]['text']) or section.match(lines[k]['text'])
+                                          or (colon and COLON_HEAD.match(lines[k]['text']))):
                 k += 1
             # the lines skipped are the grid's text. With a cut_grids entry's
             # "text": "card" (MH7's Fire Creatures, printed 13, whose paragraph
@@ -874,6 +980,19 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
                  + [lines[x]['text'] for x in range(body, k)], cut[0].get('text')))
             cuts.remove(cut[0])
             i = k
+            continue
+        gc = [d for d in grid_cards if cur and (d[0], d[1]) == (part, line['printed'])
+              and roster.norm(d[2]) == roster.norm(cur['header']) and not cur['blocks']]
+        if gc and letter_xs(line, title) is not None:
+            # a card whose block is a one-line grid (registry `grid_cards`:
+            # MH9's Skrulls, printed 24, a header, identity lines and an F A S
+            # E R I P row): the grid is the card's block, read as an
+            # opponent's is, and the lines after it are the card's text
+            block, nxt = line_block(lines, i, title, ranks, part, line['printed'], slug, cur['header'])
+            cur['blocks'].append(block)
+            cur['_sec'] = 'after-grid'
+            grid_cards.remove(gc[0])
+            i = nxt
             continue
         if grids is not None and letter_xs(line, title) is not None:
             # a one-line grid inside a card (registry `card_grids`): She-Hulk's
@@ -890,7 +1009,15 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
             i = nxt
             continue
         if booklet.is_header(line) or line.get('lost_header') or line.get('named_header'):
-            cur = {'kind': 'entry', 'header': re.sub(r'(?<=[A-Z])- (?=[A-Z])', '-', booklet.clean_name(text)), 'part': part,
+            header = re.sub(r'(?<=[A-Z])- (?=[A-Z])', '-', booklet.clean_name(text))
+            # a name the book prints on more than one card (registry
+            # `page_names` [part, page, NAME, card name]: MH9's three Captains
+            # America), each card named by its page
+            named = [n for n in page_names if (n[0], n[1]) == (part, line['printed']) and roster.norm(n[2]) == roster.norm(header)]
+            if named:
+                header = named[0][3]
+                page_names.remove(named[0])
+            cur = {'kind': 'entry', 'header': header, 'part': part,
                    'pages': [line['printed']] if line['printed'] else [], 'identity': [], 'blocks': [],
                    'sections': {}, 'powers': [], 'members': [], 'prose': [], '_sec': None}
             if line.get('status'):
@@ -988,6 +1115,10 @@ def read_cards(book, slug, part, lines, grids, ranks, reader, runin_powers=False
     if heads:
         raise SystemExit('%s: runin_heads names %s on %s, found as no power'
                          % (slug, ', '.join(h[2] for h in heads), part))
+    for field, left in (('page_names', page_names), ('grid_cards', grid_cards), ('split_blocks', split_blocks)):
+        if left:
+            raise SystemExit('%s: %s names %s on %s, found as no card'
+                             % (slug, field, ', '.join('%s p.%s' % (d[2], d[1]) for d in left), part))
     if grids:
         # card_grids names a grid no letter row in that card was read as
         raise SystemExit('%s: card_grids names %s on %s that no one-line grid in the card matched'
@@ -1458,6 +1589,16 @@ def parse(book, slug):
         if not any(roster.norm(e['header']) == roster.norm(lv[2]) and lv[3].lower() in b.get('read_off_image', [])
                    for e in entries for b in e['blocks']):
             raise SystemExit('%s: lost_values names %s %s, found in no block' % (slug, lv[2], lv[3]))
+    # a header with no block that is no card, on its page (registry
+    # `no_block_headers` [part, page, NAME]: MH9's divergent SUB-MARINER,
+    # printed 22, whose text sends the reader to the Marvel Universe Namor's
+    # block, printed 39; not_characters would drop that card too). Dropped
+    # with its identity and text, and an error unless found once with no block
+    for p, page, name in book.get('no_block_headers', []):
+        hits = [e for e in entries if e['part'] == p and e['pages'][:1] == [page] and roster.norm(e['header']) == roster.norm(name)]
+        if len(hits) != 1 or hits[0]['blocks']:
+            raise SystemExit('%s: no_block_headers finds %s on %s p.%s %d times, not once with no block' % (slug, name, p, page, len(hits)))
+        entries.remove(hits[0])
     skip = {roster.norm(n) for n in book.get('not_characters', [])}
     dropped = [e for e in entries if roster.norm(e['header']) in skip]
     if len(dropped) != len(skip):
@@ -1636,8 +1777,12 @@ def coverage(book, entries):
     # a form grid (registry `form_grids`) and a grid inside a card
     # (`card_grids`) are each a one-line grid on a card's entry
     forms = len(book.get('form_grids', [])) + len(book.get('card_grids', []))
-    if (full, line) != (len(card_names), len(opp_names) + forms):
-        lines.append('  BLOCKS: %d full and %d one-line, the checklist has %d and %d' % (full, line, len(card_names), len(opp_names) + forms))
+    # a card whose block is a one-line grid (registry `grid_cards`: MH9's
+    # Skrulls) is a card on the checklist with a one-line block
+    gcards = len(book.get('grid_cards', []))
+    if (full, line) != (len(card_names) - gcards, len(opp_names) + forms + gcards):
+        lines.append('  BLOCKS: %d full and %d one-line, the checklist has %d and %d'
+                     % (full, line, len(card_names) - gcards, len(opp_names) + forms + gcards))
         bad = True
     lines.insert(0, '  checklist: %d cards, %d opponents%s; %d full blocks, %d one-line grids; all found: %s'
                  % (len(card_names), len(opp_names), ', %d form grid%s' % (forms, '' if forms == 1 else 's') if forms else '',

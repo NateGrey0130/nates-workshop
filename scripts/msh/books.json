@@ -2211,6 +2211,9 @@
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-30: printed 1 is the title page (no banner, the Watcher's greeting and the credits); JUDGE'S INTRODUCTION (printed 2, running to 3); Chapters 1-8, each a Chapter N: line and its title over two lines at the top of column 1, then NPC ROSTER, SUMMARY, SETTING, ADVENTURE, AFTERMATH and KARMA as run-in labels or subheads; the Non-Player Character Roster (printed 21, mid column 1, under art; its characters grouped under CHAPTER N subheads); NEW PC HEROES (printed 30, the divergent world's heroes) and MARVEL UNIVERSE PC HEROES (printed 36, THE FANTASTIC FOUR a subhead under it). Tesseract reads every banner, the chapter titles split over two lines (Heli- / carrier, Other- / world). The booklet's blocks are on printed 21-40 and its one-line grids inside the chapters (row 7b).",
       "columns": 3,
       "columns_note": "Three columns on every booklet page read (the chapter openings, printed 21 and 23), a block's labels and values as two sub-columns of one column. Read on the page images 2026-10-30.",
+      "layout": "cover-panels",
+      "section_keys": {"Known Powers": "powers", "Equipment/Possessions": "equipment", "Personality": "background", "Background and personality": "background"},
+      "opponent_names": "title",
       "panels": [],
       "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1 and 42-46 holds no Health, Karma or rank row, and their images show the cover art and blurb and five maps. The scan holds no cover-panel card. Survey mh9.md, Cover-panel cards.",
       "character_ranges": [{"part": "Adventure Book", "pages": [21, 40]}],
@@ -2266,6 +2269,25 @@
       "repeat_grids": [
         {"part": "Adventure Book", "page": 20, "name": "A.I.M. Soldiers", "of": "A.I.M. Soldiers"}
       ],
+      "unnamed_grids": [
+        {"part": "Adventure Book", "page": 4, "name": "A.I.M. Soldiers"},
+        {"part": "Adventure Book", "page": 7, "name": "Golden Robots"},
+        {"part": "Adventure Book", "page": 8, "name": "Demons"},
+        {"part": "Adventure Book", "page": 10, "name": "Guardsmen Robots"},
+        {"part": "Adventure Book", "page": 10, "name": "A.I.M. Gunmen"},
+        {"part": "Adventure Book", "page": 20, "name": "A.I.M. Soldiers"},
+        {"part": "Adventure Book", "page": 20, "name": "A.I.M. Scientists"},
+        {"part": "Adventure Book", "page": 20, "name": "A.I.M. Technicians"},
+        {"part": "Adventure Book", "page": 20, "name": "Geoff Krubb"},
+        {"part": "Adventure Book", "page": 22, "name": "Sound Objects"},
+        {"part": "Adventure Book", "page": 27, "name": "Mad Thinker's Androids"}
+      ],
+      "cut_grids": [
+        {"part": "Adventure Book", "page": 22, "entry": "Klaw", "name": "Sound Objects"},
+        {"part": "Adventure Book", "page": 27, "entry": "Mad Thinker", "name": "Mad Thinker's Androids", "colon_heads": true}
+      ],
+      "code_row_letters": true,
+      "page_foot": 0.977,
       "repeat_grids_note": "Printed 20, column 1: the A.I.M. base's soldiers' grid repeats printed 4's code for code, GD TY TY GD TY PR FE, Health 32 and Karma 12 (the Karma read in the OCR away from its line, and on the same TSV line as the Health). Survey mh9.md decision 3 (recommended, as MH4's 2 Minions and MH6's Moltens): one card, the second grid checked against it and not an entry."
     }
   }
