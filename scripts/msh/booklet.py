@@ -94,10 +94,12 @@ def rules(book, pdf, height):
     return [y * height / pm.height for y in out]
 
 
-def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_unsure=False):
+def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_unsure=False, foot=0.955):
     """The part's pages first..last (printed) as one stream of lines: per page,
     each band between rules, each band's three columns left to right, each
-    column top to bottom. Lines are roster.py's (lines_of), with where they are."""
+    column top to bottom. Lines are roster.py's (lines_of), with where they are.
+    The text ends above `foot` of the page's height (the folio is below it);
+    only coverpanels.py passes another, from its registry's `page_foot`."""
     tsv = os.path.join(roster.CACHE, 'books', slug, 'tsv')
     out = []
     for printed in range(first, last + 1):
@@ -107,7 +109,7 @@ def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_un
         # header it read right at confidence 0 ("GALACTUS'S "CAT"", printed 9)
         # is still the header. The running notes share their columns with comic
         # panels, whose balloon lettering reads as unsure words (min_conf).
-        body = [w for w in words if 0.03 * H < w['y'] and w['y'] + w['h'] < 0.955 * H and w['c'] >= min_conf]
+        body = [w for w in words if 0.03 * H < w['y'] and w['y'] + w['h'] < foot * H and w['c'] >= min_conf]
         if not body:
             continue
         body_h = statistics.median(w['h'] for w in body if any(c.isalpha() for c in w['t']))
