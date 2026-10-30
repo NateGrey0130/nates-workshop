@@ -2438,7 +2438,7 @@
       "columns": 3,
       "columns_note": "Three columns on every booklet page read (printed 9-11, 13, 24, 25 and 28), a block's rows and its labels as two sub-columns of one column. Read on the page images 2026-10-30.",
       "layout": "grid-booklets",
-      "layout_note": "Read by scripts/msh/gridbooks.py, as survey mx1.md (Which reader fits) measured on a trial parse: the sentinels' grids are MA1's (number then code, Health =) and read with roster.grid_at unchanged; every other grid is MA4's order (code then number in brackets) or a codes-only grid. What the reader does for this book alone is behind the fields after opponents_note, each with a note: code_rows, card_headers, title_case_labels, column_left_quantile, letters_marks, one_line_grids (with health and subhead), not_run_ins, extra_titles and opponents' continues; cards is a checklist, and reference_summary and roster_sections are left out (MX1 prints no Summary chart and no Contents line names a character). Page citations are MH9's single-booklet shape, MX1 Adventure p.24 (decision 2).",
+      "layout_note": "Read by scripts/msh/gridbooks.py, as survey mx1.md (Which reader fits) measured on a trial parse: the sentinels' grids are MA1's (number then code, Health =) and read with roster.grid_at unchanged; every other grid is MA4's order (code then number in brackets) or a codes-only grid. What the reader does for this book alone is behind the fields after opponents_note, each with a note: code_rows, card_headers, title_case_labels, column_left_quantile, letters_marks, one_line_grids (with health and subhead), not_run_ins, extra_titles and opponents' continues, and from the data row art_boxes, bullet_marks, speck_lines and talents_end; cards is a checklist, and reference_summary and roster_sections are left out (MX1 prints no Summary chart and no Contents line names a character). Page citations are MH9's single-booklet shape, MX1 Adventure p.24 (decision 2).",
       "character_ranges": [{"part": "Adventure Book", "pages": [9, 14]}, {"part": "Adventure Book", "pages": [24, 25]}],
       "character_ranges_note": "Every block with a header of its own: the six sentinels in Project Wideawake (printed 9-11, a header in bold title case and no identity line; the Mark VI's header ends in a colon), Blue in The Tools of Oppression (printed 13, his text running on to 14), and the five Non-Player Characters (printed 24-25, a header and an identity line in bold). The grids with no header of their own (printed 13 and 28) are opponents. Survey mx1.md, Stat blocks. Read on the OCR of every booklet page and the page images 2026-10-30.",
       "cards": [
@@ -2486,7 +2486,26 @@
       "extra_titles": [["Adventure Book", 12, "Sentinel Surveillance Base"], ["Adventure Book", 28, "Vigilantes"]],
       "extra_titles_note": "Printed titles that are not characters and that the Contents does not list, each ending the entry before it: Sentinel Surveillance Base (printed 12, column 1) ends Nimrod's, whose last power otherwise took the page, and Vigilantes (printed 28, column 2) ends the Typical Rogue's (survey mx1.md, reader item 10 and registry item 6).",
       "teams": [["Adventure Book", 1, "MX1 Nightmares of Futures Past"]],
-      "teams_note": "The book prints no team sections: every card is filed under the book's own title, as MH1 filed its Sentinels and MH9 its divergent Earth, the six sentinels each a card of their own (survey mx1.md decision 1, its recommendation taken, Nate 2026-10-30)."
+      "teams_note": "The book prints no team sections: every card is filed under the book's own title, as MH1 filed its Sentinels and MH9 its divergent Earth, the six sentinels each a card of their own (survey mx1.md decision 1, its recommendation taken, Nate 2026-10-30).",
+      "card_names": {"Swat:am": "SWAT:AM"},
+      "card_names_note": "The SWAT:AM grid's name as printed, in capitals (printed 13, its subhead), which npcs.py's title case gives as Swat:am; MH8's SWAT Team Member is the same case. The id is swat-am-mx1 either way.",
+      "art_boxes": [
+        ["Adventure Book", 10, 0, 300, 2476, 1010],
+        ["Adventure Book", 10, 0, 1010, 1265, 1810],
+        ["Adventure Book", 14, 0, 300, 830, 1150]
+      ],
+      "art_boxes_note": "Illustrations whose lettering and linework the OCR reads as words that weld onto the text beside them, each box in the cache's TSV pixels (300 dpi), read on the page images 2026-10-30. Printed 10: the art across the top of the page, whose caption landed in the Alpha Sentinel's Computer Link (column 3), and the map across columns 1 and 2 under it, whose lettering and contours landed in the Mark VI's Mutant Detection (column 1) and in the narrow column of text beside the map (x 1272 on), folding the Mark VI's Customization into its Gas Jets. Printed 14: the panel at the top of column 1, whose lettering became Blue's prose. The narrow column beside the map loses two lines to the OCR altogether; the text verdicts in scripts/msh/mx1-overrides.json put their words back.",
+      "art_box_edge": true,
+      "art_box_edge_note": "An art box whose right edge falls inside a column narrows it: the lines beside the box take that edge as their left, not the column's, and a word there boxed over twice the body height is cut to the body height from its top. Printed 10: the narrow column beside the map starts at x 1272 against a column body at 874-880, so the Mark VI's flush Customization: read as indented and folded into its Gas Jets, and areas (boxed 76 px against 32) sorted under away. Read on the page image 2026-10-30.",
+      "bullet_marks": ["e", "\u00a9", "\u00a2"],
+      "bullet_marks_note": "A list's bullet read at a line's start, before a word in lower case, as the letter e, a copyright sign (U+00A9) or a cent sign (U+00A2), the signs written as JSON escapes: the typical policeman's equipment (printed 13) and the Mantinel armor's four weapons (printed 13, column 3: two copyright signs, an e and a cent sign in the TSV of PDF 15). A sign left in the line is dropped by the ASCII fold and leaves a double space. Read on the page images 2026-10-30.",
+      "speck_lines": [["Adventure Book", 13, "Hugh Biumal, mutant hound", "Hugh Blumal, mutant hound"]],
+      "speck_lines_note": "Blue's identity line, read Biumal; the page prints Blumal, as his Talents and Background do (printed 13, a 200 dpi crop of PDF 15, 2026-10-30).",
+      "talents_end": [
+        ["Adventure Book", 13, "Typical Policeman", "Law Enforcement"],
+        ["Adventure Book", 13, "SWAT:AM", "Law Enforcement, Marksmanship"]
+      ],
+      "talents_end_note": "Each codes-only grid of printed 13 prints a TALENT: or TALENTS: line under it, then the type's equipment list and how it patrols, with no label of their own (survey mx1.md, reader item 6): the talents are the line alone, and the rest is the type's prose, after the paragraph that introduces the grid. Read on the page images 2026-10-30."
     }
   }
 }

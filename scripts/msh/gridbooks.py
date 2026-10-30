@@ -69,9 +69,24 @@ def stream_of(book, slug, part, first, last):
     # the art and a flush run-in reads as indented
     quantile = book.get('column_left_quantile', 10)
     labels = [lab for lab in book.get('section_labels', []) if lab != lab.upper()] if book.get('title_case_labels') else []
+    # MX1 (registry bullet_marks): a list's bullet read as a letter or a sign
+    # at a line's start ('e pistol;', printed 13) is not a word of the text
+    bullet = re.compile(r'^(?:%s)\s+(?=[a-z])' % '|'.join(re.escape(m) for m in book['bullet_marks'])) \
+        if book.get('bullet_marks') else None
     for printed in range(first, last + 1):
         pdf = printed + offset
         words, (W, H) = roster.read_words(os.path.join(tsv, 'p%03d.tsv' % pdf))
+        # MX1 (registry art_boxes [part, page, x0, y0, x1, y1], TSV pixels): an
+        # illustration's lettering and linework read as words that weld onto
+        # the column beside it (printed 10's map, printed 14's panel); a word
+        # whose centre is inside a box is not text. A box that takes no word
+        # is stale, and stops the build.
+        boxes = [b[2:] for b in book.get('art_boxes', []) if b[0] == part and b[1] == printed]
+        for box in boxes:
+            inside = lambda w: box[0] <= w['x'] + w['w'] / 2 < box[2] and box[1] <= w['y'] + w['h'] / 2 < box[3]
+            if not any(inside(w) for w in words):
+                raise SystemExit('%s: art_boxes %s p.%d %r takes no word' % (slug, part, printed, box))
+            words = [w for w in words if not inside(w)]
         body = [w for w in words if w['y'] > 0.10 * H and w['y'] + w['h'] < 0.935 * H
                 and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
         if not body:
@@ -80,11 +95,24 @@ def stream_of(book, slug, part, first, last):
         edges = [0] + roster.gutters(body, W, book['columns']) + [W]
         for c in range(book['columns']):
             col = [w for w in body if edges[c] <= w['x'] + w['w'] / 2 < edges[c + 1]]
+            # MX1 (registry art_box_edge): an art box whose right edge falls
+            # inside this column narrows it, and the lines beside the box (the
+            # Mark VI's Gas Jets and Customization beside printed 10's map, at
+            # x 1272 against a column body at 874-880) start at the box's edge,
+            # not at the column's left, so a flush run-in there reads as flush.
+            # A word beside it boxed over twice the body height (that column's
+            # "areas", 76 px against 32, which sorted it under "away.") is cut
+            # to the body height from its top.
+            beside = [box for box in boxes if edges[c] < box[2] < edges[c + 1]] if book.get('art_box_edge') else []
+            near = lambda box, x, y0, y1: box[2] <= x and y0 < box[3] and y1 > box[1]
+            col = [dict(w, h=int(round(body_h))) if w['h'] > 2 * body_h
+                   and any(near(box, w['x'], w['y'], w['y'] + w['h']) for box in beside) else w for w in col]
             lines = [l for l in roster.lines_of(col) if l['conf'] >= 45 and any(ch.isalnum() for ch in l['text'])]
             if not lines:
                 continue
             left = sorted(l['x0'] for l in lines)[len(lines) // quantile]
             for l in lines:
+                edge = next((box[2] for box in beside if near(box, l['x0'], l['y0'], l['y1'])), None)
                 # MX1 (registry title_case_labels): a run-in label set in title
                 # case ("Known Powers:") is raised to the capitals roster.RUN_IN
                 # and roster.SECTION read
@@ -95,9 +123,20 @@ def stream_of(book, slug, part, first, last):
                 # ("SWAT:AM") is not a run-in label; parse() puts the colon back
                 for phrase in book.get('not_run_ins', []):
                     l['text'] = l['text'].replace(phrase, phrase.replace(':', NOT_A_COLON))
-                l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=left, body_h=body_h,
+                if bullet:
+                    l['text'] = bullet.sub('', l['text'])
+                l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=max(left, edge or 0), body_h=body_h,
                          col_x0=max(0, edges[c] if c else left - 20), col_x1=edges[c + 1], big=False)
                 stream.append(l)
+    # MX1 (registry speck_lines [part, page, as read, as printed], MH9's
+    # shape): a line the OCR misread that only the page image settles (Blue's
+    # identity line, printed 13: Biumal for Blumal). Each must be found
+    # exactly once on its page, or the build stops.
+    for p, page, old, new in [d for d in book.get('speck_lines', []) if d[0] == part and first <= d[1] <= last]:
+        hits = [l for l in stream if l['printed'] == page and l['text'].strip() == old]
+        if len(hits) != 1:
+            raise SystemExit('%s: speck_lines finds %r %d times on %s p.%d, not once' % (slug, old, len(hits), part, page))
+        hits[0]['text'] = new
     return stream
 
 
@@ -427,6 +466,21 @@ def parse(book, slug):
             e['prose'] = ''
     if book.get('not_run_ins'):
         entries[:] = restore_colons(book, entries)
+    # MX1 (registry talents_end [part, page, name, talents as printed]): a
+    # codes-only grid's TALENT: line is its talents alone, and what follows it
+    # (the type's equipment list and how it patrols, printed 13) goes on from
+    # the paragraph that introduces the grid, as its prose. The talents must
+    # start the section and something must follow, or the build stops.
+    for part, page, name, talents in book.get('talents_end', []):
+        hits = [e for e in entries if e['part'] == part and page in e['pages'] and e['header'] == name]
+        if len(hits) != 1:
+            raise SystemExit('talents_end: %s p.%d %r names %d entries, not 1' % (part, page, name, len(hits)))
+        e = hits[0]
+        t = e['sections'].get('talents', '')
+        if not t.startswith(talents + ' '):
+            raise SystemExit('talents_end: %s talents read %r, not %r and more' % (name, t[:60], talents))
+        e['sections']['talents'] = talents
+        e['prose'] = ' '.join(filter(None, [e['prose'].strip(), t[len(talents):].strip()]))
     summary_entries(book, entries)
     return stream, entries
 

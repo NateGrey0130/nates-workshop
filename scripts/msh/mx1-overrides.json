@@ -5,6 +5,8 @@
     "  match     {page, header}: the printed page in the Adventure Book, and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  match     {row}: a text verdict's msh_book_text row key instead",
+    "            text        a mark in the prose only the page image settles: 'read' is the few words as the chain reads them, 'printed' as the page prints them; scripts/msh/npcs.py stops if 'read' is not found exactly once in its row",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read"
   ],
@@ -40,6 +42,18 @@
      "note": "Printed S Ty (4) and I Ty (8), the same pairs as Timbre Morava's, resolving the other way: Health 44 = 10 + 10 + 4 + 20 and Karma 18 = 4 + 8 + 6 hold on the numbers and fail on Typical's 6, so the codes are the misprint. 4 is Poor; 8 is inside Good's range (8-15) and not its standard, kept here rather than as a rank_ranges for the book (survey decision 5)."},
     {"match": {"page": 28, "header": "Typical Rogue"}, "verdict": "misprint", "field": "karma",
      "printed": "16", "corrected": "14", "checked": "2026-10-30",
-     "note": "A codes-only grid: R Pr, I Ty and P Pr give Karma 4 + 6 + 4 = 14, and its Health 28 holds on the same codes. 16 would hold if either Pr were Ty, and nothing on the page says which, so the codes are kept and the Karma corrected (survey decision 4)."}
+     "note": "A codes-only grid: R Pr, I Ty and P Pr give Karma 4 + 6 + 4 = 14, and its Health 28 holds on the same codes. 16 would hold if either Pr were Ty, and nothing on the page says which, so the codes are kept and the Karma corrected (survey decision 4)."},
+    {"match": {"row": "mx1:mark-vi-sentinel-mx1:power:6"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Remarkable areas", "printed": "Remarkable potency up to 2 areas",
+     "note": "Printed 10, the narrow column beside the map, Gas Jets: the OCR lost the line between Remarkable and areas altogether (seen on a 300 dpi crop of PDF 12)."},
+    {"match": {"row": "mx1:mark-vi-sentinel-mx1:power:7"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "special equipment", "printed": "special weaponry or equipment",
+     "note": "Printed 10, the same column, Customization: the line between special and equipment is lost the same way (same crop)."},
+    {"match": {"row": "mx1:mark-v-sentinel-mx1:power:7"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "|n addition", "printed": "In addition",
+     "note": "Printed 9, column 3, Cold Beams: the capital I of its first word read as a vertical bar (seen on a 300 dpi crop of PDF 11)."},
+    {"match": {"row": "mx1:mantinels-mx1:power:5"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "\\f the operator", "printed": "If the operator",
+     "note": "Printed 13, column 3, Automatic Escape: the capital I of its first word read as a backslash (seen on a 300 dpi crop of PDF 15)."}
   ]
 }
