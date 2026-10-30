@@ -83,6 +83,11 @@
    "book": "MH9 Gates of What If",
    "code": "TSR6867",
    "pages": "Adventure 4-40"
+  },
+  {
+   "book": "MX1 Nightmares of Futures Past",
+   "code": "TSR6873",
+   "pages": "Adventure 9-14, 24-25, 28-28"
   }
  ],
  "books": [
@@ -308,6 +313,34 @@
    ],
    "part": "Adventure",
    "panels": []
+  },
+  {
+   "slug": "mx1",
+   "short": "MX1",
+   "title": "MX1 Nightmares of Futures Past",
+   "pages": [
+    9,
+    14
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       9,
+       14
+      ],
+      [
+       24,
+       25
+      ],
+      [
+       28,
+       28
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -374,7 +407,8 @@
   "MH6 Thunder Over Jotunheim",
   "MH7 The Last Resort",
   "MH8 Fault Line",
-  "MH9 Gates of What If"
+  "MH9 Gates of What If",
+  "MX1 Nightmares of Futures Past"
  ],
  "characters": [
   {
@@ -66194,6 +66228,1619 @@
    ],
    "appearances": [],
    "book": "mh9"
+  },
+  {
+   "id": "mark-iv-sentinel-mx1",
+   "name": "Mark IV Sentinel",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "mark-iv-sentinel-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "165",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-Web Cables"
+      },
+      {
+       "name": "Search Lights"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "mark-v-sentinel-mx1",
+   "name": "Mark V Sentinel",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "mark-v-sentinel-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "190",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Cold Beams"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "mark-vi-sentinel-mx1",
+   "name": "Mark VI Sentinel",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "mark-vi-sentinel-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "250",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "alpha-sentinel-mx1",
+   "name": "Alpha Sentinel",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "alpha-sentinel-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "nimrod-mx1",
+   "name": "Nimrod",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "nimrod-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "derived": [
+        "P"
+       ],
+       "health": "300",
+       "karma": "70",
+       "resources": "In (40)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "R",
+        "printed": {
+         "number": 30,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "I",
+          "printed": {
+           "number": 30,
+           "code": "Gd"
+          },
+          "corrected": {
+           "number": 30,
+           "code": "Rm"
+          }
+         },
+         {
+          "verdict": "misprint",
+          "field": "P",
+          "printed": {
+           "number": 10,
+           "code": "Gy"
+          },
+          "corrected": {
+           "number": 10,
+           "code": "Gd"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Matrix Battle Computer"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Auto-Repair"
+      },
+      {
+       "name": "Disintegrator Beam"
+      },
+      {
+       "name": "Pressor-Tractor Beam"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Nerveshock"
+      },
+      {
+       "name": "Inhibitor Field"
+      },
+      {
+       "name": "Scanners"
+      },
+      {
+       "name": "Shockweb"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "omega-sentinel-mx1",
+   "name": "Omega Sentinel",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "omega-sentinel-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Encephalo-scan"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Learning Program"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "blue-mx1",
+   "name": "Blue",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "blue-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [
+      "Hugh Blumal, mutant hound"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "64",
+       "karma": "109",
+       "resources": "Fb (2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Emotion Detection"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Astral Detection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "mantinels-mx1",
+   "name": "Mantinels",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "mantinels-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "70",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "Weapon Systems"
+      },
+      {
+       "name": "Automatic Escape"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "swat-am-mx1",
+   "name": "SWAT:AM",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "swat-am-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "46",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "typical-policeman-mx1",
+   "name": "Typical Policeman",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "typical-policeman-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "36",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "gerald-gage-mx1",
+   "name": "Gerald Gage",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "gerald-gage-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Human journalist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "20",
+       "karma": "22",
+       "resources": "Pr (4)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "timbre-morava-mx1",
+   "name": "Timbre Morava",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "timbre-morava-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      24,
+      25
+     ],
+     "identity": [
+      "Human shopowner"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ex"
+        ],
+        [
+         "I",
+         8,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "32",
+       "resources": "Ex (20)",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "S",
+        "printed": {
+         "number": 4,
+         "code": "Ty"
+        },
+        "corrected": {
+         "number": 6,
+         "code": "Ty"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "R",
+          "printed": {
+           "number": 6,
+           "code": "Ex"
+          },
+          "corrected": {
+           "number": 20,
+           "code": "Ex"
+          }
+         },
+         {
+          "verdict": "misprint",
+          "field": "I",
+          "printed": {
+           "number": 8,
+           "code": "Ty"
+          },
+          "corrected": {
+           "number": 6,
+           "code": "Ty"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "arthur-faber-mx1",
+   "name": "Arthur Faber",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "arthur-faber-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Camp guard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "46",
+       "karma": "18",
+       "resources": "Ty (6)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Radiowave Control",
+       "upb": "EC17"
+      },
+      {
+       "name": "Psi-Screen"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "bernard-carns-mx1",
+   "name": "Bernard Carns",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "bernard-carns-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Human geneticist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "16",
+       "karma": "22",
+       "resources": "Ex (20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "big-foot-mx1",
+   "name": "Big Foot",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "big-foot-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Rogue leader"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         8,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "44",
+       "karma": "18",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "S",
+        "printed": {
+         "number": 4,
+         "code": "Ty"
+        },
+        "corrected": {
+         "number": 4,
+         "code": "Pr"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "I",
+          "printed": {
+           "number": 8,
+           "code": "Ty"
+          },
+          "corrected": {
+           "number": 8,
+           "code": "Gd"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "oliver-pierce-mx1",
+   "name": "Oliver Pierce",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "oliver-pierce-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      28,
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fb"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "16",
+       "karma": "16",
+       "resources": "Fb",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Gravity Manipulation",
+       "upb": "EC11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
+  },
+  {
+   "id": "typical-rogue-mx1",
+   "name": "Typical Rogue",
+   "team": "MX1 Nightmares of Futures Past",
+   "versions": [
+    {
+     "id": "typical-rogue-mx1",
+     "label": null,
+     "team": "MX1 Nightmares of Futures Past",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "28",
+       "karma": "16",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "16",
+        "corrected": "14"
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mx1"
   }
  ]
 }
