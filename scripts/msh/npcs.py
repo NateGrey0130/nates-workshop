@@ -554,6 +554,15 @@ def main(slug_arg):
                     **({'kind': 'partial' if (rbook or panels) and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),
                 })
+                # an as_printed override names the value as the page prints it:
+                # ME3's Death prints Karma "Unlim." (Resource p.2), and the
+                # grid's crop drops the stop. The page's value is the card's.
+                # No earlier grid-booklets book's override differs from its value.
+                o = b.get('override') or {}
+                if grid and o.get('verdict') == 'as_printed' and isinstance(o.get('printed'), str) \
+                        and o.get('field') in ('health', 'karma', 'resources', 'popularity') \
+                        and blocks[-1][o['field']] != o['printed']:
+                    blocks[-1][o['field']] = o['printed']
                 if panels and b['health'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_health:
                     # printed with no Health (Fluffy, Augie Hickman): the ranks'
                     # standard numbers give it, as they give every number here
@@ -639,6 +648,16 @@ def main(slug_arg):
             # (a roster-book name's Roman numeral is read as the header's is:
             # Warren Kenneth Worthington Ill is III)
             identity = [ascii_fold(roman(x) if rbook else x) for x in e['identity']]
+            # a word hyphenated across two identity lines is one word: ME3's
+            # Mephisto (Resource p.6) prints "Luci-" / "fer, and ...". Only a
+            # grid-booklets line ending in a letter and a hyphen, the next
+            # opening in lower case; no earlier such book's identity has one.
+            k = 0
+            while grid and k + 1 < len(identity):
+                if re.search(r'[a-z]-$', identity[k]) and identity[k + 1][:1].islower():
+                    identity[k:k + 2] = [identity[k][:-1] + identity[k + 1]]
+                else:
+                    k += 1
             prose = e['prose']
             # A roster-book entry of tiers alone (Kingpin's Organization) opens
             # with a sentence, not a name: that is prose too.

@@ -4,9 +4,11 @@
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the entry's own booklet, and the start of the entry's header; codes, the seven rank codes, where one entry prints two grids on the page (Dormammu's, Resource p.12)",
     "            {summary}: a Pregenerated Heroes Summary row (PDF 53), by the name the chart prints",
+    "            {row}: an msh_book_text row key, for a text verdict (scripts/msh/npcs.py text_fixes)",
     "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
     "            summary_misprint  the chart prints a value its own ranks contradict and the character's block does not; 'printed' is the chart's, 'corrected' the block's",
     "            label             a grid the page sets with no header of its own, labelled as the note says",
+    "            text              a mark in the prose only the page image settles: 'read' is a few words as the chain gives them, 'printed' as the page prints them; npcs.py stops if 'read' is not found exactly once in its row",
     "  checked   the date the page image was read",
     "A number inside its rank's range but not its standard (Pluto's 250 Shift Y, Resource p.8) needs no override: the registry's rank_ranges (scripts/msh/books.json, the me3 entry) has the check take the range for this book alone (survey decision 3, apps/marvel-heroes/docs/surveys/me3.md)."
   ],
@@ -25,6 +27,15 @@
      "note": "His second grid prints no header: the prose above it gives it as his figures while he controls Galactus. Labelled as Mephisto's second grid is headed, MEPHISTO (w/Galactus), p.6 (survey me3.md decision 5)."},
     {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
      "printed": 90, "corrected": 110, "checked": "2026-10-30",
-     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.4) prints 110. ME1's and ME2's charts have the same misprint (survey me3.md decision 4)."}
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.4) prints 110. ME1's and ME2's charts have the same misprint (survey me3.md decision 4)."},
+    {"match": {"row": "me3:captain-marvel-mar-vell-me3:power:1"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "space. \"Psychic Transfer:", "printed": "space. *Psychic Transfer:",
+     "note": "Resource p.15, column 2, Captain Marvel's Nega-Bands: the page sets the bands' abilities as a list, each line opening with an asterisk, and the asterisk before Psychic Transfer is read as an opening double quote, which left the row with an odd count of double quotes. The page prints the asterisk, as on the line above it (seen on a 220 dpi crop of PDF 49)."},
+    {"match": {"row": "me3:galactus-me3:power:9"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "\\f Galactus' body", "printed": "If Galactus' body",
+     "note": "Resource p.4, column 1, Galactus's Serial Immortality: the word If is read as a backslash and an f (seen on a 220 dpi crop of PDF 38)."},
+    {"match": {"row": "me3:seth-me3:background"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "resurrected him. =\\e", "printed": "resurrected him.",
+     "note": "Resource p.10, the end of Seth's background: the art in column 3 (his belt) is read as =\\e and joined to the paragraph's last line. The page prints no text there (seen on a 150 dpi crop of PDF 44)."}
   ]
 }

@@ -3,8 +3,10 @@
 Official Advanced Game Adventure for Marvel Super Heroes, Ray Winninger, 1988.
 Registry entry: `scripts/msh/books.json` -> `me3`. Measured 2026-10-30.
 
-**Rows citing this book:** 0 `msh_book_text` rows: nothing is imported yet,
-and the data row sets this line from production's read-back.
+**Rows citing this book:** 195 `msh_book_text` rows over 25 character entries
+in production (`DB_MARVEL`, read back 2026-10-30); the other seven, the
+Nine-Headed Serpent, the Vulture Flock, the Keeper and the Summary's four,
+print no text.
 
 This is the module after ME2, by the same series, through `scripts/msh/` only.
 **It is laid out as ME1 and ME2 are**: a boxed module of an Adventure Book and

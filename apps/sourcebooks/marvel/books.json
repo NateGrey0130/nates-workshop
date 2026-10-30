@@ -303,6 +303,24 @@
     ]
    ],
    "total": 17
+  },
+  {
+   "slug": "me3",
+   "title": "ME3 The Left Hand of Eternity",
+   "code": "TSR6882",
+   "status": "imported",
+   "date": "2026-10-30",
+   "added": [
+    [
+     "Characters",
+     32
+    ],
+    [
+     "Rows of the book's text",
+     195
+    ]
+   ],
+   "total": 32
   }
  ]
 }
