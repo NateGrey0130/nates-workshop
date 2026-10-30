@@ -1,8 +1,7 @@
 # Survey: MT2 The Weird, Weird West (TSR6886)
 
-> **DRAFT.** Measured through *Quote marks* and *Decisions this survey
-> leaves open*. *Which reader fits* is not finished: it waits on the trial
-> parse. Nothing here is imported yet.
+> **DRAFT.** Measured through *Which reader fits*, both trials run.
+> Nothing here is imported yet.
 
 Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1988,
 the second module of the three-part Time Warp series. Registry entry:
@@ -488,7 +487,131 @@ entries (decision 7). The trial did not run `npcs.py`. Its registry patch,
 its three reader diffs and its last run are kept in the plan's store (rows
 7c and 7c1, `trial/mt2/`), not the repo.
 
-Verdict: pending the grid-booklets comparison.
+**`grid-booklets` (`scripts/msh/gridbooks.py`, ME1's, ME2's and ME3's),
+with things taught to it**: the other half. Measured 2026-10-30 (plan row
+7c2): a scratch copy of `scripts/msh/` and `apps/marvel-heroes/data` at
+this branch's `ef61d5b1`, the mt2 entry as row 7b left it (`parts`,
+`character_ranges`, `opponents`) given `"layout": "grid-booklets"`,
+`rank_ranges: true` (decision 8) and trial `teams` (decision 1), and the
+same trial `mt2-overrides.json` (decision 7), run on a copy of the cache
+under its own `WORKSHOP_MSH_CACHE`. Four runs and four working-arounds.
+
+**The stock reader does not stop.** It runs to the end and exits 1: every
+grid of the first and second shapes is unread (item 1), no one-line grid
+is read (item 4), and the Western Heroes' entries are each headed
+`STATISTICS` (item 7).
+
+| measure | stock | with every trial change |
+|---|---|---|
+| entries | 31: 25 with a block, 6 without | 34: 30 with a block, 4 without (The Player Characters as its banner and as its Contents line, Non-Player Characters, Friendly NPCs) |
+| stat blocks | 25: 21 grids on the character pages, 4 named blocks in the chapters; no one-line grid | 31: 21 grids and 2 one-line grids (Lobo, Hamilton Slade's form) on the character pages, 8 in the chapters (4 one-line) |
+| blocks passing every check | none, and 1 known (Genghis Khan's override) | 28, and 2 known from the overrides |
+| failing | 24 (every one unread) | 1 (Einstein's, unread: item 3) |
+| checklist names with no entry | 6 of the 8 opponents; 24 statted entries on no checklist (no `roster_sections` or `cards`) | 0 (the 23 cards and 8 opponents all found) |
+| Health or Karma not a number | 24 blocks | 1 block (Moon Knight's, item 14) |
+| exit code | 1 | 1 |
+
+What grid-booklets must learn. Items 1, 2, 10 and the registry items were
+made in the scratch copy, marked as the trial's; 5 and 6 are row 7c1's
+changes to `gridbooks.py`, already written; the rest were not made:
+
+1. **Rows that print the code, in capitals, before the number**, bare (`F
+   RM 30`: printed 3-8, 28, 29 and 36) or bracketed (`F GD (10)`: printed
+   52-63). `roster.ROW` wants the number first, and ME3's `code_first_rows`
+   turns round title-case codes only, so 24 of the stock run's 25 blocks
+   were unread. Reader: a mend beside ME3's, behind a registry field.
+2. **What the crop re-read hangs in such a row**: a mark and an underscore
+   between code and number (`RM_~ 30`, the Vision's P, printed 3), `i` for
+   1 inside the brackets (Red Wolf's R, 57), and a 3 read as 8 inside them
+   (`RM(80)`: Ghost Rider IV's P, 53; Red Wolf's F, 57; Shooting Star's A,
+   59; Texas Twister's E, 61), where 80 is outside Remarkable's range and
+   30 is its number. Reader: part of item 1's mend.
+3. **Einstein's rows** (printed 5): the crop reads his A and E as marks
+   and `FY` round the 6s, and the stream reads no better, so his grid is
+   unread. **Not made in the trial.** Reader: code-grids' item 10 (`FY` for
+   TY, marks in a row).
+4. **One-line grids** (Tyrannosaur 12, Hoplites 21, Cavemen 24, Khan's
+   Champion 33, Lobo 57, and Hamilton Slade 53 as Ghost Rider IV's form).
+   Registry only: `one_line_grids`, with `letters_marks`, which this reader
+   already reads (a form's `entry` and `label` too).
+5. **A one-line grid whose letters line is lost** (Khan's Champion 33,
+   Lobo 57). Reader: code-grids' item 14, a change to `gridbooks.line_grids`
+   itself.
+6. **A form's Health and Karma printed in a sentence** (Hamilton Slade,
+   53; 46 and 36, both hold). Reader: code-grids' item 15, the same
+   function.
+7. **The header above a grid**: a name over a real-name line (Doctor Doom,
+   The Sandman, Mysterio, Black Knight, Scorpion, printed 6-8: the real name
+   became the header), `STATISTICS` over each Western Hero's grid (52-63)
+   and THE HOBART GANG over Hobart (28). Registry only: MX1's `card_headers`
+   and `cards`, the 22 card-page names and Hobart, which are the checklist
+   too, so no `roster_sections` is needed.
+8. **Twain Android prints no header** (36). Registry only: `grid_headers`.
+9. **Two headers misread**: GHOST RIDER I & II as `I & Ill` (52) and
+   Hobart's quote marks (28). Registry only: MX1's `speck_lines`, the line
+   as read and as printed.
+10. **Section subheads with no colon** (KNOWN POWERS, BACKGROUND,
+    ROLE-PLAYING NOTES and HISTORY, printed 52-63). Reader: a capital line
+    that is one of the registry's `section_labels` opens its section, as a
+    run-in does. With it off (run 4), every Western Hero reads no powers and
+    no background.
+11. **Title-case run-ins** (`Talents:`, `Contacts:`, `Background:`, `Role
+    Playing Notes:`, printed 3-8, 28-29 and 52-63). Registry only: MX1's
+    `title_case_labels`.
+12. **A mark after a Health** (Ghost Rider I & II's `46` and a bracket,
+    52). Registry only: ME3's `trailing_marks`.
+13. **`STATISTICS` lands as each Western Hero's block label** (52-63):
+    `read_entries` takes a capital line right above a grid as a sub-block's
+    name. **Not made.** Reader: clear it, as code-grids' item 4 must.
+14. **Moon Knight's two forms** (4): the Normal form reads and the
+    Moonlight form's values are carried into the Health and Karma labels,
+    as under code-grids. **Not made.** Reader: code-grids' item 12.
+15. **Lobo's entry takes the rest of Red Wolf's** (57): his Talents,
+    Contacts and notes, as under code-grids. **Not made.** Reader:
+    code-grids' item 19.
+16. **Teams split on printed 5** (the Scarlet Witch, a Player Character,
+    and Einstein, the Friendly NPC): `gridbooks.team_of` reads a team from
+    a page on, so the Scarlet Witch files under MT2 The Weird, Weird West.
+    **Not made.** Reader: a team that starts at a header (code-grids' teams
+    name one).
+17. **Twain Android's `Talents.` and `Contacts.`** with a full stop (36)
+    read as powers. **Not made.** Reader: code-grids' item 17.
+18. **A mark after Twain Android's Resources** (`FE (2)`, then an
+    underscore and a mark, 36): `trailing_marks` strips a mark, not an
+    underscore. **Not made.** Reader: code-grids' item 18.
+
+**Read right with nothing changed:** every grid's Resources and
+Popularity but the android's once its rows read (item 1), Kid Colt's
+Popularity note and Two-Gun Kid's bare `GD` among them; the Hobart Gang's
+numbers off standard, under `rank_ranges`; the chapters' four named blocks
+as opponents; and the Black Knight's flying horse, left in his text as
+decision 4 wants.
+
+**So grid-booklets must learn 18 things: 10 reader changes** (1-3, 5, 6,
+10, 13, 16-18; 5 and 6 already written), **6 registry-only** (4, 7-9, 11,
+12; every field one an earlier book already reads) **and 2 left unfixed**
+(14, 15, code-grids' 12 and 19). The overrides file holds the same 2
+entries. The trial did not run `npcs.py`, so the encounter's count in
+`Average Rifleman (2)` and `Average Mounted Desperado (3)` (decision 3) is
+untried. Its registry patch, its two reader diffs and its runs are kept in
+the plan's store (row 7c2, `trial/mt2/gridbooks-*`), not the repo.
+
+**Verdict: grid-booklets.** It needs 10 reader changes where code-grids
+needs 14, two of them already written in `gridbooks.py`, and six of its
+fixes are fields an earlier book's entry already sets; it reads MT2's
+`parts`, `character_ranges` and `opponents` as row 7b wrote them, where
+code-grids had to be taught a parts entry, two card ranges, one-line grids
+and forms. Both leave the same two unfixed (Moon Knight's forms, Lobo's
+entry), and code-grids' one lead, Einstein's grid, is its item 10, which
+grid-booklets takes as item 3.
+
+**The decision it settles** (row 8a sets it): `"layout": "grid-booklets"`,
+with `rank_ranges`, `teams` (decision 1, with item 16's split),
+`letters_marks`, `one_line_grids` (the six above), `card_headers` and
+`cards` (23), `grid_headers` (Twain Android), `speck_lines` (2),
+`title_case_labels` and `trailing_marks`, and a field of its own for each
+of the reader changes 1-2 and 10. Not set: `roster_sections`, and none of
+code-grids' `offset`, `character_pages`, `index` or cut `sections`.
 
 ## Decisions this survey leaves open
 
