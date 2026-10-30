@@ -62801,11 +62801,12 @@
        "resources": null,
        "popularity": null,
        "override": {
-        "verdict": "as_printed",
+        "verdict": "rows",
         "field": "RI",
-        "printed": "Var"
+        "printed": "Var under R and I",
+        "corrected": null
        },
-       "kind": "line"
+       "kind": "partial"
       }
      ],
      "powers": [],
