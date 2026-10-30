@@ -38,7 +38,7 @@ and listed by --failures; the fix is an override citing the page, never a
 change to the parser to make one block pass. The book itself misprints some
 (survey: Northstar's Health, Poltergeist's S), and an override records the
 printed value beside the corrected one. A book whose registry entry sets
-rank_ranges (ME2 alone) takes any number inside its rank's range
+rank_ranges (ME2 and ME3 alone) takes any number inside its rank's range
 (apps/marvel-heroes/data/ranks.json min and max), not only the standard one.
 """
 import argparse, collections, io, json, os, re, statistics, sys
