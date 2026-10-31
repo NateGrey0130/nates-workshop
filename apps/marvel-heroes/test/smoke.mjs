@@ -1046,10 +1046,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && mh2.every((c) => c.team === 'Avengers' || c.team === 'MH2 Time Trap'), `${mh2.length} ${avengers}`);
     const blk = (id) => mh2.find((c) => c.id === id)?.versions[0].blocks[0];
     const minions = bookNpc({ character: 'kang-s-minions-mh2' }).snapshot;
-    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two the only ones in any book',
+    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two and MT3\'s Snakes and Scorpions the only ones in any book',
       minions?.karma === 10 && blk('kang-s-minions-mh2')?.karma_derived === true
       && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).map((c) => c.id).sort().join()
-        === 'kang-s-minions-mh2,miss-locke-mh3,mr-chambers-mh3',
+        === 'kang-s-minions-mh2,miss-locke-mh3,mr-chambers-mh3,scorpions-mt3,snakes-mt3',
       `${minions?.karma} ${blk('kang-s-minions-mh2')?.karma_derived}`);
     const mimic = bookNpc({ character: 'mimic-mh2' }).snapshot;
     check('MH2: the Mimic\'s absorbed form is a second block on his card, so he is one NPC with two forms (24 and 170)',
@@ -1732,6 +1732,133 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const twainT = rowsT.filter((r) => r.key.startsWith('mt2:twain-android-mt2:')).map((r) => r.key.split(':')[2]).sort().join();
       check('MT2 text: the Twain Android\'s Talents. and Contacts. open sections of their own beside its two powers (stop_labels)',
         twainT === 'contacts,power,power,talents', twainT);
+    }
+  }
+
+  // MT3 is read by scripts/msh/gridbooks.py (mt3-overrides.json), with the
+  // survey's decisions applied as it recommends (mt3.md; Nate 2026-10-30).
+  // Every card is in the Adventure Book (printed 4-16 and 21-63). The registry
+  // fields whose absence roster.py would not stop on (speck_lines,
+  // derived_totals, class_i_digit, two_ranks) are each pinned here by what
+  // they change.
+  if (data.npcs.characters.some((c) => c.book === 'mt3')) {
+    const mt3 = data.npcs.characters.filter((c) => c.book === 'mt3');
+    const blocksK = mt3.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkK = (id, i = 0) => mt3.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamK = (t) => mt3.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const playedK = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MT3: 43 characters, each id ending -mt3 with one version, the three Player Characters as Revenge of Kang Heroes, six X-Men, four Fantastic Four, 30 under the book\'s title, and no name starting The',
+      mt3.length === 43 && mt3.every((c) => c.id.endsWith('-mt3') && c.versions.length === 1)
+      && teamK('Revenge of Kang Heroes') === 'Moon Knight,Scarlet Witch,Vision'
+      && teamK('X-Men') === 'Angel,Beast,Cyclops,Iceman,Marvel Girl,Professor X'
+      && teamK('Fantastic Four') === 'Human Torch,Invisible Girl,Mister Fantastic,Thing'
+      && mt3.filter((c) => c.team === 'MT3 The Revenge of Kang').length === 30
+      && !mt3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mt3.length} ${[...new Set(mt3.map((c) => c.team))]}`);
+    check('MT3: the cards sort by the Adventure page each starts on, 4 to 63',
+      mt3.map((c) => c.id).join() === ['vision', 'moon-knight', 'scarlet-witch', 'beast', 'cyclops', 'angel', 'iceman', 'marvel-girl',
+        'professor-x', 'invisible-girl', 'mister-fantastic', 'human-torch', 'thing', 'daredevil', 'spider-man', 'iron-man', 'marty-jenkins',
+        'kang', 'ko-kri', 'executioner', 'mad-thinker', 'mad-thinker-s-android', 'super-skrull', 'black-knight-nathan-garrett', 'mandarin',
+        'melter', 'unicorn', 'attuma', 'attuma-s-minions', 'beetle', 'electro', 'fish', 'giant-insect', 'alligator-creatures', 'snakes',
+        'scorpions', 'kang-duplicate-s-battle-robots', 'thugs', 'mike-franklin', 'tom-tyler', 'security-robots',
+        'supreme-kang-s-battle-robots', 'o-malley'].map((id) => `${id}-mt3`).join(),
+      mt3.map((c) => c.id).join());
+    check('MT3: 48 blocks: five cards of two labelled forms (Moon Knight, the Thing, Daredevil, Spider-Man, Iron Man), 14 one-line grids (the Mad Thinker\'s Android\'s and Attuma\'s Minions\' ranks only), and 34 full blocks',
+      blocksK.length === 48
+      && blocksK.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === ['moon-knight-mt3:Normal', 'moon-knight-mt3:Moonlight',
+        'thing-mt3:Thing', 'thing-mt3:Ben (human form)', 'daredevil-mt3:Daredevil', 'daredevil-mt3:Matt Murdock (pre-accident)',
+        'spider-man-mt3:Spider-Man', 'spider-man-mt3:Peter Parker (Non-Powered Form)', 'iron-man-mt3:Iron Man', 'iron-man-mt3:Tony Stark (without armor)'].join()
+      && blocksK.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === ['mad-thinker-s-android', 'attuma-s-minions', 'fish',
+        'giant-insect', 'alligator-creatures', 'snakes', 'scorpions', 'kang-duplicate-s-battle-robots', 'thugs', 'mike-franklin', 'tom-tyler',
+        'security-robots', 'supreme-kang-s-battle-robots', 'o-malley'].map((id) => `${id}-mt3`).join()
+      && blocksK.filter(({ b }) => b.rank_only).map(({ id }) => id).join() === 'mad-thinker-s-android-mt3,attuma-s-minions-mt3'
+      && blocksK.filter(({ b }) => !b.kind).length === 34,
+      blocksK.map(({ id, b }) => `${id}:${b.kind}:${b.label}`).join());
+    const fixesK = [['moon-knight-mt3', 0], ['mandarin-mt3'], ['kang-duplicate-s-battle-robots-mt3'], ['mike-franklin-mt3'], ['tom-tyler-mt3']].map(([id, i]) => {
+      const o = blkK(id, i)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)} plays ${playedK(id, i)}`;
+    });
+    check('MT3: the five misprints keep the printed value and carry the corrected one (Moon Knight\'s Normal P 30 Ex as 30 Rm, the Mandarin\'s Resources AM(30) as AM(50), Kang Duplicate\'s Battle Robots Health 90 as 110, Mike Franklin Karma 18 as 14, Tom Tyler Karma 22 as 18)',
+      fixesK.join(' | ') === [
+        'moon-knight-mt3 misprint P 30 Ex>30 Rm plays 90/60',
+        'mandarin-mt3 misprint resources AM(30)>AM(50) plays 90/60',
+        'kang-duplicate-s-battle-robots-mt3 misprint health 90>110 plays 110/18',
+        'mike-franklin-mt3 misprint karma 18>14 plays 120/14',
+        'tom-tyler-mt3 misprint karma 22>18 plays 100/18',
+      ].join(' | ')
+      && bookNpc({ character: 'moon-knight-mt3', block: 0 }).snapshot?.abilities.psyche.rank === 'remarkable',
+      fixesK.join(' | '));
+    check('MT3: Kang\'s Karma Varies is kept as printed and plays none, his R, I and P each two ranks, the first played (two_ranks)',
+      blkK('kang-mt3')?.override?.verdict === 'as_printed' && blkK('kang-mt3')?.karma === 'Varies' && playedK('kang-mt3') === '86/null'
+      && blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join() === '40 In 50,Am,6 Ty 30,Rm,10 Gd 40,In'
+      && bookNpc({ character: 'kang-mt3' }).snapshot?.abilities.reason.number === 40,
+      `${blkK('kang-mt3')?.karma} ${playedK('kang-mt3')} ${blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join()}`);
+    const ovK = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt3-overrides.json'), 'utf8')).overrides;
+    const textK = ovK.filter((o) => o.verdict === 'text');
+    check('MT3: seven overrides: five misprints, one as printed and one text verdict (Kang\'s background), and only those six blocks carry one',
+      ovK.length === 7 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
+      && textK.map((o) => o.match.row).join() === 'mt3:kang-mt3:background'
+      && blocksK.filter(({ b }) => b.override).map(({ id }) => id).join()
+        === 'moon-knight-mt3,kang-mt3,mandarin-mt3,kang-duplicate-s-battle-robots-mt3,mike-franklin-mt3,tom-tyler-mt3',
+      JSON.stringify(ovK.map((o) => [o.verdict, o.match])));
+    check('MT3: the Snakes print no Karma and the Scorpions neither total, so theirs are derived from their rows (28/10, 40/18) and flagged so, and no other MT3 block is (derived_totals)',
+      blkK('snakes-mt3')?.karma_derived === true && !blkK('snakes-mt3')?.health_derived
+      && blkK('scorpions-mt3')?.karma_derived === true && blkK('scorpions-mt3')?.health_derived === true
+      && playedK('snakes-mt3') === '28/10' && playedK('scorpions-mt3') === '40/18'
+      && blocksK.filter(({ b }) => b.karma_derived || b.health_derived).length === 2,
+      `${playedK('snakes-mt3')} ${playedK('scorpions-mt3')} ${blocksK.filter(({ b }) => b.karma_derived || b.health_derived).map(({ id }) => id)}`);
+    check('MT3: the Fish\'s Endurance reads Class 1000, not Cli000, and plays 1060/6 (class_i_digit)',
+      blkK('fish-mt3')?.abilities[3].slice(1).join(' ') === '1000 C-1000'
+      && bookNpc({ character: 'fish-mt3' }).snapshot?.abilities.endurance.rank === 'class-1000' && playedK('fish-mt3') === '1060/6',
+      `${blkK('fish-mt3')?.abilities[3]} ${playedK('fish-mt3')}`);
+    const powK = mt3.flatMap((c) => c.versions[0].powers);
+    check('MT3: 85 powers across 28 cards, 31 of them linked to the UPB, Kang\'s five among them, and the Angel\'s identity line Warren Worthington III (speck_lines)',
+      powK.length === 85 && powK.filter((p) => p.upb).length === 31 && mt3.filter((c) => c.versions[0].powers.length).length === 28
+      && mt3.find((c) => c.id === 'kang-mt3')?.versions[0].powers.length === 5
+      && mt3.find((c) => c.id === 'angel-mt3')?.versions[0].identity[0] === 'Warren Worthington III',
+      `${powK.length} ${powK.filter((p) => p.upb).length} ${mt3.filter((c) => c.versions[0].powers.length).length} ${mt3.find((c) => c.id === 'angel-mt3')?.versions[0].identity[0]}`);
+    const bookK = data.npcs.books.find((b) => b.slug === 'mt3');
+    const twoK = ['moon-knight-mt3', 'thing-mt3', 'daredevil-mt3', 'spider-man-mt3', 'iron-man-mt3'];
+    const choicesK = mt3.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MT3: the book reads Adventure 4-16 and 21-63, a card cites its Adventure page, and every card is one GM choice but the five two-block cards, two each',
+      JSON.stringify(bookK?.ranges) === '[{"part":"Adventure","pages":[[4,16],[21,63]]}]'
+      && tagline(bookNpc({ character: 'vision-mt3' }).snapshot).startsWith('MT3 The Revenge of Kang, Adventure p.4;')
+      && tagline(bookNpc({ character: 'o-malley-mt3' }).snapshot).startsWith('MT3 The Revenge of Kang, Adventure p.63;')
+      && mt3.every((c, i) => choicesK[i] === (twoK.includes(c.id) ? 2 : 1)),
+      `${JSON.stringify(bookK?.ranges)} ${tagline(bookNpc({ character: 'vision-mt3' }).snapshot)} ${mt3.map((c, i) => `${c.id}:${choicesK[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsK = [['vision-mt3'], ['professor-x-mt3'], ['executioner-mt3'], ['thing-mt3', 0], ['thing-mt3', 1], ['iron-man-mt3', 0], ['iron-man-mt3', 1],
+      ['mad-thinker-s-android-mt3'], ['attuma-s-minions-mt3'], ['o-malley-mt3']].map(([id, b]) => playedK(id, b)).join();
+    check('MT3: cards play their printed Health and Karma (Vision 140/60, Professor X 50/165, the Executioner 245/36, the Thing 200/50 and as Ben 50/50, Iron Man 84/66 and as Tony Stark 22/66, the Mad Thinker\'s Android 100/6, Attuma\'s Minions 100/18, O\'Malley 160/18)',
+      playsK === '140/60,50/165,245/36,200/50,50/50,84/66,22/66,100/6,100/18,160/18', playsK);
+    // The text verdict moves only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by the override's own
+    // fragments, never a sentence of the book in this file.
+    const sqlK = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mt3', 'book-text.sql');
+    if (!existsSync(sqlK)) {
+      check(`MT3: skipped the text checks: no ${rel(sqlK) || sqlK}`, true);
+    } else {
+      const rowsK = [...readFileSync(sqlK, 'utf8').matchAll(/VALUES \('([^']+)', 'mt3', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entK = new Set(rowsK.map((r) => r.key.split(':')[1]));
+      check('MT3 text: 172 rows over 42 entries (Attuma\'s Minions print none) and no row with an odd count of double quotes',
+        rowsK.length === 172 && entK.size === 42
+        && mt3.filter((c) => !entK.has(c.id)).map((c) => c.id).join() === 'attuma-s-minions-mt3'
+        && !rowsK.some((r) => (r.body.match(/"/g) || []).length % 2),
+        `${rowsK.length} ${entK.size} ${rowsK.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
+      // A vertical bar is the OCR's reading of a capital I. These ten rows
+      // carry one and are left for a later row (a parser change, plan row
+      // 12b); a new one, or one fixed, moves this list.
+      const barsK = rowsK.filter((r) => r.body.includes('|')).map((r) => r.key.replace(/^mt3:/, ''));
+      check('MT3 text: the rows with a vertical bar are the ten known ones and no more',
+        barsK.join() === ['scarlet-witch-mt3:power:1', 'iceman-mt3:power:1', 'iceman-mt3:power:2', 'professor-x-mt3:notes',
+          'human-torch-mt3:background', 'daredevil-mt3:power:2', 'iron-man-mt3:power:1', 'iron-man-mt3:power:4', 'attuma-mt3:background',
+          'o-malley-mt3:prose'].join(),
+        barsK.join());
+      const countK = (row, s) => (rowsK.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsK = textK.map((o) => `${o.match.row} ${countK(o.match.row, o.printed)}/${countK(o.match.row, o.read)}`);
+      check('MT3 text: the text verdict is applied, its printed fragment once in its row and the misread gone',
+        textK.length === 1 && verdictsK.every((v) => v.endsWith(' 1/0')), verdictsK.join(' | '));
     }
   }
 
