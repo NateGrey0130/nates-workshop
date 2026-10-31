@@ -1,8 +1,7 @@
 # Survey: MT3 The Revenge of Kang (TSR6891)
 
-> **DRAFT.** Written through the stat blocks of printed 1-16 (plan row
-> 10a). The chapters' grids, *Names the Codex already has*, *Quote marks*,
-> *Which reader fits* and *Decisions* are not finished.
+> **DRAFT.** Written through every stat block of the book (plan rows 10a
+> and 10b). *Which reader fits* is not finished.
 
 Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1989,
 the third module of the Time Warp series. Registry entry:
@@ -180,7 +179,12 @@ printed 4.
   Title case appears in Moon Knight's grid alone of the labelled blocks
   (his Moonlight F, `In 40`, and `Res: Rm(30)`, printed 5), and in two of
   the three one-line grids (below: Gd, Ex, Rm, In, Ty). No book-specific spelling (MA4's RE, MH9's
-  GO) is in printed 1-16. Row 10b adds any code the chapters print.
+  GO) is in printed 1-16.
+- **The chapters' grids** (printed 21-63) print every code in title case
+  under its number: Fe, Pr, Ty, Gd, Ex, Rm, In, Am, and `Cl1000` for the
+  fish's Endurance of 1000 (printed 21, read on the image), Class 1000 in
+  `ranks.json`. So `rank_aliases` gains Fe, Pr, Am and Cl1000. No chapter
+  prints a capital code or a book-specific spelling.
 - **`survey.py` finds 0 blocks**: it looks for MA1's `Health =`, and this
   book prints `Health:`. Its block count is not this book's measure.
 
@@ -276,32 +280,266 @@ MT2's, printed the same way.
 | Ko-Kri (Typical), printed 13 | `Resources: PR(6)` | 6 is Typical (Poor is 3-4). Resources enters no total, so the arithmetic does not say which half is wrong |
 | Mandarin, printed 15 | `Res: AM(30)` | 30 is Remarkable (Amazing is 46-62). The same: no total settles it |
 
+Two other books bear on these. MT2's Moon Knight (printed 4 there) is the
+same block with `P RM 30`, so its RM agrees with the correction. MH7's
+Mandarin (printed 15 there) prints Resources as the word Amazing, which
+backs this block's code AM over its 30. Nothing else cards Ko-Kri.
+
 As `page:name:field printed->corrected`: `5:Moon Knight:P (Normal) EX->RM`,
-`13:Ko-Kri:Resources PR(6)->?`, `15:Mandarin:Resources AM(30)->?`. The two
-Resources are the Decisions' to settle (not finished).
+`13:Ko-Kri:Resources PR(6)` (left as printed, decision 8) and
+`15:Mandarin:Resources AM(30)->AM(50)` (decision 8).
 
 ## The chapters' grids and named blocks (printed 17-63)
 
-Not finished (plan row 10b): the 38 chapters' one-line grids and any named
-block. A 35 dpi look at printed 47 shows a one-line grid in column 3.
+Every chapter page, printed 17-63, was looked at on a 45 dpi render, and
+the OCR of each was searched for a row of rank codes, a row of the seven
+letters, `Health:` and `Karma:`. Both found the same **twelve grids on
+eleven pages**, and each was then read on a crop of the page image (130
+dpi). The other `Health` and `Karma` lines of printed 18, 21, 26, 32, 36,
+38, 48, 49, 53, 55, 57 and 59 are prose (damage, Karma awards), not
+blocks. **No chapter prints a named block** of the first shape (letter,
+CODE, number, labels to the right), and no grid prints a name line.
+
+**Twelve one-line grids**, each the seven letters, a row of numbers, a row
+of title-case codes under them, then `Health:` and `Karma:` on lines of
+their own or on one line. This is MT2's chapter shape. Each is named here
+by what its prose calls it (decision 3).
+
+| printed | column | name (from the prose) | F A S E R I P | Health | Karma |
+|---|---|---|---|---|---|
+| 21 | 1, foot | Fish (Chapter 3) | 6 Ty, 4 Pr, 50 Am, 1000 Cl1000, 2 Fe, 2 Fe, 2 Fe | 1060 | 6 |
+| 21 | 3 | Giant Insect (Chapter 3, living inside the fish) | 10 Gd, 6 Ty, 10 Gd, 10 Gd, 2 Fe, 2 Fe, 2 Fe | 36 | 6 |
+| 22 | 2, top | Alligator Creatures (Chapter 4, a pack) | 10 Gd, 20 Ex, 10 Gd, 20 Ex, 2 Fe, 2 Fe, 2 Fe | 60 | 6 |
+| 33 | 1, top | Snakes (Chapter 11, ten to an area; introduced at the foot of printed 32) | 10 Gd, 10 Gd, 2 Fe, 6 Ty, 2 Fe, 6 Ty, 2 Fe | 28 | not printed (10 by R+I+P) |
+| 34 | 2 | Scorpions (Chapter 12; the prose puts the word in double quotes) | 10 Gd, 10 Gd, 10 Gd, 10 Gd, 2 Fe, 10 Gd, 6 Ty | not printed (40 by F+A+S+E) | not printed (18 by R+I+P) |
+| 46 | 2 | Battle Robots (Chapter 23, two, the Kang duplicate's) | 20 Ex, 20 Ex, 30 Rm, 40 In, 6 Ty, 6 Ty, 6 Ty | **90** | 18 |
+| 47 | 3, foot | Thugs (Chapter 25, with baseball bats) | 6 Ty, 6 Ty, 6 Ty, 10 Gd, 4 Pr, 6 Ty, 6 Ty | 28 | 16 |
+| 49 | 2, top | Mike Franklin (Chapter 26, the boxer) | 30 Rm, 30 Rm, 20 Ex, 40 In, 6 Ty, 6 Ty, 2 Fe | 120 | **18** |
+| 50 | 2 | Tom Tyler (Chapter 27; the prose names him Tom Tyler on printed 49) | 30 Rm, 20 Ex, 20 Ex, 30 Rm, 10 Gd, 6 Ty, 2 Fe | 100 | **22** |
+| 56 | 1, top | Security Robots (Chapter 32, four; introduced at the foot of printed 55) | 30 Rm, 20 Ex, 30 Rm, 40 In, 6 Ty, 4 Pr, 4 Pr | 120 | 14 |
+| 62 | 2, foot | Battle Robots (Chapter 37, eight, the Supreme Kang's) | 30 Rm, 30 Rm, 40 In, 30 Rm, 6 Ty, 6 Ty, 6 Ty | 130 | 18 |
+| 63 | 1, foot | O'Malley (Chapter 38, in his augmented form) | 40 In, 40 In, 40 In, 40 In, 6 Ty, 6 Ty, 6 Ty | 160 | 18 |
+
+- **After the grid**, the fish prints `Hide:`, the insect, the alligators
+  and the snakes `Bite:`, the scorpions `Bite:` and `Chitinous Hide:`, the
+  two battle robots `Armor:` and `Blasters:`, and the security robots
+  `Armor:`, `Plasma Cannons:` and `Entwining Nets:`, each an italic run-in
+  as a power is under KNOWN POWERS. The thugs, Franklin, Tyler and O'Malley
+  are followed by prose. No chapter grid prints `KNOWN POWERS`, `Talents`,
+  `Contacts` or `Background`.
+- **OCR misreads**: the letter I as `|` on every grid, S as a section sign
+  (printed 21, 22, 47, 50, 56 and 62), the fish's `Cl1000` as `Cli000`, and
+  a mark before the robots' last `Ty` (printed 46). Each value above is the
+  image's.
+- **Two grids print the same name.** The battle robots of Chapters 23 and
+  37 are different grids (decision 3 names them apart).
+
+**The book checks itself, in the chapters.**
+
+| measure | count |
+|---|---|
+| Health = F+A+S+E | **10 of 11** that print it: Chapter 23's battle robots print 90, and 20+20+30+40 is 110 |
+| Karma = R+I+P | **8 of 10** that print it: Franklin prints 18 (6+6+2 is 14) and Tyler 22 (10+6+2 is 18) |
+| every number within its rank code's range | **12 of 12** (every grid prints number and code, and every pair agrees) |
+| a number inside its range but not the rank's standard | none |
+
+Franklin's and Tyler's Karma both miss by 4, and each would hold were its P
+`6 Ty` rather than the `2 Fe` both print. Each P's number and code agree,
+so by MT2's rule (Khan's Champion) the total is the misprint.
+
+**No grid is repeated**, in the chapters or against printed 4-16. **Beings
+statted by reference only**, to the Advanced Set's Judge's Book (typical
+soldiers, printed 39 and 52-54; a typical thug, 60; a typical policeman,
+61), to all-Typical ranks (bystanders, 18 and 57; tough guys, 43; a clerk,
+60) or to a block of printed 4-16 (the Ko-Kri, 21; Kang's duplicates,
+Chapters 13-37), print no rank row and are not here.
+
+**The misprints, the whole book, each read on the page image:**
+
+| entry | printed | the book's own arithmetic |
+|---|---|---|
+| Moon Knight, printed 5 | `P EX 30` (Normal form) | 30 is Remarkable; Karma 60 agrees with the 30, and MT2's same block prints RM: RM |
+| Ko-Kri (Typical), printed 13 | `Resources: PR(6)` | 6 is Typical; no total and no other book settles it (decision 8) |
+| Mandarin, printed 15 | `Res: AM(30)` | 30 is Remarkable; MH7's Mandarin prints Amazing, so the number is the misprint: AM(50) (decision 8) |
+| Battle Robots, printed 46 | `Health: 90` | F+A+S+E = 20+20+30+40 = 110; every number agrees with its code, so the total is the misprint |
+| Mike Franklin, printed 49 | `Karma: 18` | R+I+P = 6+6+2 = 14; the same: the total |
+| Tom Tyler, printed 50 | `Karma: 22` | R+I+P = 10+6+2 = 18; the same: the total |
+
+As `page:name:field printed->corrected`: `5:Moon Knight:P (Normal) EX->RM`,
+`13:Ko-Kri:Resources PR(6)` (as printed), `15:Mandarin:Resources
+AM(30)->AM(50)`, `46:Battle Robots:Health 90->110`, `49:Mike
+Franklin:Karma 18->14`, `50:Tom Tyler:Karma 22->18`.
+
+**The whole book, counted:** 33 full blocks (the labelled grids of printed
+4-16: 29 headers and 4 second forms) and 15 one-line grids (3 inside
+blocks, on printed 14, 15 and 16; 12 in the chapters, on printed 21-63).
+
+**Card pages and the chapters' grids.** Printed 4-16 are card pages: every
+grid there is a character's, Attuma's text ends on printed 16, and Chapter
+1's banner tops printed 17. The chapters' twelve grids are statted inside
+the prose, on printed 21, 22, 33, 34, 46, 47, 49, 50, 56, 62 and 63. The
+registry records them as MT2's entry does (`character_ranges` and
+`opponents`, each with its `part`), because MT3's entry is a `parts` entry
+and the chapters' grids are MT2's chapter grids in shape; which reader
+takes them is *Which reader fits*.
 
 ## Names the Codex already has
 
-Not finished (plan row 10b).
+Read from `apps/marvel-heroes/data/npcs.json`, 2026-10-30 (810 cards), each
+the same person unless said:
+
+| MT3 card | already carded by |
+|---|---|
+| Vision | MH2, MT2 |
+| Moon Knight | MT2 (Marc Spector) |
+| Scarlet Witch | MA1, MH2, MH9, MT2 (MH1's False Scarlet Witch is someone else) |
+| Cyclops | MA1, MHSP1, MHSP2 |
+| Beast | MA1, MHSP2 |
+| Angel | MA1, MHSP2 (Warren Worthington III) |
+| Iceman | MA1, MHSP2 |
+| Marvel Girl | MA1 (Jean Grey) |
+| Professor X | MA1, MHSP1, MH1, MHSP2 |
+| Mister Fantastic | MHSP1, MA4, MHSP2, MH9, and MH3's Mr. Fantastic |
+| Invisible Girl | MH3; MA4, MHSP2 and MH9 card Sue Storm as Invisible Woman |
+| Thing | MHSP1, MA4, MH3, MHSP2, MH9 (MH9's Thing (Divergent Earth) is another Earth's) |
+| Human Torch | MHSP1, MA4, MH3, MHSP2, MH9's Human Torch (Johnny Storm); not MA4's Human Torch I or MH9's Jim Hammond |
+| Spider-Man | MHSP1, MHSP2, MH8, MH9 |
+| Daredevil | MHSP2, MH4, MH9 |
+| Iron Man | MHSP2 (Tony Stark); MHSP1's and MH7's Iron Man is James Rhodes, someone else |
+| Kang | MHSP1, MH2 (and MH2's Kang's Minions) |
+| Super-Skrull | MA4, MH2, and MH9's Super Skrull |
+| Mad Thinker | MA4, MH9 (and their androids' cards: MA4's Mad Thinker's Awesome Android, MH9's Mad Thinker's Androids) |
+| Executioner | MH6 (Skurge) |
+| Melter | MH5 (Bruno Horgan) |
+| Mandarin | MH7 |
+| Black Knight | MT2's Black Knight (Nathan Garrett), the same block; MHSP2's and MH8's are Dane Whitman |
+| Electro | MHSP2 (Maxwell Dillon) |
+| Attuma | MA4, MH9 |
+
+New: Marty Jenkins, Ko-Kri, the Unicorn, the Beetle, the Mad Thinker's
+android, Attuma's minions and all twelve chapter grids. MT2's Scorpion is
+MacDonald Gargan, not this book's scorpions. Each MT3 card is a card of its
+own with a `-mt3` id (Nate, 2026-09-28).
 
 ## Quote marks
 
-Not finished (plan row 10b).
+**The book prints single quotes of its own, but not in any text a card
+takes.** The OCR of printed 1-64 reads a single mark at a word's edge in 76
+places. Read on the page images:
+
+- **Two real pairs of singles**, both nested inside dialogue in Chapter
+  33's read-aloud box (printed 57, columns 1 and 3): a phrase and a
+  sentence quoted inside a speech. Chapter prose is not imported.
+- **Every mark on the card pages (printed 4-16) is a double quote**, a
+  feet mark or a speck: the OCR's singles beside doubles round the Time and
+  Space series (printed 13), the Supreme and Master Kang run-ins (13) and
+  the power horn (15), Grant's (5) and Iceman's iced up (7) are doubles on
+  the image; `(30')` and `1500'` (printed 6 and 9) are feet marks on the
+  image, and the OCR reads the chapters' `16'`, `10,000'`, `500'` and the
+  like the same way; and a mark the OCR hangs before `Popularity:` on the
+  Spider-Man's P row (printed 11) is not on the block row 10a read on the
+  image. The others on printed 4 and 16 pair as doubles in the OCR and were
+  not read on the image.
+- **The chapters' marks near a grid** (printed 46's battle robots, printed
+  49's gym bag label, printed 62's message) are doubles on the image, and
+  `'em` (printed 43) is an apostrophe.
+
+So for the imported text MHSP1's rule (every single mark a misread) fits,
+as it fits MT2, with one thing for the trial parse (row 10c) to check: a
+feet mark after a number (`30'`, `1500'`) must stay a single mark and not
+be paired into a double.
 
 ## Which reader fits
 
-Not finished (plan rows 10b and 10c).
+Not finished (plan row 10c).
 
 ## Decisions this survey leaves open
 
-Not finished (plan row 10b). Already ruled: characters only (Nate,
-2026-10-21), second cards with `-mt3` ids (2026-09-28) and a leading The
-dropped from a name (2026-10-21).
+Each applied as recommended, unanswered, if Nate does not rule (Nate,
+2026-10-30: take the survey's recommendations). Characters only is already
+ruled (Nate, 2026-10-21), and so are second cards with `-mt3` ids
+(2026-09-28) and a leading The dropped from a name (2026-10-21: THE VISION
+is Vision).
+
+1. **Teams:** Revenge of Kang Heroes for the three Player Characters
+   (recommended, as MT2's Weird, Weird West Heroes for the same three);
+   **X-Men** for the six cards under the book's own subhead The X-Men
+   (printed 6-8), and **Fantastic Four** for the four on printed 9-10,
+   which the book closes with its own THE FANTASTIC FOUR IN THE ADVENTURE
+   (as MT2's Western Heroes took the book's own head; the Codex files
+   MA1's, MH1's and MHSP2's X-Men and MA4's, MH3's, MHSP2's and MH9's
+   Fantastic Four there); every other card, Spider-Man to Marty Jenkins,
+   the Enemy NPCs and the chapters' grids, under **MT3 The Revenge of
+   Kang** (as MT2's). Not taken: West Coast Avengers for the Player
+   Characters (MT2 decision 1's reason holds: no identity line names it),
+   or every NPC under the book's title.
+2. **Characters only** (recommended; Nate, 2026-10-21): no adventure,
+   items, places or maps.
+3. **Every grid a card** (recommended, as MT2 decision 3), named by what
+   the prose calls them: Fish, Giant Insect, Alligator Creatures, Snakes,
+   Scorpions (the prose's double quotes dropped: they mark a word, not a
+   nickname as Hobart's in MT2), Thugs, Mike Franklin, Tom Tyler, Security
+   Robots and O'Malley (a straight apostrophe). The two grids the prose
+   calls battle robots are named by whose they are, **Kang Duplicate's
+   Battle Robots** (printed 46) and **Supreme Kang's Battle Robots**
+   (printed 62), since one book's two cards of one name would share an id.
+   Not taken: a chapter number in a name.
+4. **The grids inside other blocks** (recommended, as MT2 decision 4): the
+   Mad Thinker's android (printed 14) a card of its own, **Mad Thinker's
+   Android**, and Attuma's minions (printed 16) one, **Attuma's Minions**,
+   each a being with a grid whose Health and Karma hold (100 and 6, 100
+   and 18), codes only, so on standard numbers and `rank_only`, filed with
+   its host's team, as MT2's Lobo; the Black Knight's winged horse (printed
+   15) left in his card's text, as MT2 decided for the same horse, since it
+   prints neither Health nor Karma.
+5. **Black Knight (Nathan Garrett)** as the card's name (recommended, as
+   MT2 decision 5 for the same block): MHSP2's and MH8's Black Knight is
+   Dane Whitman.
+6. **Moon Knight's two forms** one card with two blocks labelled Normal
+   and Moonlight, Health 90 and 150 (recommended, as MT2 decision 6 for the
+   same block).
+7. **The failing totals and code** as `misprint` overrides, printed and
+   corrected kept (recommended, as MT2 decision 7): Moon Knight's Normal P
+   code, EX to RM; Kang Duplicate's Battle Robots' Health, 90 to 110; Mike
+   Franklin's Karma, 18 to 14; Tom Tyler's Karma, 22 to 18. Not taken:
+   Franklin's and Tyler's P as `6 Ty` (both Karma would hold), since each
+   printed P's number and code agree and the rule is MT2's for Khan's
+   Champion.
+8. **The two Resources** (recommended): the Mandarin's `AM(30)` a
+   `misprint` override to AM(50), printed and corrected kept, on MH7's
+   Mandarin, whose Resources is the word Amazing; Ko-Kri's `PR(6)` left as
+   printed, since no total and no other book says which half is wrong (an
+   `as_printed` with that reason if a check reads Resources; none did for
+   MT2, per its `bracket_tail` note). Not taken: Ko-Kri's code to TY or
+   its number to 4, either of which is a guess.
+9. **Kang** (recommended): one card, one block, the first value of R, I and
+   P its ranks and the second each row's alternate (as MT2's Moon Knight
+   rows carry theirs), Health 86, and `Karma: Varies` left unset, as MH3's
+   Super-Adaptoid (MH3 decision 4: the card says so in a word, and a
+   derived 56 or 120 would be a guess at what it means). Not taken: two
+   blocks by `slash_forms`, since the block prints one Health and only
+   three rows print two values.
+10. **Totals a chapter grid does not print** (recommended, as MH3 decision
+    4's derived Karma, after MH2's Kang's Minions): the snakes' Karma 10
+    and the scorpions' Health 40 and Karma 18, derived and flagged as not
+    printed. Not taken: left unset, which leaves two cards the GM tools
+    cannot play.
+11. **No card for beings statted by reference only** (recommended, as MT2
+    decision 9): the Judge's Book's soldiers, thug and policeman, the
+    all-Typical bystanders, tough guys and clerk, and the Ko-Kri and Kang
+    duplicates the chapters send back to printed 13.
+12. **Ko-Kri (Typical)** a card named Ko-Kri with its block labelled
+    Typical, the parenthesis read as a version as `npcs.py` reads one
+    (recommended). Not taken: MT2's `count_headers`, which is for a count,
+    and Typical is not one.
+13. **Names otherwise as printed**, title case for the capitals
+    (recommended): the leading The dropped from THE VISION, THE SCARLET
+    WITCH, THE BEAST, THE THING, THE HUMAN TORCH, THE UNICORN and THE
+    BEETLE (Nate, 2026-10-21); Mister Fantastic and Invisible Girl as this
+    book prints them, not MH3's Mr. Fantastic or the later Invisible Woman;
+    the four second forms (Ben, Peter Parker, Matt Murdock, Tony Stark)
+    blocks of their hero's card labelled with the line over the grid, as
+    MT2's Hamilton Slade.
 
 ## How to reproduce
 
