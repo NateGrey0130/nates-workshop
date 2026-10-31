@@ -1,7 +1,8 @@
 # Survey: MT3 The Revenge of Kang (TSR6891)
 
 > **DRAFT.** Written through every stat block of the book (plan rows 10a
-> and 10b). *Which reader fits* is not finished.
+> and 10b), and *Which reader fits* from the trial parse (plan row 10c).
+> Not yet run through the Marvel smoke suite.
 
 Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1989,
 the third module of the Time Warp series. Registry entry:
@@ -447,11 +448,155 @@ places. Read on the page images:
 So for the imported text MHSP1's rule (every single mark a misread) fits,
 as it fits MT2, with one thing for the trial parse (row 10c) to check: a
 feet mark after a number (`30'`, `1500'`) must stay a single mark and not
-be paired into a double.
+be paired into a double. It does (*Which reader fits*).
 
 ## Which reader fits
 
-Not finished (plan row 10c).
+**`grid-booklets` (`scripts/msh/gridbooks.py`, MT2's), with things taught
+to it.** Measured 2026-10-30 (plan rows 10c and 10c1): a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at this branch's `7f56391d`
+(`main` at `b8c2221c`), the mt3 entry as rows 10a and 10b left it
+(`parts`, `character_ranges`, `opponents`) given `"layout":
+"grid-booklets"` and the fields `main`'s `gridbooks.py` already reads for
+MT2, set for this book: `rank_ranges`, `code_first_caps`, `row_marks`,
+`bracket_tail`, `letters_marks`, `lost_letters`, `title_case_labels`,
+`trailing_marks`, `card_headers`, `card_names` (decision 5), trial `teams`
+(decision 1, four of them, the third and fourth starting at a header),
+`cards` (31: the 29 headers, the Mad Thinker's Android and Attuma's
+Minions, decision 4), `header_blocks` (the four second forms),
+`one_line_grids` (14: the android and the minions with their host, and the
+twelve chapter grids by decision 3's names), `slash_forms` (Moon Knight,
+printed 5, decision 6), `subhead_labels` and `speck_lines`; and a trial
+`mt3-overrides.json`, run on a copy of the cache under its own
+`WORKSHOP_MSH_CACHE`. Six runs.
+
+**`code-grids` stops at once**, as it did on MT2: `roster.py mt3` exits 1
+in `roster.page_stream` with `KeyError: 'offset'`, because `codegrids.py`
+reads one `offset` and `character_pages`, and a parts entry carries
+neither (MT2's code-grids items 1 and 2). MT2's verdict went to
+grid-booklets, and `main`'s `gridbooks.py` now reads MT2's fields, so the
+trial went there and no further with code-grids. The other readers fit
+less: `roster.py` (MA1) reads one offset; `booklet.py` (MHSP1) and
+`coverpanels.py` (MH1, MH2) read rank words with no numbers.
+
+**The stock grid-booklets stops at the first chapter grid.** With MT2's
+fields and nothing taught, `roster.py mt3` exits 1 at the fish (printed
+21), `a one-line grid read wrong`, and writes nothing (item 1). Each later
+stop needed a reader change to pass, so there is no "past the stop" column.
+
+| measure | stock | with every trial change |
+|---|---|---|
+| entries | none (stops) | 48: 43 with a block, 5 without (The Player Characters twice, Non-Player Characters, NON-PLAYER CHARACTERS, Friendly NPCs, all blockless headings) |
+| stat blocks | none | 48 |
+| blocks passing every check | none | 42, and 6 known from the overrides (5 `misprint`, 1 `as_printed`) |
+| failing | none | 0 |
+| checklist names with no entry | not reached | 0 (31 cards, 12 opponents, all found) |
+| powers | not reached | 85 across 28 entries |
+| exit code | 1 | 0 |
+
+The 48 blocks are this survey's count: the 33 labelled grids with Moon
+Knight's read as his two forms (34), the two one-line grids carded inside
+their hosts' blocks, and the twelve chapter grids. The Black Knight's horse
+is not read as a block, as decision 4 wants. The run before the last fixes
+exited 1 with 2 failing (Moon Knight's P, matched twice by its override;
+Peter Parker's non-powered form, every row unread), Spider-Man's Health
+and Karma and Kang's Karma not numbers, and Ko-Kri (Typical) on no
+checklist.
+
+What grid-booklets must learn. Each reader change was made in the scratch
+copy, marked as the trial's:
+
+1. **Class 1000 read `Cli000`** (the fish's E, printed 21): `roster.CANON`
+   has no `i` for a 1. Reader, ungated in the trial.
+2. **A one-line grid that prints neither Health nor Karma** (the
+   scorpions, printed 34): `read_line_grid` wants a Health line. Reader,
+   ungated.
+3. **An underscore token and a mark in a codes row** (the Kang Duplicate's
+   Battle Robots, printed 46): `line_codes` strips marks but not this.
+   Reader, ungated.
+4. **A title-case second value on a slash row** (Moon Knight's Moonlight
+   F, `/In 40`, printed 5): the `slash_forms` mend wants capitals. Reader,
+   inside the `slash_forms` gate.
+5. **A mark set off by spaces between code and number** (the Vision's R,
+   printed 4; the Thing's P, 10; Ko-Kri's P and A, 13; Electro's E, 16):
+   `row_marks`' marks allow no space, so four grids were unread. Reader,
+   inside `code_first_caps`, which MT2 sets too.
+6. **Two ranks on one row** (Kang's R, I and P, `IN/AM 40/50`, printed
+   13): read as rank plus alternate (decision 9). Reader, inside
+   `code_first_caps`.
+7. **A grid broken across a column** (the Invisible Girl, printed 9; the
+   Human Torch, 10; Peter Parker's non-powered form, 11): `grid_at` wants
+   Popularity in the same column. The trial's `split_grids` takes the
+   stream's rows, then re-reads the first column's part from a `--psm 6`
+   crop as every whole grid is; Peter Parker's A, S and E read sideways in
+   the TSV, and the image prints TY 6 on each. Reader, gated by
+   `split_grids`.
+8. **`Res:` for Resources** (the Mandarin, printed 15): only `slash_forms`
+   renamed it, which covered Moon Knight alone. The trial's `res_label`.
+   Reader, gated.
+9. **Totals a grid does not print** (the snakes' Karma, printed 33; the
+   scorpions' Health and Karma, 34) are derived from the rows (decision
+   10), so the check on them cannot fail. The block should be marked
+   derived, as `rank_only` marks a derived number. Reader, ungated.
+10. **Kang's `Known Powers`** (printed 13, no colon in the OCR) stays title
+    case: `subhead_labels` adds the colon after `title_case_labels` has
+    run, so his powers went to prose. Registry only: a `speck_lines` entry,
+    the line after `subhead_labels` (`Known Powers:`) as `KNOWN POWERS:`.
+    Kang then has his 5 powers.
+11. **Kang's `Karma: Varies`** (printed 13). Registry only: an
+    `as_printed` override on his Karma (ME2 Death's shape; decision 9).
+12. **`Ko-Kri (Typical)`** (printed 13): `gridbooks.base` strips the
+    bracket from the header but the card name kept it, so neither list
+    found the other. Registry only: the card named `Ko-Kri` (decision 12).
+13. **Moon Knight's P override matched both slash forms** (printed 5).
+    Registry only: `"label": "Normal"` in its match (decision 7).
+
+**Read right with nothing changed** (MT2's fields): the four second forms
+by `header_blocks`; the android and the minions by `one_line_grids` with
+their host; every card header by `cards`; the teams' fourth field
+(MISTER FANTASTIC, SPIDER-MAN); and every chapter grid but items 1-3 and
+9.
+
+**So grid-booklets must learn 13 things: 9 reader changes** (1-9) **and 4
+registry-only** (10-13), **none left unfixed**. Items 1, 2, 3 and 9 are
+ungated in the trial and 5 and 6 sit inside `code_first_caps`, which an
+earlier book already sets: the reader row gives each a field of its own,
+or builds every earlier book byte-identical (`marvel-book`, *Prove every
+earlier book did not move*). The trial did not run that proof. The
+overrides file holds 6 entries, each matching one block (no `OVERRIDE
+MATCHES` line): Moon Knight's P (label Normal), the Mandarin's Resources
+AM(30) to AM(50), Kang's Karma `as_printed`, the Kang Duplicate's Battle
+Robots' Health 90 to 110, Mike Franklin's Karma 18 to 14 and Tom Tyler's
+22 to 18. Ko-Kri's PR(6) needs none: no check reads Resources (decision
+8). Its registry patch, its two reader diffs and its runs are kept in the
+plan's store (rows 10c and 10c1, `trial/mt3/`), not the repo.
+
+**The open checks, answered by the trial:**
+
+- **Peter Parker's non-powered block** (printed 11) reads only with item
+  7's crop re-read: F, A, S and E TY 6, R EX 20, I GD 10, P EX 20, Health
+  24, Karma 50, Resources PR(3), Popularity 0, and it passes.
+- **No Enemy NPCs heading entry**, and the book needs none: the stream
+  reads `ENEMY NPCs` (printed 13, column 1, above KANG), but mixed case
+  fails the header test. MT2's roster has none either, and `npcs.py` reads
+  only entries with a block. The registry's `sections` carry Enemy NPCs
+  already.
+- **The feet marks under `npcs.pair_quotes`** (a scratch `npcs.py`):
+  the Beast's `(30')` (printed 6), the Angel's `16'`, `10,000'` and
+  `29,000'` (7) and Mister Fantastic's `1500'` (9) each stay a single mark,
+  since each follows a digit, which `pair_quotes` skips. No `text` verdict
+  is needed for them. The Beast's text gains one double elsewhere (two
+  left singles read for an opening double, printed 6, now paired with its
+  closing double), not read on the image by the trial.
+
+**Verdict: grid-booklets.** It reads this book's `parts`,
+`character_ranges` and `opponents` as rows 10a and 10b wrote them, and
+every field MT2 taught it carries over; code-grids cannot start.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above, the overrides' six, and a field
+of its own for each of the reader changes 1-9 or the byte-identical proof
+for the ungated ones. This survey sets no `layout`.
 
 ## Decisions this survey leaves open
 
