@@ -1619,6 +1619,122 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MT2 is read by scripts/msh/gridbooks.py (mt2-overrides.json), with the
+  // survey's decisions applied as it recommends (mt2.md; Nate 2026-10-30).
+  // Every card is in the Adventure Book (printed 3-8, 12-36 and 52-64). The
+  // registry fields whose absence roster.py would not stop on (card_names,
+  // count_headers, not_labels, bracket_tail, subhead_labels, stop_labels,
+  // indented_power_heads, speck_lines, rank_ranges) are each pinned here by
+  // what they change.
+  if (data.npcs.characters.some((c) => c.book === 'mt2')) {
+    const mt2 = data.npcs.characters.filter((c) => c.book === 'mt2');
+    const blocksT = mt2.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkT = (id, i = 0) => mt2.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamT = (t) => mt2.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const playedT = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MT2: 30 characters, each id ending -mt2 with one version, the three Player Characters as Weird, Weird West Heroes, the eight Western Heroes and Lobo as Western Heroes, 18 under the book\'s title, and no name starting The',
+      mt2.length === 30 && mt2.every((c) => c.id.endsWith('-mt2') && c.versions.length === 1)
+      && teamT('Weird, Weird West Heroes') === 'Moon Knight,Scarlet Witch,Vision'
+      && teamT('Western Heroes') === 'Ghost Rider I & II,Ghost Rider IV,Kid Colt,Lobo,Rawhide Kid,Red Wolf,Shooting Star,Texas Twister,Two-Gun Kid'
+      && mt2.filter((c) => c.team === 'MT2 The Weird, Weird West').length === 18
+      && !mt2.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mt2.length} ${[...new Set(mt2.map((c) => c.team))]}`);
+    check('MT2: the cards sort by the Adventure page each starts on, 3 to 63',
+      mt2.map((c) => c.id).join() === ['vision', 'moon-knight', 'albert-einstein', 'scarlet-witch', 'alexander-the-great', 'doctor-doom',
+        'genghis-khan', 'napoleon-bonaparte', 'mysterio', 'sandman', 'black-knight-nathan-garrett', 'krozzar', 'scorpion', 'tyrannosaur',
+        'hoplites', 'cavemen', 'faro-john-hobart', 'average-mounted-desperado', 'average-rifleman', 'khan-s-champion', 'twain-android',
+        'ghost-rider-i-ii', 'ghost-rider-iv', 'kid-colt', 'rawhide-kid', 'lobo', 'red-wolf', 'shooting-star', 'texas-twister',
+        'two-gun-kid'].map((id) => `${id}-mt2`).join(),
+      mt2.map((c) => c.id).join());
+    check('MT2: the Black Knight is Nathan Garrett (card_names), and "Faro" John Hobart and Ghost Rider I & II read as printed (speck_lines)',
+      mt2.find((c) => c.id === 'black-knight-nathan-garrett-mt2')?.name === 'Black Knight (Nathan Garrett)'
+      && mt2.find((c) => c.id === 'faro-john-hobart-mt2')?.name === '"Faro" John Hobart'
+      && mt2.find((c) => c.id === 'ghost-rider-i-ii-mt2')?.name === 'Ghost Rider I & II',
+      ['black-knight-nathan-garrett-mt2', 'faro-john-hobart-mt2', 'ghost-rider-i-ii-mt2'].map((id) => mt2.find((c) => c.id === id)?.name).join(' | '));
+    check('MT2: 32 blocks: Moon Knight\'s Normal and Moonlight, Ghost Rider IV\'s own and Hamilton Slade\'s one-line grid, five more one-line grids (Lobo\'s ranks only), and no other block labelled (count_headers, not_labels)',
+      blocksT.length === 32
+      && blocksT.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === 'moon-knight-mt2:Normal,moon-knight-mt2:Moonlight,ghost-rider-iv-mt2:Ghost Rider IV,ghost-rider-iv-mt2:Hamilton Slade'
+      && blocksT.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === ['tyrannosaur', 'hoplites', 'cavemen', 'khan-s-champion',
+        'ghost-rider-iv', 'lobo'].map((id) => `${id}-mt2`).join()
+      && blocksT.filter(({ b }) => b.rank_only).map(({ id }) => id).join() === 'lobo-mt2' && blocksT.filter(({ b }) => !b.kind).length === 26,
+      blocksT.map(({ id, b }) => `${id}:${b.kind}:${b.label}`).join());
+    const fixesT = ['genghis-khan-mt2', 'khan-s-champion-mt2'].map((id) => {
+      const o = blkT(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${v(a.printed)}>${v(a.corrected)}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedT(id)}`;
+    });
+    check('MT2: the two misprints keep the printed value and play the corrected one (Genghis Khan A and S 6 Gd as 6 Ty, Khan\'s Champion Karma 10 as 14)',
+      fixesT.join(' | ') === [
+        'genghis-khan-mt2 misprint A 6 Gd>6 Ty also misprint S 6 Gd>6 Ty plays 52/40',
+        'khan-s-champion-mt2 misprint karma 10>14 plays 50/14',
+      ].join(' | '),
+      fixesT.join(' | '));
+    const ovT = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt2-overrides.json'), 'utf8')).overrides;
+    const textT = ovT.filter((o) => o.verdict === 'text');
+    check('MT2: five overrides: two misprints and three text verdicts (the Scarlet Witch\'s first power, the Black Knight\'s second, Ghost Rider IV\'s notes), and only the two misprinted blocks carry one',
+      ovT.length === 5 && ovT.filter((o) => o.verdict === 'misprint').length === 2
+      && textT.map((o) => o.match.row).join() === ['scarlet-witch-mt2:power:1', 'black-knight-nathan-garrett-mt2:power:2', 'ghost-rider-iv-mt2:notes'].map((k) => `mt2:${k}`).join()
+      && blocksT.filter(({ b }) => b.override).map(({ id }) => id).join() === 'genghis-khan-mt2,khan-s-champion-mt2',
+      JSON.stringify(ovT.map((o) => [o.verdict, o.match])));
+    const offStd = (id) => blkT(id)?.abilities.filter(([, n, code]) => {
+      const r = ranks.find((x) => x.abbr === code);
+      return r && r.standard !== n && n >= r.min && n <= (r.max ?? Infinity);
+    }).length;
+    const gangT = ['faro-john-hobart-mt2', 'average-mounted-desperado-mt2', 'average-rifleman-mt2'];
+    check('MT2: the Hobart Gang\'s three blocks print numbers inside their ranks but off the standards, and pass with no override (rank_ranges)',
+      gangT.every((id) => offStd(id) > 0 && !blkT(id)?.override)
+      && gangT.map((id) => playedT(id)).join() === '32/40,29/13,26/13',
+      gangT.map((id) => `${id} off ${offStd(id)} plays ${playedT(id)}`).join(' | '));
+    check('MT2: Two-Gun Kid\'s Resources the code GD with no number, Kid Colt\'s Popularity 20 with its clause kept, and the Twain Android\'s Resources FE (2) with nothing after it (bracket_tail)',
+      blkT('two-gun-kid-mt2')?.resources === 'GD' && blkT('kid-colt-mt2')?.popularity === '20 (-30 with authorities)'
+      && bookNpc({ character: 'kid-colt-mt2' }).snapshot?.abilities.popularity.number === 20 && blkT('twain-android-mt2')?.resources === 'FE (2)',
+      `${blkT('two-gun-kid-mt2')?.resources} | ${blkT('kid-colt-mt2')?.popularity} | ${bookNpc({ character: 'kid-colt-mt2' }).snapshot?.abilities.popularity.number} | ${blkT('twain-android-mt2')?.resources}`);
+    const powT = mt2.flatMap((c) => c.versions[0].powers);
+    check('MT2: 51 powers across 19 cards, 9 of them linked to the UPB, the Twain Android\'s two among them (subhead_labels, indented_power_heads, speck_lines)',
+      powT.length === 51 && powT.filter((p) => p.upb).length === 9 && mt2.filter((c) => c.versions[0].powers.length).length === 19
+      && mt2.find((c) => c.id === 'twain-android-mt2')?.versions[0].powers.map((p) => p.name).join() === 'Body Armor,Radio Communication',
+      `${powT.length} ${powT.filter((p) => p.upb).length} ${mt2.filter((c) => c.versions[0].powers.length).length}`);
+    const bookT = data.npcs.books.find((b) => b.slug === 'mt2');
+    const choicesT = mt2.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MT2: the book reads Adventure 3-8, 12-36 and 52-64, a card cites its Adventure page, and every card is one GM choice but Moon Knight, whose Normal and Moonlight are two',
+      JSON.stringify(bookT?.ranges) === '[{"part":"Adventure","pages":[[3,8],[12,36],[52,64]]}]'
+      && tagline(bookNpc({ character: 'vision-mt2' }).snapshot).startsWith('MT2 The Weird, Weird West, Adventure p.3;')
+      && tagline(bookNpc({ character: 'two-gun-kid-mt2' }).snapshot).startsWith('MT2 The Weird, Weird West, Adventure p.63;')
+      && mt2.every((c, i) => choicesT[i] === (c.id === 'moon-knight-mt2' ? 2 : 1)),
+      `${JSON.stringify(bookT?.ranges)} ${tagline(bookNpc({ character: 'vision-mt2' }).snapshot)} ${mt2.map((c, i) => `${c.id}:${choicesT[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const slade = bookNpc({ character: 'ghost-rider-iv-mt2' }).snapshot;
+    check('MT2: Hamilton Slade is a form on Ghost Rider IV\'s card (86 and 46), not a GM choice of its own, as ME3\'s Beta Ray Bill\'s humanoid form',
+      slade?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Ghost Rider IV 86,Hamilton Slade 46',
+      JSON.stringify(slade?.forms?.map((f) => [f.name, f.health])));
+    const playsT = [['vision-mt2'], ['doctor-doom-mt2'], ['sandman-mt2'], ['moon-knight-mt2', 0], ['moon-knight-mt2', 1], ['ghost-rider-iv-mt2'], ['lobo-mt2']].map(([id, b]) => playedT(id, b)).join();
+    check('MT2: cards play their printed Health and Karma (Vision 140/60, Doctor Doom 120/140, Sandman 175/46, Moon Knight 90/60 and in Moonlight 150/60, Ghost Rider IV 86/60, Lobo 50/10)',
+      playsT === '140/60,120/140,175/46,90/60,150/60,86/60,50/10', playsT);
+    // The text verdicts and stop_labels move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by
+    // the overrides' own fragments, never a sentence of the book in this file.
+    const sqlT = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mt2', 'book-text.sql');
+    if (!existsSync(sqlT)) {
+      check(`MT2: skipped the text checks: no ${rel(sqlT) || sqlT}`, true);
+    } else {
+      const rowsT = [...readFileSync(sqlT, 'utf8').matchAll(/VALUES \('([^']+)', 'mt2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entT = new Set(rowsT.map((r) => r.key.split(':')[1]));
+      check('MT2 text: 127 rows over 27 entries (the Hoplites, the Cavemen and Khan\'s Champion print none), no row with an odd count of double quotes and none with a vertical bar',
+        rowsT.length === 127 && entT.size === 27
+        && mt2.filter((c) => !entT.has(c.id)).map((c) => c.id).join() === 'hoplites-mt2,cavemen-mt2,khan-s-champion-mt2'
+        && !rowsT.some((r) => (r.body.match(/"/g) || []).length % 2) && !rowsT.some((r) => r.body.includes('|')),
+        `${rowsT.length} ${entT.size} ${rowsT.filter((r) => (r.body.match(/"/g) || []).length % 2 || r.body.includes('|')).map((r) => r.key)}`);
+      const countT = (row, s) => (rowsT.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsT = textT.map((o) => `${o.match.row} ${countT(o.match.row, o.printed)}/${countT(o.match.row, o.read)}`);
+      check('MT2 text: each of the three text verdicts is applied, its printed fragment once in its row and the misread gone',
+        textT.length === 3 && verdictsT.every((v) => v.endsWith(' 1/0')), verdictsT.join(' | '));
+      const twainT = rowsT.filter((r) => r.key.startsWith('mt2:twain-android-mt2:')).map((r) => r.key.split(':')[2]).sort().join();
+      check('MT2 text: the Twain Android\'s Talents. and Contacts. open sections of their own beside its two powers (stop_labels)',
+        twainT === 'contacts,power,power,talents', twainT);
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
