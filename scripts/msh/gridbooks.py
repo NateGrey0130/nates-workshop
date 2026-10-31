@@ -178,6 +178,17 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: indented_power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
         hits[0]['indented_head'] = True
+    # MT3 (registry entry_ends [part, page, the whole line as read]): a
+    # sidebar or box set in an entry's column that the page does not open
+    # with a header (Attuma's KANG'S SCRIPT, printed 16; the SPIRE box under
+    # the alligators, printed 22). read_entries ends the entry at the line.
+    # Each must be one whole line (as roster.norm reads it) found exactly
+    # once on its page, or the build stops.
+    for p, page, start in [d for d in book.get('entry_ends', []) if d[0] == part and first <= d[1] <= last]:
+        hits = [l for l in stream if l['printed'] == page and roster.norm(l['text']) == roster.norm(start)]
+        if len(hits) != 1:
+            raise SystemExit('%s: entry_ends finds %r on %d lines of %s p.%d, not 1' % (slug, start, len(hits), part, page))
+        hits[0]['ends_entry'] = True
     # ME3 (registry health_below): a Health set on the line below its label
     # ("F 5000 Cl5000 Health:", then "20,000" at the column's right: Resource
     # pp.2, 3, 6, 9, 11 and 12), so the grid has no anchor and no header; the
@@ -249,6 +260,16 @@ def mark_breaks(book, stream, part, headers):
     titles = {roster.norm(sub or section) for section, sub, _p, p in book['sections'] if p == part}
     titles -= names
     tops = {page: section for section, sub, page, p in book['sections'] if p == part and sub is None}
+    # MT3 (registry mid_page_tops [part, page]): a top-level section whose
+    # title is set partway down its page (Non-Player Characters, printed 6,
+    # under the Scarlet Witch's background) breaks at that title, which the
+    # header reading finds, and not at the page's top, where the text above
+    # it still belongs to the entry before
+    for p, page in book.get('mid_page_tops', []):
+        if p == part:
+            if page not in tops or not any(l['printed'] == page and roster.norm(l['text']) == roster.norm(tops[page]) for l in stream):
+                raise SystemExit('mid_page_tops: %s p.%d has no line reading as its top-level title' % (part, page))
+            del tops[page]
     out, seen = [], set()
     for l in stream:
         if l['printed'] in tops and l['printed'] not in seen:

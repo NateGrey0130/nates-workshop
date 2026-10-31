@@ -1802,9 +1802,11 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${blkK('kang-mt3')?.karma} ${playedK('kang-mt3')} ${blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join()}`);
     const ovK = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt3-overrides.json'), 'utf8')).overrides;
     const textK = ovK.filter((o) => o.verdict === 'text');
-    check('MT3: seven overrides: five misprints, one as printed and one text verdict (Kang\'s background), and only those six blocks carry one',
-      ovK.length === 7 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
-      && textK.map((o) => o.match.row).join() === 'mt3:kang-mt3:background'
+    check('MT3: nineteen overrides: five misprints, one as printed and 13 text verdicts (Kang\'s background quote, 11 capital I misread as a bar or an l, the Thugs\' last word), and only those six blocks carry one',
+      ovK.length === 19 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
+      && textK.map((o) => o.match.row.replace(/^mt3:/, '')).join() === ['kang-mt3:background', 'scarlet-witch-mt3:power:1', 'iceman-mt3:power:1',
+        'iceman-mt3:power:2', 'professor-x-mt3:notes', 'human-torch-mt3:background', 'daredevil-mt3:power:2', 'iron-man-mt3:power:1',
+        'iron-man-mt3:power:4', 'o-malley-mt3:prose', 'kang-mt3:background', 'kang-mt3:background', 'thugs-mt3:prose'].join()
       && blocksK.filter(({ b }) => b.override).map(({ id }) => id).join()
         === 'moon-knight-mt3,kang-mt3,mandarin-mt3,kang-duplicate-s-battle-robots-mt3,mike-franklin-mt3,tom-tyler-mt3',
       JSON.stringify(ovK.map((o) => [o.verdict, o.match])));
@@ -1852,19 +1854,30 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         && mt3.filter((c) => !entK.has(c.id)).map((c) => c.id).join() === 'attuma-s-minions-mt3'
         && !rowsK.some((r) => (r.body.match(/"/g) || []).length % 2),
         `${rowsK.length} ${entK.size} ${rowsK.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
-      // A vertical bar is the OCR's reading of a capital I. These ten rows
-      // carry one and are left for a later row (a parser change, plan row
-      // 12b); a new one, or one fixed, moves this list.
-      const barsK = rowsK.filter((r) => r.body.includes('|')).map((r) => r.key.replace(/^mt3:/, ''));
-      check('MT3 text: the rows with a vertical bar are the ten known ones and no more',
-        barsK.join() === ['scarlet-witch-mt3:power:1', 'iceman-mt3:power:1', 'iceman-mt3:power:2', 'professor-x-mt3:notes',
-          'human-torch-mt3:background', 'daredevil-mt3:power:2', 'iron-man-mt3:power:1', 'iron-man-mt3:power:4', 'attuma-mt3:background',
-          'o-malley-mt3:prose'].join(),
-        barsK.join());
+      // A vertical bar is the OCR's reading of a capital I. Ten rows carried
+      // one (nine now read right by a text verdict, the tenth, Attuma's, was
+      // inside a sidebar the entry no longer takes), each read on the page; a
+      // new one moves this list. So does "Il" for "II": Kang's two read right.
+      const barsK = rowsK.filter((r) => r.body.includes('|') || /\bIl\b/.test(r.body)).map((r) => r.key.replace(/^mt3:/, ''));
+      check('MT3 text: no row carries a vertical bar or a Part Il',
+        barsK.length === 0, barsK.join());
       const countK = (row, s) => (rowsK.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsK = textK.map((o) => `${o.match.row} ${countK(o.match.row, o.printed)}/${countK(o.match.row, o.read)}`);
-      check('MT3 text: the text verdict is applied, its printed fragment once in its row and the misread gone',
-        textK.length === 1 && verdictsK.every((v) => v.endsWith(' 1/0')), verdictsK.join(' | '));
+      check('MT3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        // the Thugs' verdict only adds a word, so its read fragment stays inside its printed one
+        textK.length === 13 && textK.every((o) => countK(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countK(o.match.row, o.read) === 0)),
+        verdictsK.join(' | '));
+      // Where an entry's text ends, each read on the page (survey mt3.md): the
+      // Scarlet Witch's background runs on into printed 6, Attuma's and the
+      // alligators' stop before the sidebar and the box that share their
+      // column, and the Thugs' ends on its page's last word.
+      const bodyK = (row) => rowsK.find((r) => r.key === row)?.body || '';
+      check('MT3 text: the Scarlet Witch\'s background runs onto printed 6, Attuma\'s ends before the KANG\'S SCRIPT sidebar, the alligators\' before the SPIRE box, and the Thugs\' on "long."',
+        !/re-$/.test(bodyK('mt3:scarlet-witch-mt3:background')) && /life\.$/.test(bodyK('mt3:scarlet-witch-mt3:background'))
+        && /wedding\.$/.test(bodyK('mt3:attuma-mt3:background')) && !/SCRIPT/.test(bodyK('mt3:attuma-mt3:background'))
+        && /foliage\.$/.test(bodyK('mt3:alligator-creatures-mt3:prose')) && !/SPIRE/.test(bodyK('mt3:alligator-creatures-mt3:prose'))
+        && /areas long\.$/.test(bodyK('mt3:thugs-mt3:prose')),
+        ['scarlet-witch-mt3:background', 'attuma-mt3:background', 'alligator-creatures-mt3:prose', 'thugs-mt3:prose'].map((k) => `${k} ...${bodyK('mt3:' + k).slice(-12)}`).join(' | '));
     }
   }
 

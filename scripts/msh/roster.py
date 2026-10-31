@@ -628,6 +628,14 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
     i = 0
     while i < len(stream):
         line = stream[i]
+        # MT3 (gridbooks.stream_of, registry entry_ends): a sidebar or a box
+        # set in the entry's column (Attuma's KANG'S SCRIPT, printed 16; the
+        # SPIRE box under the alligators, printed 22) ends it; lines are
+        # dropped until the next header
+        if line.get('ends_entry'):
+            cur = None
+            i += 1
+            continue
         anchored = bool(ANCHOR.search(line['text']))
         rows, nxt = grid(stream, i, reader) if anchored else (None, i)
         if anchored and nxt > i:
