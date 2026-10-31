@@ -316,8 +316,18 @@ def rows_from(texts, mends=()):
             if std is not None and '8' in num and str(std) == num.replace('8', '3') and not rank_ok({'number': fix_digits(num), 'code': code}):
                 num = num.replace('8', '3')
             return '%s %s %s' % (m.group(1), num, m.group(2))
+        if 'two_ranks' in mends:
+            # MT3 (registry two_ranks): two ranks on one row, the codes and then
+            # the numbers each split by a slash ("R IN/AM 40/50": Kang's R, I
+            # and P, printed 13), read as the rank and its alternate
+            texts = [re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')/(' + caps + r')\s+([0-9OolI]{1,4})/([0-9OolI]{1,4})\b',
+                            r'\1 \4 \2 (\5 \3)', t) for t in texts]
         marks = r'(?:[^\w\s(]|_){0,3}'     # "RM_~ 30", the Vision's P, printed 3
-        texts = [re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')' + marks + r'\s*\(\s*([0-9OolIi]{1,4})\s*\)', turn, t) for t in texts]
+        if 'spaced_marks' in mends:
+            # MT3 (registry spaced_marks): the marks set off by spaces ("AM _
+            # 50", "EX = 20", "RM _= 30": the Vision, the Thing, Ko-Kri, Electro)
+            marks = r'(?:\s*(?:[^\w\s(]|_)){0,3}'
+        texts =[re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')' + marks + r'\s*\(\s*([0-9OolIi]{1,4})\s*\)', turn, t) for t in texts]
         texts = [re.sub(r'^(\s*\S{1,3})\s+(' + caps + r')' + marks + r'\s*([0-9OolI]{1,4})\b', turn, t) for t in texts]
         if 'slash_forms' in mends:
             # MT2 (registry slash_forms): a second form's code and number after
@@ -325,8 +335,16 @@ def rows_from(texts, mends=()):
             # is read as the row's alternate, and the block's Res: label as
             # Resources; gridbooks.parse makes the two forms two blocks
             slash = r'^(\s*\S{1,3}\s+\d{1,4}\s+[A-Z]{2})\s*/\s*([A-Z]{2})[^\w\s(]*\s*([0-9OolI]{1,4})\b'
+            if 'slash_title_case' in mends:
+                # MT3 (registry slash_title_case): the second form's code in
+                # title case ("F RM 30 /In 40": Moon Knight, printed 5)
+                slash = r'^(\s*\S{1,3}\s+\d{1,4}\s+[A-Z]{2})\s*/\s*([A-Z][A-Za-z])[^\w\s(]*\s*([0-9OolI]{1,4})\b'
             texts = [re.sub(r'\bRes:', 'Resources:', re.sub(slash, r'\1 (\3 \2)', t)) if re.match(slash, t) else t
                      for t in texts]
+    if 'res_label' in mends:
+        # MT3 (registry res_label): Res: for Resources on a grid of one form
+        # (the Mandarin, printed 15), which only slash_forms renamed
+        texts = [re.sub(r'\bRes:', 'Resources:', t) for t in texts]
     rows = []
     for t in texts:
         m = ROW.match(t)
@@ -356,7 +374,8 @@ class GridReader:
         # one book's grid mends, each a registry field of its own (ME3); a
         # book that sets none reads every grid as it always has
         self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes',
-                                  'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail')
+                                  'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail',
+                                  'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -383,6 +402,28 @@ def grid_at(stream, i, reader):
     line = stream[i]
     if not ANCHOR.search(line['text']):
         return None, i
+    mends = getattr(reader, 'mends', ())
+    if 'split_grids' in mends:
+        # MT3 (registry split_grids): a grid broken across a column, its last
+        # rows at the top of the next column (the Invisible Girl, printed 9;
+        # the Human Torch, 10; Peter Parker's non-powered form, 11), read from
+        # the stream, then the first column's part re-read from a crop as
+        # every whole grid is (Peter Parker's A, S and E read sideways in the
+        # TSV); the next column's part stays the stream's
+        k = i
+        while k < min(len(stream), i + 12) and stream[k]['pdf'] == line['pdf'] and stream[k]['col'] in (line['col'], line['col'] + 1):
+            if 'Popular' in stream[k]['text']:
+                break
+            k += 1
+        if k < len(stream) and stream[k]['pdf'] == line['pdf'] and stream[k]['col'] == line['col'] + 1 \
+                and 'Popular' in stream[k]['text']:
+            rows = rows_from([s['text'] for s in stream[i:k + 1]], mends)
+            first = [s for s in stream[i:k + 1] if s['col'] == line['col']]
+            box = (line['col_x0'], line['y0'] - 45, line['col_x1'], max(s['y1'] for s in first) + 10)
+            again = rows_from(reader.read(line['pdf'], box) + [s['text'] for s in stream[i:k + 1] if s['col'] != line['col']], mends)
+            if len(again) == 7:
+                rows = again
+            return (rows[:7] if len(rows) >= 7 else None), k + 1
     j = i
     while j < min(len(stream), i + 12) and stream[j]['pdf'] == line['pdf'] and stream[j]['col'] == line['col']:
         if 'Popularity' in stream[j]['text'] or 'Popularlty' in stream[j]['text']:
@@ -398,7 +439,6 @@ def grid_at(stream, i, reader):
     # line with, so the box starts a line higher; the line it may take in from
     # above is prose, and rows_from ignores lines before the first row.
     top = line['y0'] - 45
-    mends = getattr(reader, 'mends', ())
     bottom = stream[j]['y1']
     if 'popularity_below' in mends and j + 1 < len(stream) and stream[j + 1]['pdf'] == line['pdf'] \
             and stream[j + 1]['col'] == line['col'] and re.search(r'Popularity:\s*\S{0,4}$', stream[j]['text']) \

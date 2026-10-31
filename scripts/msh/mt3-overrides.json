@@ -1,0 +1,32 @@
+{
+  "about": [
+    "Hand decisions about MT3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/mt3.md, Stat blocks and The chapters' grids, the misprints tables; decisions 7, 8 and 9); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, label}: the printed page in the Adventure Book, the start of the entry's header, and where one card holds two blocks the block's label",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
+    "  checked   the date the page image was read",
+    "Ko-Kri's Resources PR(6) (printed 13: 6 is Typical's number, outside Poor's range) has no override: no check reads Resources, and no total or other book says which half is wrong (survey decision 8)."
+  ],
+  "overrides": [
+    {"match": {"page": 5, "header": "Moon Knight", "label": "Normal"}, "verdict": "misprint", "field": "P",
+     "printed": {"number": 30, "code": "Ex"}, "corrected": {"number": 30, "code": "Rm"}, "checked": "2026-10-30",
+     "note": "Printed P EX 30 in the Normal form (printed 5): 30 is Remarkable's number, outside Excellent's range (16-25), Karma 60 = 10 + 20 + 30 holds on the 30, the Moonlight form prints RM 30, and MT2's same block prints RM 30, so the code is the misprint. The match names the Normal block, since the card holds both forms. Survey decision 7."},
+    {"match": {"page": 15, "header": "Mandarin"}, "verdict": "misprint", "field": "resources",
+     "printed": "AM(30)", "corrected": "AM(50)", "checked": "2026-10-30",
+     "note": "Printed Res: AM(30) (printed 15): 30 is Remarkable's number, outside Amazing's range (46-62), and MH7's Mandarin prints Resources as the word Amazing, so the number is the misprint. Survey decision 8."},
+    {"match": {"page": 13, "header": "Kang"}, "verdict": "as_printed", "field": "karma",
+     "printed": "Varies", "checked": "2026-10-30",
+     "note": "Printed Karma: Varies (printed 13). His R, I and P each print two ranks, read as the rank and its alternate (registry two_ranks), so R + I + P is either of two sums and the card says which in a word. Left unset, as MH3's Super-Adaptoid. Survey decision 9."},
+    {"match": {"page": 46, "header": "Kang Duplicate's Battle Robots"}, "verdict": "misprint", "field": "health",
+     "printed": 90, "corrected": 110, "checked": "2026-10-30",
+     "note": "Printed Health: 90 (printed 46, column 2, a one-line grid with no name line): F + A + S + E = 20 + 20 + 30 + 40 = 110, and every number agrees with its code, so the total is the misprint; Karma 18 = 6 + 6 + 6 holds. Survey decision 7."},
+    {"match": {"page": 49, "header": "Mike Franklin"}, "verdict": "misprint", "field": "karma",
+     "printed": 18, "corrected": 14, "checked": "2026-10-30",
+     "note": "Printed Karma: 18 (printed 49, column 2, a one-line grid with no name line): R + I + P = 6 + 6 + 2 = 14, and every number agrees with its code, so the total is the misprint (MT2's rule for Khan's Champion); Health 120 = 30 + 30 + 20 + 40 holds. Survey decision 7."},
+    {"match": {"page": 50, "header": "Tom Tyler"}, "verdict": "misprint", "field": "karma",
+     "printed": 22, "corrected": 18, "checked": "2026-10-30",
+     "note": "Printed Karma: 22 (printed 50, column 2, a one-line grid with no name line): R + I + P = 10 + 6 + 2 = 18, and every number agrees with its code, so the total is the misprint (MT2's rule for Khan's Champion); Health 100 = 30 + 20 + 20 + 30 holds. Survey decision 7."}
+  ]
+}

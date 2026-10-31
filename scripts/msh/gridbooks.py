@@ -323,11 +323,16 @@ HEALTH_SENTENCE = re.compile(r'Health is (\d+),? and (?:his|her|its) Karma (?:be
 SHIFT = {'X': 'ShX', 'Y': 'ShY', 'Z': 'ShZ'}
 
 
-def line_codes(text, spill):
+def line_codes(text, spill, marks=False):
     """The codes row as seven codes. A Class rank set on two lines ("Cl" over
     "1000") takes its number from the line below (`spill`); two Shift codes run
     together ("ZZ") are two codes."""
     tokens, out = text.split(), []
+    if marks:
+        # MT3 (registry code_marks): marks hung in a codes row, an underscore
+        # token and a mark before a code (the Kang Duplicate's Battle Robots,
+        # printed 46), are not codes
+        tokens = [t for t in (re.sub(r'[^0-9A-Za-z]', '', t) for t in tokens) if t]
     k = 0
     while k < len(tokens):
         t = tokens[k]
@@ -345,9 +350,10 @@ def line_codes(text, spill):
     return out
 
 
-def read_line_grid(stream, i, sentence=False):
+def read_line_grid(stream, i, sentence=False, mends=()):
     """The one-line grid whose letters are stream[i]: (rows, Health, Karma,
-    the index after it), or None. Every line is in one column of one page."""
+    the index after it), or None. Every line is in one column of one page.
+    `mends` is the registry's one-line grid mends set for the book (MT3)."""
     same = lambda j: j < len(stream) and stream[j]['pdf'] == stream[i]['pdf'] and stream[j]['col'] == stream[i]['col']
     h = next((j for j in range(i + 1, i + 6) if same(j) and HEALTH_LINE.match(stream[j]['text'].strip())), None)
     if h is None:
@@ -356,9 +362,17 @@ def read_line_grid(stream, i, sentence=False):
         # Slade, printed 53); the sentence is kept in the entry's text
         s = next((j for j in range(i + 2, i + 5) if same(j) and 'Health is' in stream[j]['text']), None) if sentence else None
         m = s is not None and HEALTH_SENTENCE.search(stream[s]['text'] + ' ' + (stream[s + 1]['text'] if same(s + 1) else ''))
-        if not m:
+        if m:
+            h, health, karma, end = s, m.group(1), m.group(2), s
+        elif 'derived_totals' in mends and same(i + 2) and len(stream[i + 1]['text'].split()) == 7 \
+                and len(stream[i + 2]['text'].split()) == 7 \
+                and all(SHIFT.get(t) or roster.canon(t) for t in stream[i + 2]['text'].split()):
+            # MT3 (registry derived_totals): a grid that prints neither Health
+            # nor Karma (the scorpions, printed 34) ends at its row of seven
+            # codes under its row of seven numbers; line_grids derives both
+            h, health, karma, end = i + 3, None, None, i + 3
+        else:
             return None
-        h, health, karma, end = s, m.group(1), m.group(2), s
     else:
         m = HEALTH_LINE.match(stream[h]['text'].strip())
         health, karma, end = m.group(1), m.group(2), h + 1
@@ -370,8 +384,12 @@ def read_line_grid(stream, i, sentence=False):
         # a mark OCR hangs on a number ('�50', Charon's P) is not a digit
         numbers = [roster.fix_digits(re.sub(r'[^0-9OolI]', '', t)) for t in texts.pop(0).split()]
     spill = [t for x in texts[1:] for t in x.split() if re.fullmatch(r'\d{4}', t)]
-    codes = line_codes(texts[0], spill) if texts else []
-    canon = [SHIFT.get(c) or roster.canon(c) for c in codes]
+    codes = line_codes(texts[0], spill, 'code_marks' in mends) if texts else []
+    if 'class_i_digit' in mends:
+        # MT3 (registry class_i_digit): a Class rank's 1 read as i (the
+        # fish's Cl1000 as Cli000, printed 21)
+        codes = [re.sub(r'^(C[lI1])i(?=\d{3}$)', r'\g<1>1', c) for c in codes]
+    canon =[SHIFT.get(c) or roster.canon(c) for c in codes]
     if len(canon) != 7 or None in canon or (numbers is not None and len(numbers) != 7) or spill:
         raise SystemExit('a one-line grid read wrong, %s p.%d: %r' % (stream[i]['part'], stream[i]['printed'], texts))
     rows = [{'letter': roster.ABILITIES[n], 'number': numbers[n] if numbers else roster.RANK_NUMBER[c],
@@ -393,7 +411,7 @@ def lost_letters(stream, i, letters):
                for j in (i + 1, i + 2))
 
 
-def line_grids(book, stream, keyed, labelled):
+def line_grids(book, stream, keyed, labelled, derived=None):
     """Find the registry's `one_line_grids` on this stream's pages, in reading
     order. A grid with a `name` is a character of its own and gets a header
     line (the book prints none: the chapter's prose names it); its lines become
@@ -408,6 +426,7 @@ def line_grids(book, stream, keyed, labelled):
         return stream
     letters = LETTERS_MARKS if book.get('letters_marks') else LETTERS
     sentence = bool(book.get('health_sentence'))
+    mends = {k for k in ('class_i_digit', 'code_marks', 'derived_totals') if book.get(k)}
     # ME3 (a grid's `wrapped`: the serpent, Adventure p.11 column 2): a grid
     # wrapped after R, letters "F A S E R" / "I P" and codes "Un Mn Mn Un Fe" /
     # "Rm Fe", is joined to one line of each on the pages of such a grid
@@ -427,14 +446,14 @@ def line_grids(book, stream, keyed, labelled):
     while i < len(stream):
         l = stream[i]
         key = (l['part'], l['printed'])
-        got = read_line_grid(stream, i, sentence) if want.get(key) and letters.match(l['text'].strip()) else None
+        got = read_line_grid(stream, i, sentence, mends) if want.get(key) and letters.match(l['text'].strip()) else None
         lost = False
         if not got and want.get(key) and book.get('lost_letters') and lost_letters(stream, i, letters):
             # MT2 (registry lost_letters): the letters line read below
             # confidence and left the stream (Khan's Champion, printed 33;
             # Lobo, 57), so the row under it starts the grid
             fake = [dict(l, text='F A S E R I P')] + stream[i:]
-            got = read_line_grid(fake, 0, sentence)
+            got = read_line_grid(fake, 0, sentence, mends)
             if got:
                 got = got[:3] + (i + got[3] - 1,)
                 lost = True
@@ -443,6 +462,16 @@ def line_grids(book, stream, keyed, labelled):
             i += 1
             continue
         rows, health, karma, end = got
+        made = []
+        if 'derived_totals' in mends:
+            # MT3 (registry derived_totals): a total the grid does not print
+            # (the snakes' Karma, printed 33; the scorpions' Health and Karma,
+            # 34) is derived from the rows, and the block says so, as rank_only
+            # says a number is derived, since the check on it cannot fail
+            if health is None:
+                health, made = str(sum(r['number'] for r in rows[:4])), made + ['health']
+            if karma is None:
+                karma, made = str(sum(r['number'] for r in rows[4:])), made + ['karma']
         if any('health' in g for g in want[key]):
             # MX1: each name is tied to its grid by the Health it prints, so a
             # grid missed on the page cannot hand its name to the next one
@@ -477,8 +506,12 @@ def line_grids(book, stream, keyed, labelled):
                      'health': health, 'karma': karma, 'resources': None, 'popularity': None}
             if rank_only:
                 block['rank_only'] = True
+            if made:
+                block['derived'] = made
             block['check'] = roster.check(block, roster.rank_ranges(book))
             labelled.append((g, block))
+        if made and g.get('name'):
+            derived[(l['pdf'], l['col'], health)] = made
         i = end
     left = [g for gs in want.values() for g in gs if (g['part'], g['page']) in pages]
     if left:
@@ -541,11 +574,11 @@ def restore_colons(book, value):
 def parse(book, slug):
     reader = roster.GridReader(book, slug)
     ranges = roster.rank_ranges(book)
-    streams, keyed, labelled = [], {}, []
+    streams, keyed, labelled, derived = [], {}, [], {}
     cards = [c[2] for c in book.get('cards', [])] if book.get('card_headers') else ()
     for r in book['character_ranges']:
         s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
-        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled))
+        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled, derived))
         streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards)), False, ()))
     for o in book['opponents']:
         s = stream_of(book, slug, o['part'], o['page'], o['page'])
@@ -559,7 +592,7 @@ def parse(book, slug):
         # start on it are left to its own opponent
         for page in o.get('runs_on', []):
             s += stream_of(book, slug, o['part'], page, page)
-        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled))
+        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled, derived))
         mark_headers(s, cards)
         streams.append((s, True, tuple(o.get('runs_on', []))))
     stream, entries = [], []
@@ -634,6 +667,8 @@ def parse(book, slug):
                     b['kind'] = 'line'
                     if keyed[key]:
                         b['rank_only'] = True
+                    if key in derived:
+                        b['derived'] = derived[key]
             # Death's "Health: 20,000" (ME2, Resource p.2): check() reads no comma
             for b in e['blocks']:
                 if ',' in (b['health'] or '') and b['check'].get('health') is None:
