@@ -64,7 +64,7 @@ const cite = (short, part, pages) => {
 };
 
 // An override's field, as a card names it.
-const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
+const FIELD = { health: 'Health', karma: 'Karma', resources: 'Resources', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
   R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche', IP: 'Intuition and Psyche',
   RI: 'Reason and Intuition', FAS: 'Fighting, Agility and Strength', FASE: 'Fighting, Agility, Strength and Endurance' };
 
