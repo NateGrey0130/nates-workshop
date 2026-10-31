@@ -93,6 +93,11 @@
    "book": "ME3 The Left Hand of Eternity",
    "code": "TSR6882",
    "pages": "Adventure 3-5, 11-28; Resource 2-16"
+  },
+  {
+   "book": "MT2 The Weird, Weird West",
+   "code": "TSR6886",
+   "pages": "Adventure 3-8, 12-36, 52-64"
   }
  ],
  "books": [
@@ -379,6 +384,34 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mt2",
+   "short": "MT2",
+   "title": "MT2 The Weird, Weird West",
+   "pages": [
+    3,
+    8
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       3,
+       8
+      ],
+      [
+       12,
+       36
+      ],
+      [
+       52,
+       64
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -449,7 +482,10 @@
   "MX1 Nightmares of Futures Past",
   "Left Hand of Eternity Heroes",
   "ME3 The Left Hand of Eternity",
-  "Death Gods"
+  "Death Gods",
+  "Weird, Weird West Heroes",
+  "MT2 The Weird, Weird West",
+  "Western Heroes"
  ],
  "characters": [
   {
@@ -71043,6 +71079,2539 @@
    ],
    "appearances": [],
    "book": "me3"
+  },
+  {
+   "id": "vision-mt2",
+   "name": "Vision",
+   "team": "Weird, Weird West Heroes",
+   "versions": [
+    {
+     "id": "vision-mt2",
+     "label": null,
+     "team": "Weird, Weird West Heroes",
+     "part": "Adventure",
+     "pages": [
+      3,
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "140",
+       "karma": "60",
+       "resources": "PR(4)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Solar Beams"
+      },
+      {
+       "name": "Solar Regeneration"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "moon-knight-mt2",
+   "name": "Moon Knight",
+   "team": "Weird, Weird West Heroes",
+   "versions": [
+    {
+     "id": "moon-knight-mt2",
+     "label": null,
+     "team": "Weird, Weird West Heroes",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "alias Marc Spector"
+     ],
+     "blocks": [
+      {
+       "label": "Normal",
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "RM(30)",
+       "popularity": "10"
+      },
+      {
+       "label": "Moonlight",
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "150",
+       "karma": "60",
+       "resources": "RM(30)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Boost"
+      },
+      {
+       "name": "Ankh"
+      },
+      {
+       "name": "Weaponry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "albert-einstein-mt2",
+   "name": "Albert Einstein",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "albert-einstein-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      5,
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "20",
+       "karma": "80",
+       "resources": "GD(10)",
+       "popularity": "25"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "scarlet-witch-mt2",
+   "name": "Scarlet Witch",
+   "team": "Weird, Weird West Heroes",
+   "versions": [
+    {
+     "id": "scarlet-witch-mt2",
+     "label": null,
+     "team": "Weird, Weird West Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "alias Wanda"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "46",
+       "karma": "60",
+       "resources": "TY(6)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hex Spheres"
+      },
+      {
+       "name": "Magical Abilities"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "alexander-the-great-mt2",
+   "name": "Alexander The Great",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "alexander-the-great-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "50",
+       "karma": "50",
+       "resources": "EX(20)",
+       "popularity": "40"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "doctor-doom-mt2",
+   "name": "Doctor Doom",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "doctor-doom-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [
+      "Victor von Doom"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "120",
+       "karma": "140",
+       "resources": "AM(50)",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Kinetic Blast"
+      },
+      {
+       "name": "Electricity"
+      },
+      {
+       "name": "Rockets"
+      },
+      {
+       "name": "Mauser"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "genghis-khan-mt2",
+   "name": "Genghis Khan",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "genghis-khan-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "52",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "30",
+       "override": {
+        "verdict": "misprint",
+        "field": "A",
+        "printed": {
+         "number": 6,
+         "code": "Gd"
+        },
+        "corrected": {
+         "number": 6,
+         "code": "Ty"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "S",
+          "printed": {
+           "number": 6,
+           "code": "Gd"
+          },
+          "corrected": {
+           "number": 6,
+           "code": "Ty"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "napoleon-bonaparte-mt2",
+   "name": "Napoleon Bonaparte",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "napoleon-bonaparte-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "40",
+       "resources": "GD(10)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "mysterio-mt2",
+   "name": "Mysterio",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "mysterio-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      7,
+      8
+     ],
+     "identity": [
+      "Quentin Black"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "60",
+       "karma": "70",
+       "resources": "EX(20)",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Helmet"
+      },
+      {
+       "name": "Gas Nozzles"
+      },
+      {
+       "name": "Holographic Projectors"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "sandman-mt2",
+   "name": "Sandman",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "sandman-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "William Baker"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "175",
+       "karma": "46",
+       "resources": "TY(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mineral Body"
+      },
+      {
+       "name": "Topology"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Sanablast"
+      },
+      {
+       "name": "Quick Healing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "black-knight-nathan-garrett-mt2",
+   "name": "Black Knight (Nathan Garrett)",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "black-knight-nathan-garrett-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Nathan Garret"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "60",
+       "karma": "20",
+       "resources": "EX(20)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flying Horse"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "krozzar-mt2",
+   "name": "Krozzar",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "krozzar-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "60",
+       "karma": "24",
+       "resources": "TY(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Rubbery Hide"
+      },
+      {
+       "name": "Weaponry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "scorpion-mt2",
+   "name": "Scorpion",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "scorpion-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "MacDonald Gargan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "150",
+       "karma": "22",
+       "resources": "TY(6)",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Cybernetic Tail"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "tyrannosaur-mt2",
+   "name": "Tyrannosaur",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "tyrannosaur-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "180",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Tough Hide"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "hoplites-mt2",
+   "name": "Hoplites",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "hoplites-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      21
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "40",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "cavemen-mt2",
+   "name": "Cavemen",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "cavemen-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      24
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "44",
+       "karma": "12",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "faro-john-hobart-mt2",
+   "name": "\"Faro\" John Hobart",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "faro-john-hobart-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      28,
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         3,
+         "Pr"
+        ],
+        [
+         "A",
+         16,
+         "Ex"
+        ],
+        [
+         "S",
+         5,
+         "Ty"
+        ],
+        [
+         "E",
+         8,
+         "Gd"
+        ],
+        [
+         "R",
+         16,
+         "Ex"
+        ],
+        [
+         "I",
+         8,
+         "Gd"
+        ],
+        [
+         "P",
+         16,
+         "Ex"
+        ]
+       ],
+       "health": "32",
+       "karma": "40",
+       "resources": "TY (5)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "average-mounted-desperado-mt2",
+   "name": "Average Mounted Desperado",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "average-mounted-desperado-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         8,
+         "Gd"
+        ],
+        [
+         "A",
+         8,
+         "Gd"
+        ],
+        [
+         "S",
+         8,
+         "Gd"
+        ],
+        [
+         "E",
+         5,
+         "Ty"
+        ],
+        [
+         "R",
+         5,
+         "Ty"
+        ],
+        [
+         "I",
+         5,
+         "Ty"
+        ],
+        [
+         "P",
+         3,
+         "Pr"
+        ]
+       ],
+       "health": "29",
+       "karma": "13",
+       "resources": "0",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "average-rifleman-mt2",
+   "name": "Average Rifleman",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "average-rifleman-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         5,
+         "Ty"
+        ],
+        [
+         "A",
+         8,
+         "Gd"
+        ],
+        [
+         "S",
+         5,
+         "Ty"
+        ],
+        [
+         "E",
+         8,
+         "Gd"
+        ],
+        [
+         "R",
+         5,
+         "Ty"
+        ],
+        [
+         "I",
+         5,
+         "Ty"
+        ],
+        [
+         "P",
+         3,
+         "Pr"
+        ]
+       ],
+       "health": "26",
+       "karma": "13",
+       "resources": "0",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "khan-s-champion-mt2",
+   "name": "Khan's Champion",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "khan-s-champion-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      33
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 33,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "50",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 10,
+        "corrected": 14
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "twain-android-mt2",
+   "name": "Twain Android",
+   "team": "MT2 The Weird, Weird West",
+   "versions": [
+    {
+     "id": "twain-android-mt2",
+     "label": null,
+     "team": "MT2 The Weird, Weird West",
+     "part": "Adventure",
+     "pages": [
+      36
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "100",
+       "karma": "20",
+       "resources": "FE (2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Radio Communication"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "ghost-rider-i-ii-mt2",
+   "name": "Ghost Rider I & II",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "ghost-rider-i-ii-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      52
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 52,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "46",
+       "karma": "36",
+       "resources": "TY (6)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gun Fighting"
+      },
+      {
+       "name": "Lighting Draw"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "ghost-rider-iv-mt2",
+   "name": "Ghost Rider IV",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "ghost-rider-iv-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      53
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Ghost Rider IV",
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "86",
+       "karma": "60",
+       "resources": "TY (6)",
+       "popularity": "5"
+      },
+      {
+       "label": "Hamilton Slade",
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "46",
+       "karma": "36",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      },
+      {
+       "name": "Detection of Evil"
+      },
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      },
+      {
+       "name": "Invisiblity"
+      },
+      {
+       "name": "Banshee"
+      },
+      {
+       "name": "Mystic Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "kid-colt-mt2",
+   "name": "Kid Colt",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "kid-colt-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      54,
+      55
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "70",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "20 (-30 with authorities)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gun-fighting"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "rawhide-kid-mt2",
+   "name": "Rawhide Kid",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "rawhide-kid-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      56
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "70",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gun-fighting"
+      },
+      {
+       "name": "Lighting Draw"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "lobo-mt2",
+   "name": "Lobo",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "lobo-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      57
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "50",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "red-wolf-mt2",
+   "name": "Red Wolf",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "red-wolf-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      57,
+      58
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "80",
+       "karma": "70",
+       "resources": "TY (6)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Weapons"
+      },
+      {
+       "name": "Wolf"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "shooting-star-mt2",
+   "name": "Shooting Star",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "shooting-star-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      59,
+      60
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "66",
+       "karma": "18",
+       "resources": "TY (6)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Pistols"
+      },
+      {
+       "name": "Gyro-Boots"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "texas-twister-mt2",
+   "name": "Texas Twister",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "texas-twister-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      61,
+      62
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "66",
+       "karma": "18",
+       "resources": "TY (6)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Whirlwind",
+       "upb": "T23"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
+  },
+  {
+   "id": "two-gun-kid-mt2",
+   "name": "Two-Gun Kid",
+   "team": "Western Heroes",
+   "versions": [
+    {
+     "id": "two-gun-kid-mt2",
+     "label": null,
+     "team": "Western Heroes",
+     "part": "Adventure",
+     "pages": [
+      63,
+      64
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "60",
+       "karma": "36",
+       "resources": "GD",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Pistols"
+      },
+      {
+       "name": "Lasso"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt2"
   }
  ]
 }
