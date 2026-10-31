@@ -339,6 +339,20 @@
     ]
    ],
    "total": 30
+  },
+  {
+   "slug": "mt3",
+   "title": "MT3 The Revenge of Kang",
+   "code": "TSR6891",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     43
+    ]
+   ],
+   "total": 43
   }
  ]
 }

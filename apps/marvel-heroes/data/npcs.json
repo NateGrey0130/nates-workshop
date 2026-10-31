@@ -98,6 +98,11 @@
    "book": "MT2 The Weird, Weird West",
    "code": "TSR6886",
    "pages": "Adventure 3-8, 12-36, 52-64"
+  },
+  {
+   "book": "MT3 The Revenge of Kang",
+   "code": "TSR6891",
+   "pages": "Adventure 4-16, 21-63"
   }
  ],
  "books": [
@@ -412,6 +417,30 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mt3",
+   "short": "MT3",
+   "title": "MT3 The Revenge of Kang",
+   "pages": [
+    4,
+    16
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       4,
+       16
+      ],
+      [
+       21,
+       63
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -485,7 +514,9 @@
   "Death Gods",
   "Weird, Weird West Heroes",
   "MT2 The Weird, Weird West",
-  "Western Heroes"
+  "Western Heroes",
+  "Revenge of Kang Heroes",
+  "MT3 The Revenge of Kang"
  ],
  "characters": [
   {
@@ -73612,6 +73643,3810 @@
    ],
    "appearances": [],
    "book": "mt2"
+  },
+  {
+   "id": "vision-mt3",
+   "name": "Vision",
+   "team": "Revenge of Kang Heroes",
+   "versions": [
+    {
+     "id": "vision-mt3",
+     "label": null,
+     "team": "Revenge of Kang Heroes",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "140",
+       "karma": "60",
+       "resources": "PR(4)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Solar Beams"
+      },
+      {
+       "name": "Solar Regeneration"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "moon-knight-mt3",
+   "name": "Moon Knight",
+   "team": "Revenge of Kang Heroes",
+   "versions": [
+    {
+     "id": "moon-knight-mt3",
+     "label": null,
+     "team": "Revenge of Kang Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "alias Marc Spector"
+     ],
+     "blocks": [
+      {
+       "label": "Normal",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Ex"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "Rm(30)",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "P",
+        "printed": {
+         "number": 30,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        }
+       }
+      },
+      {
+       "label": "Moonlight",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "150",
+       "karma": "60",
+       "resources": "Rm(30)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Boost"
+      },
+      {
+       "name": "Ankh"
+      },
+      {
+       "name": "Weaponry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "scarlet-witch-mt3",
+   "name": "Scarlet Witch",
+   "team": "Revenge of Kang Heroes",
+   "versions": [
+    {
+     "id": "scarlet-witch-mt3",
+     "label": null,
+     "team": "Revenge of Kang Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "alias Wanda"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "46",
+       "karma": "60",
+       "resources": "TY(6)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hex Spheres"
+      },
+      {
+       "name": "Magical Abilities"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "beast-mt3",
+   "name": "Beast",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "beast-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [
+      "Hank McCoy"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "130",
+       "karma": "50",
+       "resources": "RM(30)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Feet and Hands"
+      },
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Balance"
+      },
+      {
+       "name": "Lightning Speed"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "cyclops-mt3",
+   "name": "Cyclops",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "cyclops-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Scott Summers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "76",
+       "karma": "70",
+       "resources": "GD(10)",
+       "popularity": "6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Optic Blasts"
+      },
+      {
+       "name": "Resistance to Injury"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "angel-mt3",
+   "name": "Angel",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "angel-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Warren Worthington III"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "90",
+       "karma": "26",
+       "resources": "RM(30)",
+       "popularity": "12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Adapted Anatomy"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "iceman-mt3",
+   "name": "Iceman",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "iceman-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      7,
+      8
+     ],
+     "identity": [
+      "Bobby Drake"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "56",
+       "karma": "20",
+       "resources": "TY(6)",
+       "popularity": "16"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Invulnerability to Cold"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "marvel-girl-mt3",
+   "name": "Marvel Girl",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "marvel-girl-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Jean Grey"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "54",
+       "karma": "80",
+       "resources": "GD(10)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Deflection"
+      },
+      {
+       "name": "Telekinetic Flight"
+      },
+      {
+       "name": "Mental Bolts",
+       "upb": "M21"
+      },
+      {
+       "name": "Telepathic Power"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "professor-x-mt3",
+   "name": "Professor X",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "professor-x-mt3",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      8,
+      9
+     ],
+     "identity": [
+      "Charles Xavier"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "50",
+       "karma": "165",
+       "resources": "RM(30)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Mental Bolts",
+       "upb": "M21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Handicap"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "invisible-girl-mt3",
+   "name": "Invisible Girl",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "invisible-girl-mt3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [
+      "Sue Storm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "46",
+       "karma": "40",
+       "resources": "RM(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "mister-fantastic-mt3",
+   "name": "Mister Fantastic",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "mister-fantastic-mt3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Reed Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "42",
+       "karma": "100",
+       "resources": "RM(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elongation",
+       "upb": "S12"
+      },
+      {
+       "name": "Plasticity",
+       "upb": "S25"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Hyper-Intelligence",
+       "upb": "M13"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "human-torch-mt3",
+   "name": "Human Torch",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "human-torch-mt3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      10,
+      11
+     ],
+     "identity": [
+      "Johnny Storm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "26",
+       "resources": "RM(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Energy Sheath (Fire)"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "thing-mt3",
+   "name": "Thing",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "thing-mt3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Benjamin Grimm"
+     ],
+     "blocks": [
+      {
+       "label": "Thing",
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "200",
+       "karma": "50",
+       "resources": "RM(30)",
+       "popularity": "10"
+      },
+      {
+       "label": "Ben (human form)",
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "50",
+       "karma": "50",
+       "resources": "RM(30)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "daredevil-mt3",
+   "name": "Daredevil",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "daredevil-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [
+      "Matt Murdock"
+     ],
+     "blocks": [
+      {
+       "label": "Daredevil",
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "110",
+       "karma": "91",
+       "resources": "EX(20)",
+       "popularity": "10"
+      },
+      {
+       "label": "Matt Murdock (pre-accident)",
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "40",
+       "karma": "26",
+       "resources": "TY(6)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Senses"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Billy Club"
+      },
+      {
+       "name": "Blindness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "spider-man-mt3",
+   "name": "Spider-Man",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "spider-man-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Peter Parker"
+     ],
+     "blocks": [
+      {
+       "label": "Spider-Man",
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "160",
+       "karma": "70",
+       "resources": "TY(6)",
+       "popularity": "20"
+      },
+      {
+       "label": "Peter Parker (Non-Powered Form)",
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "24",
+       "karma": "50",
+       "resources": "PR(3)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Spider-Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "iron-man-mt3",
+   "name": "Iron Man",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "iron-man-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Tony Stark"
+     ],
+     "blocks": [
+      {
+       "label": "Iron Man",
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "84",
+       "karma": "66",
+       "resources": "IN(40)",
+       "popularity": "20"
+      },
+      {
+       "label": "Tony Stark (without armor)",
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "66",
+       "resources": "IN(40)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Magnetic Control",
+       "upb": "EC15"
+      },
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "marty-jenkins-mt3",
+   "name": "Marty Jenkins",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "marty-jenkins-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      12,
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "18",
+       "resources": "GD(10)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "kang-mt3",
+   "name": "Kang",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "kang-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Kang the Conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         40,
+         "In",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "I",
+         6,
+         "Ty",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "P",
+         10,
+         "Gd",
+         [
+          40,
+          "In"
+         ]
+        ]
+       ],
+       "health": "86",
+       "karma": "Varies",
+       "resources": "MN(75)",
+       "popularity": "-30",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "Varies"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Blaster Gauntlets"
+      },
+      {
+       "name": "Time Ship"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "ko-kri-mt3",
+   "name": "Ko-Kri",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "ko-kri-mt3",
+     "label": "Typical",
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "70",
+       "karma": "76",
+       "resources": "PR(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Psi-Blast"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "executioner-mt3",
+   "name": "Executioner",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "executioner-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      14,
+      15
+     ],
+     "identity": [
+      "Skurge"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "245",
+       "karma": "36",
+       "resources": "GD(10)",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Boay Armor"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Enhanced Vision"
+      },
+      {
+       "name": "Magical Axe"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "mad-thinker-mt3",
+   "name": "Mad Thinker",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "mad-thinker-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "24",
+       "karma": "62",
+       "resources": "RM(30)",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Total Memory",
+       "upb": "M33"
+      },
+      {
+       "name": "Android"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "mad-thinker-s-android-mt3",
+   "name": "Mad Thinker's Android",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "mad-thinker-s-android-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "100",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "super-skrull-mt3",
+   "name": "Super-Skrull",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "super-skrull-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "150",
+       "karma": "22",
+       "resources": "FE(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Elongation",
+       "upb": "S12"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Rocket Flight"
+      },
+      {
+       "name": "Armored Skin"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Power Selection"
+      },
+      {
+       "name": "Power Source"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "black-knight-nathan-garrett-mt3",
+   "name": "Black Knight (Nathan Garrett)",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "black-knight-nathan-garrett-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      15,
+      16
+     ],
+     "identity": [
+      "Nathan Garret"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "60",
+       "karma": "20",
+       "resources": "EX(20)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flying Horse"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "mandarin-mt3",
+   "name": "Mandarin",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "mandarin-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "AM(30)",
+       "popularity": "-12",
+       "override": {
+        "verdict": "misprint",
+        "field": "resources",
+        "printed": "AM(30)",
+        "corrected": "AM(50)"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "melter-mt3",
+   "name": "Melter",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "melter-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Bruno Horgan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "32",
+       "karma": "32",
+       "resources": "EX(20)",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Melting Ray"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "unicorn-mt3",
+   "name": "Unicorn",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "unicorn-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Milos Masaryk"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "130",
+       "karma": "28",
+       "resources": "GD(10)",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Power Horn"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "attuma-mt3",
+   "name": "Attuma",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "attuma-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "175",
+       "karma": "32",
+       "resources": "EX(20)",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper Swimming",
+       "upb": "T11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "attuma-s-minions-mt3",
+   "name": "Attuma's Minions",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "attuma-s-minions-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "100",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "beetle-mt3",
+   "name": "Beetle",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "beetle-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Abner Jenkins"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "70",
+       "karma": "56",
+       "resources": "EX(20)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Electro-Bite"
+      },
+      {
+       "name": "Battle Computer"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "electro-mt3",
+   "name": "Electro",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "electro-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Maxwell Dillon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "100",
+       "karma": "36",
+       "resources": "TY(6)",
+       "popularity": "-12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "fish-mt3",
+   "name": "Fish",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "fish-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      21
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "1060",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "giant-insect-mt3",
+   "name": "Giant Insect",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "giant-insect-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      21
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "36",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "alligator-creatures-mt3",
+   "name": "Alligator Creatures",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "alligator-creatures-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      22
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "60",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "snakes-mt3",
+   "name": "Snakes",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "snakes-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      33
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 33,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "28",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "scorpions-mt3",
+   "name": "Scorpions",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "scorpions-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      34
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 34,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "40",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "health_derived": true,
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "kang-duplicate-s-battle-robots-mt3",
+   "name": "Kang Duplicate's Battle Robots",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "kang-duplicate-s-battle-robots-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      46
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 46,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "90",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 90,
+        "corrected": 110
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "thugs-mt3",
+   "name": "Thugs",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "thugs-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      47
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 47,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "28",
+       "karma": "16",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "mike-franklin-mt3",
+   "name": "Mike Franklin",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "mike-franklin-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      49
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 49,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "120",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 18,
+        "corrected": 14
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "tom-tyler-mt3",
+   "name": "Tom Tyler",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "tom-tyler-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      50
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 50,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "100",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 22,
+        "corrected": 18
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "security-robots-mt3",
+   "name": "Security Robots",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "security-robots-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      56
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "120",
+       "karma": "14",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "supreme-kang-s-battle-robots-mt3",
+   "name": "Supreme Kang's Battle Robots",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "supreme-kang-s-battle-robots-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      62
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "130",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
+  },
+  {
+   "id": "o-malley-mt3",
+   "name": "O'Malley",
+   "team": "MT3 The Revenge of Kang",
+   "versions": [
+    {
+     "id": "o-malley-mt3",
+     "label": null,
+     "team": "MT3 The Revenge of Kang",
+     "part": "Adventure",
+     "pages": [
+      63
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "160",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mt3"
   }
  ]
 }
