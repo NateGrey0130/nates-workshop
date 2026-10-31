@@ -321,6 +321,20 @@
     ]
    ],
    "total": 32
+  },
+  {
+   "slug": "mt2",
+   "title": "MT2 The Weird, Weird West",
+   "code": "TSR6886",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     30
+    ]
+   ],
+   "total": 30
   }
  ]
 }

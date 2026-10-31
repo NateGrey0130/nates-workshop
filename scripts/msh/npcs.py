@@ -454,6 +454,17 @@ def main(slug_arg):
         entries = [x for x in entries if x is not e]
         second[id(owners[0])] = (dict(e['blocks'][0], label=g['label'], second=True), e['powers'])
     statted = [e for e in entries if e['blocks']]
+    # A header's parenthesis that counts the beings an encounter fields (MT2's
+    # Average Rifleman (2) and Average Mounted Desperado (3), printed 29;
+    # registry count_headers [part, printed page, header], survey mt2.md
+    # decision 3) is not a version label: the version has none. Each must
+    # find exactly one entry. Only a grid-booklets book sets the field.
+    counted = set()
+    for c in (book.get('count_headers', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2]]
+        if len(hits) != 1 or not variant(c[2]):
+            raise SystemExit('%s: count_headers %r finds %d entries, not 1 with a parenthesis' % (slug_arg, c[2], len(hits)))
+        counted.add(id(hits[0]))
     by_name = {}
     for e in statted:
         by_name.setdefault(norm(name_of(e) if booklet else group_name(e['header'])), []).append(e)
@@ -658,6 +669,19 @@ def main(slug_arg):
                     identity[k:k + 2] = [identity[k][:-1] + identity[k + 1]]
                 else:
                     k += 1
+            # MT2's Moon Knight (printed 4, registry slash_forms) prints his
+            # two forms' names over the rank columns, Normal / Moonlight, and
+            # the reader keeps the line as an identity line. It names the two
+            # blocks, which carry it as their labels, not the man, so it goes.
+            # Only a grid-booklets entry slash_forms names, and the line must
+            # be found once; no other book sets the field.
+            for f in (book.get('slash_forms', []) if grid else []):
+                if f['part'] == e['part'] and f['page'] in e['pages'] and norm(name_of(e)) == norm(f['entry']):
+                    heads = [x for x in identity if norm(x) == norm(' '.join(f['labels']))]
+                    if len(heads) != 1:
+                        raise SystemExit('%s: slash_forms %s finds its labels line %d times in the identity, not once'
+                                         % (slug_arg, f['entry'], len(heads)))
+                    identity.remove(heads[0])
             prose = e['prose']
             # A roster-book entry of tiers alone (Kingpin's Organization) opens
             # with a sentence, not a name: that is prose too.
@@ -688,7 +712,8 @@ def main(slug_arg):
                 members.append({'name': display(m['name']), 'page': m['page']})
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
-                'id': eslug, 'label': variant(e['header']) if (grid or not booklet) and e['header'] not in page_named else None,
+                'id': eslug, 'label': variant(e['header']) if (grid or not booklet) and e['header'] not in page_named
+                and id(e) not in counted else None,
                 'team': team_of_panel_card(e) if panels else team_of_entry(e) if booklet
                 else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
