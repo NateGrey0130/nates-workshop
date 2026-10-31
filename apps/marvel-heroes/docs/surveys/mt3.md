@@ -1,14 +1,10 @@
 # Survey: MT3 The Revenge of Kang (TSR6891)
 
-> **DRAFT.** Written through every stat block of the book (plan rows 10a
-> and 10b), and *Which reader fits* from the trial parse (plan row 10c).
-> Not yet run through the Marvel smoke suite.
-
 Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1989,
 the third module of the Time Warp series. Registry entry:
 `scripts/msh/books.json` -> `mt3`. Measured 2026-10-30.
 
-**Rows citing this book:** none yet (no data is built).
+**Rows citing this book:** 0 `msh_book_text` rows (no data is built).
 
 Everything here was measured and read on the page images.
 
