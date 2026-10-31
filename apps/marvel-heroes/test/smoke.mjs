@@ -1789,6 +1789,12 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       ].join(' | ')
       && bookNpc({ character: 'moon-knight-mt3', block: 0 }).snapshot?.abilities.psyche.rank === 'remarkable',
       fixesK.join(' | '));
+    const resK = bookNpc({ character: 'mandarin-mt3' }).snapshot?.abilities.resources;
+    check('MT3: the Mandarin\'s Resources misprint plays as corrected (printed AM(30) is Remarkable 30, corrected AM(50) plays Amazing 50), and only a block with a resources override changes (the Mandarin of MH7, printing the word Amazing, plays the same)',
+      resK?.rank === 'amazing' && resK.number === 50
+      && blkK('mandarin-mt3')?.resources === 'AM(30)'
+      && bookNpc({ character: 'mandarin-mh7' }).snapshot?.abilities.resources.rank === 'amazing',
+      JSON.stringify(resK));
     check('MT3: Kang\'s Karma Varies is kept as printed and plays none, his R, I and P each two ranks, the first played (two_ranks)',
       blkK('kang-mt3')?.override?.verdict === 'as_printed' && blkK('kang-mt3')?.karma === 'Varies' && playedK('kang-mt3') === '86/null'
       && blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join() === '40 In 50,Am,6 Ty 30,Rm,10 Gd 40,In'

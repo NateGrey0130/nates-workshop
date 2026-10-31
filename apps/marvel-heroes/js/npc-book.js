@@ -95,10 +95,13 @@ export function makeBookNpc(data) {
     // Resources prints as a rank and a number, "Pr (4)"; the number is the
     // measure. MHSP1 prints the rank alone ("POOR", "CLASS 1000"): its standard
     // number. "None" and a dash are kept as printed, with no number.
-    const named = ladder.find((r) => r.name.toLowerCase() === String(b.resources ?? '').trim().toLowerCase());
-    const resN = named ? named.standard : int((String(b.resources ?? '').match(/\((\d+)\)/) || [])[1]);
+    // A misprinted Resources (the Mandarin's AM(30), MT3) plays as its override's
+    // corrected text, which is read the same way.
+    const resText = fixOf('resources') ? fixOf('resources').corrected : b.resources;
+    const named = ladder.find((r) => r.name.toLowerCase() === String(resText ?? '').trim().toLowerCase());
+    const resN = named ? named.standard : int((String(resText ?? '').match(/\((\d+)\)/) || [])[1]);
     const resR = rankOf(resN);
-    abilities.resources = { rank: resR ? resR.id : null, name: resR ? resR.name : (b.resources || 'None'), number: resN };
+    abilities.resources = { rank: resR ? resR.id : null, name: resR ? resR.name : (resText || 'None'), number: resN };
     const popN = int(b.popularity);
     abilities.popularity = { rank: null, name: b.popularity || '0', number: popN };
     const printedH = int(b.health);
