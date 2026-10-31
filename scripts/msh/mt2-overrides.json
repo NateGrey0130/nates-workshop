@@ -5,6 +5,7 @@
     "  match     {page, header}: the printed page in the Adventure Book, and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  text      match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "A number inside its rank's range but not its standard (the Hobart Gang's, printed 28-29) needs no override: the registry's rank_ranges (scripts/msh/books.json, the mt2 entry) has the check take the range for this book alone (survey decision 8)."
@@ -16,6 +17,15 @@
      "note": "Printed A GD 6 and S GD 6 (printed 6, column 2): 6 is Typical's number, outside Good's range (8-15), and Health 52 = 20 + 6 + 6 + 20 holds on the 6s, so the codes are the misprint. Survey decision 7."},
     {"match": {"page": 33, "header": "Khan's Champion"}, "verdict": "misprint", "field": "karma",
      "printed": 10, "corrected": 14, "checked": "2026-10-30",
-     "note": "Printed Karma: 10 (printed 33, column 2, a one-line grid with no name line): R + I + P = 4 + 6 + 4 = 14, and every number agrees with its code, so the total is the misprint; Health 50 = 10 + 10 + 10 + 20 holds. Survey decision 7."}
+     "note": "Printed Karma: 10 (printed 33, column 2, a one-line grid with no name line): R + I + P = 4 + 6 + 4 = 14, and every number agrees with its code, so the total is the misprint; Health 50 = 10 + 10 + 10 + 20 holds. Survey decision 7."},
+    {"match": {"row": "mt2:scarlet-witch-mt2:power:1"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "\"| want", "printed": "\"I want",
+     "note": "Printed 5, the Scarlet Witch's Hex Spheres: the capital I opening the quoted example is read as a vertical bar. Both double quotes of the row are right (seen on a 300 dpi crop of PDF 7)."},
+    {"match": {"row": "mt2:black-knight-nathan-garrett-mt2:power:2"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "R | P", "printed": "R I P",
+     "note": "Printed 8, the Black Knight's Flying Horse: the horse's ability letters print I between R and P, read as a vertical bar (seen on a 300 dpi crop of PDF 10)."},
+    {"match": {"row": "mt2:ghost-rider-iv-mt2:notes"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "Ghost Rider | and II", "printed": "Ghost Rider I and II",
+     "note": "Printed 53, Ghost Rider IV's notes: the page prints the roman numeral I, read as a vertical bar (seen on a 300 dpi crop of PDF 55)."}
   ]
 }
