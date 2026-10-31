@@ -588,6 +588,15 @@ def main(slug_arg):
                     # Mr. Chambers, mh3.md decision 4) is derived the same way
                     blocks[-1]['karma'] = str(sum(a[1] for a in abilities[4:]))
                     blocks[-1]['karma_derived'] = True
+                if grid and book.get('derived_totals'):
+                    # MT3 (registry derived_totals, survey mt3.md decision 10):
+                    # a one-line grid printing no Karma (the snakes, printed 33)
+                    # or neither total (the scorpions, 34) has it derived from
+                    # its rows by gridbooks.line_grids, which lists it under the
+                    # block's derived; the card flags it as MH2's Kang's Minions'
+                    # is. No earlier book sets the field.
+                    for k in b.get('derived') or []:
+                        blocks[-1][k + '_derived'] = True
                 if b in slashed:
                     blocks[-1:] = slash_forms(blocks[-1], name_of(e), e['identity'], e['header'])
             pw = []

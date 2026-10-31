@@ -339,6 +339,24 @@
     ]
    ],
    "total": 30
+  },
+  {
+   "slug": "mt3",
+   "title": "MT3 The Revenge of Kang",
+   "code": "TSR6891",
+   "status": "imported",
+   "date": "2026-10-31",
+   "added": [
+    [
+     "Characters",
+     43
+    ],
+    [
+     "Rows of the book's text",
+     172
+    ]
+   ],
+   "total": 43
   }
  ]
 }

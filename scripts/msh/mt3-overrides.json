@@ -5,6 +5,7 @@
     "  match     {page, header, label}: the printed page in the Adventure Book, the start of the entry's header, and where one card holds two blocks the block's label",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text        match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "Ko-Kri's Resources PR(6) (printed 13: 6 is Typical's number, outside Poor's range) has no override: no check reads Resources, and no total or other book says which half is wrong (survey decision 8)."
@@ -27,6 +28,9 @@
      "note": "Printed Karma: 18 (printed 49, column 2, a one-line grid with no name line): R + I + P = 6 + 6 + 2 = 14, and every number agrees with its code, so the total is the misprint (MT2's rule for Khan's Champion); Health 120 = 30 + 30 + 20 + 40 holds. Survey decision 7."},
     {"match": {"page": 50, "header": "Tom Tyler"}, "verdict": "misprint", "field": "karma",
      "printed": 22, "corrected": 18, "checked": "2026-10-30",
-     "note": "Printed Karma: 22 (printed 50, column 2, a one-line grid with no name line): R + I + P = 10 + 6 + 2 = 18, and every number agrees with its code, so the total is the misprint (MT2's rule for Khan's Champion); Health 100 = 30 + 20 + 20 + 30 holds. Survey decision 7."}
+     "note": "Printed Karma: 22 (printed 50, column 2, a one-line grid with no name line): R + I + P = 10 + 6 + 2 = 18, and every number agrees with its code, so the total is the misprint (MT2's rule for Khan's Champion); Health 100 = 30 + 20 + 20 + 30 holds. Survey decision 7."},
+    {"match": {"row": "mt3:kang-mt3:background"}, "verdict": "text", "checked": "2026-10-30",
+     "read": "\"Kang Duplicates: The", "printed": "\"Kang Duplicates:\" The",
+     "note": "Printed 13, column 3, Kang's background: the run-in Kang Duplicates opens with a double quote and the page prints the closing one after the colon, as the Supreme Kang and Master Kang run-ins above it; the OCR lost the closing mark, which left the row with an odd count of double quotes (seen on a 220 dpi crop of PDF 15)."}
   ]
 }
