@@ -4,7 +4,8 @@ Marvel Super Heroes Official Advanced Game Adventure, Ray Winninger, 1988,
 the second module of the three-part Time Warp series. Registry entry:
 `scripts/msh/books.json` -> `mt2`. Measured 2026-10-30.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
+**Rows citing this book:** 127 `msh_book_text` rows over 27 character entries
+in production (`DB_MARVEL`, read back 2026-10-30).
 
 Everything here was measured and read on the page images.
 

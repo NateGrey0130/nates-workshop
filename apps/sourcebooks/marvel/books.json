@@ -327,11 +327,15 @@
    "title": "MT2 The Weird, Weird West",
    "code": "TSR6886",
    "status": "imported",
-   "date": null,
+   "date": "2026-10-30",
    "added": [
     [
      "Characters",
      30
+    ],
+    [
+     "Rows of the book's text",
+     127
     ]
    ],
    "total": 30
