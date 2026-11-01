@@ -357,6 +357,24 @@
     ]
    ],
    "total": 43
+  },
+  {
+   "slug": "mx2",
+   "title": "MX2 The X-Potential",
+   "code": "TSR6875",
+   "status": "imported",
+   "date": "2026-10-31",
+   "added": [
+    [
+     "Characters",
+     24
+    ],
+    [
+     "Rows of the book's text",
+     103
+    ]
+   ],
+   "total": 24
   }
  ]
 }

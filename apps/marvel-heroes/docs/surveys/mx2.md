@@ -3,7 +3,8 @@
 Official Advanced Game Accessory for Marvel Super Heroes, Mark Acres, 1987.
 Registry entry: `scripts/msh/books.json` -> `mx2`. Measured 2026-10-31.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data has been built).
+**Rows citing this book:** 103 `msh_book_text` rows over 24 character entries
+in production (`DB_MARVEL`, read back 2026-10-31).
 
 Everything here was measured and read on the page images.
 

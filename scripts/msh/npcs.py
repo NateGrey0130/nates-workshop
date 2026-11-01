@@ -419,6 +419,16 @@ def main(slug_arg):
         if len(hits) != 1 or variant(hits[0]['header']):
             raise SystemExit('%s: card_names %r finds %d entries, not 1 with no parenthesis' % (slug_arg, old, len(hits)))
 
+    # MX2 (registry line_identity [{part, page, name, lines}]): a named
+    # codes-only grid's subhead is over identity lines (Braddock's U.S. Army /
+    # Chairman, Joint Chiefs of Staff, printed 15), which gridbooks hands over
+    # as the entry's prose, a subhead in MX1 printing none. The lines as the
+    # page prints them are the card's identity, and the prose as read must be
+    # those words and nothing more (survey mx2.md decision 3). Each must find
+    # exactly one entry; no earlier book sets the field.
+    line_identity = {(x['part'], x['page'], x['name']): x['lines'] for x in book.get('line_identity', [])} if grid else {}
+    line_identity_used = set()
+
     no_health = {norm(n) for n in book.get('no_health', [])} if panels else set()
     no_karma = {norm(n) for n in book.get('no_karma', [])} if panels else set()
 
@@ -715,6 +725,13 @@ def main(slug_arg):
             if len(identity) >= 3 or (rbook and identity and all(b.get('kind') == 'line' for b in e['blocks'])):
                 prose = ' '.join(e['identity']) + ' ' + prose
                 identity = []
+            key = (e.get('part'), page0, name_of(e)) if line_identity else None
+            if key in line_identity:
+                if key in line_identity_used or identity or norm(prose) != norm(' '.join(line_identity[key])):
+                    raise SystemExit('%s: line_identity %r does not match the prose of exactly one entry with no identity'
+                                     % (slug_arg, key[2]))
+                line_identity_used.add(key)
+                identity, prose = [ascii_fold(x) for x in line_identity[key]], ''
             text_row(eslug, 'prose', None, None, page0, prose)
             members = []
             for n, m in enumerate(e['members'], 1):
@@ -739,6 +756,8 @@ def main(slug_arg):
                       **({'side': versions[0]['side']} if booklet and versions[0].get('side') else {}),
                       **({'summary_only': True} if booklet and group[0]['kind'] == 'summary' else {}),
                       'versions': versions, 'appearances': []})
+    for key in set(line_identity) - line_identity_used:
+        raise SystemExit('%s: line_identity %r finds no entry on %s p.%s' % (slug_arg, key[2], key[0], key[1]))
 
     # A team the Roster Booklet prints over its members' blocks (the Wrecking
     # Crew): a card with no block of its own, its members linked, and its
