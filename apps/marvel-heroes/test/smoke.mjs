@@ -2147,6 +2147,135 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MX4 is read by scripts/msh/gridbooks.py (mx4-overrides.json), with the
+  // survey's decisions applied as it recommends (mx4.md; Nate 2026-10-31).
+  // Its two appendices hold every card: the six sentinels (printed 25-26) and
+  // seven NPCs (27-31), all filed under the book's title. The registry fields
+  // whose absence roster.py would not stop on (rank_ranges, speck_lines,
+  // extra_titles, identity_lines, wrapped_alternates, override_values) are
+  // each pinned here by what they change.
+  if (data.npcs.characters.some((c) => c.book === 'mx4')) {
+    const mx4 = data.npcs.characters.filter((c) => c.book === 'mx4');
+    const blocksQ = mx4.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blkQ = (id) => mx4.find((c) => c.id === id)?.versions[0].blocks[0];
+    const cardQ = (id) => mx4.find((c) => c.id === id)?.versions[0];
+    const playedQ = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    const sentinelsQ = ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'alpha-sentinel', 'omega-sentinel', 'nimrod'].map((s) => `${s}-mx4`);
+    check('MX4: 13 characters, each id ending -mx4 with one version and one block, all filed under the book\'s title, and no name starting The',
+      mx4.length === 13 && mx4.every((c) => c.id.endsWith('-mx4') && c.versions.length === 1 && c.versions[0].blocks.length === 1)
+      && mx4.every((c) => c.team === 'MX4 Flames of Doom') && !mx4.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mx4.length} ${[...new Set(mx4.map((c) => c.team))]}`);
+    check('MX4: the cards sort by the Adventure page each starts on, 25 to 30, and one page\'s cards by name (npcs.py), so the Alpha comes before the Mark IV on printed 25',
+      mx4.map((c) => c.id).join() === ['alpha-sentinel', 'mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'nimrod', 'omega-sentinel',
+        'cannonball', 'lila-cheney', 'magma', 'mirage', 'mystique', 'marco-pene', 'sunspot'].map((id) => `${id}-mx4`).join(),
+      mx4.map((c) => c.id).join());
+    check('MX4: 13 full blocks, none a one-line grid, none ranks only and none with a label',
+      blocksQ.length === 13 && blocksQ.every(({ b }) => !b.kind && !b.rank_only && !b.label),
+      blocksQ.map(({ id, b }) => `${id}:${b.kind}:${b.rank_only}:${b.label}`).join());
+    const fixesQ = ['alpha-sentinel', 'nimrod', 'cannonball', 'lila-cheney', 'magma', 'mirage', 'marco-pene', 'sunspot'].map((s) => {
+      const id = `${s}-mx4`;
+      const o = blkQ(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${v(a.printed)}${a.corrected ? `>${v(a.corrected)}` : ''}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedQ(id)}`;
+    });
+    check('MX4: the eight misprinted blocks keep the printed values and play the sums of their printed numbers (the Alpha\'s Health 250 as 290; Nimrod\'s R 30 Ex, I 30 Gd and P 10 Ty as Rm, Rm and Gd; Karma 10 as 40 for Cannonball, 20 as 40 for Lila Cheney; Magma 100/60 as 86/70; Mirage 80/20 as 90/70; Marco Pene 35/60 as 61/46; Sunspot\'s Karma 30 as 46)',
+      fixesQ.join(' | ') === [
+        'alpha-sentinel-mx4 misprint health 250>290 also as_printed karma 0 plays 290/0',
+        'nimrod-mx4 misprint R 30 Ex>30 Rm also misprint I 30 Gd>30 Rm also misprint P 10 Ty>10 Gd plays 300/70',
+        'cannonball-mx4 misprint karma 10>40 plays 90/40',
+        'lila-cheney-mx4 misprint karma 20>40 plays 66/40',
+        'magma-mx4 misprint health 100>86 also misprint karma 60>70 plays 86/70',
+        'mirage-mx4 misprint health 80>90 also misprint karma 20>70 plays 90/70',
+        'marco-pene-mx4 misprint health 35>61 also misprint karma 60>46 plays 61/46',
+        'sunspot-mx4 misprint karma 30>46 plays 76/46',
+      ].join(' | ')
+      && ['reason', 'intuition', 'psyche'].map((a) => bookNpc({ character: 'nimrod-mx4' }).snapshot?.abilities[a]?.rank).join() === 'remarkable,remarkable,good',
+      `${fixesQ.join(' | ')} ${['reason', 'intuition', 'psyche'].map((a) => bookNpc({ character: 'nimrod-mx4' }).snapshot?.abilities[a]?.rank)}`);
+    const robotsQ = ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'omega-sentinel'].map((id) => `${id}-mx4`);
+    check('MX4: the four other sentinels print Karma 0 against R, I and P printed, kept as printed (as_printed karma) and played as 0, and Nimrod prints his',
+      robotsQ.every((id) => blkQ(id)?.override?.verdict === 'as_printed' && blkQ(id).override.field === 'karma' && blkQ(id).karma === '0')
+      && robotsQ.map(playedQ).join() === '165/0,190/0,250/0,290/0' && blkQ('nimrod-mx4')?.karma === '70',
+      robotsQ.map(playedQ).join());
+    check('MX4: Mystique\'s Karma prints 150* against R, I and P of 90, kept as printed (as_printed karma), and she plays 90/150',
+      blkQ('mystique-mx4')?.karma === '150*' && blkQ('mystique-mx4')?.override?.verdict === 'as_printed'
+      && blkQ('mystique-mx4').override.field === 'karma' && playedQ('mystique-mx4') === '90/150',
+      `${blkQ('mystique-mx4')?.karma} ${playedQ('mystique-mx4')}`);
+    const ovQ = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx4-overrides.json'), 'utf8')).overrides;
+    check('MX4: thirteen overrides, eight misprints and five as printed, no text verdict (row 9b read every quote mark on the page), and every block carries one',
+      ovQ.length === 13 && ovQ.filter((o) => o.verdict === 'misprint').length === 8 && ovQ.filter((o) => o.verdict === 'as_printed').length === 5
+      && !ovQ.some((o) => o.verdict === 'text') && blocksQ.every(({ b }) => b.override),
+      JSON.stringify(ovQ.map((o) => [o.verdict, o.match])));
+    // rank_ranges: five numbers inside their rank's range and off its
+    // standard, kept and played as printed (survey decision 6)
+    const offQ = [['magma', 'fighting'], ['marco-pene', 'fighting', 'endurance', 'intuition'], ['sunspot', 'reason']]
+      .map(([s, ...ab]) => `${s}:${ab.map((a) => bookNpc({ character: `${s}-mx4` }).snapshot?.abilities[a]?.number).join(' ')}`).join();
+    check('MX4: the five numbers inside a rank\'s range and off its standard play as printed (Magma F 16; Marco Pene F 16, E 15, I 16; Sunspot R 16) (rank_ranges)',
+      offQ === 'magma:16,marco-pene:16 15 16,sunspot:16', offQ);
+    check('MX4: Cannonball\'s and Sunspot\'s Strength keep their bracketed alternates (10 Gd (30 Rm), 6 Ty (40 In)) on the S row, Cannonball\'s joined back from the line below (wrapped_alternates)',
+      blkQ('cannonball-mx4')?.abilities[2].join(' ') === 'S 10 Gd 30,Rm' && blkQ('sunspot-mx4')?.abilities[2].join(' ') === 'S 6 Ty 40,In'
+      && blkQ('cannonball-mx4')?.abilities[3].join(' ') === 'E 40 In',
+      `${blkQ('cannonball-mx4')?.abilities.map((a) => a.join(' '))} | ${blkQ('sunspot-mx4')?.abilities[2]}`);
+    check('MX4: Nimrod\'s Resources reads In (40) across its wrap, Cannonball\'s Pr (Ex) and Lila Cheney\'s Pr (In); Cannonball and Mirage print Popularity -10',
+      blkQ('nimrod-mx4')?.resources === 'In (40)' && blkQ('cannonball-mx4')?.resources === 'Pr (Ex)' && blkQ('lila-cheney-mx4')?.resources === 'Pr (In)'
+      && blkQ('cannonball-mx4')?.popularity === '-10' && blkQ('mirage-mx4')?.popularity === '-10',
+      ['nimrod', 'cannonball', 'lila-cheney', 'mirage'].map((s) => `${s} ${blkQ(`${s}-mx4`)?.resources} ${blkQ(`${s}-mx4`)?.popularity}`).join());
+    check('MX4: the Mark IV, V and VI are named as printed, not as read (speck_lines), and the six sentinels print no identity line',
+      ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel'].map((s) => mx4.find((c) => c.id === `${s}-mx4`)?.name).join() === 'Mark IV Sentinel,Mark V Sentinel,Mark VI Sentinel'
+      && sentinelsQ.every((id) => !cardQ(id)?.identity.length),
+      `${mx4.map((c) => c.name)} ${sentinelsQ.map((id) => cardQ(id)?.identity.length)}`);
+    const idQ = (s) => cardQ(`${s}-mx4`)?.identity || [];
+    check('MX4: each NPC keeps its identity run whole as one line, Mystique\'s of four printed lines and Sunspot\'s of three among them (identity_lines)',
+      ['cannonball', 'lila-cheney', 'magma', 'mirage', 'mystique', 'marco-pene', 'sunspot'].every((s) => idQ(s).length === 1 && /, Mutant$/.test(idQ(s)[0]))
+      && idQ('mystique')[0].startsWith('Raven Darkholme, Member of Project Wideawake and DARPA') && idQ('sunspot')[0].startsWith('Roberto Da Costa, ex-New Mutant, Leader'),
+      ['cannonball', 'lila-cheney', 'magma', 'mirage', 'mystique', 'marco-pene', 'sunspot'].map((s) => JSON.stringify(idQ(s))).join(' '));
+    const powQ = mx4.flatMap((c) => c.versions[0].powers);
+    check('MX4: 70 powers across 13 cards, 17 of them linked to the UPB, Nimrod\'s 15, and Mystique\'s Weapons among her powers (decision 5)',
+      powQ.length === 70 && powQ.filter((p) => p.upb).length === 17 && mx4.every((c) => c.versions[0].powers.length)
+      && cardQ('nimrod-mx4')?.powers.length === 15 && cardQ('mystique-mx4')?.powers.some((p) => p.name === 'Weapons'),
+      `${powQ.length} ${powQ.filter((p) => p.upb).length} ${cardQ('nimrod-mx4')?.powers.length} ${cardQ('mystique-mx4')?.powers.map((p) => p.name)}`);
+    const bookQ = data.npcs.books.find((b) => b.slug === 'mx4');
+    check('MX4: the book reads Adventure 25-31, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookQ?.ranges) === '[{"part":"Adventure","pages":[[25,31]]}]'
+      && tagline(bookNpc({ character: 'alpha-sentinel-mx4' }).snapshot).startsWith('MX4 Flames of Doom, Adventure p.25;')
+      && tagline(bookNpc({ character: 'sunspot-mx4' }).snapshot).startsWith('MX4 Flames of Doom, Adventure p.30;')
+      && mx4.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(bookQ)} ${tagline(bookNpc({ character: 'sunspot-mx4' }).snapshot)}`);
+    // The quote marks, extra_titles and the section labels move only the
+    // book's text, which is msh_book_text's: read the generated .sql in the
+    // cache, by keys and counts, never a sentence of the book in this file.
+    const sqlQ = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mx4', 'book-text.sql');
+    if (!existsSync(sqlQ)) {
+      check(`MX4: skipped the text checks: no ${rel(sqlQ) || sqlQ}`, true);
+    } else {
+      const rowsQ = [...readFileSync(sqlQ, 'utf8').matchAll(/VALUES \('([^']+)', 'mx4', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const markedQ = rowsQ.filter((r) => /["']/.test(r.body));
+      const nQ = (re) => rowsQ.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MX4 text: 91 rows over 13 entries, no row with an odd count of double quotes, and the marks row 9b read on the page: 14 rows hold 26, three double-quoted pairs and 20 singles (19 apostrophes and one elision)',
+        rowsQ.length === 91 && new Set(rowsQ.map((r) => r.key.split(':')[1])).size === 13
+        && !rowsQ.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedQ.length === 14 && nQ(/"/g) === 6 && nQ(/'/g) === 20,
+        `${rowsQ.length} ${new Set(rowsQ.map((r) => r.key.split(':')[1])).size} ${markedQ.length} ${nQ(/"/g)} ${nQ(/'/g)}`);
+      const barsQ = rowsQ.filter((r) => /[|\\]/.test(r.body)).map((r) => r.key.replace(/^mx4:/, ''));
+      check('MX4 text: no row carries a vertical bar or a backslash', barsQ.length === 0, barsQ.join());
+      // Where an entry's text ends, each read on the page (survey mx4.md):
+      // The Hardware of Hell (extra_titles) ends Sunspot's on printed 31, the
+      // sentinels print Known Powers only, Mirage's Equipment is her notes and
+      // Mystique's footnote her prose; Marco Pene prints no Contacts and
+      // Mystique no Background.
+      const partsQ = (s) => rowsQ.filter((r) => r.key.startsWith(`mx4:${s}-mx4:`)).map((r) => r.key.split(':').slice(2).join(':')).filter((k) => !k.startsWith('power:')).join();
+      const nPowQ = (s) => rowsQ.filter((r) => r.key.startsWith(`mx4:${s}-mx4:power:`)).length;
+      check('MX4 text: Sunspot\'s text ends before The Hardware of Hell, no row runs into an appendix title, and each entry\'s sections are the ones it prints',
+        !rowsQ.some((r) => /Hardware of Hell|Arm of the State|Non-Player Characters/.test(r.body))
+        && sentinelsQ.every((id) => partsQ(id.replace(/-mx4$/, '')) === '')
+        && ['cannonball', 'lila-cheney', 'magma', 'mirage', 'mystique', 'marco-pene', 'sunspot'].map(partsQ).join(' | ')
+          === 'talents,contacts,background | talents,contacts,background | talents,contacts,background | talents,contacts,background,notes | talents,contacts,prose | talents,background | talents,contacts,background'
+        && mx4.every((c) => nPowQ(c.id.replace(/-mx4$/, '')) === c.versions[0].powers.length),
+        `${['cannonball', 'lila-cheney', 'magma', 'mirage', 'mystique', 'marco-pene', 'sunspot'].map(partsQ).join(' | ')} ${mx4.map((c) => `${c.id}:${nPowQ(c.id.replace(/-mx4$/, ''))}/${c.versions[0].powers.length}`).join()}`);
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).

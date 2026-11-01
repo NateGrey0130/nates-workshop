@@ -393,6 +393,24 @@
     ]
    ],
    "total": 11
+  },
+  {
+   "slug": "mx4",
+   "title": "MX4 Flames of Doom",
+   "code": "TSR6888",
+   "status": "imported",
+   "date": "2026-11-01",
+   "added": [
+    [
+     "Characters",
+     13
+    ],
+    [
+     "Rows of the book's text",
+     91
+    ]
+   ],
+   "total": 13
   }
  ]
 }

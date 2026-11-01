@@ -722,7 +722,18 @@ def main(slug_arg):
                     else:
                         joined.append(x)
                 identity = joined
-            if len(identity) >= 3 or (rbook and identity and all(b.get('kind') == 'line' for b in e['blocks'])):
+            # MX4 (registry identity_lines, which the reader already used to
+            # keep up to that many lines between a header and its grid) prints
+            # each NPC's identity as one comma-separated run wrapped by a narrow
+            # column: Mystique's (printed 29) over four lines, Sunspot's
+            # (printed 30) over three, Lila Cheney's and Mirage's over two,
+            # each break inside the run. So the lines are one identity, joined,
+            # and three or more of them are not a team's opening paragraph.
+            # Only a grid-booklets book sets the field, and only MX4 does.
+            kept_lines = grid and 'identity_lines' in book
+            if kept_lines and identity:
+                identity = [' '.join(identity)]
+            if (len(identity) >= 3 and not kept_lines) or (rbook and identity and all(b.get('kind') == 'line' for b in e['blocks'])):
                 prose = ' '.join(e['identity']) + ' ' + prose
                 identity = []
             key = (e.get('part'), page0, name_of(e)) if line_identity else None
