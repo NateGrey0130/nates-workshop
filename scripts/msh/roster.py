@@ -386,7 +386,7 @@ class GridReader:
         self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes',
                                   'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail',
                                   'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids',
-                                  'wrapped_alternates')
+                                  'wrapped_alternates', 'dash_marks', 'inner_grids')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -492,6 +492,11 @@ def secondary(rows, stream, end, mends=()):
                 # follows it ('90 = R': Captain Marvel's Karma, Resource p.15;
                 # a quote mark after the Mindless Ones' Health, p.14)
                 out[k.lower()] = re.sub(r'(?<=\d)\s+[^\w\s(][^\d]*$', '', out[k.lower()])
+            if 'dash_marks' in mends:
+                # MLA1 (registry dash_marks): a dash hard against the number
+                # (the Fixer's Health '32-', printed 56), where trailing_marks
+                # wants a space before the mark
+                out[k.lower()] = re.sub(r'(?<=\d)-+$', '', out[k.lower()])
         if v and 'trailing_marks' in mends:
             # ...and before a number, or after a closing bracket (Captain
             # Marvel's Popularity '/) 55' and Resources 'Pr(4) : a')
@@ -627,6 +632,7 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
     grid = grid or grid_at
     labels = labels or {}
     entries, cur = [], None
+    after_inner = -1                    # the line after an inner grid (registry inner_grids)
 
     def start(kind, name, line):
         nonlocal cur
@@ -649,7 +655,9 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             cur = None
             i += 1
             continue
-        anchored = bool(ANCHOR.search(line['text']))
+        # MLA1 (gridbooks.karma_grids, registry karma_grids): a grid of R, I
+        # and P under a Karma line, no Health (Bartholomew Jacobs, printed 40)
+        anchored = bool(ANCHOR.search(line['text'])) or bool(line.get('karma_grid'))
         rows, nxt = grid(stream, i, reader) if anchored else (None, i)
         if anchored and nxt > i:
             if rows is None:
@@ -676,7 +684,17 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             if label and cur['identity'] and cur['identity'][-1] == label:
                 cur['identity'].pop()
             add_page(line)
-            cur['_sec'] = 'after-grid'
+            # MLA1 (registry inner_grids): a second grid set inside a section
+            # of its card (the Black Talon's zombie and skeleton inside his
+            # Necromancy power, printed 53; the Werewolf's human statistics,
+            # 62) is followed by the rest of that section, not by prose
+            inner = 'inner_grids' in getattr(reader, 'mends', ()) and len(cur['blocks']) > 1 \
+                and cur['_sec'] in ('powers', 'talents', 'contacts', 'running', 'background', 'notes')
+            cur['_sec'] = cur['_sec'] if inner else 'after-grid'
+            # ...and its first line starts a paragraph, though the line before
+            # it is the grid's (the Werewolf's Claws under his human
+            # statistics, printed 62)
+            after_inner = end if inner else after_inner
             i = end
             continue
         if line['big']:
@@ -761,7 +779,7 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             paragraph_start = ((line['x0'] - line['left'] < 25
                                 and (not cur['powers'] or prev_text.endswith(('.', ':', ')', '"', '\u201d', '!'))
                                      or line.get('power_head', False)))
-                               or line.get('indented_head', False))
+                               or line.get('indented_head', False) or i == after_inner)
             if pm and paragraph_start and len(pm.group(1)) <= 40:
                 cur['powers'].append({'name': pm.group(1), 'text': [pm.group(2)]})
             elif cur['powers']:

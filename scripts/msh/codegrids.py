@@ -56,21 +56,26 @@ ROW = re.compile(r'^\s*(\S{0,3}?)\s*[~_=-]*\s*(' + CODE + r')(?![A-Za-z0-9])' + 
 ROW_TITLE_CASE = re.compile(ROW.pattern.replace('|FE|', '|FE|FB|'), re.IGNORECASE)
 
 
-def code_row(unread_codes=False, specks=False):
+def code_row(unread_codes=False, specks=False, dash_shift=False):
     """ROW_TITLE_CASE, or with MX3's mends, read through scripts/msh/gridbooks.py
     grid. `unread_codes` (registry unread_codes): a one- or two-letter token
     set hard against a bracketed number is a code the row cannot read (Gilda
     Ginsel's "P M(30)", printed 6), so the line is still a row, its code None.
     `specks` (registry code_row_specks): a full stop or comma between the row
-    letter and the code is a speck ("P . TY (6)", the Mark IV's P, printed 31)."""
-    if not (unread_codes or specks):
+    letter and the code is a speck ("P . TY (6)", the Mark IV's P, printed 31).
+    `dash_shift` (MLA1's registry dash_shift_codes): Shift 0 printed Sh-0 (the
+    Black Talon's zombie and skeleton, printed 53), where CODE reads Shift 0."""
+    if not (unread_codes or specks or dash_shift):
         return ROW_TITLE_CASE
     pattern = ROW_TITLE_CASE.pattern
     if unread_codes:
         pattern = pattern.replace('|[XYZ])', r'|[XYZ]|[A-Z]{1,2}(?=\(\d))', 1)
     if specks:
         pattern = pattern.replace('[~_=-]*', '[~_=.,-]*', 1)
-    assert pattern.count(r'[A-Z]{1,2}(?=\(\d)') == int(unread_codes) and pattern.count('[~_=.,-]*') == int(specks)
+    if dash_shift:
+        pattern = pattern.replace(r'|Shift\s?[0XYZ]|', r'|Shift\s?[0XYZ]|Sh-?0|', 1)
+    assert pattern.count(r'[A-Z]{1,2}(?=\(\d)') == int(unread_codes) and pattern.count('[~_=.,-]*') == int(specks) \
+        and pattern.count('|Sh-?0|') == int(dash_shift)
     return re.compile(pattern, re.IGNORECASE)
 # a code that must print a number to be a row: with none, the line is prose
 # (a mixed-case line above MX1's grids, 'ere eee', reads as Re)

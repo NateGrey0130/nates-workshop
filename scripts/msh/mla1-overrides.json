@@ -1,0 +1,35 @@
+{
+  "about": [
+    "Hand decisions about MLA1 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/mla1.md, Stat blocks, the misprints tables; decisions 5 and 6); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, codes}: the printed page in the Adventure Book, the start of the entry's header, and where one card holds more than one block the block's seven codes as read",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            label       a second block on one card that prints no label of its own; 'label' is the name it is shown under",
+    "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 8, "header": "Typical Buzz Cut"}, "verdict": "misprint", "field": "karma",
+     "printed": 11, "corrected": 12, "checked": "2026-11-01",
+     "note": "Printed Karma: 11 (printed 8): R, I and P each print PR (4), every row's code agreeing with its number, so R + I + P = 12 and the total is the misprint; Health 28 holds. Survey decision 5."},
+    {"match": {"page": 55, "header": "Eel"}, "verdict": "misprint", "field": "karma",
+     "printed": 22, "corrected": 32, "checked": "2026-11-01",
+     "note": "Printed Karma: 22 (printed 55): R EX (20), I TY (6), P TY (6), each code agreeing with its number, so R + I + P = 32. Reading R as GD (10) would change a row whose code and number agree, so the total is the misprint. Survey decision 5."},
+    {"match": {"page": 61, "header": "Tatterdemalion"}, "verdict": "misprint", "field": "karma",
+     "printed": 8, "corrected": 12, "checked": "2026-11-01",
+     "note": "Printed Karma: 8 (printed 61): R TY (6), I PR (4), P FE (2), each code agreeing with its number, so R + I + P = 12 and the total is the misprint, as for Eel; Health 70 holds. Survey decision 5."},
+    {"match": {"page": 8, "header": "Typical Flashing Blade"}, "verdict": "as_printed", "field": "A",
+     "printed": {"number": 12, "code": "Gd"}, "checked": "2026-11-01",
+     "also": [{"verdict": "as_printed", "field": "E", "printed": {"number": 7, "code": "Ty"}}],
+     "note": "Printed A GD 12 with no brackets and E TY (7) (printed 8): each inside its rank's range (Good 8-15, Typical 5-7) but not its standard number, and Health 31 = 6 + 12 + 6 + 7 holds on them, so both are kept as printed in one override. Survey decision 6."},
+    {"match": {"page": 53, "header": "Black Talon's Zombie", "codes": ["Rm", "Rm", "Rm", "Rm", "Sh0", "Sh0", "Sh0"]}, "verdict": "as_printed", "field": "health",
+     "printed": 80, "checked": "2026-11-01",
+     "note": "Printed Health: 80 over four RM (30) rows (printed 53, the zombie inside the Black Talon's Necromancy power): his text gives a zombie's Health as his own Power rank number, 80, and the skeleton's as half of it, 40, which F + A + S + E also gives. The book's rule, not a misprint. Survey decision 5."},
+    {"match": {"page": 60, "header": "Sentinels, Mark IV"}, "verdict": "as_printed", "field": "karma",
+     "printed": "NA", "checked": "2026-11-01",
+     "note": "Printed Karma: NA, with Resources and Popularity NA (printed 60): a robot, as MA1 prints a dash for the same machine and MX1's sentinels print Karma 0. Left unset. Survey decision 5."},
+    {"match": {"page": 62, "header": "Werewolf", "codes": ["Ty", "Ty", "Ty", "Gd", "Ty", "Gd", "Gd"]}, "verdict": "label", "label": "Jack Russell",
+     "checked": "2026-11-01", "note": "His human statistics, the second grid on his card inside his Lycanthropy power (printed 62), Health 28 and Karma 26; named as his identity line names him, as MT3's Ben and MT2's Hamilton Slade. Survey decision 4."}
+  ]
+}
