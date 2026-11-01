@@ -1,8 +1,5 @@
 # Survey: MX2 The X-Potential (TSR6875)
 
-> **DRAFT.** Measured through *Which reader fits* (the trial parse); the
-> Marvel smoke suite has not been run on it yet. Nothing here is data yet.
-
 Official Advanced Game Accessory for Marvel Super Heroes, Mark Acres, 1987.
 Registry entry: `scripts/msh/books.json` -> `mx2`. Measured 2026-10-31.
 
