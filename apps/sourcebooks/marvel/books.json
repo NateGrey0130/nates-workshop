@@ -375,6 +375,20 @@
     ]
    ],
    "total": 24
+  },
+  {
+   "slug": "mx3",
+   "title": "MX3 Reap the Whirlwind",
+   "code": "TSR6877",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     11
+    ]
+   ],
+   "total": 11
   }
  ]
 }
