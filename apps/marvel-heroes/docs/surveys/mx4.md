@@ -4,7 +4,8 @@ Official Game Adventure for Marvel Super Heroes, David "Zeb" Cook, 1987; the
 fourth module of the MX series (the back cover).
 Registry entry: `scripts/msh/books.json` -> `mx4`. Measured 2026-11-01.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data row has run).
+**Rows citing this book:** 91 `msh_book_text` rows over 13 character entries
+in production (`DB_MARVEL`, read back 2026-11-01).
 
 Everything here was measured and read on the page images.
 
