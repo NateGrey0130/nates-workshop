@@ -3535,7 +3535,9 @@
       "grid_cards": [
         ["Adventure Book", 53, "Black Talon", 2, "Black Talon's Zombie"],
         ["Adventure Book", 53, "Black Talon", 3, "Black Talon's Skeleton"]
-      ]
+      ],
+      "inner_grids": true,
+      "label_powers": [["Adventure Book", 63, "Weaponry"]]
     }
   }
 }
