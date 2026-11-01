@@ -3204,6 +3204,64 @@
         {"part": "Adventure Book", "page": 16, "name": "Jay Atkinson", "lines": ["Staff Counsel", "Senate Select Committee on Mutant-Communist Subversion"]}
       ],
       "line_identity_note": "The identity lines under seven codes-only grids' subheads, as the page prints them (printed 14-16, read on 110 dpi renders of PDF 15-17, 2026-10-31): the Knights' bracketed other names, Scarlesi's one line, Braddock's second subhead line U.S. Army over his post, the two scientists' posts over McGrafton Industries, Shiver's one line wrapped in two, and Atkinson's two, his second wrapped at Mutant-. gridbooks hands each over as the entry's prose, since an MX1 subhead prints no identity line; scripts/msh/npcs.py makes them the card's identity where the prose as read is those words and nothing more (survey mx2.md decision 3, its recommendation taken, Nate 2026-10-31). Without it each card shows none and its lines go to D1 as its prose."
+    },
+    "mx3": {
+      "title": "MX3 Reap the Whirlwind",
+      "short": "MX3",
+      "code": "TSR6877",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6877 MX3 Reap the Whirlwind Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "5ad38845ddcee0bb0e899d13dc6b7a3de9350cab505aaaa959cfd3c2c1118d6e",
+      "pdf_pages": 37,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Stark Enterprises Canada floor plan", "cite": null, "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 34], "offset": 2},
+        {"name": "Train car plans", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [36, 36], "offset": null},
+        {"name": "Map sheet", "cite": null, "pdf": [37, 37], "offset": null}
+      ],
+      "offset_evidence": "2026-10-31, scripts/msh/survey.py tsv_folio: 23 pages vote printed = PDF - 2 (PDF 10, 12-21 and 23-34). PDF 4-9, 11 and 22 print their folios (2-7, 9 and 20), read on the page images, at the foot and missed by Tesseract; PDF 22 is full-page art and still prints its folio. PDF 3 is printed 1, the title and Contents page, which prints no folio; the Contents lists Mutants Arise at 2, whose banner opens PDF 4. PDF 36's vote of 30 (folio 6) is the bar code's leading digit, and PDF 2's vote of -5 (folio 7) a mark on the floor plan read at confidence 0; neither is a folio. So PDF 3-34 are the 32-page booklet (594 x 767 pt), printed 1-32. PDF 1 (589 x 772 pt) is the front cover; PDF 2 (589 x 772) the inside front cover, a floor plan headed Stark Enterprises - Canada; PDF 35 (589 x 772) the inside back cover, plans of four train cars (sleeper, coach, mutant containment car, engine); PDF 36 (589 x 772) the back cover (product code 6877 in the bar code, ISBN 0-88038-481-6), which names the package as a 32-page book and a full-colour map; PDF 37 (1538 x 2352 pt) is that map: a station master's house, a train station and the Automated Sentinel Assembly Plant. None of PDF 1, 2 and 35-37 prints a folio or a stat block, and the Contents names none of them. Survey mx3.md, The scan.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Two spellings, read on the page images 2026-10-31. The four narrative cards (printed 6, 9, 16 and 23), the Maintenance Robots (printed 27) and the five sentinels (printed 31-32) print Health =, Karma =, Resources = and Popularity = with an equals sign beside rows F, S, R and P. Every one prints Resources = 0 and Popularity = 0 but Sebastian Shaw, whose Resources = wraps its IN(40) onto the next line, beside no row, and whose Popularity is 15. The Omega Sentinel's Resources = carries a speck the OCR reads as a colon (Resources: = 0). The SWAT:AM grid (printed 32) prints Health: 46 and Karma: 22 on lines of their own under its codes, and no Resources or Popularity.",
+      "section_labels": ["Known Powers", "Talents", "Contacts", "Background", "Equipment"],
+      "section_labels_note": "Counted on the OCR of all 37 pages and read on the page images 2026-10-31, each a run-in ending in a colon, in bold title case: Known Powers: 12 (the four narrative cards, the Maintenance Robots, the five sentinels, and the two AS-1A armor entries on printed 17 and 21, which are items and not imported), Talents: 5 (the four narrative cards and SWAT:AM), Contacts: 4 and Background: 4 (the four narrative cards), Equipment: 1 (SWAT:AM; gear, not imported). Powers are italic run-in heads ending in a colon. SWAT:AM's Talents: and Equipment: are plain, not bold. The Maintenance Robots' first power runs on the Known Powers: line. No Talent:, Weakness or Personality label is printed.",
+      "rank_aliases": {"PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "AM": "amazing", "MN": "monstrous", "UN": "unearthly", "Shift X": "shift-x", "Shift 0": "shift-0"},
+      "rank_aliases_note": "The codes the eleven grids print, in capitals, read on the page images 2026-10-31: PR, TY, GD, EX, RM, IN (the Alpha and Omega Sentinels' Agility, Shaw's Resources), AM, MN (the Mark IV's and the Maintenance Robots' Endurance), UN (the Mark V's Endurance), Shift X (the Mark VI's, Alpha's and Omega's Endurance, 150) and Shift 0 (the Maintenance Robots' Intuition and Psyche, 0). No FE, Fb or Shift Y-Z code is printed. Gilda Ginsel's Psyche prints M(30), a misprint of RM, not an alias (survey mx3.md decision 4).",
+      "sections": [
+        ["Mutants Arise", null, 2, "Adventure Book"],
+        ["For Judges Only", null, 4, "Adventure Book"],
+        ["Mutie, Mutie, Who's Got the Mutie?", null, 6, "Adventure Book"],
+        ["Ghost in the Machine", null, 12, "Adventure Book"],
+        ["You're In the Army Now", null, 22, "Adventure Book"],
+        ["Sentinels and SWAT:AM Teams", null, 31, "Adventure Book"]
+      ],
+      "contents_note": "The Contents on printed 1 (PDF 3), transcribed from the page image 2026-10-31 (the OCR mangles the dot leaders), in one column: the six entries here, as printed. Every entry was read on its page image and its banner (capitals in a brick band) is at the top of the page the Contents gives (PDF 4, 6, 8, 14, 24 and 33), in the Contents' words; the first banner adds an exclamation mark the Contents does not print. No page differs, so there is no contents_errata. No index: the coverage checklist is this survey's list (survey mx3.md, Stat blocks).",
+      "columns": 3,
+      "columns_note": "Three columns on every booklet page read (printed 6-10, 16, 23, 27 and 31-32 at 110-150 dpi, and every page at 20 dpi), a block's rows and its totals as two sub-columns of one column. Read on the page images 2026-10-31.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [31, 32]}],
+      "character_ranges_note": "The roster section, Sentinels and SWAT:AM Teams (printed 31-32): the five sentinel cards and the SWAT:AM grid. The other five grids are statted inside the adventure's chapters and are opponents. No other page prints a Health, Karma or rank row (the OCR of all 37 pages, 2026-10-31); the Health the OCR finds elsewhere is rules prose and the AS-1A armor's (an item). Survey mx3.md, Where the blocks are.",
+      "cards": [
+        ["Adventure Book", 31, "Mark IV Sentinel"],
+        ["Adventure Book", 31, "Mark V Sentinel"],
+        ["Adventure Book", 32, "Mark VI Sentinel"],
+        ["Adventure Book", 32, "Alpha Sentinel"],
+        ["Adventure Book", 32, "Omega Sentinel"]
+      ],
+      "cards_note": "The five headers in bold title case over a seven-row block in the roster section, as printed, read on the page images 2026-10-31: the code, one space, then the number in brackets (EX (20), Shift X (150)). None has an identity line. Survey mx3.md, Stat blocks.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 6, "names": ["Gilda Ginsel"], "continues": [7]},
+        {"part": "Adventure Book", "page": 9, "names": ["Bill Gregson"], "continues": [10]},
+        {"part": "Adventure Book", "page": 16, "names": ["Marco Pene"]},
+        {"part": "Adventure Book", "page": 23, "names": ["Sebastian Shaw"], "continues": [24]},
+        {"part": "Adventure Book", "page": 27, "names": ["Maintenance Robots"]}
+      ],
+      "opponents_note": "The five grids statted inside the adventure's chapters, each under a bold title-case header with no identity line, the code then the number in brackets with no space (PR(4), Shift 0(0)), read on the page images 2026-10-31. Gilda Ginsel's grid is near the foot of column 3 of printed 6 and her powers run on to the top of printed 7, where her talents, contacts and background are; Bill Gregson's ends column 3 of printed 9 and his text runs on to printed 10; Sebastian Shaw's Background runs on to printed 24, ending at the subhead This Ain't No Summer Camp. Survey mx3.md, Stat blocks.",
+      "one_line_grids": [{"part": "Adventure Book", "page": 32, "name": "SWAT:AM", "health": 46, "karma": 22, "subhead": "SWAT:AM"}],
+      "one_line_grids_note": "The one codes-only grid (an F A S E R I P row, a row of seven codes, then Health: and Karma: on lines of their own), as MX1's and MX2's SWAT:AM, under its bold subhead at the top of column 3 of printed 32, read on the page image 2026-10-31. Its codes, Health and Karma are MX1's and MX2's.",
+      "tiers": ["SWAT:AM"],
+      "tiers_note": "The codes-only grid as a checklist, as MX1's and MX2's: tiers is the only list scripts/msh/gridbooks.py coverage reads with no page, and it is read in a character range, not an opponents page."
     }
   }
 }
