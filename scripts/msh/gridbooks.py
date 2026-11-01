@@ -70,6 +70,7 @@ def stream_of(book, slug, part, first, last):
     quantile = book.get('column_left_quantile', 10)
     labels = [lab for lab in book.get('section_labels', []) if lab != lab.upper()] if book.get('title_case_labels') else []
     subheads = set(book.get('subhead_labels', []))
+    label_powers = collections.Counter({tuple(d): 0 for d in book.get('label_powers', []) if d[0] == part and first <= d[1] <= last})
     stops, stopped = collections.defaultdict(list), collections.Counter()
     for p, page, lab in book.get('stop_labels', []):
         if p == part and first <= page <= last:
@@ -93,7 +94,10 @@ def stream_of(book, slug, part, first, last):
             if not any(inside(w) for w in words):
                 raise SystemExit('%s: art_boxes %s p.%d %r takes no word' % (slug, part, printed, box))
             words = [w for w in words if not inside(w)]
-        body = [w for w in words if w['y'] > 0.10 * H and w['y'] + w['h'] < 0.935 * H
+        # MLA1 (registry body_top): the first line of a column sets at 9.6-10%
+        # of the page (Gypsy Moth's header, printed 57, y 314 of 3197), so the
+        # body starts higher; every other book's starts at 10%
+        body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < 0.935 * H
                 and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
         if not body:
             continue
@@ -124,6 +128,13 @@ def stream_of(book, slug, part, first, last):
                 # and roster.SECTION read
                 for lab in labels:
                     if l['text'].startswith(lab + ':'):
+                        # MLA1 (registry label_powers [part, page, label]): a
+                        # power whose name is a section label (the Whirlwind's
+                        # Weaponry, printed 63, under KNOWN POWERS) is left in
+                        # title case, a power head, not raised to open a section
+                        if (part, printed, lab) in label_powers:
+                            label_powers[(part, printed, lab)] += 1
+                            continue
                         l['text'] = lab.upper() + l['text'][len(lab):]
                 # MT2 (registry subhead_labels): a section subhead in capitals
                 # with no colon (KNOWN POWERS, BACKGROUND, printed 52-63) opens
@@ -149,6 +160,9 @@ def stream_of(book, slug, part, first, last):
     for (p, page, lab), n in stopped.items():
         if n != 1:
             raise SystemExit('%s: stop_labels finds %r %d times on %s p.%d, not once' % (slug, lab + '.', n, p, page))
+    for (p, page, lab), n in label_powers.items():
+        if n != 1:
+            raise SystemExit('%s: label_powers finds %r %d times on %s p.%d, not once' % (slug, lab + ':', n, p, page))
     # MX1 (registry speck_lines [part, page, as read, as printed], MH9's
     # shape): a line the OCR misread that only the page image settles (Blue's
     # identity line, printed 13: Biumal for Blumal). Each must be found
@@ -340,6 +354,12 @@ def mark_titles(book, stream):
         if not any(l['part'] == part and l['printed'] == page for l in stream):
             continue                    # another range's page
         hits = [l for l in stream if l['part'] == part and l['printed'] == page and roster.norm(l['text']) == roster.norm(title)]
+        if len(hits) > 1 and book.get('subhead_exact_case'):
+            # MLA1 (MX2's registry subhead_exact_case): the factions' list ('-
+            # the Maggia', printed 7) is the subhead's words in lower case, so
+            # the line printed as the title is kept (where two matched, the
+            # build stopped, so no book that builds can move)
+            hits = [l for l in hits if l['text'].strip() == title]
         if len(hits) != 1:
             raise SystemExit('extra_titles: %r is on %d lines of %s p.%d, not 1' % (title, len(hits), part, page))
         hits[0].update(text=title, big=True, synthetic=True)
@@ -583,6 +603,50 @@ def line_grids(book, stream, keyed, labelled, derived=None):
     return out
 
 
+KARMA_GRID_ROWS = ('R', 'I', 'P')
+
+
+def karma_grids(book, stream, reader, karma_keyed):
+    """MLA1 (registry karma_grids [part, page, name]): a grid of three rows,
+    R, I and P, with Karma beside R and no Health (Bartholomew Jacobs, printed
+    40: the chapter gives him the physical abilities of the hero he
+    possesses), under a line of prose and with no header. It has no Health
+    line for roster.read_entries to anchor on, so its Karma line is the anchor
+    (a line marked karma_grid), the name the registry's, and its F, A, S, E
+    and Health are unset. The rows are read from a crop of the grid with
+    codegrids' row, the book's code_rows. Each must be the one Karma line with
+    no Health on its page, and three rows, or the build stops. `karma_keyed`
+    gets the grid's (pdf, col, Karma), which parse() checks as such."""
+    want = [g for g in book.get('karma_grids', []) if any((l['part'], l['printed']) == (g[0], g[1]) for l in stream)]
+    if not want:
+        return stream
+    import codegrids
+    row = codegrids.code_row(bool(book.get('unread_codes')), bool(book.get('code_row_specks')), bool(book.get('dash_shift_codes')))
+    for part, page, name in want:
+        at = [k for k, l in enumerate(stream) if (l['part'], l['printed']) == (part, page)
+              and re.search(r'Karma\s*:\s*\d', l['text']) and not roster.ANCHOR.search(l['text'])]
+        if len(at) != 1:
+            raise SystemExit('karma_grids: %s p.%d prints %d Karma lines with no Health, not 1' % (part, page, len(at)))
+        k = at[0]
+        l = stream[k]
+        p = next((j for j in range(k + 1, min(len(stream), k + 4)) if (stream[j]['pdf'], stream[j]['col']) == (l['pdf'], l['col'])
+                  and re.match(r'^\s*P\s+\S', stream[j]['text'])), None)
+        if p is None:
+            raise SystemExit('karma_grids: %s p.%d %s: no P row under the Karma line' % (part, page, name))
+        got = codegrids.rows_from(reader.read(l['pdf'], (l['col_x0'], l['y0'] - 20, l['col_x1'], stream[p]['y1'] + 10)), pattern=row)
+        if len(got) != 3:
+            raise SystemExit('karma_grids: %s p.%d %s: the crop gives %d rows, not 3' % (part, page, name, len(got)))
+        rows = [{'letter': x, 'number': None, 'code': None, 'printed_code': None, 'rest': ''} for x in roster.ABILITIES[:4]]
+        rows += [dict(r, letter=x) for x, r in zip(KARMA_GRID_ROWS, got)]
+        karma = re.search(r'Karma\s*:\s*(\d+)', ' '.join(r['rest'] for r in got))
+        if not karma:
+            raise SystemExit('karma_grids: %s p.%d %s: the crop reads no Karma' % (part, page, name))
+        karma_keyed.add((l['pdf'], l['col'], karma.group(1)))
+        stream[k:p + 1] = [dict(l, text=name, big=True, conf=100, y1=l['y0'] - 8),
+                           dict(stream[p], text='Karma: ' + karma.group(1), line_grid=rows, karma_grid=True)]
+    return stream
+
+
 def table_grids(book, stream, reader, keyed):
     """MX2 (registry table_grids [{part, page, first, names, health, karma}]):
     one table of several characters' codes (the Mutant Affairs Committee,
@@ -648,16 +712,42 @@ def table_grids(book, stream, reader, keyed):
 
 
 def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False,
-         unread_codes=False, specks=False, end_at_popularity=False):
+         unread_codes=False, specks=False, end_at_popularity=False, by_pitch=False, dash_shift=False):
     """`resources_below` is the registry's code_rows_resources_below (MX2),
     passed to scripts/msh/codegrids.py's row reader. MX3's, each with
     code_rows: `unread_codes` (registry unread_codes) and `specks` (registry
     code_row_specks) choose codegrids.code_row's row, and `end_at_popularity`
-    (registry code_rows_end_at_popularity) is codegrids.grid_at's."""
+    (registry code_rows_end_at_popularity) is codegrids.grid_at's. MLA1's,
+    each with code_rows: `dash_shift` (registry dash_shift_codes) is
+    codegrids.code_row's, and `by_pitch` (registry code_grids_by_pitch) reads
+    a grid seven row pitches down where no Popularity line ends it."""
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
     rows, end = roster.grid_at(stream, i, reader)
+    if rows is None and end == i and by_pitch and code_rows and roster.ANCHOR.search(line['text']):
+        # MLA1 (registry code_grids_by_pitch): a code-first grid with no
+        # Popularity (Security Officers, printed 36) or no Karma either (the
+        # chapter 32 three, printed 42), its row letters lost from the stream,
+        # so grids_end_at_p finds no P row: read seven row pitches down (the
+        # pitch the least gap of the column's next lines; 6.9 pitches cut the
+        # Mosquito Swarm's P, printed 42)
+        import codegrids
+        row = codegrids.code_row(unread_codes, specks, dash_shift)
+        same = [j for j in range(i, min(len(stream), i + 12))
+                if stream[j]['pdf'] == line['pdf'] and stream[j]['col'] == line['col']]
+        gaps = [stream[b]['y0'] - stream[a]['y0'] for a, b in zip(same, same[1:4]) if stream[b]['y0'] > stream[a]['y0']]
+        if gaps:
+            pitch = min(gaps)
+            bottom = line['y0'] + 7 * pitch + 10
+            box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
+            got = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row, unread_codes=unread_codes)
+            if len(got) >= 7:
+                end = i + 1
+                while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
+                        and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
+                    end += 1
+                return got[:7], end
     if rows is None and end == i and end_at_p and roster.ANCHOR.search(line['text']):
         # ME3 (registry grids_end_at_p): a grid that prints no Resources and
         # no Popularity (Mephisto's Thralls and Footsoldiers, Resource p.7; the
@@ -676,7 +766,7 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
         # brackets ("F Gd (10) Health: 64"), MA4's order, read by
         # scripts/msh/codegrids.py's row in title case
         import codegrids
-        row = codegrids.code_row(unread_codes, specks)
+        row = codegrids.code_row(unread_codes, specks, dash_shift)
         rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=row, resources_below=resources_below,
                                         unread_codes=unread_codes, end_at_popularity=end_at_popularity)
         if rows2 is not None:
@@ -712,6 +802,7 @@ def parse(book, slug):
     reader = roster.GridReader(book, slug)
     ranges = roster.rank_ranges(book)
     streams, keyed, labelled, derived = [], {}, [], {}
+    karma_keyed = set()
     cards = [c[2] for c in book.get('cards', [])] if book.get('card_headers') else ()
     # MX4 (registry identity_lines): an identity line of up to four lines
     # (Mystique, printed 29), so a card's name is looked for that many lines
@@ -738,14 +829,16 @@ def parse(book, slug):
         # start on it are left to its own opponent
         for page in o.get('runs_on', []):
             s += stream_of(book, slug, o['part'], page, page)
-        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled, derived))
+        s = line_grids(book, place_headers(book, s), keyed, labelled, derived)
+        s = mark_titles(book, karma_grids(book, s, reader, karma_keyed))
         mark_headers(s, cards)
         streams.append((s, True, tuple(o.get('runs_on', []))))
     stream, entries = [], []
     code_rows, end_at_p = bool(book.get('code_rows')), bool(book.get('grids_end_at_p'))
     below = bool(book.get('code_rows_resources_below'))
     mx3 = dict(unread_codes=bool(book.get('unread_codes')), specks=bool(book.get('code_row_specks')),
-               end_at_popularity=bool(book.get('code_rows_end_at_popularity')))
+               end_at_popularity=bool(book.get('code_rows_end_at_popularity')),
+               by_pitch=bool(book.get('code_grids_by_pitch')), dash_shift=bool(book.get('dash_shift_codes')))
     read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below, **mx3)) \
         if code_rows or end_at_p else grid
     unlabelled = [0]
@@ -820,11 +913,54 @@ def parse(book, slug):
                         b['rank_only'] = True
                     if key in derived:
                         b['derived'] = derived[key]
+                # MLA1 (registry derived_karma): a vertical grid that prints no
+                # Karma (the chapter 32 three, printed 42) derives it, R+I+P,
+                # as MT3's derived_totals does a one-line grid's, and lists it
+                # in the block's derived (survey mla1.md decision 7)
+                if book.get('derived_karma') and b['karma'] is None and b.get('kind') != 'line' \
+                        and all(a['number'] is not None for a in b['abilities'][4:]):
+                    b['karma'] = str(sum(a['number'] for a in b['abilities'][4:]))
+                    b['derived'] = sorted(set(b.get('derived', [])) | {'karma'})
+                    b['check'] = roster.check(b, ranges)
+                if (b['pdf'], b['col'], b['karma']) in karma_keyed and b['health'] is None \
+                        and all(a['number'] is None for a in b['abilities'][:4]):
+                    # MLA1 (karma_grids): the grid prints R, I, P and Karma
+                    # alone, so the Karma is held to R+I+P and each row to its
+                    # code, and what it does not print is listed as unprinted,
+                    # which coverage() reads (roster.check fails a block with
+                    # any row unset)
+                    rip = [a['number'] for a in b['abilities'][4:]]
+                    k = roster.as_int(b['karma'])
+                    c = {'ranks': [x for n, x in enumerate(roster.ABILITIES) if n >= 4 and not roster.rank_ok(b['abilities'][n], ranges)],
+                         'codes_unread': [x for n, x in enumerate(roster.ABILITIES) if n >= 4 and b['abilities'][n]['code'] is None],
+                         'health': None, 'karma': None if k is None or None in rip else sum(rip) == k}
+                    c['ok'] = not c['ranks'] and not c['codes_unread'] and c['karma'] is True
+                    b['check'], b['unprinted'] = c, list(roster.ABILITIES[:4]) + ['health']
             # Death's "Health: 20,000" (ME2, Resource p.2): check() reads no comma
             for b in e['blocks']:
                 if ',' in (b['health'] or '') and b['check'].get('health') is None:
                     b['check'] = roster.check(dict(b, health=b['health'].replace(',', '')), ranges)
         entries += got
+    # MLA1 (registry grid_cards [part, page, host, n, name]): a card's n-th
+    # grid set inside its text that is a being of its own (the zombie and the
+    # skeleton the Black Talon raises, his second and third grids, printed 53;
+    # survey mla1.md decision 4) is an entry of its own, named by the
+    # registry, with the grid alone and the host's team. The text stays the
+    # host's. The host must be one entry and hold the grid, or the build stops.
+    split = collections.defaultdict(list)
+    for part, page, host, n, name in book.get('grid_cards', []):
+        split[(part, page, host)].append((n, name))
+    for (part, page, host), gs in split.items():
+        hits = [k for k, e in enumerate(entries) if e['part'] == part and e['pages'][0] == page and e['header'] == host]
+        if len(hits) != 1 or any(not 2 <= n <= len(entries[hits[0]]['blocks']) for n, _ in gs):
+            raise SystemExit('grid_cards: %s p.%d %r is %d entries, not 1 holding grids %s'
+                             % (part, page, host, len(hits), [n for n, _ in gs]))
+        h = entries[hits[0]]
+        made = [{'kind': 'entry', 'header': name, 'pages': [h['blocks'][n - 1]['page']], 'identity': [],
+                 'blocks': [h['blocks'][n - 1]], 'sections': {}, 'powers': [], 'members': [], 'prose': [], '_sec': None,
+                 'part': part, 'team': h['team']} for n, name in sorted(gs)]
+        h['blocks'] = [b for n, b in enumerate(h['blocks'], 1) if n not in {n for n, _ in gs}]
+        entries[hits[0] + 1:hits[0] + 1] = made
     for p, page, head in run_on:
         if found[(p, page, head)] != 1:
             raise SystemExit('opponent_indented_paragraphs: %r is %d opponent entries of %s p.%d, not 1'
@@ -986,6 +1122,8 @@ def coverage(book, entries, overrides):
     # MX1: no Contents line names a character, so the registry's cards (each
     # header with a block, by booklet and page) are a checklist too
     cards = [(n, part, page) for part, page, n in book.get('cards', [])]
+    # MLA1: a grid_cards entry is a card the registry names too
+    cards += [(n, part, page) for part, page, _host, _k, n in book.get('grid_cards', [])]
     where += cards
     listed = contents + opponents + book.get('tiers', []) + [c[0] for c in cards]
     for n, part, page in where + [(t, None, None) for t in book.get('tiers', [])]:
@@ -1006,6 +1144,8 @@ def coverage(book, entries, overrides):
             # (ME2's Death: "Karma: Unlimited", Resource p.2)
             o = b.get('override') or {}
             explained = {o.get('field')} | {x['field'] for x in o.get('also', [])}
+            # ...or the grid prints no such line (MLA1's karma_grids)
+            explained |= set(b.get('unprinted', ()))
             for k in ('health', 'karma'):
                 if roster.as_int((b[k] or '').replace(',', '')) is None and k not in explained:
                     lines.append('  %s IS NOT A NUMBER: %s %s p.%s: %r' % (k.upper(), e['header'], e['part'], b['page'], b[k]))
