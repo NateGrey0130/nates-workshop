@@ -3297,6 +3297,63 @@
       "popularity_numbers_note": "ME3's: every grid that prints Resources prints a Popularity that is a number (each 0 but Shaw's 15). The check that turns code_row_specks and code_rows_end_at_popularity red when both are off (the Mark IV's Popularity read as its powers' first line, measured 2026-11-01). On, nothing moves.",
       "override_values": true,
       "override_values_note": "MX3's: gridbooks.coverage holds each override's printed value (and each also's) to the block as read, a Health or Karma to its text and a row to its printed code and number. roster.apply_overrides matches a block by page and header alone, so with unread_codes off Gilda Ginsel's unread grid passed on her override, whose also explains her Health and Karma, with exit 0 (measured 2026-11-01). Off, nothing moves; on with unread_codes off, roster.py exits 1 on three lines for her P, Health and Karma."
+    },
+    "mx4": {
+      "title": "MX4 Flames of Doom",
+      "short": "MX4",
+      "code": "TSR6888",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6888 MX4 Flames of Doom Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "96262380279bb3b227630a080ec9ec2edb4e98bcd64d3f44c4622a92e7dbbac3",
+      "pdf_pages": 36,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 33], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [34, 34], "offset": null},
+        {"name": "North America Map", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Map sheet", "cite": null, "pdf": [36, 36], "offset": null}
+      ],
+      "offset_evidence": "2026-11-01, scripts/msh/survey.py tsv_folio: 22 pages vote printed = PDF - 1 (PDF 11-33 but 21). PDF 3-10 and 21 print their folios (2-9 and 20), read on the page images, at the foot and missed by Tesseract; PDF 4 is a full-page comic and still prints its folio. PDF 2 is printed 1, the title and Contents page, and prints none; the Contents' first entry is printed 2 and PDF 3 opens it. Two other votes, read on the images, are not folios: PDF 34 (k = 32) is the digit after the back cover's bar code, PDF 36 (k = 29) a speck in the map sheet's border of stars. Sizes (PyMuPDF): PDF 1 and 34 are 599 x 775 pt (the outside covers: PDF 1 prints MX4 and 6888, PDF 34 the code 6888XXX1401), PDF 2-33 are 594 x 767 (the 32-page booklet), PDF 35 is 1206 x 774 (the North America Map, twice a cover's width: by its size the inside of the cover as one spread, since the back cover names the package as a 32-page book and one map) and PDF 36 is 2378 x 1578 (the map sheet). So parts, as MX1's, with the covers and both maps as parts of their own.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "One spelling, read on the page images 2026-11-01: all 13 blocks (printed 25-30) print Health =, Karma =, Resources = and Popularity = with an equals sign beside rows F, S, R and P, as MA1's and MX1's sentinels do. The six sentinels print Karma = 0, Resources = 0 and Popularity = 0, but Nimrod (Karma = 70, Resources = In over (40) on a second line). The NPCs print Resources as a code alone (Gd, Pr, Mn, Ex), a code and a bracketed alternate code (Cannonball Pr (Ex), Lila Cheney Pr (In)), or 0 (Marco Pene); Popularity is a number (-10 to 20). Mystique's Karma prints 150 and an asterisk, explained by a footnote under her grid.",
+      "section_labels": ["Known Powers", "Talents", "Contacts", "Background", "Equipment"],
+      "section_labels_note": "Counted on the OCR of printed 25-31 and read on the page images 2026-11-01. Known Powers: 13 times, one per block, a bold title-case line of its own. The rest are italic title-case run-ins ending in a colon, set in the same italic as the power names: Talents: 7 (every NPC), Contacts: 6 (all but Marco Pene), Background: 6 (all but Mystique), and Equipment: once (Mirage, printed 29, after her last power and before her Talents). The sentinels print Known Powers: only. Mystique's Weapons: (printed 29) is set among her powers, between Psionic Scrambler and Personal Mask, and is not listed here (survey mx4.md decision 5).",
+      "rank_aliases": {"Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent", "Rm": "remarkable", "In": "incredible", "Am": "amazing", "Mn": "monstrous", "Un": "unearthly", "Shift X": "shift-x"},
+      "rank_aliases_note": "The codes the 13 grids print, read on the page images 2026-11-01: Pr (Resources only), Ty, Gd, Ex, Rm, In, Am, Mn (the Mark IV's Endurance, Mystique's Resources), Un (the Mark V's Endurance) and Shift X (the Endurance of the Mark VI, Alpha, Omega and Nimrod, 150). No Fb, Fe or Shift 0. Nimrod's R 30 Ex, I 30 Gd and P 10 Ty are misprints, not aliases (survey mx4.md, Stat blocks).",
+      "sections": [
+        ["The Cruelest of Dreams", null, 2, "Adventure Book"],
+        ["Choices, Choices", null, 5, "Adventure Book"],
+        ["Loose Ends Encounters", null, 7, "Adventure Book"],
+        ["How the Worlds End", null, 12, "Adventure Book"],
+        ["How the Worlds End", "The Peoples' Revolution", 12, "Adventure Book"],
+        ["How the Worlds End", "The Teleporters' Railroad", 18, "Adventure Book"],
+        ["How the Worlds End", "Salvation", 22, "Adventure Book"],
+        ["The Arm of the State", null, 25, "Adventure Book"],
+        ["Non-Player Characters", null, 27, "Adventure Book"],
+        ["The Great Debate Cards", null, 32, "Adventure Book"]
+      ],
+      "contents_note": "The Contents on printed 1 (PDF 2), transcribed from the page image 2026-11-01 (the OCR mangles the dot leaders), in two columns: ten entries, three of them indented under How the Worlds End, as printed. Every entry was read on its page image. The seven chapters open under a banner (capitals in a brick band) at the top of the page the Contents gives (PDF 3, 6, 8, 13, 26, 28) but the last, whose heading Appendix 3: The Great Debate Cards opens printed 32, column 1, under a brick band with no words in it. The three sub-entries are bold title-case subheads on their pages (printed 12 column 1, 18 and 22), and the first prints The People's Revolution where the Contents prints Peoples'. Every page agrees, so there is no contents_errata. Two subheads in the same type have no Contents line: Life in Hell (printed 24, column 3, the fourth ending) and The Hardware of Hell (printed 31, column 1, gear after Sunspot's entry). The Arm of the State and Non-Player Characters open with the subheads Appendix #1: Sentinels and Appendix #2: Non-Player Characters.",
+      "columns": 3,
+      "columns_note": "Three columns on every booklet page read (printed 25-31 at 110-200 dpi, and every page at 30 dpi), a block's rows and its totals as two sub-columns of one column. The title page (printed 1) sets its Contents in two. Read on the page images 2026-11-01.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [25, 31]}],
+      "character_ranges_note": "The two appendices, The Arm of the State (printed 25-26: the six sentinels) and Non-Player Characters (printed 27-31: seven NPCs, Sunspot's text running on to printed 31, column 1, where The Hardware of Hell begins). No other page prints a Health =, Karma = or rank row (the OCR of all 36 pages, 2026-11-01); the Health and Karma of printed 4, 9, 11, 16, 18 and 22 are prose (Karma the hero's name, a satellite's Health, Karma awards and the CRA's own Karma), not grids. No being is statted inside a chapter's prose, so the book has no opponents, one_line_grids or tiers.",
+      "cards": [
+        ["Adventure Book", 25, "Mark IV Sentinel"],
+        ["Adventure Book", 25, "Mark V Sentinel"],
+        ["Adventure Book", 25, "Mark VI Sentinel"],
+        ["Adventure Book", 25, "Alpha Sentinel"],
+        ["Adventure Book", 26, "Omega Sentinel"],
+        ["Adventure Book", 26, "Nimrod"],
+        ["Adventure Book", 27, "Cannonball"],
+        ["Adventure Book", 27, "Lila Cheney"],
+        ["Adventure Book", 28, "Magma"],
+        ["Adventure Book", 28, "Mirage"],
+        ["Adventure Book", 29, "Mystique"],
+        ["Adventure Book", 30, "Marco Pene"],
+        ["Adventure Book", 30, "Sunspot"]
+      ],
+      "cards_note": "The 13 headers with a block under them, as printed, read on the page images 2026-11-01: each in bold title case over a seven-row grid of the number then its code (20 Ex, 150 Shift X), as MA1's and MX1's sentinels. The six sentinels print no identity line; the seven NPCs print an italic one of one to four lines (Mystique's is four). Survey mx4.md, Stat blocks."
     }
   }
 }
