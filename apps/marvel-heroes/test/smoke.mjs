@@ -1881,6 +1881,140 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MX2 is read by scripts/msh/gridbooks.py (mx2-overrides.json), with the
+  // survey's decisions applied as it recommends (mx2.md; Nate 2026-10-31).
+  // Every card is in the Adventure Book (printed 10-17), filed under the
+  // book's title. The registry fields only this book sets (subhead_exact_case,
+  // code_rows_resources_below, line_grid_resources, table_grids, a grid's
+  // karma and subhead_page, line_identity) and the ones it shares whose
+  // absence roster.py would not stop on (card_names, speck_lines, power_heads,
+  // rank_ranges) are each pinned here by what they change.
+  if (data.npcs.characters.some((c) => c.book === 'mx2')) {
+    const mx2 = data.npcs.characters.filter((c) => c.book === 'mx2');
+    const blocksZ = mx2.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blkZ = (id) => mx2.find((c) => c.id === id)?.versions[0].blocks[0];
+    const cardZ = (id) => mx2.find((c) => c.id === id)?.versions[0];
+    const playedZ = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    const committeeZ = ['chuck', 'martha', 'bob', 'phil', 'jenny'].map((id) => `${id}-mx2`);
+    check('MX2: 24 characters, each id ending -mx2 with one version and one block, all filed under the book\'s title, and no name starting The',
+      mx2.length === 24 && mx2.every((c) => c.id.endsWith('-mx2') && c.versions.length === 1 && c.versions[0].blocks.length === 1)
+      && mx2.every((c) => c.team === 'MX2 The X-Potential') && !mx2.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mx2.length} ${[...new Set(mx2.map((c) => c.team))]}`);
+    check('MX2: the cards sort by the Adventure page each starts on, 10 to 16, McGrafton first and the six sentinels next',
+      mx2.map((c) => c.id).join() === ['senator-joseph-mcgrafton', 'alpha-sentinel', 'mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel',
+        'omega-sentinel', 'nimrod', 'swat-am', 'typical-policeman', 'knights-of-genetic-purity', 'secret-service-anti-mutant-teams',
+        'soldiers-and-camp-guards', 'vincent-scarlesi', 'bob', 'chuck', 'general-william-b-braddock', 'jenny', 'lorelei', 'martha', 'phil',
+        'dr-paolo-hernandez', 'dr-yagami-fuchido', 'jay-atkinson', 'william-shiver'].map((id) => `${id}-mx2`).join(),
+      mx2.map((c) => c.id).join());
+    check('MX2: sixteen one-line grids, ranks only (eleven codes-only grids and the Mutant Affairs Committee\'s five rows, table_grids), and eight full blocks',
+      blocksZ.filter(({ b }) => b.kind === 'line').map(({ id }) => id).sort().join() === ['swat-am', 'typical-policeman', 'knights-of-genetic-purity',
+        'secret-service-anti-mutant-teams', 'soldiers-and-camp-guards', 'vincent-scarlesi', 'general-william-b-braddock', 'dr-paolo-hernandez',
+        'dr-yagami-fuchido', 'jay-atkinson', 'william-shiver', 'chuck', 'martha', 'bob', 'phil', 'jenny'].map((id) => `${id}-mx2`).sort().join()
+      && blocksZ.filter(({ b }) => b.kind === 'line').every(({ b }) => b.rank_only) && blocksZ.filter(({ b }) => !b.kind).length === 8,
+      blocksZ.map(({ id, b }) => `${id}:${b.kind}`).join());
+    const fixesZ = ['nimrod', 'knights-of-genetic-purity', 'vincent-scarlesi', 'general-william-b-braddock', 'dr-paolo-hernandez', 'jay-atkinson',
+      ...committeeZ.map((id) => id.replace(/-mx2$/, ''))].map((s) => {
+      const id = `${s}-mx2`;
+      const o = blkZ(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${v(a.printed)}>${v(a.corrected)}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedZ(id)}`;
+    });
+    check('MX2: the eleven misprints keep the printed value and play the corrected one (Nimrod R 30 Ex as 30 Rm; five codes-only grids\' totals and the committee\'s one Health 20 and Karma 10 as each member\'s codes add up)',
+      fixesZ.join(' | ') === [
+        'nimrod-mx2 misprint R 30 Ex>30 Rm plays 300/70',
+        'knights-of-genetic-purity-mx2 misprint health 32>40 also misprint karma 14>12 plays 40/12',
+        'vincent-scarlesi-mx2 misprint health 20>24 also misprint karma 30>40 plays 24/40',
+        'general-william-b-braddock-mx2 misprint health 29>36 also misprint karma 37>46 plays 36/46',
+        'dr-paolo-hernandez-mx2 misprint karma 56>66 plays 20/66',
+        'jay-atkinson-mx2 misprint karma 32>26 plays 22/26',
+        'chuck-mx2 misprint health 20>18 also misprint karma 10>22 plays 18/22',
+        'martha-mx2 misprint health 20>28 also misprint karma 10>36 plays 28/36',
+        'bob-mx2 misprint health 20>50 also misprint karma 10>18 plays 50/18',
+        'phil-mx2 misprint health 20>34 also misprint karma 10>44 plays 34/44',
+        'jenny-mx2 misprint health 20>40 also misprint karma 10>32 plays 40/32',
+      ].join(' | ')
+      && bookNpc({ character: 'nimrod-mx2' }).snapshot?.abilities.reason.rank === 'remarkable',
+      fixesZ.join(' | '));
+    const robotsZ = ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'alpha-sentinel', 'omega-sentinel'].map((id) => `${id}-mx2`);
+    check('MX2: the five sentinel robots print Karma 0 against R, I and P printed, kept as printed (as_printed karma) and played as 0',
+      robotsZ.every((id) => blkZ(id)?.override?.verdict === 'as_printed' && blkZ(id).override.field === 'karma' && blkZ(id).karma === '0')
+      && robotsZ.map(playedZ).join() === '165/0,190/0,250/0,290/0,290/0',
+      robotsZ.map(playedZ).join());
+    const ovZ = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx2-overrides.json'), 'utf8')).overrides;
+    const textZ = ovZ.filter((o) => o.verdict === 'text');
+    check('MX2: twenty-one overrides: eleven misprints, five as printed and five text verdicts (the Mark IV\'s Customization, the alpha\'s and omega\'s Body Armor, two in William Shiver\'s background), and only the sixteen overridden blocks carry one',
+      ovZ.length === 21 && ovZ.filter((o) => o.verdict === 'misprint').length === 11 && ovZ.filter((o) => o.verdict === 'as_printed').length === 5
+      && textZ.map((o) => o.match.row).join() === ['mark-iv-sentinel-mx2:power:8', 'alpha-sentinel-mx2:power:4', 'omega-sentinel-mx2:power:4',
+        'william-shiver-mx2:background', 'william-shiver-mx2:background'].map((k) => `mx2:${k}`).join()
+      && blocksZ.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === [...robotsZ, ...fixesZ.map((f) => f.split(' ')[0])].sort().join(),
+      JSON.stringify(ovZ.map((o) => [o.verdict, o.match])));
+    check('MX2: cards play their printed Health and Karma (McGrafton 57/128, Lorelei 94/70, SWAT:AM 46/22, the Typical Policeman 36/18, the Soldiers 46/16, the Secret Service teams 50/30, Fuchido 20/46, Shiver 28/50)',
+      ['senator-joseph-mcgrafton', 'lorelei', 'swat-am', 'typical-policeman', 'soldiers-and-camp-guards', 'secret-service-anti-mutant-teams',
+        'dr-yagami-fuchido', 'william-shiver'].map((id) => playedZ(`${id}-mx2`)).join() === '57/128,94/70,46/22,36/18,46/16,50/30,20/46,28/50',
+      ['senator-joseph-mcgrafton', 'lorelei', 'swat-am', 'typical-policeman', 'soldiers-and-camp-guards', 'secret-service-anti-mutant-teams',
+        'dr-yagami-fuchido', 'william-shiver'].map((id) => playedZ(`${id}-mx2`)).join());
+    check('MX2: Nimrod\'s Resources is the IN (40) set under its label and his I reads 30 Rm, not IN 40 (code_rows_resources_below); Scarlesi\'s Resources IN and Popularity 20 are in his block (line_grid_resources)',
+      blkZ('nimrod-mx2')?.resources === 'IN (40)' && blkZ('nimrod-mx2')?.abilities[5].slice(1).join(' ') === '30 Rm'
+      && blkZ('vincent-scarlesi-mx2')?.resources === 'IN' && blkZ('vincent-scarlesi-mx2')?.popularity === '20',
+      `${blkZ('nimrod-mx2')?.resources} ${blkZ('nimrod-mx2')?.abilities[5]} ${blkZ('vincent-scarlesi-mx2')?.resources} ${blkZ('vincent-scarlesi-mx2')?.popularity}`);
+    check('MX2: SWAT:AM keeps its printed capitals (card_names) and is found from its subhead on printed 13 (subhead_page); the Secret Service teams\' grid is found (subhead_exact_case) and so is Fuchido\'s (speck_lines)',
+      cardZ('swat-am-mx2') && mx2.find((c) => c.id === 'swat-am-mx2').name === 'SWAT:AM' && JSON.stringify(cardZ('swat-am-mx2').pages) === '[13,14]'
+      && blkZ('secret-service-anti-mutant-teams-mx2')?.kind === 'line'
+      && blkZ('dr-yagami-fuchido-mx2')?.abilities.map((a) => a[0]).join('') === 'FASERIP',
+      `${mx2.find((c) => c.id === 'swat-am-mx2')?.name} ${JSON.stringify(cardZ('swat-am-mx2')?.pages)}`);
+    // Listed in id order, not the page's: the page's order of these names is
+    // ten words of the book, which the leak check below refuses.
+    const identZ = ['dr-paolo-hernandez', 'dr-yagami-fuchido', 'general-william-b-braddock', 'jay-atkinson', 'knights-of-genetic-purity',
+      'lorelei', 'vincent-scarlesi', 'william-shiver'].map((id) => cardZ(`${id}-mx2`)?.identity.length).join();
+    check('MX2: the seven codes-only grids\' identity lines are their cards\' identities, as printed (line_identity), Braddock\'s two U.S. Army over his post, and Lorelei\'s is her real name; no other card has one',
+      identZ === '2,2,2,2,1,1,1,1' && cardZ('general-william-b-braddock-mx2')?.identity[0] === 'U.S. Army'
+      && cardZ('lorelei-mx2')?.identity.join() === 'Laura Lee Masters'
+      && mx2.filter((c) => c.versions[0].identity.length).length === 8,
+      `${identZ} ${cardZ('general-william-b-braddock-mx2')?.identity}`);
+    const powZ = mx2.flatMap((c) => c.versions[0].powers);
+    check('MX2: 61 powers across 8 cards, 18 of them linked to the UPB, Nimrod\'s 13 among them, and Lorelei\'s four, Flight, Pheromones, Blending and Phasing (power_heads)',
+      powZ.length === 61 && powZ.filter((p) => p.upb).length === 18 && mx2.filter((c) => c.versions[0].powers.length).length === 8
+      && cardZ('nimrod-mx2')?.powers.length === 13
+      && cardZ('lorelei-mx2')?.powers.map((p) => p.name).join() === 'Flight,Pheromones,Blending,Phasing',
+      `${powZ.length} ${powZ.filter((p) => p.upb).length} ${mx2.filter((c) => c.versions[0].powers.length).length} ${cardZ('lorelei-mx2')?.powers.map((p) => p.name)}`);
+    const bookZ = data.npcs.books.find((b) => b.slug === 'mx2');
+    check('MX2: the book reads Adventure 10-17, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookZ?.ranges) === '[{"part":"Adventure","pages":[[10,17]]}]'
+      && tagline(bookNpc({ character: 'senator-joseph-mcgrafton-mx2' }).snapshot).startsWith('MX2 The X-Potential, Adventure p.10;')
+      && tagline(bookNpc({ character: 'william-shiver-mx2' }).snapshot).startsWith('MX2 The X-Potential, Adventure p.16;')
+      && mx2.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(bookZ)} ${tagline(bookNpc({ character: 'william-shiver-mx2' }).snapshot)}`);
+    // The text verdicts and line_identity move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by
+    // the overrides' own fragments, never a sentence of the book in this file.
+    const sqlZ = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mx2', 'book-text.sql');
+    if (!existsSync(sqlZ)) {
+      check(`MX2: skipped the text checks: no ${rel(sqlZ) || sqlZ}`, true);
+    } else {
+      const rowsZ = [...readFileSync(sqlZ, 'utf8').matchAll(/VALUES \('([^']+)', 'mx2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      check('MX2 text: 103 rows over 24 entries, and no row with an odd count of double quotes',
+        rowsZ.length === 103 && new Set(rowsZ.map((r) => r.key.split(':')[1])).size === 24
+        && !rowsZ.some((r) => (r.body.match(/"/g) || []).length % 2),
+        `${rowsZ.length} ${new Set(rowsZ.map((r) => r.key.split(':')[1])).size} ${rowsZ.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
+      const barsZ = rowsZ.filter((r) => r.body.includes('|')).map((r) => r.key.replace(/^mx2:/, ''));
+      check('MX2 text: no row carries a vertical bar (three were specks, each read right by a text verdict)', barsZ.length === 0, barsZ.join());
+      const countZ = (row, s) => (rowsZ.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsZ = textZ.map((o) => `${o.match.row} ${countZ(o.match.row, o.printed)}/${countZ(o.match.row, o.read)}`);
+      check('MX2 text: each of the five text verdicts is applied, its printed fragment in its row and the misread gone',
+        textZ.length === 5 && textZ.every((o) => countZ(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countZ(o.match.row, o.read) === 0)),
+        verdictsZ.join(' | '));
+      // line_identity takes a codes-only grid's identity lines out of its
+      // prose: those seven cards have no prose row of their own, and the
+      // committee's five each have one, their run-in paragraphs.
+      const proseZ = mx2.filter((c) => rowsZ.some((r) => r.key === `mx2:${c.id}:prose`)).map((c) => c.id.replace(/-mx2$/, '')).sort().join();
+      check('MX2 text: the prose rows are the committee\'s five run-ins and three grids\' (SWAT:AM, the Soldiers, the Secret Service teams), none of the seven line_identity cards',
+        proseZ === ['bob', 'chuck', 'jenny', 'martha', 'phil', 'swat-am', 'secret-service-anti-mutant-teams', 'soldiers-and-camp-guards'].sort().join(),
+        proseZ);
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
