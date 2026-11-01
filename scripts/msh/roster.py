@@ -341,6 +341,16 @@ def rows_from(texts, mends=()):
                 slash = r'^(\s*\S{1,3}\s+\d{1,4}\s+[A-Z]{2})\s*/\s*([A-Z][A-Za-z])[^\w\s(]*\s*([0-9OolI]{1,4})\b'
             texts = [re.sub(r'\bRes:', 'Resources:', re.sub(slash, r'\1 (\3 \2)', t)) if re.match(slash, t) else t
                      for t in texts]
+    if 'wrapped_alternates' in mends:
+        # MX4 (registry wrapped_alternates): a row's bracketed alternate
+        # wrapped onto the next line ("S 10 Gd (30" / "Rm) Karma = 10":
+        # Cannonball, printed 27), which left "(30 Rm)" in his Health; the
+        # code and its bracket go back on the row before it is read
+        for n in range(len(texts) - 1, 0, -1):
+            nxt = re.match(r'^\s*(?P<code>' + CODE + r')\s*\)\s*(?P<rest>.*)$', texts[n])
+            if nxt and re.search(r'\(\s*[0-9OolI]{1,4}\s*$', texts[n - 1]):
+                texts[n - 1] = texts[n - 1].rstrip() + ' ' + nxt.group('code') + ') ' + nxt.group('rest')
+                del texts[n]
     if 'res_label' in mends:
         # MT3 (registry res_label): Res: for Resources on a grid of one form
         # (the Mandarin, printed 15), which only slash_forms renamed
@@ -375,7 +385,8 @@ class GridReader:
         # book that sets none reads every grid as it always has
         self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes',
                                   'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail',
-                                  'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids')
+                                  'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids',
+                                  'wrapped_alternates')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -599,7 +610,7 @@ def parse(slug):
     return book, stream, entries
 
 
-def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=None, run_on=()):
+def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=None, run_on=(), identity_lines=3):
     """The book's entries from one stream. With opponent set, the stream is an
     adventure's page with a character statted in its prose (ME1's chapters): an
     entry is read from its header through its grid and powers, and ends where
@@ -610,7 +621,9 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
     `ranges` is rank_ranges(book), for a book whose check takes a rank's range.
     `labels` (opponent mode only) maps more run-in labels to sections, and
     `run_on` names entries, as (first page, header), whose own paragraphs are
-    set indented, so an indent does not end them (MT2, gridbooks.parse)."""
+    set indented, so an indent does not end them (MT2, gridbooks.parse).
+    `identity_lines` is how many lines under a header before its grid are
+    the identity line (three, or the registry's, MX4)."""
     grid = grid or grid_at
     labels = labels or {}
     entries, cur = [], None
@@ -730,7 +743,10 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
                 i += 1
                 continue
         sec = cur['_sec']
-        if not cur['blocks'] and sec is None and len(cur['identity']) < 3:
+        # MX4 (gridbooks.parse passes registry identity_lines): Mystique's
+        # identity line runs to four lines (printed 29); every other book
+        # keeps three
+        if not cur['blocks'] and sec is None and len(cur['identity']) < identity_lines:
             cur['identity'].append(text)
         elif sec == 'member':
             cur['members'][-1]['text'].append(text)

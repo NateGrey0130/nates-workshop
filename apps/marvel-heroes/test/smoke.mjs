@@ -3093,7 +3093,7 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const codes = blocks.filter(({ c, b }) => b.abilities.some((a, i) => !agrees(c, a) && !known(b, 'FASERIP'[i]) && !unprinted(b, a) && !beyond(b, a)));
   check('every number agrees with its rank code (inside its range, for a book whose registry sets rank_ranges), or its override names the misprint',
     codes.length === 0, codes.map(({ c }) => c.id).join(', '));
-  check(`only ME2's, ME3's, MT2's, MX2's and MX3's registry entries set rank_ranges (${[...ranged]})`, [...ranged].join() === 'me2,me3,mt2,mx2,mx3', [...ranged].join());
+  check(`only ME2's, ME3's, MT2's, MX2's, MX3's and MX4's registry entries set rank_ranges (${[...ranged]})`, [...ranged].join() === 'me2,me3,mt2,mx2,mx3,mx4', [...ranged].join());
   const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
   check('each misprint keeps both the printed value and the corrected one',
     misprints.length > 0 && misprints.every(({ b }) => 'printed' in b.override && 'corrected' in b.override), String(misprints.length));

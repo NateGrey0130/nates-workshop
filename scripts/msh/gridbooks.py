@@ -231,23 +231,25 @@ def stream_of(book, slug, part, first, last):
     return stream
 
 
-def mark_headers(stream, cards=()):
+def mark_headers(stream, cards=(), depth=3):
     """Mark the header above each grid. Returns the headers' texts. With
     `cards` (the registry's, MX1), a line above the grid that is a card's name
     is its header: MX1 sets them in title case over an identity line ("Blue" /
     "Hugh Blumal, mutant hound"), and the Mark VI's ends in a colon, which is
-    dropped."""
+    dropped. `depth` is how many lines up a card's name is looked for (MX4's
+    identity_lines plus one); the header rule without cards reads three."""
     found = []
     names = {roster.norm(c) for c in cards}
     for i, line in enumerate(stream):
         if not roster.ANCHOR.search(line['text']) or line.get('headed'):
             continue
         above, j = [], i - 1
-        while j >= 0 and len(above) < 3:
+        while j >= 0 and len(above) < depth:
             if not roster.ROW.match(stream[j]['text']):
                 above.append(j)
             j -= 1
         named = [j for j in above if names and roster.norm(stream[j]['text']) in names]
+        above = above[:3]
         if named:
             stream[named[0]]['text'] = stream[named[0]]['text'].rstrip(': ')
             stream[named[0]]['big'] = True
@@ -711,11 +713,17 @@ def parse(book, slug):
     ranges = roster.rank_ranges(book)
     streams, keyed, labelled, derived = [], {}, [], {}
     cards = [c[2] for c in book.get('cards', [])] if book.get('card_headers') else ()
+    # MX4 (registry identity_lines): an identity line of up to four lines
+    # (Mystique, printed 29), so a card's name is looked for that many lines
+    # plus one above its grid, and that many identity lines are kept; every
+    # other book reads three
+    identity_lines = book.get('identity_lines', 3)
     for r in book['character_ranges']:
         s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
         s = table_grids(book, place_headers(book, s), reader, keyed)
         s = mark_titles(book, line_grids(book, s, keyed, labelled, derived))
-        streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards)), False, ()))
+        streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards, identity_lines + 1 if 'identity_lines' in book else 3)),
+                        False, ()))
     # MX2: a book whose blocks are all in its character ranges sets no
     # opponents (every earlier grid-booklets book sets the key)
     for o in book.get('opponents', []):
@@ -755,6 +763,7 @@ def parse(book, slug):
         stream += [l for l in s if l['printed'] not in runs_on]
         part = s[0]['part']
         got = roster.read_entries(s, reader, opponent=opponent, grid=read_grid, ranges=ranges, labels=labels,
+                                  identity_lines=identity_lines,
                                   run_on={(page, head) for p, page, head in run_on if p == part} if opponent else ())
         if runs_on:
             got = [e for e in got if e['pages'][0] not in runs_on]
