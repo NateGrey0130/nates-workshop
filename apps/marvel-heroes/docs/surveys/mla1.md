@@ -1,15 +1,10 @@
 # Survey: MLA1 After Midnight (TSR6892)
 
-> **DRAFT.** Written through every stat block of the book, *Names the
-> Codex already has*, *Quote marks*, *Which reader fits* and *Decisions*
-> (plan rows 10a-10c). The Marvel smoke suite has not run on it yet (plan
-> row 10d).
-
 Marvel Super Heroes Official Game Adventure, Anthony Herring, 1990, the
 first module of the Gang Wars trilogy (the MLA series). Registry entry:
 `scripts/msh/books.json` -> `mla1`. Measured 2026-11-01.
 
-**Rows citing this book:** none yet (no data is built).
+**Rows citing this book:** 0 `msh_book_text` rows (no data row has run).
 
 Everything here was measured and read on the page images.
 
