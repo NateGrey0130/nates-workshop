@@ -1,8 +1,8 @@
 # Survey: MX4 Flames of Doom (TSR6888)
 
-> **DRAFT** (row 7a, 2026-11-01). Everything down to *Quote marks* is
-> measured; *Which reader fits* is not finished and is the trial parse's
-> (row 7c). No data has been built from this book.
+> **DRAFT** (rows 7a and 7c, 2026-11-01). Every section is measured,
+> *Which reader fits* by a trial parse on a scratch copy; the Marvel smoke
+> suite has not yet run over it. No data has been built from this book.
 
 Official Game Adventure for Marvel Super Heroes, David "Zeb" Cook, 1987; the
 fourth module of the MX series (the back cover).
@@ -265,19 +265,113 @@ relying on it.
 
 ## Which reader fits
 
-**Not finished.** The trial parse is row 7c's. What this survey measured for
-it: every grid is MA1's number-first shape with `Health =`, the shape MX1's
-and MX2's sentinels read with `roster.grid_at` unchanged, so the nearest
-reader is `grid-booklets` (`scripts/msh/gridbooks.py`), without MX3's
-`code_rows`. The places to look: the title-case headers over italic identity
-lines of up to four lines (MX1's `card_headers`); the title-case labels set
-in the same italic as the power names (MX1's `title_case_labels`); the OCR's
-reading of three sentinel headers (the Mark IV's, V's and VI's lose or
-lower-case their first word); the appendix subheads and the NPC banner above
-the first card on each page; The Hardware of Hell ending Sunspot's entry on
-printed 31 (MX1's `extra_titles`); Cannonball's S bracket wrapped onto a
-second line and Nimrod's wrapped Resources; Mystique's `150*`. The entry
-sets no `layout` until then.
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with MX1's and MX2's
+registry fields, two registry-only workarounds and two things taught to the
+reader.** Measured, not argued: a scratch copy of `scripts/msh/` and
+`apps/marvel-heroes/data` at `818681bb` (`main`'s scripts at `f1c92595` plus
+this entry), the entry given `"layout": "grid-booklets"`, run on a copy of
+the cache under its own `WORKSHOP_MSH_CACHE` (no page re-OCR'd; only grid
+crops were added, to the copy). Without MX3's `code_rows`: every grid is the
+number-first shape.
+
+- **Stock, `layout` alone:** `roster.py mx4` runs to the end and exits 1.
+  15 entries, 13 blocks, 1 passing (Mystique's, only because the check skips
+  a Karma that is not a number), 12 failing, **no power in any entry**; ten
+  cards with no entry (the Mark IV, V and VI, and all seven NPCs, each named
+  by a line of its identity, `Mutant` alone three times);
+  Cannonball's Health not a number (`90 (30 Rm)`), Mystique's Karma not a
+  number (`150*`).
+- **Stock, with the MX family's fields** (`card_headers`,
+  `title_case_labels`, `rank_ranges`, `teams` with every card under MX4 Flames
+  of Doom): exit 1. 70 powers across the 13 entries, every NPC but two named;
+  five cards with no entry (the Mark IV, V and VI, Mystique, Sunspot) and
+  Cannonball's Health still not a number.
+- **With the workarounds and reader changes below:** exit 0.
+
+| measure | trial, last run |
+|---|---|
+| entries | 16: 13 with a block, 3 without (the headings The Arm of the State, Non-Player Characters and The Hardware of Hell) |
+| stat blocks | 13 of 13, every value as *Stat blocks* lists it, Cannonball's and Sunspot's S alternates read as alternates |
+| blocks passing every check | 0, and 13 known from trial overrides (5 `as_printed`, 8 `misprint`): the survey's misprints and printed-on-purpose Karmas, each matching one block; failing 0 |
+| powers | 70 across 13 entries, each NPC's power names as the page's run-ins give them (Cannonball 2, Lila Cheney 2, Magma 4, Mirage 4 with Brightwind, Mystique 5 with Weapons, Marco Pene 2, Sunspot 1) |
+| checklist | 13 cards, all found |
+| exit code | 0 |
+
+Every block carries a trial override, so no block passes on its own: the
+survey's thirteen (decision 4: the five robots' `Karma = 0` and Mystique's
+`150*` `as_printed`, the Alpha's Health, Nimrod's three codes and the six
+NPCs' Health and Karma `misprint`), written for the trial only and not
+re-read on the images; the data row writes the real file.
+
+**Registry-only workarounds** (no reader change; each worked in the trial,
+and each was dropped in turn to see what it holds):
+
+1. **Three sentinel headers lose their first word.** Tesseract boxes `Mark`
+   and the F row's letter below it as one word two lines tall, read `a`,
+   `mark` and a dash at confidence 17-39 (PDF 26), so the stream reads `IV Sentinel`, `V Sentinel` and `VI Sentinel`, which
+   `card_headers` does not match. MX1's `speck_lines` (`[part, page, as read,
+   as printed]`) puts each back. Dropped: exit 1, three cards with no entry
+   and their three `as_printed` overrides matching nothing.
+2. **The Hardware of Hell** (printed 31, column 1) is a title the Contents
+   does not list and not a character: MX1's `extra_titles` ends Sunspot's
+   entry at it. Dropped: **exit 0, silently**, 15 entries, the gear's text
+   in Sunspot's entry.
+3. **The MX family's fields:** `card_headers` (dropped: exit 1, every NPC
+   named by its identity line); `title_case_labels` (dropped: **exit 0, 0
+   powers**, every run-in a paragraph); `rank_ranges` (decision 6; no change
+   to `roster.py`'s counts, since every block it covers carries an override
+   that marks the whole block explained, so it is the Marvel smoke suite's
+   Health/Karma check that needs it); `teams` (no change to `roster.py`;
+   `npcs.py` files by it).
+4. **The misprints and printed-on-purpose Karmas**: overrides, as above.
+
+**What the reader must learn: two things**, both applied in the trial behind
+registry fields that every earlier book leaves unset (`gridbooks.py` 12
+changed lines, `roster.py` 18; not yet proved byte-identical on the earlier
+books, which is the parser row's to do):
+
+1. **An identity line of four lines** (Mystique, printed 29; Sunspot's is
+   three). `mark_headers` looks three non-row lines above the grid for a
+   card's name and `roster.read_entries` keeps three identity lines, so
+   Sunspot's header (four lines up) and Mystique's (five) are not found and
+   each entry takes its identity line's last line for a name (`Mutant`,
+   `cy), Mutant`); Mystique's fourth line lands in her prose. The trial adds
+   `identity_lines` (4): a card's name is looked for that many lines plus
+   one above the grid, and that many identity lines are kept. Dropped: exit
+   1, Mystique and Sunspot with no entry.
+2. **A bracketed alternate wrapped onto the next line** (Cannonball's S,
+   printed 27: the crop reads `S 10 Gd (30` and then `Rm) Karma = 10`).
+   `roster.ROW` wants the closing bracket on the row's line, so the `(30` and
+   `Rm)` join the rows' remainder and his Health reads `90 (30 Rm)`. The
+   trial adds `wrapped_alternates`, a `GridReader` mend that joins the code
+   and its bracket back onto the row before it is read; his S reads `10 Gd`
+   with the alternate `30 Rm`, and his Health 90. Dropped: exit 1, his Health
+   not a number.
+
+Read and fine as it is: the number-first rows and `Health =` read with
+`roster.grid_at` unchanged, `Shift X` included, from the grid crops (the
+stream's F rows of the Mark IV, V and VI carry the welded `Mark` as a stray
+letter; the crops read clean); the I row read as `|` is taken by position;
+Sunspot's S `6 Ty (40 In)` reads as an alternate on one line; Nimrod's
+`In` / `(40)` and the NPC Resources `Pr` / `(Ex)` join their rows; the
+minus of Cannonball's and Mirage's Popularity reads as a dash, which
+`npcs.minus` already takes; Mystique's `150*` is kept as printed for its
+`as_printed` override, and her footnote under the grid lands in her prose.
+`KNOWN POWERS:` reads in capitals in the stream, so `title_case_labels` is
+needed for the run-ins only. Mirage's `Equipment:` ends her powers and
+lands in a `notes` section with its label, as MX3's does (decision 5);
+Mystique's `Weapons:` stays a power. Brightwind is a power run-in, as
+printed (*Entry kinds*).
+
+The other readers fit less: `codegrids.py` (MA4) reads one offset and
+`page_stream`, not booklet `parts`, and MT3's trial found it stops at a
+missing `offset`; `roster.py` (MA1) reads no booklet; `booklet.py`,
+`rosterbook.py` and `coverpanels.py` read rank words or cover panels. The
+entry still sets no `layout`: that is the parser row's to write, with the
+two reader items behind the registry and every earlier book's build proved
+byte-identical. The scratch registry patch, the trial overrides, both
+reader diffs (CRs stripped), each stock run, the field-by-field ablation
+and the last run's output are kept in the plan store, `trial\mx4\`.
 
 ## Decisions this survey leaves open
 
