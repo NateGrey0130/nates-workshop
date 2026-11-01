@@ -483,6 +483,16 @@ def line_grids(book, stream, keyed, labelled, derived=None):
             i += 1
             continue
         rows, health, karma, end = got
+        grid_end, extra = end, ''
+        while book.get('line_grid_resources') and end < len(stream) and stream[end]['pdf'] == l['pdf'] \
+                and stream[end]['col'] == l['col'] \
+                and re.match(r'^(?:Resources|Popularity):\s*\S', stream[end]['text'].strip()) \
+                and stream[end]['text'].split(':')[0] not in extra:
+            # MX2 (registry line_grid_resources): a codes-only grid that prints
+            # Resources and Popularity on lines of their own under its Karma
+            # (Vincent Scarlesi's, printed 14) keeps them, not its prose
+            extra += ' ' + stream[end]['text'].strip()
+            end += 1
         made = []
         if 'derived_totals' in mends:
             # MT3 (registry derived_totals): a total the grid does not print
@@ -496,7 +506,11 @@ def line_grids(book, stream, keyed, labelled, derived=None):
         if any('health' in g for g in want[key]):
             # MX1: each name is tied to its grid by the Health it prints, so a
             # grid missed on the page cannot hand its name to the next one
-            hits = [g for g in want[key] if str(g.get('health')) == health]
+            # MX2 (a grid's `karma`): a Health two grids share on a page (46,
+            # printed 14; 20, printed 16) is told apart by the Karma printed
+            # under it, where the registry records one
+            hits = [g for g in want[key] if str(g.get('health')) == health
+                    and ('karma' not in g or str(g['karma']) == karma)]
             if len(hits) != 1:
                 raise SystemExit('one_line_grids: %s p.%d Health %s names %d grids, not 1' % (l['part'], l['printed'], health, len(hits)))
             g = hits[0]
@@ -508,19 +522,31 @@ def line_grids(book, stream, keyed, labelled, derived=None):
             # MX1: the grid's name is the subhead above the paragraph that
             # introduces it ("The Blue Knight" over a typical policeman's
             # grid), so the entry starts there and the next subhead ends it
-            at = [k for k in range(len(out)) if (out[k]['part'], out[k]['printed']) == key
+            # MX2 (a grid's `subhead_page`): a subhead set at the foot of the
+            # page before its grid (SWAT:AM, printed 13, its grid on 14)
+            skey = (l['part'], g.get('subhead_page', l['printed']))
+            at = [k for k in range(len(out)) if (out[k]['part'], out[k]['printed']) == skey
                   and roster.norm(out[k]['text']) == roster.norm(g['subhead'])]
+            if len(at) > 1 and book.get('subhead_exact_case'):
+                # MX2 (registry subhead_exact_case): the paragraph under a
+                # subhead holds a line of the same words in lower case (the
+                # Secret Service's, printed 14), which roster.norm makes equal;
+                # the subhead is the line in the subhead's own case
+                at = [k for k in at if out[k]['text'].strip() == g['subhead']]
             if len(at) != 1:
                 raise SystemExit('one_line_grids: subhead %r is on %d lines of %s p.%d, not 1' % (g['subhead'], len(at), l['part'], l['printed']))
             out[at[0]] = dict(out[at[0]], text=g['name'], big=True, subhead=True)
-            rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma)
-            out.append(dict(stream[end - 1], text=rows[0]['rest'], line_grid=rows, headed=True))
+            rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma) + extra
+            out.append(dict(stream[grid_end - 1], text=rows[0]['rest'], line_grid=rows, headed=True))
             keyed[(l['pdf'], l['col'], health)] = rank_only
         elif g.get('name'):
             out.append(dict(l, text=g['name'], big=True, conf=100, y1=l['y0'] - 8))
-            rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma)
-            out.append(dict(stream[end - 1], text=rows[0]['rest'], line_grid=rows))
+            rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma) + extra
+            out.append(dict(stream[grid_end - 1], text=rows[0]['rest'], line_grid=rows))
             keyed[(l['pdf'], l['col'], health)] = rank_only
+        elif extra:
+            raise SystemExit('line_grid_resources: %s p.%d: the form %s prints%s, which a labelled grid does not read'
+                             % (l['part'], l['printed'], g['label'], extra))
         else:
             block = {'label': g['label'], 'kind': 'line', 'page': l['printed'], 'pdf': l['pdf'], 'col': l['col'],
                      'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code')} for r in rows],
@@ -540,7 +566,73 @@ def line_grids(book, stream, keyed, labelled, derived=None):
     return out
 
 
-def grid(stream, i, reader, code_rows=False, end_at_p=False):
+def table_grids(book, stream, reader, keyed):
+    """MX2 (registry table_grids [{part, page, first, names, health, karma}]):
+    one table of several characters' codes (the Mutant Affairs Committee,
+    printed 15): a letters row headed by the word `first`, a row per name (the
+    name, then seven codes) and one Health and Karma under them all. The page
+    stream drops and welds its codes, so the rows are read from a --psm 6 crop
+    of the column from the letters row to the Karma line, and a welded pair
+    (GDTY) is split in two. The table leaves the stream, and each name becomes
+    an entry: a header and a one-line grid put in at the run-in that opens its
+    paragraph ("Chuck:"), which is its prose to the next header. Each block
+    keeps the table's Health and Karma as printed; the overrides correct
+    them to its codes' sums (survey mx2.md decision 6)."""
+    for t in book.get('table_grids', []):
+        where = '%s p.%d' % (t['part'], t['page'])
+        on = [k for k, l in enumerate(stream) if (l['part'], l['printed']) == (t['part'], t['page'])]
+        if not on:
+            continue
+        tops = [k for k in on if stream[k]['text'].split()[:3] == [t['first'], 'F', 'A']]
+        if len(tops) != 1:
+            raise SystemExit('table_grids: %r and its letters are on %d lines of %s, not 1' % (t['first'], len(tops), where))
+        top = tops[0]
+        same = lambda j: stream[j]['pdf'] == stream[top]['pdf'] and stream[j]['col'] == stream[top]['col']
+        k = next((j for j in range(top + 2, min(len(stream), top + 12))
+                  if same(j) and KARMA_LINE.match(stream[j]['text'].strip())), None)
+        if k is None or not HEALTH_LINE.match(stream[k - 1]['text'].strip()) or not all(same(j) for j in range(top, k + 1)):
+            raise SystemExit('table_grids: no Health and Karma line in the column under the table on %s' % where)
+        health = HEALTH_LINE.match(stream[k - 1]['text'].strip()).group(1)
+        karma = KARMA_LINE.match(stream[k]['text'].strip()).group(1)
+        if (health, karma) != (str(t['health']), str(t['karma'])):
+            raise SystemExit('table_grids: %s prints Health %s and Karma %s, not %s and %s'
+                             % (where, health, karma, t['health'], t['karma']))
+        head = stream[top]
+        texts = reader.read(head['pdf'], (head['col_x0'], head['y0'] - 15, head['col_x1'], stream[k]['y1'] + 10))
+        rows_of = {}
+        for name in t['names']:
+            hit = [x for x in texts if x.split()[:1] == [name]]
+            if len(hit) != 1:
+                raise SystemExit('table_grids: %s is %d rows of the crop on %s, not 1' % (name, len(hit), where))
+            codes = []
+            for tok in hit[0].split()[1:]:
+                if roster.canon(tok) is None and len(tok) == 4 and roster.canon(tok[:2]) and roster.canon(tok[2:]):
+                    codes += [tok[:2], tok[2:]]
+                else:
+                    codes.append(tok)
+            canon = [roster.canon(c) for c in codes]
+            if len(canon) != 7 or None in canon:
+                raise SystemExit('table_grids: %s reads %r on %s, not seven codes' % (name, hit[0], where))
+            rows_of[name] = [{'letter': roster.ABILITIES[n], 'number': roster.RANK_NUMBER[c], 'code': c,
+                              'printed_code': codes[n], 'rest': ''} for n, c in enumerate(canon)]
+        del stream[top:k + 1]
+        for name in t['names']:
+            at = [j for j, l in enumerate(stream) if (l['part'], l['printed']) == (t['part'], t['page'])
+                  and l['text'].startswith(name + ':')]
+            if len(at) != 1:
+                raise SystemExit('table_grids: the run-in %r is on %d lines of %s, not 1' % (name + ':', len(at), where))
+            l, rows = stream[at[0]], rows_of[name]
+            rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma)
+            stream[at[0]:at[0] + 1] = [dict(l, text=name, big=True, conf=100, y1=l['y0'] - 8),
+                                       dict(l, text=rows[0]['rest'], line_grid=rows, headed=True),
+                                       dict(l, text=l['text'][len(name) + 1:].strip())]
+            keyed[(l['pdf'], l['col'], health)] = True
+    return stream
+
+
+def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False):
+    """`resources_below` is the registry's code_rows_resources_below (MX2),
+    passed to scripts/msh/codegrids.py's row reader."""
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
@@ -563,7 +655,7 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False):
         # brackets ("F Gd (10) Health: 64"), MA4's order, read by
         # scripts/msh/codegrids.py's row in title case
         import codegrids
-        rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=codegrids.ROW_TITLE_CASE)
+        rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=codegrids.ROW_TITLE_CASE, resources_below=resources_below)
         if rows2 is not None:
             return rows2, end2
         # the stream can lose the Karma line under confidence 45 (Bernard
@@ -573,7 +665,8 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False):
                     and stream[j]['col'] == line['col'] and 'Popular' in stream[j]['text']), None)
         if pop is not None:
             box = (line['col_x0'], line['y0'] - 45, line['col_x1'], stream[pop]['y1'] + 10)
-            rows3 = codegrids.rows_from(reader.read(line['pdf'], box), pattern=codegrids.ROW_TITLE_CASE)
+            rows3 = codegrids.rows_from(reader.read(line['pdf'], box), pattern=codegrids.ROW_TITLE_CASE,
+                                        resources_below=resources_below)
             if len(rows3) == 7:
                 return rows3, end
     return rows, end
@@ -599,9 +692,12 @@ def parse(book, slug):
     cards = [c[2] for c in book.get('cards', [])] if book.get('card_headers') else ()
     for r in book['character_ranges']:
         s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
-        s = mark_titles(book, line_grids(book, place_headers(book, s), keyed, labelled, derived))
+        s = table_grids(book, place_headers(book, s), reader, keyed)
+        s = mark_titles(book, line_grids(book, s, keyed, labelled, derived))
         streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards)), False, ()))
-    for o in book['opponents']:
+    # MX2: a book whose blocks are all in its character ranges sets no
+    # opponents (every earlier grid-booklets book sets the key)
+    for o in book.get('opponents', []):
         s = stream_of(book, slug, o['part'], o['page'], o['page'])
         # MX1: an opponent's text that runs on past the art of the next page
         # (Oliver Pierce, printed 28 to 30) reads the pages it names too
@@ -618,7 +714,9 @@ def parse(book, slug):
         streams.append((s, True, tuple(o.get('runs_on', []))))
     stream, entries = [], []
     code_rows, end_at_p = bool(book.get('code_rows')), bool(book.get('grids_end_at_p'))
-    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p)) if code_rows or end_at_p else grid
+    below = bool(book.get('code_rows_resources_below'))
+    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below)) \
+        if code_rows or end_at_p else grid
     unlabelled = [0]
     # MT2 (registry opponent_section_labels {label: section}): a run-in that
     # opens a section in a chapter's block and in no other book (ROLE PLAYING
@@ -851,8 +949,8 @@ def coverage(book, entries, overrides):
     summary = book.get('reference_summary') or {'heroes': []}
     where = [(sub, part, None) for section, sub, _page, part in book['sections'] if section in book.get('roster_sections', []) and sub]
     contents = [w[0] for w in where]
-    where += [(n, o['part'], o['page']) for o in book['opponents'] for n in o['names']]
-    opponents = [n for o in book['opponents'] for n in o['names']]
+    where += [(n, o['part'], o['page']) for o in book.get('opponents', []) for n in o['names']]
+    opponents = [n for o in book.get('opponents', []) for n in o['names']]
     # MX1: no Contents line names a character, so the registry's cards (each
     # header with a block, by booklet and page) are a checklist too
     cards = [(n, part, page) for part, page, n in book.get('cards', [])]

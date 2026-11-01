@@ -3140,7 +3140,7 @@
       "cards_note": "The 8 headers in bold title case with a seven-row block under them, as printed, read on the page images 2026-10-31: the code, then the number in brackets (TY (5), Shift X (150)). Lorelei alone has an identity line (her real name); the others have none. The Omega Sentinel's powers run on to printed 12. Survey mx2.md, Stat blocks.",
       "one_line_grids": [
         {"part": "Adventure Book", "page": 13, "name": "Typical Policeman", "health": 36, "karma": 18, "subhead": "Typical Policeman"},
-        {"part": "Adventure Book", "page": 14, "name": "SWAT:AM", "health": 46, "karma": 22, "subhead": "SWAT:AM"},
+        {"part": "Adventure Book", "page": 14, "name": "SWAT:AM", "health": 46, "karma": 22, "subhead": "SWAT:AM", "subhead_page": 13},
         {"part": "Adventure Book", "page": 14, "name": "Soldiers and Camp Guards", "health": 46, "karma": 16, "subhead": "Soldiers and Camp Guards"},
         {"part": "Adventure Book", "page": 14, "name": "Secret Service Anti-Mutant Teams", "health": 50, "karma": 30, "subhead": "Secret Service Anti-Mutant Teams"},
         {"part": "Adventure Book", "page": 14, "name": "Knights of Genetic Purity", "health": 32, "karma": 14, "subhead": "Knights of Genetic Purity"},
@@ -3152,8 +3152,45 @@
         {"part": "Adventure Book", "page": 16, "name": "Jay Atkinson", "health": 22, "karma": 32, "subhead": "Jay Atkinson"}
       ],
       "one_line_grids_note": "The eleven codes-only grids (an F A S E R I P row, a row of seven codes, then Health: and Karma: on lines of their own), as MX1's, each under a bold title-case subhead, read on the page images 2026-10-31. page is the grid's; SWAT:AM's subhead is on printed 13 and its grid on 14, where gridbooks.line_grids looks for a subhead on the grid's page only. health does not tie a name to one grid on a page in this book: 46 is SWAT:AM's and the Soldiers' (both printed 14) and 20 is Fuchido's and Hernandez's (both printed 16; Scarlesi's and the committee table's too), so karma is recorded as well, and the pair is unique; gridbooks reads health alone today (survey mx2.md, Which reader fits). The six named ones have identity lines under the subhead (Scarlesi's one line, the others' two; the Knights' is a bracketed line of other names); Braddock's subhead runs to two lines, his rank and name with a trailing comma, then U.S. Army; subhead and name are the first line without its comma (survey mx2.md decision 3). The Mutant Affairs Committee's table (printed 15) is a shape of its own, five named rows of codes under one Health: and Karma:, and is not listed here (decision 6). The printed Health and Karma of five grids do not add up (survey mx2.md, Stat blocks).",
-      "tiers": ["Typical Policeman", "SWAT:AM", "Soldiers and Camp Guards", "Secret Service Anti-Mutant Teams", "Knights of Genetic Purity", "Vincent Scarlesi", "General William B. Braddock", "Dr. Yagami Fuchido", "Dr. Paolo Hernandez", "Jay Atkinson", "William Shiver"],
-      "tiers_note": "The eleven codes-only grids (survey mx2.md decision 3), as a checklist, as MX1's: tiers is the only list scripts/msh/gridbooks.py coverage reads with no page, and these are read in a character range, not an opponents page. The committee's five members join it once decision 6 is taken."
+      "tiers": ["Typical Policeman", "SWAT:AM", "Soldiers and Camp Guards", "Secret Service Anti-Mutant Teams", "Knights of Genetic Purity", "Vincent Scarlesi", "General William B. Braddock", "Dr. Yagami Fuchido", "Dr. Paolo Hernandez", "Jay Atkinson", "William Shiver", "Chuck", "Martha", "Bob", "Phil", "Jenny"],
+      "tiers_note": "The eleven codes-only grids (survey mx2.md decision 3) and the Mutant Affairs Committee's five members (decision 6, read by table_grids), as a checklist, as MX1's: tiers is the only list scripts/msh/gridbooks.py coverage reads with no page, and these are read in a character range, not an opponents page.",
+      "layout": "grid-booklets",
+      "layout_note": "MX1's reader, scripts/msh/gridbooks.py through roster.read_entries: the full cards, the codes-only grids and the committee's table are all in one character range (survey mx2.md, Which reader fits, measured on a trial parse 2026-10-31). What the book needs beyond MX1's fields is behind fields of this entry, each with its _note: a one_line_grids grid's karma and subhead_page, subhead_exact_case, code_rows_resources_below, line_grid_resources and table_grids. The entry sets no opponents, which gridbooks reads as none. MX1's letters_marks is not set: the trial set it, and roster.json is byte-identical without it (2026-10-31).",
+      "code_rows": true,
+      "code_rows_note": "The eight full cards (McGrafton, printed 10; the five sentinels, 11; Nimrod, 12; Lorelei, 15) print the code, then the number in brackets (TY (5), Shift X (150)), with Health, Karma, Resources and Popularity beside rows F, S, R and P, as MX1's: read by scripts/msh/codegrids.py's row in title case. Without it every card's Health and Karma reads as not a number (2026-10-31).",
+      "card_headers": true,
+      "card_headers_note": "The cards' headers are bold title case; Lorelei's is over her identity line (Laura Lee Masters, printed 15), which gridbooks' header rule takes for the header without this, as MX1's Blue (2026-10-31: the checklist then misses Lorelei).",
+      "title_case_labels": true,
+      "title_case_labels_note": "The run-in labels of section_labels are title case (Known Powers:, Talents:), as MX1's; without it no entry has a power or a section (2026-10-31).",
+      "not_run_ins": ["SWAT:AM"],
+      "not_run_ins_note": "SWAT:AM's subhead (printed 13) and five lines of the prose under the types' grids (printed 13 and 14) start with it, which roster.RUN_IN would read as a run-in label SWAT (survey mx2.md, Columns, labels and ranks). Without it the Secret Service Anti-Mutant Teams' sections move (2026-10-31).",
+      "teams": [["Adventure Book", 1, "MX2 The X-Potential"]],
+      "teams_note": "The book prints no team sections: every card is filed under the book's own title, as MX1 filed its sentinels and NPCs, the six sentinels each a card of their own (survey mx2.md decision 1, its recommendation taken, Nate 2026-10-31).",
+      "rank_ranges": true,
+      "rank_ranges_note": "McGrafton's seven numbers (printed 10) and Lorelei's (printed 15) are each its rank's lowest (TY 5, GD 8, EX 16, RM 26, IN 36, AM 46), inside its range and not its standard, and both cards' Health and Karma add up with them: passed on the ranges, as ME2's, rather than fourteen also entries (survey mx2.md decision 5).",
+      "speck_lines": [["Adventure Book", 16, "F A S\u00a7 ER | P", "F A S E R I P"]],
+      "speck_lines_note": "Dr. Yagami Fuchido's letters row (printed 16) reads F A S, a section sign, then ER | P, E and R welded, which no letters pattern matches, so his grid is not found; the page prints F A S E R I P, as the other ten grids do (survey mx2.md, registry item 3).",
+      "two_line_headers": [["Adventure Book", 15, "The Mutant Affairs", "Committee"]],
+      "two_line_headers_note": "The Mutant Affairs Committee's subhead (printed 15) is set on two lines, joined to one so that its extra_titles entry, which matches one line, finds it, as ME3's (survey mx2.md, registry item 5).",
+      "extra_titles": [
+        ["Adventure Book", 10, "Villains"],
+        ["Adventure Book", 10, "The Sentinels"],
+        ["Adventure Book", 13, "Notes on Sentinels"],
+        ["Adventure Book", 13, "Non-Player Characters"],
+        ["Adventure Book", 15, "The Mutant Affairs Committee"],
+        ["Adventure Book", 17, "Equipment"]
+      ],
+      "extra_titles_note": "The bold subheads inside Villains, NPCs, and Equipment that are no character, read on the page images 2026-10-31 (survey mx2.md, Columns, labels and ranks): each opens a heading entry, so that its text is not taken into the character above. Without them McGrafton's Background runs on through the sentinels' introduction and Jay Atkinson's through the Equipment section (survey mx2.md, registry item 4). The Mutant Affairs Committee's has the words of the chapter at printed 25, which is a section of its own.",
+      "power_heads": [["Adventure Book", 15, "Pheromones"], ["Adventure Book", 15, "Blending"], ["Adventure Book", 15, "Phasing"]],
+      "power_heads_note": "Lorelei's four powers (printed 15) are each one line ending in no full stop, so the three after Flight read as Flight's text: these three run-ins start a power each, as ME3's, which gives her four (survey mx2.md, registry item 6).",
+      "subhead_exact_case": true,
+      "subhead_exact_case_note": "The Secret Service Anti-Mutant Teams' subhead (printed 14) and a line of the paragraph under it hold the same four words, the line in lower case, which roster.norm makes equal, so a one_line_grids subhead would be on two lines. Where two lines match, scripts/msh/gridbooks.line_grids keeps the line whose text is the subhead as written (survey mx2.md, reader item 3). Without it the build stops there.",
+      "code_rows_resources_below": true,
+      "code_rows_resources_below_note": "Nimrod's card (printed 12) sets his Resources' value on the line under its label (R EX (30) Resources =, then IN (40) at the column's right), which scripts/msh/codegrids.rows_from reads as his I row, moving I and P down a row and P into his Resources. With this a row with no letter right after a row ending in Resources = or Resources: is that value's tail (survey mx2.md, reader item 4). Without it his I reads IN 40 and his Karma fails, which his R override hides from roster.py's count: one override marks a whole block explained. McGrafton's wrapped MN / (75) and Lorelei's TY read the same either way.",
+      "line_grid_resources": true,
+      "line_grid_resources_note": "Vincent Scarlesi's codes-only grid (printed 14), alone of the eleven, prints Resources: IN and Popularity: 20 on lines of their own under its Karma. With this scripts/msh/gridbooks.line_grids reads them into his block; without it they land in his prose and the block has none (survey mx2.md, reader item 7).",
+      "table_grids": [{"part": "Adventure Book", "page": 15, "first": "Mutant", "names": ["Chuck", "Martha", "Bob", "Phil", "Jenny"], "health": 20, "karma": 10}],
+      "table_grids_note": "The Mutant Affairs Committee (printed 15, column 2): a letters row headed Mutant, five rows each a member's first name and seven codes, then one Health: 20 and Karma: 10 under all five, and a run-in paragraph per member (Chuck: and so on, columns 2 and 3). The page stream drops the letters row's I and P and Chuck's codes and welds code pairs, so scripts/msh/gridbooks.table_grids reads the rows from a --psm 6 crop of the column from the letters row to the Karma line (2026-10-31: every row as the page prints it, Chuck's and Jenny's GDTY split in two). Each member is a card of its own, its block at its codes' standard numbers with the printed 20 and 10 kept and corrected in scripts/msh/mx2-overrides.json, its prose its run-in paragraph to the next member's; Braddock's subhead ends Jenny's, so the paragraph about the whole committee after hers is in her prose (survey mx2.md decision 6, its recommendation taken, Nate 2026-10-31)."
     }
   }
 }

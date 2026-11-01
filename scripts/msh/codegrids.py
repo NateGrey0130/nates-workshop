@@ -93,14 +93,20 @@ def number_of(code, raw):
     return n, None
 
 
-def rows_from(texts, pattern=ROW):
+def rows_from(texts, pattern=ROW, resources_below=False):
     """The grid's rows from the crop's lines, in order. A line that is not a
     row after the first is the tail of a value that wrapped, and joins the row
-    above, as in roster.rows_from. `pattern` is ROW, or MX1's ROW_TITLE_CASE."""
+    above, as in roster.rows_from. `pattern` is ROW, or MX1's ROW_TITLE_CASE.
+    `resources_below` is MX2's registry code_rows_resources_below."""
     rows = []
     for t in texts:
         m = pattern.match(t)
         ok = m and (m.group(3) or not re.match(BARE, m.group(2), pattern.flags & re.IGNORECASE))
+        if ok and resources_below and rows and not m.group(1) and re.search(r'Resources\s*[=:]\s*$', rows[-1]['rest']):
+            # MX2 (registry code_rows_resources_below): a Resources set on the
+            # line under its label (Nimrod's "R EX (30) Resources =" over
+            # "IN (40)", printed 12) is the value's tail, not the next row
+            ok = False
         if ok and len(rows) < 7:
             code = code_of(m.group(2))
             number, read_as = number_of(code, m.group(3))
@@ -116,7 +122,7 @@ def rows_from(texts, pattern=ROW):
     return rows
 
 
-def grid_at(stream, i, reader, pattern=ROW):
+def grid_at(stream, i, reader, pattern=ROW, resources_below=False):
     """If stream[i] is a grid's Health line, return (rows, first index after
     the grid), as roster.grid_at does. The box runs from a line above the
     Health label to the Popularity line in the same column, or seven row
@@ -133,9 +139,9 @@ def grid_at(stream, i, reader, pattern=ROW):
     pitch = (stream[karma]['y0'] - line['y0']) / 2 or 60
     bottom = stream[pop]['y1'] + 10 if pop is not None else line['y0'] + 7 * pitch + 10
     box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
-    rows = rows_from(reader.read(line['pdf'], box), pattern)
+    rows = rows_from(reader.read(line['pdf'], box), pattern, resources_below)
     if len(rows) != 7:
-        rows = rows_from([s['text'] for s in stream[i:(pop if pop is not None else karma) + 5]], pattern)
+        rows = rows_from([s['text'] for s in stream[i:(pop if pop is not None else karma) + 5]], pattern, resources_below)
     end = i + 1
     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
             and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
