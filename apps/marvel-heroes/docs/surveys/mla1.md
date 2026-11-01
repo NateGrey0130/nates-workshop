@@ -1,10 +1,8 @@
 # Survey: MLA1 After Midnight (TSR6892)
 
-> **DRAFT.** Written through the stat blocks of the Player Characters, the
-> factions and the Non-Player Character Roster from Arclight to Mentallo
-> (plan row 10a). The rest of the roster, the chapters' grids, *Names the
-> Codex already has*, *Quote marks*, *Which reader fits* and *Decisions*
-> are not finished.
+> **DRAFT.** Written through every stat block of the book, *Names the
+> Codex already has*, *Quote marks* and *Decisions* (plan rows 10a and
+> 10b). *Which reader fits* is not finished (plan row 10c).
 
 Marvel Super Heroes Official Game Adventure, Anthony Herring, 1990, the
 first module of the Gang Wars trilogy (the MLA series). Registry entry:
@@ -135,8 +133,10 @@ there are no `contents_errata`. Stored as `sections`.
   capitals, number in brackets (`F IN (40)`), with `Health:`, `Karma:`,
   `Resources:` and `Popularity:` in bold to the right of rows F, S, R and P,
   Resources as a code and its number in brackets (`GD (10)`). This is MX1's
-  second shape (code then number in brackets) with MT3's capital codes. **No
-  horizontal one-line grid** on the pages read.
+  second shape (code then number in brackets) with MT3's capital codes. The
+  chapters' grids are the same column with fewer labels (*Stat blocks: the
+  rest of the roster and the chapters*). **No horizontal one-line grid**
+  anywhere in the book.
 - **Headers.** The Player Characters' and the roster's are bold title case;
   the roster's are alphabetical and inverted where a surname leads
   (`Bifrost, Felicia`, `Bifrost, Johnny`). The faction grids' headers are
@@ -151,11 +151,22 @@ there are no `contents_errata`. Stored as `sections`.
   italic title-case run-in under it; `Talents:` (27) and `Background:` (22)
   as bold title-case run-ins; Mentallo adds `Weaknesses:` (printed 58). The
   five faction grids print `Talents:` and `Weaponry:` (5) under the grid,
-  and no powers or background.
+  and no powers or background. The rest of the roster (PDF 60-64) adds no
+  label: `KNOWN POWERS:` (10), `Talents:` (11), `Background:` (11) and
+  `Real Name:` (10) on its eleven cards, Pride, Mr. Maximilian (printed 59)
+  printing no identity line and no powers. The Whirlwind's `Weaponry:`
+  (printed 63) is an italic power under `KNOWN POWERS:`, not a section.
+  Over the book's 33 cards: `KNOWN POWERS:` 32, `Background:` 33,
+  `Real Name:` 29. The chapters' grids add **`Abilities:`** (Jack the
+  Bartender, printed 18; Security Officers, printed 36), found nowhere
+  else, each with `Weaponry:`, and SWF Operatives (printed 32) prints
+  `Talents:` and `Weaponry:`.
 - **Ranks.** FE (Callisto's Resources), PR, TY, GD, EX, RM, IN, AM and MN,
   and `Sh-0` for the R, I and P of the Black Talon's zombie and skeleton
   (printed 53). Resources prints `NA` on those two and `None` on
-  Frankenstein's Monster (printed 56). No book-specific spelling. Marks on
+  Frankenstein's Monster (printed 56), and the Sentinels, Mark IV print `NA`
+  for Karma, Resources and Popularity (printed 60). The rest of the roster
+  and the chapters print no other code. No book-specific spelling. Marks on
   the page, not spellings: a speck before Johnny Bifrost's P code (`.TY`,
   printed 52), a square closing bracket on Hammerhead's P (`RM (30]`,
   printed 57), and the Typical Flashing Blade's A printed `GD 12` with no
@@ -168,6 +179,17 @@ there are no `contents_errata`. Stored as `sections`.
 **None.** The OCR of PDF 1 and 65-69 holds no `Health`, `Karma` or rank
 row, and their images show the cover, the three pages of floor plans, the
 back cover's blurb and the map sheet. So `panels` is empty, as MT3's.
+
+## Where the blocks are
+
+Printed 4-8 (the Player Characters and the factions), printed 51-63 (the
+Non-Player Character Roster) and five chapter pages: printed 18, 32, 36, 40
+and 42. Found by counting `Health:`, `Karma:`, `Resources:`, `KNOWN POWERS`
+and a rank code before a bracketed number on the OCR of all 69 pages, each
+page with a hit then read on its image: no other page holds a grid. The
+Hypnoporter Machine (printed 9) is a device and prints none. The card pages
+are the registry's `character_ranges`; the chapters' grids are its
+`opponents`, each statted inside a chapter's prose.
 
 ## Stat blocks: the Player Characters, the factions and the roster to Mentallo
 
@@ -213,8 +235,8 @@ none.
 The identity in brackets is the card's `Real Name:` line (or `Real Names:`,
 or `Alias:`), as printed; the faction grids' is their subhead. Hammerhead's
 text runs on to the top of printed 58, column 1, and Mentallo's (column 3)
-to the top of printed 59, column 1, where Mister Fear's card starts under it:
-his card is the next row's. Printed 58 holds Harpoon and Mentallo only. **The Black
+to the top of printed 59, column 1, where Mister Fear's card starts under it
+(the next section). Printed 58 holds Harpoon and Mentallo only. **The Black
 Talon's zombie and skeleton** are sub-grids inside his Necromancy power,
 each introduced as the typical creature he raises, with no header of their
 own.
@@ -229,13 +251,13 @@ own.
 | every Resources number within its code's range | **26 of 26** that print one (the zombie's and skeleton's `NA` and Frankenstein's Monster's `None` print none) |
 | a number inside its range but not the rank's standard | **two**, both the Typical Flashing Blade's (printed 8): A `GD 12` (Good is 8-15) and E `TY (7)` (Typical is 5-7). Its Health 31 holds on them |
 
-**The misprints so far, each read on the page image** (printed page: name:
-field printed -> corrected):
+**The misprints of these pages, each read on the page image** (printed
+page: name: field printed -> corrected):
 
 | misprint | the book's own arithmetic |
 |---|---|
 | 8:Typical Buzz Cut:Karma 11 -> 12 | R, I and P each print `PR (4)`, and every row's code agrees with its number; 4+4+4 is 12, and its Health 28 holds |
-| 55:Eel:Karma 22 -> 32 | R `EX (20)`, I `TY (6)`, P `TY (6)`, each code agreeing with its number; 20+6+6 is 32. The alternative, R `GD (10)` for 22, would change a row whose code and number agree, so the Karma is the misprint (the Decisions' to confirm, not finished) |
+| 55:Eel:Karma 22 -> 32 | R `EX (20)`, I `TY (6)`, P `TY (6)`, each code agreeing with its number; 20+6+6 is 32. The alternative, R `GD (10)` for 22, would change a row whose code and number agree, so the Karma is the misprint (decision 5) |
 
 **Printed on purpose:** the Black Talon's zombie prints `Health: 80` over
 four `RM (30)` rows (F+A+S+E is 120). His Necromancy text gives a zombie's
@@ -247,30 +269,199 @@ misprint.
 **Noted, not a block:** Hammerhead's text (printed 58) gives a second
 Health for him while a device is worn; it is prose, not a grid.
 
-## The rest of the roster and the chapters' grids
+## Stat blocks: the rest of the roster and the chapters
 
-Not finished (plan row 10b): the roster from Mister Fear to Whirlwind
-(printed 59-63, PDF 60-64; Mister Fear's header is in column 1 of printed
-59, under the end of Mentallo's text) and the grids inside the chapters (PDF 19, 33,
-37, 41 and 43, printed 18, 32, 36, 40 and 42).
+Every block of printed 59-63 (PDF 60-64) and the seven grids inside the
+chapters (PDF 19, 33, 37, 41 and 43) was read on a crop of the page image
+(120-200 dpi) and checked the same way. Mister Fear's header is in column 1
+of printed 59, under the end of Mentallo's text.
+
+**11 roster cards, 1 grid inside a card and 7 chapter grids.**
+
+| printed (PDF) | header as printed | F A S E R I P | Health | Karma | Resources | Popularity |
+|---|---|---|---|---|---|---|
+| 59 (60) | Mister Fear (Alan Fagan) | TY 6, GD 10, TY 6, GD 10, GD 10, EX 20, GD 10 | 32 | 40 | RM (30) | -5 |
+| 59 (60) | Pride, Mr. Maximilian (no identity line) | PR 4, TY 6, PR 4, TY 6, EX 20, GD 10, GD 10 | 20 | 40 | GD (10) | 10 |
+| 59 (60) | Scarecrow (Ebenezer Laughton) | EX 20, RM 30, GD 10, GD 10, TY 6, EX 20, FE 2 | 70 | 28 | TY (6) | -6 |
+| 60 (61) | Scorpion (MacDonald Gargan) | RM 30, IN 40, IN 40, IN 40, TY 6, TY 6, GD 10 | 150 | 22 | TY (6) | -15 |
+| 60 (61) | Sentinels, Mark IV (Not applicable) | EX 20, EX 20, AM 50, MN 75, TY 6, TY 6, PR 4 | 165 | NA | NA | NA |
+| 60 (61) | Shroud (Unrevealed) | RM 30, EX 20, GD 10, EX 20, GD 10, IN 40, EX 20 | 80 | 70 | GD (10) | -10 |
+| 61 (62) | Skids (Sally Blevins) | GD 10, TY 6, PR 4, GD 10, PR 4, GD 10, EX 20 | 30 | 34 | PR (4) | 1 |
+| 61 (62) | Tatterdemalion (Arnold Paffenroth) | EX 20, EX 20, GD 10, EX 20, TY 6, PR 4, FE 2 | 70 | **8** | FE (2) | -1 |
+| 62 (63) | Vertigo (Unrevealed) | GD 10, GD 10, TY 6, EX 20, TY 6, GD 10, IN 40 | 46 | 56 | GD (10) | -10 |
+| 62 (63) | Werewolf (Jack Russell) | RM 30, EX 20, RM 30, IN 40, TY 6, MN 75, GD 10 | 120 | 91 | EX (20) | -2 |
+| 62 (63) | Werewolf's human statistics (grid inside the card) | TY 6, TY 6, TY 6, GD 10, TY 6, GD 10, GD 10 | 28 | 26 | EX (20) | 0 |
+| 63 (64) | Whirlwind (David Cannon) | GD 10, IN 40, GD 10, RM 30, TY 6, TY 6, TY 6 | 90 | 18 | TY (6) | -8 |
+| 18 (19) | Jack the Bartender (Chapter 9) | GD 10, GD 10, GD 10, GD 10, PR 4, TY 6, PR 4 | 40 | 14 | PR (4) | 0 |
+| 32 (33) | SWF Operatives (Chapter 22) | EX 20, GD 10, GD 10, TY 6, TY 6, TY 6, GD 10 | 46 | 22 | GD (10) | 4 |
+| 36 (37) | Security Officers (Chapter 27) | GD 10, GD 10, TY 6, GD 10, TY 6, TY 6, TY 6 | 36 | 18 | - | - |
+| 40 (41) | Bartholomew Jacobs (Chapter 30; no header) | -, -, -, -, RM 30, GD 10, MN 75 | - | 115 | - | - |
+| 42 (43) | Alligator (Chapter 32) | PR 4, GD 10, RM 30, EX 20, FE 2, FE 2, FE 2 | 64 | - | - | - |
+| 42 (43) | Rat, pack of 10 (Chapter 32) | EX 20, TY 6, FE 2, EX 20, FE 2, FE 2, FE 2 | 48 | - | - | - |
+| 42 (43) | Mosquito Swarm (Chapter 32) | EX 20, FE 2, FE 2, EX 20, FE 2, FE 2, FE 2 | 44 | - | - | - |
+
+A `-` is a label the grid does not print. **Entry kinds** beyond the first
+half's:
+
+- **The Werewolf's human statistics** (printed 62): a full grid under his
+  powers, introduced by a line of prose, with no header: Jack Russell's
+  form when he is not transformed.
+- **The chapters' types** (Jack the Bartender, SWF Operatives, Security
+  Officers, the Alligator, Rat, pack of 10 and Mosquito Swarm): a bold
+  header over the grid in a chapter's column, no identity line, the chapter
+  resuming under it. Jack the Bartender and Security Officers print
+  `Abilities:` and `Weaponry:` under the grid, SWF Operatives `Talents:`
+  and `Weaponry:`, the chapter 32 three nothing.
+- **Bartholomew Jacobs** (printed 40): three rows, R, I and P, with
+  `Karma:` beside R, under a line of prose naming him and with no header.
+  The chapter gives him the physical abilities of the hero he possesses,
+  so the book prints no F, A, S, E or Health for him.
+- **Characters in the prose only**, named and not statted, are not
+  entries.
+
+**The book checks itself, the whole book counted** (48 blocks: 33 cards, 5
+faction grids, 3 grids inside cards and 7 chapter grids):
+
+| measure | count |
+|---|---|
+| Health = F+A+S+E | **46 of 47** that print one; the zombie's as printed (above). Bartholomew Jacobs prints none |
+| Karma = R+I+P | **41 of 44** that print a number; the Typical Buzz Cut's, Eel's and Tatterdemalion's (12, printed 8). The Sentinels, Mark IV print `NA`; the chapter 32 three print no Karma |
+| every ability number within its rank code's range | **48 of 48** |
+| every Resources number within its code's range | **39 of 39** that print one |
+| a number inside its range but not the rank's standard | still **two**, the Typical Flashing Blade's (printed 8) |
+
+**The misprint of these pages, read on the page image:**
+
+| misprint | the book's own arithmetic |
+|---|---|
+| 61:Tatterdemalion:Karma 8 -> 12 | R `TY (6)`, I `PR (4)`, P `FE (2)`, each code agreeing with its number; 6+4+2 is 12, and his Health 70 holds. The alternative, R `FE (2)` for 8, would change a row whose code and number agree, as for Eel (decision 5) |
+
+So the book's misprints, whole: **8:Typical Buzz Cut:Karma 11->12,
+55:Eel:Karma 22->32, 61:Tatterdemalion:Karma 8->12**. Printed on purpose:
+53:Black Talon's zombie:Health 80 (his Necromancy rule) and
+60:Sentinels, Mark IV:Karma, Resources and Popularity NA (a robot, as MA1
+prints `-` for the same machine).
 
 ## Names the Codex already has
 
-Not finished (plan row 10b).
+Read against `apps/marvel-heroes/data/npcs.json` (901 cards) by name. By
+the rule #1520 pinned (Nate, 2026-09-28), each is a card of its own with a
+`-mla1` id:
+
+- **The six Player Characters:** Black Widow (MH4), Daredevil (MHSP2, MH4,
+  MH9, MT3), Iron Fist (MHSP2, MH4), Moon Knight (MT2, MT3), Power Man (MA4,
+  MHSP2, MH4) and Spider-Man (MHSP1, MHSP2, MH8, MH9, MT3).
+- **Callisto** (MA1): the same seven ranks, Health 90 and Karma 60; MA1's
+  Resources `Ty (6)` and Popularity -10, this book's `FE (2)` and 6.
+- **Fixer** (MH1, a ranks-only line): F and A Typical where this book
+  prints GD 10 (Health 24 there, 32 here); S, E, R, I and P agree.
+- **Gypsy Moth** (MA1): F, A, S, E and I agree; MA1's R Ty and P Ex (Karma
+  36, Popularity 70), this book's R and P `PR (4)` (Karma 18, Popularity 0).
+- **Mentallo** (MH1): the same ranks, Health 52, Karma 90, Popularity 5.
+- **Scorpion** (MT2): the same numbers, Health 150, Karma 22, Popularity -15.
+- **Sentinels, Mark IV**: MA1's Mark IV & V Sentinels card, its Mark IV
+  block, prints the same numbers and codes, P `4 Pr` as here, where MX1's
+  Mark IV prints `6 Ty`; MX1, MX2, MX3 and MX4 each have a Mark IV
+  Sentinel card too.
+- **Skids** (MA1): the same seven ranks, Health 30 and Karma 34; MA1's
+  Resources `Fb (2)` and Popularity 0, this book's `PR (4)` and 1.
+- **Vertigo** (MA1, MA4): neither agrees. MA1 prints A Ty and R Pr (Health
+  42, Karma 54); MA4 another block (Health 48, Karma 40).
+- **Whirlwind** (MA1, MH7): the same ranks, Health 90, Karma 18; MA1's
+  Popularity -8 as here, MH7's 8.
+
+Not the same beings: MA4's Dr. Jacob Grimm and Penny Grimm (not the
+Brothers Grimm), MT3's Alligator Creatures and Security Robots, MH1's
+Crimson Dynamo. Every other name (Arclight, Felicia and Johnny Bifrost,
+Black Panther, Black Talon and his zombie and skeleton, Blacklash,
+Boomerang, Brothers Grimm, Eel, Frankenstein's Monster, Hammerhead,
+Harpoon, Mister Fear, Pride, Scarecrow, Shroud, Tatterdemalion, Werewolf,
+the five faction grids and the seven chapter grids) is new to the Codex.
 
 ## Quote marks
 
-Not finished (plan row 10b).
+**The book prints single quotes of its own**, so MA1's rule holds, not
+MHSP1's. Measured on the OCR of all 69 pages: 113 opening and 108 closing
+curly doubles, 6 straight doubles, 41 opening and 415 closing curly singles
+(mostly apostrophes) and 8 straight singles. 88 single marks are neither
+inside a word nor a possessive s's: most are the apostrophe of the Roarin'
+Twenties, feet marks on room sizes, or a double read as a pair of singles
+(19 sit next to another mark). Read on the page images:
+
+- **Real single quotes** around a word in the chapters' prose, printed 22
+  and printed 33, each read on the image.
+- **On the character pages** every lone single read on the image was half
+  of a double: printed 5 (Iron Fist's text), printed 61 (Shroud's) and
+  printed 62 (the Werewolf's).
+
+So a single mark may be real, and a lost closing single on a character page
+is a `text` override, never a rule (as `ma1.md` *Quote marks*). The data
+row confirms the count on the character pages, where `npcs.unpaired` stops
+on an odd double.
 
 ## Which reader fits
 
-Not finished (plan rows 10b and 10c).
+Not finished (plan row 10c).
 
 ## Decisions this survey leaves open
 
-Not finished (plan row 10b). Already ruled: characters only (Nate,
-2026-10-21), second cards with `-mla1` ids (2026-09-28) and a leading The
-dropped from a name (2026-10-21).
+Each has a recommendation, the one MX1 and MT3 took where they had the
+same question (Nate 2026-10-31: take the survey's recommendations).
+Already ruled: characters only (Nate, 2026-10-21), second cards with
+`-mla1` ids (2026-09-28) and a leading The dropped from a name
+(2026-10-21).
+
+1. **Teams.** Recommendation: **After Midnight Heroes** for the six Player
+   Characters (as MT3's Revenge of Kang Heroes and MT2's Weird, Weird West
+   Heroes), and every other card, the faction grids, the roster and the
+   chapters' grids, under the book's title, **MLA1 After Midnight** (as
+   MX1 and MT3 filed theirs). Not taken: a team per faction subhead, five
+   teams of one grid each; the faction stays in the grid's name.
+2. **Page citations.** Recommendation: MX1's single-booklet shape,
+   `MLA1 Adventure p.59` (the part's `cite` is `Adventure`).
+3. **Names as printed** (recommended, as MT3 decision 13 and ME2's
+   `Olympian, Typical`): the roster's inverted headers kept
+   (`Bifrost, Felicia`, `Bifrost, Johnny`, `Pride, Mr. Maximilian`,
+   `Sentinels, Mark IV`), and `Rat, pack of 10` as printed. Not taken:
+   uninverting them, or MT2's `count_headers` for the rats, which reads a
+   count in parentheses, not after a comma.
+4. **The grids inside cards** (recommended, as MT3 decisions 4 and 13): the
+   Werewolf's human statistics a second block on his card, labelled **Jack
+   Russell** (as MT3's Ben and MT2's Hamilton Slade); the Black Talon's
+   zombie and skeleton each a card of its own, **Black Talon's Zombie** and
+   **Black Talon's Skeleton**, filed with the Black Talon (as MT3's Mad
+   Thinker's Android). Not taken: blocks on the Black Talon's card, since
+   they are beings he raises, not a form of him.
+5. **The misprints** as `misprint` overrides keeping printed and corrected
+   (recommended, as MT3 decision 7): the Typical Buzz Cut's Karma 11 to 12,
+   Eel's 22 to 32 and Tatterdemalion's 8 to 12, each the total corrected
+   because every row's code and number agree. `as_printed`: the zombie's
+   Health 80 (the Necromancy rule) and the Sentinels, Mark IV's `NA`
+   Karma, Resources and Popularity (a robot, as MX1's sentinels' `Karma =
+   0`).
+6. **The Typical Flashing Blade's A 12 and E 7**, the two numbers inside a
+   rank's range but not its standard. Recommendation: one `as_printed`
+   override on its A with the E in its `also` (both in range, and its
+   Health 31 holds on them), as MX1 decision 5 kept one value in one
+   block. Not taken: `rank_ranges` for the book, which ME2 took for
+   twenty-seven values.
+7. **Totals a chapter grid does not print** (recommended, as MT3 decision
+   10): the Alligator's, Rat, pack of 10's and Mosquito Swarm's Karma
+   derived, R+I+P = 6 each, flagged as not printed. Security Officers'
+   Resources and Popularity left unset, as MX1's codes-only grids print
+   neither. Not taken: the three Karma left unset, which leaves cards the
+   GM tools cannot play.
+8. **Bartholomew Jacobs** (recommended, as MT3 decision 3, every grid a
+   card): a card with his R, I, P and Karma 115 as printed, and F, A, S, E
+   and Health unset, since the book gives him the possessed hero's. Not
+   taken: no card, as MT3 decision 11 for beings statted by reference only,
+   since this one prints three rows of his own. If the reader cannot carry
+   a block with four rows absent, row 10c says so.
+9. **Spider-Man's Popularity 30/6** kept as printed, the card showing both
+   values (recommended).
+10. **Characters only.** The Hypnoporter Machine, the faction and chapter
+    gear, the floor plans and the map sheet are not imported (Nate,
+    2026-10-21).
 
 ## How to reproduce
 
