@@ -1,9 +1,5 @@
 # Survey: MX3 Reap the Whirlwind (TSR6877)
 
-> **DRAFT** (rows 4a and 4c, 2026-10-31 and 2026-11-01). Everything down to
-> *Quote marks* is measured; *Which reader fits* is the trial parse's (row
-> 4c). No data has been built from this book.
-
 Official Game Adventure for Marvel Super Heroes, Caroline and Warren Spector,
 1987; the third chapter of the Future in Flames series (the back cover).
 Registry entry: `scripts/msh/books.json` -> `mx3`. Measured 2026-10-31.
