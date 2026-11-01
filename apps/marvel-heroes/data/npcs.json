@@ -108,6 +108,11 @@
    "book": "MX2 The X-Potential",
    "code": "TSR6875",
    "pages": "Adventure 10-17"
+  },
+  {
+   "book": "MX3 Reap the Whirlwind",
+   "code": "TSR6877",
+   "pages": "Adventure 6-27, 31-32"
   }
  ],
  "books": [
@@ -466,6 +471,30 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mx3",
+   "short": "MX3",
+   "title": "MX3 Reap the Whirlwind",
+   "pages": [
+    6,
+    27
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       6,
+       27
+      ],
+      [
+       31,
+       32
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -542,7 +571,8 @@
   "Western Heroes",
   "Revenge of Kang Heroes",
   "MT3 The Revenge of Kang",
-  "MX2 The X-Potential"
+  "MX2 The X-Potential",
+  "MX3 Reap the Whirlwind"
  ],
  "characters": [
   {
@@ -79647,6 +79677,1077 @@
    ],
    "appearances": [],
    "book": "mx2"
+  },
+  {
+   "id": "gilda-ginsel-mx3",
+   "name": "Gilda Ginsel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "gilda-ginsel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         5,
+         "Ty"
+        ],
+        [
+         "E",
+         7,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         15,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "derived": [
+        "P"
+       ],
+       "health": "50",
+       "karma": "35",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "P",
+        "printed": {
+         "number": 30,
+         "code": "M"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "health",
+          "printed": "50",
+          "corrected": "22"
+         },
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "35",
+          "corrected": "55"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Masking"
+      },
+      {
+       "name": "Mutant Mocking"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "bill-gregson-mx3",
+   "name": "Bill Gregson",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "bill-gregson-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         7,
+         "Ty"
+        ],
+        [
+         "A",
+         5,
+         "Ty"
+        ],
+        [
+         "S",
+         8,
+         "Gd"
+        ],
+        [
+         "E",
+         7,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         5,
+         "Ty"
+        ]
+       ],
+       "health": "40",
+       "karma": "20",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "40",
+        "corrected": "27",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "20",
+          "corrected": "25"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Offensive Body Odor"
+      },
+      {
+       "name": "Animal Communication and Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "marco-pene-mx3",
+   "name": "Marco Pene",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "marco-pene-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         16,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         15,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         16,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "55",
+       "karma": "10",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "55",
+        "corrected": "61",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "46"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Vision"
+      },
+      {
+       "name": "Mutant Flash"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "sebastian-shaw-mx3",
+   "name": "Sebastian Shaw",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "sebastian-shaw-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      23,
+      24
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "100",
+       "karma": "70",
+       "resources": "IN(40)",
+       "popularity": "15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Kinetic Absorption"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "maintenance-robots-mx3",
+   "name": "Maintenance Robots",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "maintenance-robots-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         15,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "35",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "35",
+        "corrected": "130",
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": "0"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Extra Arms"
+      },
+      {
+       "name": "Corrosive Touch"
+      },
+      {
+       "name": "Energy Touch"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "mark-iv-sentinel-mx3",
+   "name": "Mark IV Sentinel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "mark-iv-sentinel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "165",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-Web"
+      },
+      {
+       "name": "Search Lights"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "mark-v-sentinel-mx3",
+   "name": "Mark V Sentinel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "mark-v-sentinel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "190",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Cold Beams"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "alpha-sentinel-mx3",
+   "name": "Alpha Sentinel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "alpha-sentinel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "mark-vi-sentinel-mx3",
+   "name": "Mark VI Sentinel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "mark-vi-sentinel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "250",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "omega-sentinel-mx3",
+   "name": "Omega Sentinel",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "omega-sentinel-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Encephalo-scan"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Learning Program"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
+  },
+  {
+   "id": "swat-am-mx3",
+   "name": "SWAT:AM",
+   "team": "MX3 Reap the Whirlwind",
+   "versions": [
+    {
+     "id": "swat-am-mx3",
+     "label": null,
+     "team": "MX3 Reap the Whirlwind",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "46",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx3"
   }
  ]
 }

@@ -2015,6 +2015,138 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MX3 is read by scripts/msh/gridbooks.py (mx3-overrides.json), with the
+  // survey's decisions applied as it recommends (mx3.md; Nate 2026-10-31).
+  // Five cards are chapter opponents (printed 6-27) and six are in the roster
+  // section (31-32), all filed under the book's title. The registry fields
+  // whose absence roster.py would not stop on (card_names, rank_ranges,
+  // code_rows_resources_below, label_line_powers, opponent_indented_paragraphs,
+  // extra_titles) are each pinned here by what they change.
+  if (data.npcs.characters.some((c) => c.book === 'mx3')) {
+    const mx3 = data.npcs.characters.filter((c) => c.book === 'mx3');
+    const blocksW = mx3.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ id: c.id, b }))));
+    const blkW = (id) => mx3.find((c) => c.id === id)?.versions[0].blocks[0];
+    const cardW = (id) => mx3.find((c) => c.id === id)?.versions[0];
+    const playedW = (id) => { const s = bookNpc({ character: id }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MX3: 11 characters, each id ending -mx3 with one version and one block, all filed under the book\'s title, and no name starting The',
+      mx3.length === 11 && mx3.every((c) => c.id.endsWith('-mx3') && c.versions.length === 1 && c.versions[0].blocks.length === 1)
+      && mx3.every((c) => c.team === 'MX3 Reap the Whirlwind') && !mx3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mx3.length} ${[...new Set(mx3.map((c) => c.team))]}`);
+    check('MX3: the cards sort by the Adventure page each starts on, 6 to 32, and one page\'s cards by name (npcs.py), so the alpha comes before the Mark VI on printed 32',
+      mx3.map((c) => c.id).join() === ['gilda-ginsel', 'bill-gregson', 'marco-pene', 'sebastian-shaw', 'maintenance-robots', 'mark-iv-sentinel',
+        'mark-v-sentinel', 'alpha-sentinel', 'mark-vi-sentinel', 'omega-sentinel', 'swat-am'].map((id) => `${id}-mx3`).join(),
+      mx3.map((c) => c.id).join());
+    check('MX3: ten full blocks and one one-line grid, SWAT:AM\'s, ranks only; no block has a label',
+      blocksW.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === 'swat-am-mx3'
+      && blkW('swat-am-mx3')?.rank_only === true && blocksW.filter(({ b }) => !b.kind).length === 10
+      && !blocksW.some(({ b }) => b.label),
+      blocksW.map(({ id, b }) => `${id}:${b.kind}:${b.label}`).join());
+    const fixesW = ['gilda-ginsel', 'bill-gregson', 'marco-pene', 'maintenance-robots'].map((s) => {
+      const id = `${s}-mx3`;
+      const o = blkW(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` also ${a.verdict} ${a.field} ${v(a.printed)}${a.corrected ? `>${v(a.corrected)}` : ''}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedW(id)}`;
+    });
+    check('MX3: the four failing chapter grids keep the printed values and play the sums of their printed numbers (Gilda Ginsel\'s P M(30) as RM, Health 50 as 22, Karma 35 as 55; Bill Gregson 40/20 as 27/25; Marco Pene 55/10 as 61/46; the Maintenance Robots\' Health 35 as 130, their Karma 0 as printed)',
+      fixesW.join(' | ') === [
+        'gilda-ginsel-mx3 misprint P 30 M>30 Rm also misprint health 50>22 also misprint karma 35>55 plays 22/55',
+        'bill-gregson-mx3 misprint health 40>27 also misprint karma 20>25 plays 27/25',
+        'marco-pene-mx3 misprint health 55>61 also misprint karma 10>46 plays 61/46',
+        'maintenance-robots-mx3 misprint health 35>130 also as_printed karma 0 plays 130/0',
+      ].join(' | ')
+      && bookNpc({ character: 'gilda-ginsel-mx3' }).snapshot?.abilities.psyche.rank === 'remarkable',
+      fixesW.join(' | '));
+    check('MX3: Gilda Ginsel\'s P is the one row in the book whose code is unread, so its code is derived from its 30 (unread_codes) and flagged so',
+      JSON.stringify(blkW('gilda-ginsel-mx3')?.derived) === '["P"]' && blkW('gilda-ginsel-mx3')?.abilities[6].slice(1).join(' ') === '30 Rm'
+      && blocksW.filter(({ b }) => b.derived).length === 1,
+      `${JSON.stringify(blkW('gilda-ginsel-mx3')?.derived)} ${blocksW.filter(({ b }) => b.derived).map(({ id }) => id)}`);
+    const robotsW = ['mark-iv-sentinel', 'mark-v-sentinel', 'mark-vi-sentinel', 'alpha-sentinel', 'omega-sentinel'].map((id) => `${id}-mx3`);
+    check('MX3: the five sentinels print Karma 0 against R, I and P printed, kept as printed (as_printed karma) and played as 0',
+      robotsW.every((id) => blkW(id)?.override?.verdict === 'as_printed' && blkW(id).override.field === 'karma' && blkW(id).karma === '0')
+      && robotsW.map(playedW).join() === '165/0,190/0,250/0,290/0,290/0',
+      robotsW.map(playedW).join());
+    const ovW = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx3-overrides.json'), 'utf8')).overrides;
+    const textW = ovW.filter((o) => o.verdict === 'text');
+    check('MX3: ten overrides: four misprints, five as printed and one text verdict (the alpha\'s Body Armor), and only the nine overridden blocks carry one',
+      ovW.length === 10 && ovW.filter((o) => o.verdict === 'misprint').length === 4 && ovW.filter((o) => o.verdict === 'as_printed').length === 5
+      && textW.map((o) => o.match.row).join() === 'mx3:alpha-sentinel-mx3:power:4'
+      && blocksW.filter(({ b }) => b.override).map(({ id }) => id).sort().join()
+        === [...robotsW, ...fixesW.map((f) => f.split(' ')[0])].sort().join(),
+      JSON.stringify(ovW.map((o) => [o.verdict, o.match])));
+    check('MX3: Sebastian Shaw and SWAT:AM play their printed Health and Karma (100/70, 46/22); Shaw\'s Resources is the IN(40) set under its label, his Popularity 15, and his I reads 20 Ex (code_rows_resources_below)',
+      ['sebastian-shaw-mx3', 'swat-am-mx3'].map(playedW).join() === '100/70,46/22'
+      && blkW('sebastian-shaw-mx3')?.resources === 'IN(40)' && blkW('sebastian-shaw-mx3')?.popularity === '15'
+      && blkW('sebastian-shaw-mx3')?.abilities[5].slice(1).join(' ') === '20 Ex',
+      `${['sebastian-shaw-mx3', 'swat-am-mx3'].map(playedW)} ${blkW('sebastian-shaw-mx3')?.resources} ${blkW('sebastian-shaw-mx3')?.abilities[5]}`);
+    // rank_ranges: twelve numbers inside their rank's range and off its
+    // standard, kept and played as printed (survey decision 5)
+    const offW = [['gilda-ginsel', 'strength', 'endurance', 'intuition'], ['bill-gregson', 'fighting', 'agility', 'strength', 'endurance', 'psyche'],
+      ['marco-pene', 'fighting', 'endurance', 'intuition'], ['maintenance-robots', 'fighting']]
+      .map(([s, ...ab]) => `${s}:${ab.map((a) => bookNpc({ character: `${s}-mx3` }).snapshot?.abilities[a]?.number).join(' ')}`).join();
+    check('MX3: the twelve numbers inside a rank\'s range and off its standard play as printed (Gilda Ginsel S 5, E 7, I 15; Bill Gregson F 7, A 5, S 8, E 7, P 5; Marco Pene F 16, E 15, I 16; the Maintenance Robots F 15) (rank_ranges)',
+      offW === 'gilda-ginsel:5 7 15,bill-gregson:7 5 8 7 5,marco-pene:16 15 16,maintenance-robots:15', offW);
+    check('MX3: SWAT:AM keeps its printed capitals (card_names) on printed 32, and the Alpha Sentinel is named as printed, not as read (speck_lines)',
+      mx3.find((c) => c.id === 'swat-am-mx3')?.name === 'SWAT:AM' && JSON.stringify(cardW('swat-am-mx3')?.pages) === '[32]'
+      && mx3.find((c) => c.id === 'alpha-sentinel-mx3')?.name === 'Alpha Sentinel',
+      `${mx3.find((c) => c.id === 'swat-am-mx3')?.name} ${JSON.stringify(cardW('swat-am-mx3')?.pages)}`);
+    const powW = mx3.flatMap((c) => c.versions[0].powers);
+    check('MX3: 51 powers across 10 cards, 11 of them linked to the UPB, the Omega\'s nine, the Maintenance Robots\' four opening on Body Armor (label_line_powers), and no card with an identity line',
+      powW.length === 51 && powW.filter((p) => p.upb).length === 11 && mx3.filter((c) => c.versions[0].powers.length).length === 10
+      && cardW('omega-sentinel-mx3')?.powers.length === 9
+      && cardW('maintenance-robots-mx3')?.powers.map((p) => p.name).join() === 'Body Armor,Extra Arms,Corrosive Touch,Energy Touch'
+      && !mx3.some((c) => c.versions[0].identity.length),
+      `${powW.length} ${powW.filter((p) => p.upb).length} ${mx3.filter((c) => c.versions[0].powers.length).length} ${cardW('maintenance-robots-mx3')?.powers.map((p) => p.name)}`);
+    const bookW = data.npcs.books.find((b) => b.slug === 'mx3');
+    check('MX3: the book reads Adventure 6-27 and 31-32, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookW?.ranges) === '[{"part":"Adventure","pages":[[6,27],[31,32]]}]'
+      && tagline(bookNpc({ character: 'gilda-ginsel-mx3' }).snapshot).startsWith('MX3 Reap the Whirlwind, Adventure p.6;')
+      && tagline(bookNpc({ character: 'swat-am-mx3' }).snapshot).startsWith('MX3 Reap the Whirlwind, Adventure p.32;')
+      && mx3.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(bookW)} ${tagline(bookNpc({ character: 'gilda-ginsel-mx3' }).snapshot)}`);
+    // The text verdict, opponent_indented_paragraphs and extra_titles move
+    // only the book's text, which is msh_book_text's: read the generated .sql
+    // in the cache, by keys and by the override's own fragments, never a
+    // sentence of the book in this file.
+    const sqlW = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mx3', 'book-text.sql');
+    if (!existsSync(sqlW)) {
+      check(`MX3: skipped the text checks: no ${rel(sqlW) || sqlW}`, true);
+    } else {
+      const rowsW = [...readFileSync(sqlW, 'utf8').matchAll(/VALUES \('([^']+)', 'mx3', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const markedW = rowsW.filter((r) => /["']/.test(r.body));
+      const nW = (re) => rowsW.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MX3 text: 67 rows over 11 entries, no row with an odd count of double quotes, and the marks row 6b read on the page: 13 rows hold one, four double-quoted pairs and 27 apostrophes',
+        rowsW.length === 67 && new Set(rowsW.map((r) => r.key.split(':')[1])).size === 11
+        && !rowsW.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedW.length === 13 && nW(/"/g) === 8 && nW(/'/g) === 27,
+        `${rowsW.length} ${new Set(rowsW.map((r) => r.key.split(':')[1])).size} ${markedW.length} ${nW(/"/g)} ${nW(/'/g)}`);
+      const barsW = rowsW.filter((r) => /[|\\]/.test(r.body)).map((r) => r.key.replace(/^mx3:/, ''));
+      check('MX3 text: no row carries a vertical bar or a backslash (the alpha\'s Body Armor read one, set right by its text verdict)', barsW.length === 0, barsW.join());
+      const countW = (row, s) => (rowsW.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MX3 text: the one text verdict is applied, its printed fragment once in its row and the misread gone',
+        textW.length === 1 && textW.every((o) => countW(o.match.row, o.printed) === 1 && countW(o.match.row, o.read) === 0),
+        textW.map((o) => `${o.match.row} ${countW(o.match.row, o.printed)}/${countW(o.match.row, o.read)}`).join());
+      // Where an entry's text ends, each read on the page (survey mx3.md): an
+      // extra_titles subhead ends Gilda Ginsel's, Marco Pene's, Sebastian
+      // Shaw's and the Maintenance Robots' text, and Marco's and Shaw's own
+      // indented paragraphs do not (opponent_indented_paragraphs).
+      const bodyW = (row) => rowsW.find((r) => r.key === row)?.body || '';
+      const partsW = (s) => rowsW.filter((r) => r.key.startsWith(`mx3:${s}-mx3:`)).map((r) => r.key.split(':').slice(2).join(':')).sort().join();
+      check('MX3 text: the Maintenance Robots\' Energy Touch ends on "level." before The Assembly-line, no row runs into a chapter subhead, and Marco Pene and Sebastian Shaw keep their Talents, Contacts and Background',
+        /level\.$/.test(bodyW('mx3:maintenance-robots-mx3:power:4')) && bodyW('mx3:maintenance-robots-mx3:power:4').length === 61
+        && !rowsW.some((r) => /Assembly-line|Away We Go|Under Attack|Summer Camp/.test(r.body))
+        && /prey\.$/.test(bodyW('mx3:marco-pene-mx3:background')) && /factory\.$/.test(bodyW('mx3:sebastian-shaw-mx3:background'))
+        && partsW('marco-pene') === 'background,contacts,power:1,power:2,talents'
+        && partsW('sebastian-shaw') === 'background,contacts,power:1,talents',
+        `${bodyW('mx3:maintenance-robots-mx3:power:4').length} ${partsW('marco-pene')} | ${partsW('sebastian-shaw')}`);
+      check('MX3 text: Gilda Ginsel\'s Background keeps its run-in as printed, which points back to the chapter\'s prose (decision 6), and only SWAT:AM has a prose row',
+        bodyW('mx3:gilda-ginsel-mx3:background') === 'See above.'
+        && rowsW.filter((r) => r.key.endsWith(':prose')).map((r) => r.key).join() === 'mx3:swat-am-mx3:prose',
+        `${bodyW('mx3:gilda-ginsel-mx3:background')} ${rowsW.filter((r) => r.key.endsWith(':prose')).map((r) => r.key)}`);
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).

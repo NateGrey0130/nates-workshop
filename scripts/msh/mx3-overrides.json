@@ -5,6 +5,7 @@
     "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text        match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "No reading of the four failing chapter grids (Gilda Ginsel, Bill Gregson, Marco Pene, the Maintenance Robots) adds up on the printed numbers, the codes' standard numbers or their lowest, so each failing total is corrected to the sum of the printed numbers and the numbers are kept (survey decision 4). Their twelve numbers inside a range but off its standard pass on the registry's rank_ranges (decision 5)."
@@ -41,6 +42,9 @@
      "note": "Karma = 0 printed for a robot (printed 32), as MX1's and MX2's same block. Survey decision 4."},
     {"match": {"page": 32, "header": "Omega Sentinel"}, "verdict": "as_printed", "field": "karma",
      "printed": "0", "checked": "2026-10-31",
-     "note": "Karma = 0 printed for a robot (printed 32), as MX1's and MX2's same block. Survey decision 4."}
+     "note": "Karma = 0 printed for a robot (printed 32), as MX1's and MX2's same block. Survey decision 4."},
+    {"match": {"row": "mx3:alpha-sentinel-mx3:power:4"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "\\ncredible, made", "printed": "Incredible, made",
+     "note": "the Alpha Sentinel's Body Armor, printed 32, column 1: the page prints Incredible; the OCR read the capital I as a backslash (200 dpi crop of PDF 34)."}
   ]
 }
