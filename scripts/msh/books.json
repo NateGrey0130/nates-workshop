@@ -3463,13 +3463,18 @@
       "tiers": ["Typical Batboy", "Typical Maggia Thug", "Typical Crimson Smile", "Typical Flashing Blade", "Typical Buzz Cut", "Sentinels, Mark IV", "SWF Operatives", "Security Officers", "Alligator", "Rat, pack of 10", "Mosquito Swarm"],
       "tiers_note": "The statted generic types, as printed: the five faction grids (printed 7-8), the roster's Sentinels, Mark IV (printed 60) and the chapters' five types (printed 32, 36 and 42). The book prints no index and its Contents names no character, so this and the survey's block table are the checklist. Survey mla1.md, Stat blocks.",
       "layout": "grid-booklets",
+      "layout_note": "ME1's reader, scripts/msh/gridbooks.py (survey mla1.md, Which reader fits; set by plan rows 11a1-11a3 2026-11-01), every mend this book needs a field of this entry so no earlier book's parse moves; code_rows_end_at_popularity and grids_end_at_p, set by the trial, are left out, since each off alone left roster.py's exit, counts and roster.json identical (grids_end_at_p is superseded by code_grids_by_pitch). roster.py mla1 2026-11-01: 55 entries (47 with a block), 48 blocks, 42 passing, 6 known from the overrides (3 misprint, 3 as_printed), 0 failing; powers 103 across 32 entries; 40 cards, 7 opponents and 11 tiers, all found.",
       "code_rows": true,
+      "code_rows_note": "MX1's: rows of the code then the number in brackets (F IN (40)), read by scripts/msh/codegrids.py, capitals and title case alike (survey mla1.md, Which reader fits item 1). Off, 40 blocks fail, two opponents have no entry and roster.py exits 1 (measured 2026-11-01).",
       "card_headers": true,
+      "card_headers_note": "MX1's: an entry is named by its header in cards, not by its identity line. Off, grid_cards finds no Black Talon entry on printed 53 and the build stops (measured 2026-11-01).",
       "title_case_labels": true,
+      "title_case_labels_note": "MX1's: the title-case run-ins Talents:, Background:, Weaknesses:, Weaponry: and Abilities: are raised to capitals so each opens its section (survey mla1.md, Which reader fits item 1). Off, label_powers finds no Weaponry: on printed 63 and the build stops (measured 2026-11-01).",
       "teams": [
         ["Adventure Book", 4, "After Midnight Heroes"],
         ["Adventure Book", 7, "MLA1 After Midnight"]
       ],
+      "teams_note": "[part, printed page, team]: After Midnight Heroes for the six Player Characters of printed 4-6, MLA1 After Midnight from printed 7 on (survey mla1.md decision 1, recommended, applied unanswered; Nate 2026-10-31: take the survey's recommendations). Off, roster.py exits 0 with every entry on no team (measured 2026-11-01).",
       "cards": [
         ["Adventure Book", 4, "Black Widow"],
         ["Adventure Book", 4, "Daredevil"],
@@ -3510,15 +3515,21 @@
         ["Adventure Book", 62, "Werewolf"],
         ["Adventure Book", 63, "Whirlwind"]
       ],
+      "cards_note": "The 38 cards, this book's checklist (gridbooks.coverage), named by header: the six Player Characters and five faction grids of printed 4-8 and the 27 villains of printed 51-63. With grid_cards' two the report counts 40.",
       "code_row_specks": true,
-      "code_rows_end_at_popularity": true,
+      "code_row_specks_note": "MX3's: a speck in a code-first row's code is read past (Johnny Bifrost's P, read .TY, printed 52; survey mla1.md, Which reader fits item 2). Off, his grid is unread, its Health and Karma are not numbers, 1 block fails and roster.py exits 1 (measured 2026-11-01).",
       "trailing_marks": true,
-      "grids_end_at_p": true,
+      "trailing_marks_note": "MX3's: a mark after a total, set off by a space, is stripped (Mister Fear's Karma, read 40 -, printed 59). Off, his Karma is not a number and roster.py exits 1 (measured 2026-11-01).",
       "body_top": 0.09,
+      "body_top_note": "The share of the page height above which gridbooks.stream_of drops words, 0.10 for every other book: a column's first line sets at 9.6-10% here (Gypsy Moth's header, printed 57; Mentallo's, 58), and no word of a booklet page lies between 7% and 9.6% (survey mla1.md, Which reader fits item 1).",
       "speck_lines": [["Adventure Book", 5, "lron Fist", "Iron Fist"]],
+      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of: Iron Fist's header reads with a lower-case L (printed 5; survey mla1.md, Which reader fits item 3). Off, his entry is named by his identity line, the checklist finds no Iron Fist and roster.py exits 1 (measured 2026-11-01).",
       "derived_karma": true,
+      "derived_karma_note": "A vertical grid that prints no Karma (Rat, pack of 10 and Mosquito Swarm, chapter 32, printed 42) derives it as R+I+P and lists it in the block's derived, as MT3's derived_totals does a one-line grid's (survey mla1.md decision 7; Which reader fits item 5).",
       "override_values": true,
+      "override_values_note": "MX3's guard: each override's printed value must be the block as read, or the build stops. Off alone nothing moves while every override agrees; with the Typical Buzz Cut's printed Karma changed to 13 for a trial, roster.py exits 1 with it on and 0 with it off (measured 2026-11-01), so it stays.",
       "opponent_section_labels": {"ABILITIES": "notes", "WEAPONRY": "notes"},
+      "opponent_section_labels_note": "{label: section}, MT2's: Abilities: and Weaponry: open a chapter opponent's notes instead of ending its entry (Jack the Bartender, printed 18; SWF Operatives, 32; Security Officers, 36; survey mla1.md, Which reader fits decision item 5). Off, roster.py exits 0 and those three entries lose those sections (measured 2026-11-01).",
       "extra_titles": [
         ["Adventure Book", 7, "The Faces of Fear"],
         ["Adventure Book", 7, "The Maggia"],
@@ -3527,17 +3538,26 @@
         ["Adventure Book", 8, "The Buzz Cuts Gang"],
         ["Adventure Book", 8, "Contacts and Other NPCs"]
       ],
+      "extra_titles_note": "[part, printed page, title]: the six faction subheads of printed 7-8, each a heading entry of its own so a faction's introduction is not the notes of the grid above it (survey mla1.md, Which reader fits decision item 4). Off, roster.py exits 0 with 49 entries for 55 and the Typical Batboy's notes at 209 words for 72 (measured 2026-11-01).",
       "subhead_exact_case": true,
+      "subhead_exact_case_note": "MX2's: an extra title is found on the line printed in its own case, since the factions' list on printed 7 names each faction again in lower case and roster.norm folds case (survey mla1.md, Which reader fits item 6).",
       "dash_shift_codes": true,
+      "dash_shift_codes_note": "Shift 0 printed Sh-0 as a code-first row's code (the Black Talon's zombie and skeleton, printed 53), read by codegrids.code_row, whose CODE reads Shift 0 (survey mla1.md, Which reader fits item 2).",
       "dash_marks": true,
+      "dash_marks_note": "A dash hard against a total (the Fixer's Health, read 32-, printed 56) is stripped by roster.py, where trailing_marks wants a space before the mark (survey mla1.md, Which reader fits item 3).",
       "code_grids_by_pitch": true,
+      "code_grids_by_pitch_note": "A code-first grid with no Popularity (Security Officers, printed 36; the Alligator, 42) or no Karma either (Rat, pack of 10 and Mosquito Swarm, 42), its row letters lost from the stream, is read from a crop seven row pitches down by gridbooks.grid (survey mla1.md, Which reader fits item 4). It replaces grids_end_at_p for this book, which finds no P row in these grids and is left out (layout_note).",
       "karma_grids": [["Adventure Book", 40, "Bartholomew Jacobs"]],
+      "karma_grids_note": "[part, printed page, name]: Bartholomew Jacobs (printed 40) prints three rows, R, I and P, Karma beside R and no Health or header, so gridbooks.karma_grids anchors the grid at its Karma line, names it here and leaves F, A, S and E null (survey mla1.md decision 8; Which reader fits item 7).",
       "grid_cards": [
         ["Adventure Book", 53, "Black Talon", 2, "Black Talon's Zombie"],
         ["Adventure Book", 53, "Black Talon", 3, "Black Talon's Skeleton"]
       ],
+      "grid_cards_note": "[part, printed page, host, n, name]: the Black Talon's second and third grids (printed 53) are entries of their own with his team, his zombie and his skeleton, while the text stays his; the host must be one entry holding the grid or the build stops (survey mla1.md decision 4; Which reader fits item 8).",
       "inner_grids": true,
-      "label_powers": [["Adventure Book", 63, "Weaponry"]]
+      "inner_grids_note": "The text after a second grid set inside a card's section stays in that section rather than falling to the entry's prose (the Black Talon's Necromancy, printed 53; the Werewolf's Claws after his human statistics, 62), by roster.read_entries (survey mla1.md, Which reader fits item 9).",
+      "label_powers": [["Adventure Book", 63, "Weaponry"]],
+      "label_powers_note": "[part, printed page, label]: the Whirlwind's Weaponry: (printed 63) is a power under KNOWN POWERS:, left in title case by gridbooks.stream_of rather than raised by title_case_labels to open a section; it must be found once or the build stops (survey mla1.md, Which reader fits item 10)."
     }
   }
 }
