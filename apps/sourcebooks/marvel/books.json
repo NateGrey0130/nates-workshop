@@ -357,6 +357,20 @@
     ]
    ],
    "total": 43
+  },
+  {
+   "slug": "mx2",
+   "title": "MX2 The X-Potential",
+   "code": "TSR6875",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     24
+    ]
+   ],
+   "total": 24
   }
  ]
 }

@@ -103,6 +103,11 @@
    "book": "MT3 The Revenge of Kang",
    "code": "TSR6891",
    "pages": "Adventure 4-16, 21-63"
+  },
+  {
+   "book": "MX2 The X-Potential",
+   "code": "TSR6875",
+   "pages": "Adventure 10-17"
   }
  ],
  "books": [
@@ -441,6 +446,26 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mx2",
+   "short": "MX2",
+   "title": "MX2 The X-Potential",
+   "pages": [
+    10,
+    17
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       10,
+       17
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -516,7 +541,8 @@
   "MT2 The Weird, Weird West",
   "Western Heroes",
   "Revenge of Kang Heroes",
-  "MT3 The Revenge of Kang"
+  "MT3 The Revenge of Kang",
+  "MX2 The X-Potential"
  ],
  "characters": [
   {
@@ -77448,6 +77474,2179 @@
    ],
    "appearances": [],
    "book": "mt3"
+  },
+  {
+   "id": "senator-joseph-mcgrafton-mx2",
+   "name": "Senator Joseph McGrafton",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "senator-joseph-mcgrafton-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         5,
+         "Ty"
+        ],
+        [
+         "A",
+         8,
+         "Gd"
+        ],
+        [
+         "S",
+         8,
+         "Gd"
+        ],
+        [
+         "E",
+         36,
+         "In"
+        ],
+        [
+         "R",
+         46,
+         "Am"
+        ],
+        [
+         "I",
+         36,
+         "In"
+        ],
+        [
+         "P",
+         46,
+         "Am"
+        ]
+       ],
+       "health": "57",
+       "karma": "128",
+       "resources": "MN (75)",
+       "popularity": "85"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "Nullifying Power"
+      },
+      {
+       "name": "Mask Ring"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "alpha-sentinel-mx2",
+   "name": "Alpha Sentinel",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "alpha-sentinel-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "mark-iv-sentinel-mx2",
+   "name": "Mark IV Sentinel",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "mark-iv-sentinel-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "165",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-Web"
+      },
+      {
+       "name": "Search Lights"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "mark-v-sentinel-mx2",
+   "name": "Mark V Sentinel",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "mark-v-sentinel-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "190",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Cold Beams"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "mark-vi-sentinel-mx2",
+   "name": "Mark VI Sentinel",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "mark-vi-sentinel-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "250",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Customization"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "omega-sentinel-mx2",
+   "name": "Omega Sentinel",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "omega-sentinel-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Encephalo-scan"
+      },
+      {
+       "name": "Electrical Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Learning Program"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "nimrod-mx2",
+   "name": "Nimrod",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "nimrod-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "300",
+       "karma": "70",
+       "resources": "IN (40)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "R",
+        "printed": {
+         "number": 30,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Matrix Battle Computer"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Auto-Repair"
+      },
+      {
+       "name": "Disintegrator Beam"
+      },
+      {
+       "name": "Pressor-Tractor Beam"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Nerveshock"
+      },
+      {
+       "name": "Inhibitor Field"
+      },
+      {
+       "name": "Scanners"
+      },
+      {
+       "name": "Shockweb"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "swat-am-mx2",
+   "name": "SWAT:AM",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "swat-am-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "46",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "typical-policeman-mx2",
+   "name": "Typical Policeman",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "typical-policeman-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "36",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "knights-of-genetic-purity-mx2",
+   "name": "Knights of Genetic Purity",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "knights-of-genetic-purity-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "(Whiteshirts, KGP)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "32",
+       "karma": "14",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "32",
+        "corrected": "40",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "14",
+          "corrected": "12"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "secret-service-anti-mutant-teams-mx2",
+   "name": "Secret Service Anti-Mutant Teams",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "secret-service-anti-mutant-teams-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "50",
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "soldiers-and-camp-guards-mx2",
+   "name": "Soldiers and Camp Guards",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "soldiers-and-camp-guards-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "46",
+       "karma": "16",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "vincent-scarlesi-mx2",
+   "name": "Vincent Scarlesi",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "vincent-scarlesi-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      14,
+      15
+     ],
+     "identity": [
+      "Local Syndicate Boss"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "30",
+       "resources": "IN",
+       "popularity": "20",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "24",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "30",
+          "corrected": "40"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "bob-mx2",
+   "name": "Bob",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "bob-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "50",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "18"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "chuck-mx2",
+   "name": "Chuck",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "chuck-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "18",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "22"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "general-william-b-braddock-mx2",
+   "name": "General William B. Braddock",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "general-william-b-braddock-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15,
+      16
+     ],
+     "identity": [
+      "U.S. Army",
+      "Chairman, Joint Chiefs of Staff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "29",
+       "karma": "37",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "29",
+        "corrected": "36",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "37",
+          "corrected": "46"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "jenny-mx2",
+   "name": "Jenny",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "jenny-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "40",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "32"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "lorelei-mx2",
+   "name": "Lorelei",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "lorelei-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Laura Lee Masters"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         16,
+         "Ex"
+        ],
+        [
+         "A",
+         26,
+         "Rm"
+        ],
+        [
+         "S",
+         16,
+         "Ex"
+        ],
+        [
+         "E",
+         36,
+         "In"
+        ],
+        [
+         "R",
+         8,
+         "Gd"
+        ],
+        [
+         "I",
+         36,
+         "In"
+        ],
+        [
+         "P",
+         26,
+         "Rm"
+        ]
+       ],
+       "health": "94",
+       "karma": "70",
+       "resources": "TY",
+       "popularity": "-30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Pheromones",
+       "upb": "P8"
+      },
+      {
+       "name": "Blending",
+       "upb": "S6"
+      },
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "martha-mx2",
+   "name": "Martha",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "martha-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "28",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "36"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "phil-mx2",
+   "name": "Phil",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "phil-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "20",
+        "corrected": "34",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "10",
+          "corrected": "44"
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "dr-paolo-hernandez-mx2",
+   "name": "Dr. Paolo Hernandez",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "dr-paolo-hernandez-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Director of Sentinel Research",
+      "McGrafton Industries, Inc."
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "56",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "56",
+        "corrected": "66"
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "dr-yagami-fuchido-mx2",
+   "name": "Dr. Yagami Fuchido",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "dr-yagami-fuchido-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Director of Genetic Research",
+      "McGrafton Industries, Inc."
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "20",
+       "karma": "46",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "jay-atkinson-mx2",
+   "name": "Jay Atkinson",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "jay-atkinson-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      16,
+      17
+     ],
+     "identity": [
+      "Staff Counsel",
+      "Senate Select Committee on Mutant-Communist Subversion"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "22",
+       "karma": "32",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "32",
+        "corrected": "26"
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
+  },
+  {
+   "id": "william-shiver-mx2",
+   "name": "William Shiver",
+   "team": "MX2 The X-Potential",
+   "versions": [
+    {
+     "id": "william-shiver-mx2",
+     "label": null,
+     "team": "MX2 The X-Potential",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "U.S. Correspondent for The Times, London, England"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "28",
+       "karma": "50",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx2"
   }
  ]
 }
