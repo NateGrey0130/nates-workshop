@@ -83328,7 +83328,14 @@
        "health": null,
        "karma": "115",
        "resources": null,
-       "popularity": null
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "FASE",
+        "printed": "R, I, P and Karma only",
+        "corrected": null
+       },
+       "kind": "partial"
       }
      ],
      "powers": [],
