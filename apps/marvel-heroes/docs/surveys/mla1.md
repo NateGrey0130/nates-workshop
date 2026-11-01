@@ -1,8 +1,9 @@
 # Survey: MLA1 After Midnight (TSR6892)
 
 > **DRAFT.** Written through every stat block of the book, *Names the
-> Codex already has*, *Quote marks* and *Decisions* (plan rows 10a and
-> 10b). *Which reader fits* is not finished (plan row 10c).
+> Codex already has*, *Quote marks*, *Which reader fits* and *Decisions*
+> (plan rows 10a-10c). The Marvel smoke suite has not run on it yet (plan
+> row 10d).
 
 Marvel Super Heroes Official Game Adventure, Anthony Herring, 1990, the
 first module of the Gang Wars trilogy (the MLA series). Registry entry:
@@ -401,7 +402,138 @@ on an odd double.
 
 ## Which reader fits
 
-Not finished (plan row 10c).
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with the MX1 family's
+fields and ten things taught to it.** Measured, not argued: a scratch copy
+of `scripts/msh/` and `apps/marvel-heroes/data` at `e8c5195b` (`main`'s
+scripts at `1c871815` plus this entry), the entry given
+`"layout": "grid-booklets"`, run on a copy of the cache under its own
+`WORKSHOP_MSH_CACHE` (no page re-OCR'd; only grid crops were added, to the
+copy). `code-grids` (MA4's) was not tried, since this one fits.
+
+- **Stock, `layout` alone:** it runs to the end and exits 1. 46 entries,
+  43 blocks, **none passing**: every grid's Health and Karma lines carry the
+  next rows' text (number-then-code rows read nothing), 32 entries are named
+  by their identity line, and four chapter grids and Bartholomew Jacobs have
+  no block.
+- **Stock, with the MX1 family** (`code_rows`, `card_headers` with the 38
+  headers as `cards`, `title_case_labels`, `teams`): exit 1. 46 entries, 43
+  blocks, 36 passing, 7 failing.
+- **With the registry workarounds and reader changes below:** exit 1, on one
+  line: `CHECKLIST NAME WITH NO ENTRY: Bartholomew Jacobs` (reader item 7,
+  not applied).
+
+| measure | trial, last run |
+|---|---|
+| entries | 52: 44 with a block, 8 without (The Player Characters, Non-Player Character Factions and its six subheads) |
+| stat blocks | 47 of the book's 48, every value as *Stat blocks* lists it; Bartholomew Jacobs's is the one missing |
+| blocks passing every check | 41, and 6 known from trial overrides (3 `misprint`, 3 `as_printed`): the survey's six, each matching one block; failing 0 |
+| powers | 96 across 32 entries (every card but Pride, Mr. Maximilian, who prints none) |
+| checklist | 38 cards, 11 tiers and 7 opponents, all found but Bartholomew Jacobs |
+| exit code | 1 |
+
+The overrides are the survey's (decisions 5 and 6) written for the trial
+only, not re-read on the images; the data row writes the real file. The
+zombie's is matched by its codes, since the Black Talon's three blocks
+share his header.
+
+**Registry-only workarounds** (no reader change; each worked in the trial):
+
+1. **The MX1 family.** `code_rows` reads `F IN (40)`: MX1's
+   `ROW_TITLE_CASE` is case-free, so capitals read too. `card_headers` with
+   the 33 cards and 5 faction grids as `cards` names every entry by its
+   header, not its identity line. `title_case_labels` raises `Talents:`,
+   `Background:`, `Weaknesses:`, `Weaponry:` and `Abilities:`. `teams` as
+   decision 1. 0 passing became 36.
+2. **Specks and marks, as MX3 and ME3.** `code_row_specks` reads Johnny
+   Bifrost's P (`.TY`, printed 52), whose grid was unread;
+   `trailing_marks` strips a mark after Mister Fear's Karma (`40 -`, printed
+   59). `code_rows_end_at_popularity` was set with them, as MX3's, and not
+   measured alone.
+3. **`speck_lines`:** Iron Fist's header reads `lron Fist` (printed 5), so
+   his entry was named by his identity line.
+4. **`extra_titles` for the six faction subheads** (The Faces of Fear, The
+   Maggia, The Crimson Smiles Gang on printed 7; The Flashing Blades Gang,
+   The Buzz Cuts Gang, Contacts and Other NPCs on printed 8), so each
+   faction's introduction is a heading entry of its own and not the notes of
+   the grid above it (the Typical Batboy's notes went from 209 words to 72,
+   his Weaponry alone). Needs reader item 6.
+5. **`opponent_section_labels`** `{"ABILITIES": "notes", "WEAPONRY":
+   "notes"}`: an opponent's entry ends at a run-in that is not one of its
+   sections, so Jack the Bartender's and Security Officers' `Abilities:` and
+   `Weaponry:` and SWF Operatives' `Weaponry:` were dropped. Which section
+   `Abilities:` belongs in is the data row's.
+6. **`grids_end_at_p` and `derived_totals`**, the fields reader items 4 and
+   5 sit behind.
+7. **The misprints and printed-on-purpose values**: overrides, as above.
+
+**What the reader must learn: ten things**, the first six applied in the
+trial (`gridbooks.py` 35 lines, `roster.py` 2, `codegrids.py` 1), the last
+four not:
+
+1. **The column's top.** `stream_of` drops every word above 10% of the page
+   height, and this book sets a column's first line at 9.6-10% (y 306-319 of
+   3197). The headers of Gypsy Moth (printed 57) and Mentallo (printed 58)
+   were lost, each entry named by its identity line, and words of a
+   column's first line are cut on 15 booklet pages, the Typical Crimson
+   Smile's `Weaponry:` label among them (printed 8). The trial reads a
+   registry `body_top` of 0.09; no word of any booklet page lies between 7%
+   and 9.6%.
+2. **`Sh-0` as a code-first row's code** (the Black Talon's zombie and
+   skeleton, printed 53). `codegrids.CODE` reads `Shift 0`, not `Sh-0`, so
+   both grids were unread.
+3. **A dash hard against a number** (the Fixer's Health `32-`, printed
+   56). `trailing_marks` wants a space before the mark.
+4. **A code-first grid with no Popularity and its row letters lost**
+   (Security Officers, printed 36; the Alligator, printed 42), **or no
+   Karma either** (Rat, pack of 10 and Mosquito Swarm, printed 42).
+   `roster.grid_at` wants a Popularity line, and `grids_end_at_p` finds the
+   P row by its letter and reads number-then-code rows, so two grids had no
+   entry and two no rows. The trial crops seven row pitches down and reads
+   the rows with `codegrids`' row; a crop at 6.9 pitches cut the Mosquito
+   Swarm's P `(2)`, read as `(9)`.
+5. **Karma derived for a vertical grid** (the chapter 32 three, decision
+   7). `derived_totals` derives only a one-line grid's; the trial gives the
+   same `derived` flag to a block that prints no Karma.
+6. **An extra title in its printed case.** The factions' list on printed 7
+   names each faction again, a dash and the name in lower case, and
+   `roster.norm` folds case, so `extra_titles` finds each twice and the
+   build stops. The trial keeps the line printed in the title's own case,
+   under MX2's `subhead_exact_case`.
+7. **Bartholomew Jacobs** (printed 40): three rows, R, I and P, with
+   `Karma:` beside R, no header and no Health. `roster.ANCHOR` is a Health
+   line, so there is no grid and no entry. Needs a grid read at a Karma
+   line, a name for it (`grid_headers` keys on a Health) and F, A, S and E
+   null, as the `rows` override does for ME1's Oolafat once a block exists
+   (decision 8). Not applied.
+8. **A grid inside a card that is a card of its own** (decision 4). The
+   Black Talon's zombie and skeleton read as his second and third blocks.
+   `one_line_grids`' `host` gives a one-line grid an entry of its own;
+   nothing does that for a vertical grid. Not applied. The Werewolf's human
+   statistics, a second block on his card, need only a `label` override.
+9. **The text after a grid inside a card falls to the entry's prose**: the
+   Black Talon's (337 words, the rest of his Necromancy power) and the
+   Werewolf's (153 words, the run-in Claws among them), not their powers.
+   Not applied.
+10. **The Whirlwind's `Weaponry:`** (printed 63) is a power under
+    `KNOWN POWERS:`, but `title_case_labels` raises it as a section label,
+    because the faction grids print it as one; it reads as 82 words of notes
+    and his powers list Spinning alone. Not applied.
+
+Read and fine as it is: the Player Characters' and the roster's grids read
+from their crops, the second card on a page included; Spider-Man's
+Popularity `30/6`; the Sentinels, Mark IV's `NA` values; Callisto's and
+Tatterdemalion's `FE`; Frankenstein's Monster's `None`; the Werewolf's human
+statistics as a second block; every identity line, Johnny Bifrost's and
+Pride's none. Not a reader matter: a printed minus reads as an em dash
+(`-10` as a dash and 10), which `npcs.py` folds already; a stray `q` after
+the Typical Flashing Blade's Talents and a speck after Blacklash's identity
+line are `text` verdicts for the data row.
+
+The entry still sets no `layout`: that is the parser row's to write, with
+items 1-10 behind the registry and every earlier book's build proved
+byte-identical. The scratch registry patch, the trial overrides, the three
+reader diffs (CRs stripped) and the last run's output are kept in the plan
+store, `trial\mla1\`.
 
 ## Decisions this survey leaves open
 
