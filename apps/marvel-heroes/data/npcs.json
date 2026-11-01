@@ -118,6 +118,11 @@
    "book": "MX4 Flames of Doom",
    "code": "TSR6888",
    "pages": "Adventure 25-31"
+  },
+  {
+   "book": "MLA1 After Midnight",
+   "code": "TSR6892",
+   "pages": "Adventure 4-8, 18-42, 51-63"
   }
  ],
  "books": [
@@ -520,6 +525,34 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mla1",
+   "short": "MLA1",
+   "title": "MLA1 After Midnight",
+   "pages": [
+    4,
+    8
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       4,
+       8
+      ],
+      [
+       18,
+       42
+      ],
+      [
+       51,
+       63
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -598,7 +631,9 @@
   "MT3 The Revenge of Kang",
   "MX2 The X-Potential",
   "MX3 Reap the Whirlwind",
-  "MX4 Flames of Doom"
+  "MX4 Flames of Doom",
+  "After Midnight Heroes",
+  "MLA1 After Midnight"
  ],
  "characters": [
   {
@@ -82121,6 +82156,3941 @@
    ],
    "appearances": [],
    "book": "mx4"
+  },
+  {
+   "id": "black-widow-mla1",
+   "name": "Black Widow",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "black-widow-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Real Name: Natalia Alianova Romanova"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "100",
+       "karma": "70",
+       "resources": "GD (10)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "daredevil-mla1",
+   "name": "Daredevil",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "daredevil-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Real Name: Matthew Michael Murdock"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "110",
+       "karma": "91",
+       "resources": "PR (4)",
+       "popularity": "6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Senses"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Billy Club"
+      },
+      {
+       "name": "Blindness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "iron-fist-mla1",
+   "name": "Iron Fist",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "iron-fist-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Real Name: Daniel Rand"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "100",
+       "karma": "125",
+       "resources": "PR (4)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Chi"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "moon-knight-mla1",
+   "name": "Moon Knight",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "moon-knight-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      5,
+      6
+     ],
+     "identity": [
+      "Real Name: Marc Spector"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "RM (30)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Boost"
+      },
+      {
+       "name": "Ankh"
+      },
+      {
+       "name": "Bola"
+      },
+      {
+       "name": "Lasso-Grapple"
+      },
+      {
+       "name": "Scarab Darts"
+      },
+      {
+       "name": "Throwing Irons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "power-man-mla1",
+   "name": "Power Man",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "power-man-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Real Name: Luke Cage"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "130",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "18"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "spider-man-mla1",
+   "name": "Spider-Man",
+   "team": "After Midnight Heroes",
+   "versions": [
+    {
+     "id": "spider-man-mla1",
+     "label": null,
+     "team": "After Midnight Heroes",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Real Name: Peter Parker"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "160",
+       "karma": "70",
+       "resources": "TY (6)",
+       "popularity": "30/6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Spider-Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      },
+      {
+       "name": "Spider-Tracer"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "typical-batboy-mla1",
+   "name": "Typical Batboy",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "typical-batboy-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "14",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "typical-crimson-smile-mla1",
+   "name": "Typical Crimson Smile",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "typical-crimson-smile-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      7,
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "12",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "typical-maggia-thug-mla1",
+   "name": "Typical Maggia Thug",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "typical-maggia-thug-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "32",
+       "karma": "16",
+       "resources": "GD (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "typical-buzz-cut-mla1",
+   "name": "Typical Buzz Cut",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "typical-buzz-cut-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "28",
+       "karma": "11",
+       "resources": "PR (4)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 11,
+        "corrected": 12
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "typical-flashing-blade-mla1",
+   "name": "Typical Flashing Blade",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "typical-flashing-blade-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         12,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         7,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "31",
+       "karma": "16",
+       "resources": "PR (4)",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "A",
+        "printed": {
+         "number": 12,
+         "code": "Gd"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "E",
+          "printed": {
+           "number": 7,
+           "code": "Ty"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "jack-the-bartender-mla1",
+   "name": "Jack the Bartender",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "jack-the-bartender-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "40",
+       "karma": "14",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "swf-operatives-mla1",
+   "name": "SWF Operatives",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "swf-operatives-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "46",
+       "karma": "22",
+       "resources": "GD (10)",
+       "popularity": "4"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "security-officers-mla1",
+   "name": "Security Officers",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "security-officers-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      36
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "36",
+       "karma": "18",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "bartholomew-jacobs-mla1",
+   "name": "Bartholomew Jacobs",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "bartholomew-jacobs-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         null,
+         null
+        ],
+        [
+         "A",
+         null,
+         null
+        ],
+        [
+         "S",
+         null,
+         null
+        ],
+        [
+         "E",
+         null,
+         null
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": null,
+       "karma": "115",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "alligator-mla1",
+   "name": "Alligator",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "alligator-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      42
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "64",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "mosquito-swarm-mla1",
+   "name": "Mosquito Swarm",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "mosquito-swarm-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      42
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "44",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "rat-pack-of-10-mla1",
+   "name": "Rat, pack of 10",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "rat-pack-of-10-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      42
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "48",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "arclight-mla1",
+   "name": "Arclight",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "arclight-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      51
+     ],
+     "identity": [
+      "Real Name: Phillipa Sontag"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 51,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "120",
+       "karma": "46",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shockwave Attack"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "bifrost-felicia-mla1",
+   "name": "Bifrost, Felicia",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "bifrost-felicia-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      51,
+      52
+     ],
+     "identity": [
+      "Alias: Lady Anguish"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 51,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "32",
+       "karma": "80",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Costume"
+      },
+      {
+       "name": "Psionic Attack"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Resistance to Radiation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "bifrost-johnny-mla1",
+   "name": "Bifrost, Johnny",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "bifrost-johnny-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      52
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 52,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "46",
+       "karma": "18",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mirrored Eyes"
+      },
+      {
+       "name": "Resistance To Radiation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "black-panther-mla1",
+   "name": "Black Panther",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "black-panther-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      52,
+      53
+     ],
+     "identity": [
+      "Real Name: T'Challa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 52,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "140",
+       "karma": "60",
+       "resources": "AM (50)",
+       "popularity": "66"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Tracking",
+       "upb": "DT19"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "black-talon-mla1",
+   "name": "Black Talon",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "black-talon-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      53
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "42",
+       "karma": "56",
+       "resources": "TY (6)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Necromancy"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "black-talon-s-skeleton-mla1",
+   "name": "Black Talon's Skeleton",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "black-talon-s-skeleton-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      53
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "40",
+       "karma": "0",
+       "resources": "NA",
+       "popularity": "-30"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "black-talon-s-zombie-mla1",
+   "name": "Black Talon's Zombie",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "black-talon-s-zombie-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      53
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "80",
+       "karma": "0",
+       "resources": "NA",
+       "popularity": "-30",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": 80
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "blacklash-mla1",
+   "name": "Blacklash",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "blacklash-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      54
+     ],
+     "identity": [
+      "Real Name: Mark Scarlotti"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "80",
+       "karma": "34",
+       "resources": "TY (6)",
+       "popularity": "-8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Whips"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "boomerang-mla1",
+   "name": "Boomerang",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "boomerang-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      54
+     ],
+     "identity": [
+      "Real Name: Fred Myers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "80",
+       "karma": "26",
+       "resources": "GD (10)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Boomerangs"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "brothers-grimm-mla1",
+   "name": "Brothers Grimm",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "brothers-grimm-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      54,
+      55
+     ],
+     "identity": [
+      "Real Names: Percy and Barton Grimes"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "52",
+       "karma": "40",
+       "resources": "EX (20)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Battlesuits"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "callisto-mla1",
+   "name": "Callisto",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "callisto-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      55
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 55,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "FE (2)",
+       "popularity": "6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hypersenses"
+      },
+      {
+       "name": "Knife"
+      },
+      {
+       "name": "Slingshot"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "eel-mla1",
+   "name": "Eel",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "eel-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      55,
+      56
+     ],
+     "identity": [
+      "Real Name: Edward Lavell"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 55,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "76",
+       "karma": "22",
+       "resources": "TY (6)",
+       "popularity": "-2",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 22,
+        "corrected": 32
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Eel Suit"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      },
+      {
+       "name": "Resistance to Electricity"
+      },
+      {
+       "name": "Body Coating",
+       "upb": "S9"
+      },
+      {
+       "name": "Light Emission",
+       "upb": "EE8"
+      },
+      {
+       "name": "Radarsense",
+       "upb": "DT15"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "fixer-mla1",
+   "name": "Fixer",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "fixer-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      56
+     ],
+     "identity": [
+      "Real Name: Norbert Ebersol"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "32",
+       "karma": "70",
+       "resources": "RM (30)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body-Suit"
+      },
+      {
+       "name": "Battle-Vest"
+      },
+      {
+       "name": "Sonic Blaster"
+      },
+      {
+       "name": "Electrification"
+      },
+      {
+       "name": "Launchers"
+      },
+      {
+       "name": "Ammunition"
+      },
+      {
+       "name": "Gravity Clamp"
+      },
+      {
+       "name": "Pistol"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Helmet"
+      },
+      {
+       "name": "Psi-Screen Device"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "frankenstein-s-monster-mla1",
+   "name": "Frankenstein's Monster",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "frankenstein-s-monster-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      56,
+      57
+     ],
+     "identity": [
+      "Real Name: \"Adam\""
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "120",
+       "karma": "20",
+       "resources": "None",
+       "popularity": "-2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Rapid Healing"
+      },
+      {
+       "name": "Suspended Animation",
+       "upb": "P13"
+      },
+      {
+       "name": "Huge Size"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "gypsy-moth-mla1",
+   "name": "Gypsy Moth",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "gypsy-moth-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      57
+     ],
+     "identity": [
+      "Real Name: Sybil Dvorak"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "42",
+       "karma": "18",
+       "resources": "RM (30)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Psychokinesis"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "hammerhead-mla1",
+   "name": "Hammerhead",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "hammerhead-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      57,
+      58
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "60",
+       "karma": "50",
+       "resources": "EX (20)",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Marksman"
+      },
+      {
+       "name": "Metal-Plated Skull"
+      },
+      {
+       "name": "Exoskeleton"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "harpoon-mla1",
+   "name": "Harpoon",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "harpoon-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      58
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "110",
+       "karma": "22",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Imbue Energy"
+      },
+      {
+       "name": "Slayspears"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "mentallo-mla1",
+   "name": "Mentallo",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "mentallo-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      58,
+      59
+     ],
+     "identity": [
+      "Real Name: Marvin Flumm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "52",
+       "karma": "90",
+       "resources": "TY (6)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Hallucination"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Anti-Psionic Helmet"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "mister-fear-mla1",
+   "name": "Mister Fear",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "mister-fear-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      59
+     ],
+     "identity": [
+      "Real Name: Alan Fagan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "32",
+       "karma": "40",
+       "resources": "RM (30)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fear Compound"
+      },
+      {
+       "name": "Fear Gun"
+      },
+      {
+       "name": "Fear Ring"
+      },
+      {
+       "name": "Gas Mask"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "pride-mr-maximilian-mla1",
+   "name": "Pride, Mr. Maximilian",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "pride-mr-maximilian-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      59
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "20",
+       "karma": "40",
+       "resources": "GD (10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "scarecrow-mla1",
+   "name": "Scarecrow",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "scarecrow-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      59,
+      60
+     ],
+     "identity": [
+      "Real Name: Ebenezer Laughton"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "70",
+       "karma": "28",
+       "resources": "TY (6)",
+       "popularity": "-6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Contortionist"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "scorpion-mla1",
+   "name": "Scorpion",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "scorpion-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      60
+     ],
+     "identity": [
+      "Real Name: MacDonald Gargan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "150",
+       "karma": "22",
+       "resources": "TY (6)",
+       "popularity": "-15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Cybernetic Tail"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "sentinels-mark-iv-mla1",
+   "name": "Sentinels, Mark IV",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "sentinels-mark-iv-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      60
+     ],
+     "identity": [
+      "Real Name: Not applicable"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "165",
+       "karma": "NA",
+       "resources": "NA",
+       "popularity": "NA",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "NA"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Construction"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Learning Program"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-Web Cables"
+      },
+      {
+       "name": "Searchlights"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "shroud-mla1",
+   "name": "Shroud",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "shroud-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      60,
+      61
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "80",
+       "karma": "70",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Darkforce Control"
+      },
+      {
+       "name": "Mystic Vision"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "skids-mla1",
+   "name": "Skids",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "skids-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      61
+     ],
+     "identity": [
+      "Real Name: Sally Blevins"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "30",
+       "karma": "34",
+       "resources": "PR (4)",
+       "popularity": "1"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "tatterdemalion-mla1",
+   "name": "Tatterdemalion",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "tatterdemalion-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      61
+     ],
+     "identity": [
+      "Real Name: Arnold Paffenroth"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "70",
+       "karma": "8",
+       "resources": "FE (2)",
+       "popularity": "-1",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 8,
+        "corrected": 12
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gloves"
+      },
+      {
+       "name": "Costume"
+      },
+      {
+       "name": "Knockout Cloak"
+      },
+      {
+       "name": "Throwing Scarf"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "vertigo-mla1",
+   "name": "Vertigo",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "vertigo-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      62
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "46",
+       "karma": "56",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Equilibrium Distortion"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "werewolf-mla1",
+   "name": "Werewolf",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "werewolf-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      62,
+      63
+     ],
+     "identity": [
+      "Real Name: Jack Russell"
+     ],
+     "blocks": [
+      {
+       "label": "Werewolf",
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "120",
+       "karma": "91",
+       "resources": "EX (20)",
+       "popularity": "-2"
+      },
+      {
+       "label": "Jack Russell",
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "26",
+       "resources": "EX (20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Lycanthropy"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Extraordinary Senses"
+      },
+      {
+       "name": "Running and Jumping"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Silver Vulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
+  },
+  {
+   "id": "whirlwind-mla1",
+   "name": "Whirlwind",
+   "team": "MLA1 After Midnight",
+   "versions": [
+    {
+     "id": "whirlwind-mla1",
+     "label": null,
+     "team": "MLA1 After Midnight",
+     "part": "Adventure",
+     "pages": [
+      63
+     ],
+     "identity": [
+      "Real Name: David Cannon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "90",
+       "karma": "18",
+       "resources": "TY (6)",
+       "popularity": "-8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Spinning"
+      },
+      {
+       "name": "Weaponry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla1"
   }
  ]
 }

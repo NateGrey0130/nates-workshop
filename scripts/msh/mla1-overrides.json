@@ -6,6 +6,7 @@
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
     "            label       a second block on one card that prints no label of its own; 'label' is the name it is shown under",
+    "            text        a mark in the prose only the page image settles; match {row} is the msh_book_text key, 'read' the few words as the OCR gives them and 'printed' as the page does. scripts/msh/npcs.py stops if 'read' is not found exactly once in its row",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read"
   ],
@@ -30,6 +31,9 @@
      "printed": "NA", "checked": "2026-11-01",
      "note": "Printed Karma: NA, with Resources and Popularity NA (printed 60): a robot, as MA1 prints a dash for the same machine and MX1's sentinels print Karma 0. Left unset. Survey decision 5."},
     {"match": {"page": 62, "header": "Werewolf", "codes": ["Ty", "Ty", "Ty", "Gd", "Ty", "Gd", "Gd"]}, "verdict": "label", "label": "Jack Russell",
-     "checked": "2026-11-01", "note": "His human statistics, the second grid on his card inside his Lycanthropy power (printed 62), Health 28 and Karma 26; named as his identity line names him, as MT3's Ben and MT2's Hamilton Slade. Survey decision 4."}
+     "checked": "2026-11-01", "note": "His human statistics, the second grid on his card inside his Lycanthropy power (printed 62), Health 28 and Karma 26; named as his identity line names him, as MT3's Ben and MT2's Hamilton Slade. Survey decision 4."},
+    {"match": {"row": "mla1:typical-flashing-blade-mla1:talents"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "None. q", "printed": "None.",
+     "note": "The Typical Flashing Blade's Talents, printed 8, column 1: the page prints None. and nothing after it on the line; the q is the edge of the illustration below the column (250 dpi crop of PDF 9). Survey mla1.md, Which reader fits (not a reader matter)."}
   ]
 }
