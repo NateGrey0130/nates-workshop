@@ -158,6 +158,21 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: speck_lines finds %r %d times on %s p.%d, not once' % (slug, old, len(hits), part, page))
         hits[0]['text'] = new
+    # MX3 (registry label_line_powers [part, page, power name]): a power set
+    # on its section label's line ("Known Powers: Body Armor:", the Maintenance
+    # Robots, printed 27), read after title_case_labels raised the label, is
+    # cut into two lines, the label alone and then the power, so the label
+    # opens its section and the power is read as one. Each must be found
+    # exactly once on its page, after a label that opens a section.
+    for p, page, head in [d for d in book.get('label_line_powers', []) if d[0] == part and first <= d[1] <= last]:
+        rx = re.compile(r'^([A-Z][A-Z ]*:)\s+(' + re.escape(head) + r':.*)$')
+        hits = [k for k, l in enumerate(stream) if l['printed'] == page and rx.match(l['text'])
+                and roster.section_of(rx.match(l['text']).group(1)[:-1])]
+        if len(hits) != 1:
+            raise SystemExit('%s: label_line_powers finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
+        k = hits[0]
+        m = rx.match(stream[k]['text'])
+        stream[k:k + 1] = [dict(stream[k], text=m.group(1)), dict(stream[k], text=m.group(2))]
     # ME3 (registry power_heads [part, page, power name]): a run-in power whose
     # line above ends no sentence (Firelord's Energy Sheath after a list of
     # forms, Adventure p.4; Mephisto's Enlargement after "Galactus.]",
@@ -630,9 +645,13 @@ def table_grids(book, stream, reader, keyed):
     return stream
 
 
-def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False):
+def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False,
+         unread_codes=False, specks=False, end_at_popularity=False):
     """`resources_below` is the registry's code_rows_resources_below (MX2),
-    passed to scripts/msh/codegrids.py's row reader."""
+    passed to scripts/msh/codegrids.py's row reader. MX3's, each with
+    code_rows: `unread_codes` (registry unread_codes) and `specks` (registry
+    code_row_specks) choose codegrids.code_row's row, and `end_at_popularity`
+    (registry code_rows_end_at_popularity) is codegrids.grid_at's."""
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
@@ -655,7 +674,9 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
         # brackets ("F Gd (10) Health: 64"), MA4's order, read by
         # scripts/msh/codegrids.py's row in title case
         import codegrids
-        rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=codegrids.ROW_TITLE_CASE, resources_below=resources_below)
+        row = codegrids.code_row(unread_codes, specks)
+        rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=row, resources_below=resources_below,
+                                        unread_codes=unread_codes, end_at_popularity=end_at_popularity)
         if rows2 is not None:
             return rows2, end2
         # the stream can lose the Karma line under confidence 45 (Bernard
@@ -665,8 +686,8 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
                     and stream[j]['col'] == line['col'] and 'Popular' in stream[j]['text']), None)
         if pop is not None:
             box = (line['col_x0'], line['y0'] - 45, line['col_x1'], stream[pop]['y1'] + 10)
-            rows3 = codegrids.rows_from(reader.read(line['pdf'], box), pattern=codegrids.ROW_TITLE_CASE,
-                                        resources_below=resources_below)
+            rows3 = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row,
+                                        resources_below=resources_below, unread_codes=unread_codes)
             if len(rows3) == 7:
                 return rows3, end
     return rows, end
@@ -715,7 +736,9 @@ def parse(book, slug):
     stream, entries = [], []
     code_rows, end_at_p = bool(book.get('code_rows')), bool(book.get('grids_end_at_p'))
     below = bool(book.get('code_rows_resources_below'))
-    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below)) \
+    mx3 = dict(unread_codes=bool(book.get('unread_codes')), specks=bool(book.get('code_row_specks')),
+               end_at_popularity=bool(book.get('code_rows_end_at_popularity')))
+    read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below, **mx3)) \
         if code_rows or end_at_p else grid
     unlabelled = [0]
     # MT2 (registry opponent_section_labels {label: section}): a run-in that
@@ -991,6 +1014,27 @@ def coverage(book, entries, overrides):
                     and not re.match(r'^[^\w\s(]?\s*\d+(?:\s*\(\d[^)]*\))?$', (b.get('popularity') or '').strip()):
                 lines.append('  POPULARITY IS NOT A NUMBER: %s %s p.%s: %r' % (e['header'], e['part'], b['page'], b.get('popularity')))
                 bad = True
+            # MX3 (registry override_values): an override's printed values are
+            # the block's as read. roster.apply_overrides matches a block by
+            # page and header alone, so a grid the parse leaves unread (Gilda
+            # Ginsel's, printed 6, with unread_codes off) passed on the override
+            # that explains its totals, and its Health was no number
+            for x in ([o] + o.get('also', [])) if book.get('override_values') and o else ():
+                f, want = x.get('field'), x.get('printed')
+                if f in ('health', 'karma'):
+                    got = (b.get(f) or '').strip()
+                    same = got == str(want)
+                elif f in roster.ABILITIES:
+                    a = b['abilities'][roster.ABILITIES.index(f)]
+                    got = '%s %s' % (a.get('printed_code'), a.get('number'))
+                    same = isinstance(want, dict) and a.get('number') == want.get('number') \
+                        and (a.get('printed_code') or '').upper() == str(want.get('code')).upper()
+                else:
+                    continue
+                if not same:
+                    lines.append('  OVERRIDE PRINTED IS NOT THE BLOCK AS READ: %s %s p.%s %s: %r for %r'
+                                 % (e['header'], e['part'], b['page'], f, got, want))
+                    bad = True
     marked ={(o['match']['summary'], o['field']): o for o in overrides if 'summary' in o['match']}
     used = set()
     rows = summary['heroes']
