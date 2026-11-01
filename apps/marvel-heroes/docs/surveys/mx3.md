@@ -1,8 +1,8 @@
 # Survey: MX3 Reap the Whirlwind (TSR6877)
 
-> **DRAFT** (row 4a, 2026-10-31). Everything down to *Quote marks* is
-> measured; *Which reader fits* is not finished and is the trial parse's
-> (row 4c). No data has been built from this book.
+> **DRAFT** (rows 4a and 4c, 2026-10-31 and 2026-11-01). Everything down to
+> *Quote marks* is measured; *Which reader fits* is the trial parse's (row
+> 4c). No data has been built from this book.
 
 Official Game Adventure for Marvel Super Heroes, Caroline and Warren Spector,
 1987; the third chapter of the Future in Flames series (the back cover).
@@ -262,14 +262,111 @@ must confirm** on the character pages that no card's text holds another.
 
 ## Which reader fits
 
-**Not finished.** The trial parse is row 4c's. What this survey measured
-for it: every grid is code first, as MX2's, so the nearest reader is
-`grid-booklets` (`scripts/msh/gridbooks.py`) with MX2's `code_rows`; the
-chapter grids' missing space before the bracket, Shaw's wrapped Resources,
-the opponents whose text runs on to the next page (`continues`), the
-Maintenance Robots' `Shift 0(0)` rows and SWAT:AM's subhead read as a
-run-in (MX1 reader item 7, MX2's `not_run_ins`) are the places to look.
-The entry sets no `layout` until then.
+**`grid-booklets` (`scripts/msh/gridbooks.py`), MX2's fields, and three
+things taught to the reader.** Measured, not argued: a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at `804d9175` (`main`'s scripts
+at `e2f99361` plus this entry), the entry given `"layout": "grid-booklets"`,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE` (no page
+re-OCR'd; only grid crops were added, to the copy), 2026-11-01.
+
+- **Stock, `layout` alone:** `roster.py mx3` stops at `one_line_grids not
+  found: SWAT:AM`, exit 1. No registry field is missing any more (MX1's
+  `reference_summary` stop is gone).
+- **Stock, with MX2's fields and `letters_marks`:** it runs to the end and
+  exits 1. 12 entries, 11 blocks, 2 passing: Gilda Ginsel's grid unread
+  (Health and Karma read as `50 A TY(6) Ss TY(5)` and `35 E TY(7) R GD(10)`),
+  the Alpha Sentinel's header as read (`Aipha`), and the robots' `Karma = 0`
+  and the misprints with no override yet.
+- **With the registry workarounds and reader changes below:** exit 0.
+
+| measure | trial, last run |
+|---|---|
+| entries | 15: 11 with a block, 4 without (the headings Sentinels and SWAT:AM Teams, And Away We Go, Under Attack, This Ain't No Summer Camp) |
+| stat blocks | 11 of 11, every value as *Stat blocks* lists it (Gilda's P read as code unread, number 30) |
+| blocks passing every check | 2 (Shaw, SWAT:AM), and 9 known from trial overrides (5 `as_printed`, 4 `misprint`): the survey's eight misprints in four blocks, each block's second and third fault in its `also`, and the five sentinels' `Karma = 0`; failing 0 |
+| powers | 51 across 10 entries: each sentinel's as printed (8, 8, 7, 8, 9), Gilda 2, Bill 2, Marco 2, Shaw 1, the Robots 4 |
+| checklist | 5 opponents, 1 tiers and 5 cards, all found |
+| exit code | 0 |
+
+The overrides are the survey's (decisions 4 and 5) written for the trial
+only, not re-read on the images; the data row writes the real file.
+
+**Registry-only workarounds** (no reader change; each worked in the trial,
+and each was dropped in turn from the last run to see what it does):
+
+1. **MX2's fields:** `code_rows` (without it 10 entries move, and the
+   grids' rows are read into their Health and Karma, exit 1),
+   `title_case_labels` (without it 0 powers, silently), `teams` (every card
+   under **MX3 Reap the Whirlwind**, decision 1), `rank_ranges` (decision 5;
+   without it the four chapter grids' twelve off-standard numbers are held
+   to the standard, and exit 0 only because each of those blocks carries an
+   override) and
+   `code_rows_resources_below` (Shaw's `Resources =` over `IN(40)`; without
+   it his block fails). **Not needed:** `card_headers`, `not_run_ins` and
+   `card_names`; dropping each moved nothing, so the data row leaves them
+   out. SWAT:AM's subhead is not read as a run-in here.
+2. **`letters_marks`** (MX1's): SWAT:AM's letters row reads `F A` and three
+   characters for S (printed 32); without it, `one_line_grids not found`.
+3. **`speck_lines`** `[Adventure Book, 32, Aipha Sentinel, Alpha Sentinel]`:
+   the header as read; without it the checklist has no Alpha Sentinel.
+4. **`opponent_indented_paragraphs`** (MT2's) for Marco Pene (printed 16)
+   and Sebastian Shaw (printed 23): each sets his own second paragraphs
+   indented, so the entry stopped at the first indent after a sentence.
+   Without it Marco has no Talents, Contacts or Background and one of his
+   two powers (Mutant Flash), and Shaw's Background stops on printed 23.
+   Exit 0 either way: silent.
+5. **`extra_titles`** (MX1's): three chapter subheads in title case end an
+   opponent's text, And Away We Go (printed 7, after Gilda's Background),
+   Under Attack (16, after Marco's) and This Ain't No Summer Camp (24, after
+   Shaw's, where *Where the blocks are* puts his end). None is big enough
+   for the header test, so without them Gilda's Background takes a
+   paragraph of the adventure (and with item 4, Marco's and Shaw's run on
+   past their subheads). Silent.
+6. **The misprints and the robots' `Karma = 0`**: overrides, as above. The
+   Maintenance Robots' `as_printed` Karma is the `also` of their Health
+   misprint.
+
+**What the reader must learn: three things**, all applied in the trial
+(`gridbooks.py` 10 lines, `codegrids.py` 10):
+
+1. **A code-first row whose code is no code** (Gilda Ginsel's `P M(30)`,
+   printed 6). `codegrids.ROW_TITLE_CASE` matches only real codes, so the
+   P row is not a row, the crop gives six, the stream gives six, and the
+   whole grid is unread; `roster.check` then reads welded rows as Health and
+   Karma (exit 1, loud). The trial takes a one- or two-letter token hard
+   against a bracketed number as a row with its code unread and its number
+   kept (`codes_unread: P`), so the override's `printed` `{30, M}` matches.
+   MX1's Nimrod (`Gy`) is number first and never needed it.
+2. **A speck between the row letter and the code in the crop** (`P . TY (6)`,
+   the Mark IV's P, printed 31). The crop's P row fails, so
+   `codegrids.grid_at` falls back to the stream's lines, which run four
+   lines past the Popularity line, and the Mark IV's Popularity became
+   `0 KNOWN POWERS: Flight: ...` with exit 0 (Popularity is not checked).
+   The trial allows `.` and `,` there. The parser should also stop the
+   stream fallback at the Popularity line, or at a run-in, where one is
+   printed.
+3. **A power run on its section label's line** (the Maintenance Robots'
+   `Known Powers: Body Armor:`, printed 27). The label opens the section and
+   the rest is section text, so Body Armor is no power (3 powers, not 4;
+   exit 0). The trial splits such a line in two in `stream_of`, after the
+   label is raised to capitals.
+
+Read and fine as it is: the chapter grids' missing space before the bracket
+(`PR(4)`) and the sentinels' one space; `Shift 0(0)` (the Robots' I and P)
+and `Shift X (150)`; row S read `Ss` or `iS)` and row I `|`; `RM (30)`, which
+the page OCR reads `RM (80)` twice, read right from the crops; the Omega's
+`Resources: = 0`; Gilda's and Bill's text running on to printed 7 and 10
+through `continues`, and Bill's ending at the indent after it; SWAT:AM's
+subhead and talents, as MX2's. Not a reader matter: none.
+
+The other readers fit less: `codegrids.py` (MA4) reads one offset and
+`page_stream`, not booklet `parts`; `roster.py` (MA1) reads number-first
+rows only; `booklet.py`, `rosterbook.py` and `coverpanels.py` read rank
+words. The entry still sets no `layout`: that is the parser row's to write,
+with items 1-3 behind the registry and every earlier book's build proved
+byte-identical. The scratch registry patch, the trial overrides, both reader
+diffs (CRs stripped), the scripts and the last run's output are kept in the
+plan store, `trial\mx3\`.
 
 ## Decisions this survey leaves open
 
