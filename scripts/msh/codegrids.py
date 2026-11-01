@@ -54,6 +54,24 @@ ROW = re.compile(r'^\s*(\S{0,3}?)\s*[~_=-]*\s*(' + CODE + r')(?![A-Za-z0-9])' + 
 # MX1's rows, read through scripts/msh/gridbooks.py (registry code_rows): the
 # same order set in title case ("Gd (10)"), with Feeble printed Fb
 ROW_TITLE_CASE = re.compile(ROW.pattern.replace('|FE|', '|FE|FB|'), re.IGNORECASE)
+
+
+def code_row(unread_codes=False, specks=False):
+    """ROW_TITLE_CASE, or with MX3's mends, read through scripts/msh/gridbooks.py
+    grid. `unread_codes` (registry unread_codes): a one- or two-letter token
+    set hard against a bracketed number is a code the row cannot read (Gilda
+    Ginsel's "P M(30)", printed 6), so the line is still a row, its code None.
+    `specks` (registry code_row_specks): a full stop or comma between the row
+    letter and the code is a speck ("P . TY (6)", the Mark IV's P, printed 31)."""
+    if not (unread_codes or specks):
+        return ROW_TITLE_CASE
+    pattern = ROW_TITLE_CASE.pattern
+    if unread_codes:
+        pattern = pattern.replace('|[XYZ])', r'|[XYZ]|[A-Z]{1,2}(?=\(\d))', 1)
+    if specks:
+        pattern = pattern.replace('[~_=-]*', '[~_=.,-]*', 1)
+    assert pattern.count(r'[A-Z]{1,2}(?=\(\d)') == int(unread_codes) and pattern.count('[~_=.,-]*') == int(specks)
+    return re.compile(pattern, re.IGNORECASE)
 # a code that must print a number to be a row: with none, the line is prose
 # (a mixed-case line above MX1's grids, 'ere eee', reads as Re)
 BARE = r'^(?:FE|FB|PR|TY|GD|EX|RM|RE|IN|AM|MN|UN|[XYZ])$'
@@ -93,11 +111,13 @@ def number_of(code, raw):
     return n, None
 
 
-def rows_from(texts, pattern=ROW, resources_below=False):
+def rows_from(texts, pattern=ROW, resources_below=False, unread_codes=False):
     """The grid's rows from the crop's lines, in order. A line that is not a
     row after the first is the tail of a value that wrapped, and joins the row
     above, as in roster.rows_from. `pattern` is ROW, or MX1's ROW_TITLE_CASE.
-    `resources_below` is MX2's registry code_rows_resources_below."""
+    `resources_below` is MX2's registry code_rows_resources_below.
+    `unread_codes` is MX3's registry unread_codes (code_row): a row whose code
+    is no code keeps its number, where N/A keeps none."""
     rows = []
     for t in texts:
         m = pattern.match(t)
@@ -110,7 +130,7 @@ def rows_from(texts, pattern=ROW, resources_below=False):
         if ok and len(rows) < 7:
             code = code_of(m.group(2))
             number, read_as = number_of(code, m.group(3))
-            if code is None:
+            if code is None and not (unread_codes and not m.group(2).upper().startswith('N')):
                 number = None
             row = {'letter': roster.ABILITIES[len(rows)], 'number': number, 'code': code,
                    'printed_code': re.sub(r'\s+', ' ', m.group(2)).strip(), 'rest': m.group(4)}
@@ -122,11 +142,15 @@ def rows_from(texts, pattern=ROW, resources_below=False):
     return rows
 
 
-def grid_at(stream, i, reader, pattern=ROW, resources_below=False):
+def grid_at(stream, i, reader, pattern=ROW, resources_below=False, unread_codes=False, end_at_popularity=False):
     """If stream[i] is a grid's Health line, return (rows, first index after
     the grid), as roster.grid_at does. The box runs from a line above the
     Health label to the Popularity line in the same column, or seven row
-    pitches down where no Popularity is printed."""
+    pitches down where no Popularity is printed. `end_at_popularity` is MX3's
+    registry code_rows_end_at_popularity: where the crop gives no seven rows,
+    the stream's lines are read to the Popularity line and no further (the
+    Mark IV's, printed 31, took the next four, its Known Powers among them,
+    into its Popularity)."""
     line = stream[i]
     if not roster.ANCHOR.search(line['text']):
         return None, i
@@ -139,9 +163,10 @@ def grid_at(stream, i, reader, pattern=ROW, resources_below=False):
     pitch = (stream[karma]['y0'] - line['y0']) / 2 or 60
     bottom = stream[pop]['y1'] + 10 if pop is not None else line['y0'] + 7 * pitch + 10
     box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
-    rows = rows_from(reader.read(line['pdf'], box), pattern, resources_below)
+    rows = rows_from(reader.read(line['pdf'], box), pattern, resources_below, unread_codes)
     if len(rows) != 7:
-        rows = rows_from([s['text'] for s in stream[i:(pop if pop is not None else karma) + 5]], pattern, resources_below)
+        stop = pop + 1 if end_at_popularity and pop is not None else (pop if pop is not None else karma) + 5
+        rows = rows_from([s['text'] for s in stream[i:stop]], pattern, resources_below, unread_codes)
     end = i + 1
     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
             and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
