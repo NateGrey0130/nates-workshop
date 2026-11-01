@@ -381,11 +381,15 @@
    "title": "MX3 Reap the Whirlwind",
    "code": "TSR6877",
    "status": "imported",
-   "date": null,
+   "date": "2026-11-01",
    "added": [
     [
      "Characters",
      11
+    ],
+    [
+     "Rows of the book's text",
+     67
     ]
    ],
    "total": 11

@@ -4,7 +4,8 @@ Official Game Adventure for Marvel Super Heroes, Caroline and Warren Spector,
 1987; the third chapter of the Future in Flames series (the back cover).
 Registry entry: `scripts/msh/books.json` -> `mx3`. Measured 2026-10-31.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data row has run).
+**Rows citing this book:** 67 `msh_book_text` rows over 11 character entries
+in production (`DB_MARVEL`, read back 2026-11-01).
 
 Everything here was measured and read on the page images.
 
