@@ -5,6 +5,7 @@
     "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text        match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "A codes-only grid prints no number, so its rows stand at each code's standard number (rank_only) and a Health or Karma its codes do not add up to is corrected to their standard sum, its codes kept, as MX1's Typical Rogue (survey decision 4). McGrafton's and Lorelei's fourteen numbers inside a rank's range and not its standard need no override: the registry's rank_ranges passes them (decision 5)."
@@ -65,6 +66,21 @@
     {"match": {"page": 15, "header": "Jenny"}, "verdict": "misprint", "field": "health",
      "printed": "20", "corrected": "40", "checked": "2026-10-31",
      "also": [{"verdict": "misprint", "field": "karma", "printed": "10", "corrected": "32"}],
-     "note": "The committee table's one Health and Karma (printed 15): PR + EX + GD + TY = 40 and TY + EX + TY = 32. Survey decision 6."}
+     "note": "The committee table's one Health and Karma (printed 15): PR + EX + GD + TY = 40 and TY + EX + TY = 32. Survey decision 6."},
+    {"match": {"row": "mx2:mark-iv-sentinel-mx2:power:8"}, "verdict": "text", "checked": "2026-10-31",
+     "read": "Mark |Vs are", "printed": "Mark IVs are",
+     "note": "Printed 11, column 1, the mark IV's Customization: the capital I of IVs is read as a vertical bar (seen on a 250 dpi crop of PDF 12)."},
+    {"match": {"row": "mx2:alpha-sentinel-mx2:power:4"}, "verdict": "text", "checked": "2026-10-31",
+     "read": "|Incredible, made", "printed": "Incredible, made",
+     "note": "Printed 11, column 3, the alpha sentinel's Body Armor: a speck before Incredible is read as a vertical bar; the page prints nothing there (seen on a 250 dpi crop of PDF 12)."},
+    {"match": {"row": "mx2:omega-sentinel-mx2:power:4"}, "verdict": "text", "checked": "2026-10-31",
+     "read": "|Incredible, made", "printed": "Incredible, made",
+     "note": "Printed 12, column 1, the omega sentinel's Body Armor (its card opens on printed 11): the same vertical bar before Incredible, nothing printed there (seen on a 250 dpi crop of PDF 13)."},
+    {"match": {"row": "mx2:william-shiver-mx2:background"}, "verdict": "text", "checked": "2026-10-31",
+     "read": "possible -  i including", "printed": "possible -  including",
+     "note": "Printed 16, column 3, William Shiver's background: a margin mark is read as a lone i after the dash; the page prints the dash and then including (seen on a 250 dpi crop of PDF 17)."},
+    {"match": {"row": "mx2:william-shiver-mx2:background"}, "verdict": "text", "checked": "2026-10-31",
+     "read": "necessary. j", "printed": "necessary.",
+     "note": "Printed 16, the same background: a margin mark after its last word is read as a trailing j; the paragraph ends at the full stop (same crop)."}
   ]
 }
