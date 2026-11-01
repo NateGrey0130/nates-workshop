@@ -393,6 +393,20 @@
     ]
    ],
    "total": 11
+  },
+  {
+   "slug": "mx4",
+   "title": "MX4 Flames of Doom",
+   "code": "TSR6888",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     13
+    ]
+   ],
+   "total": 13
   }
  ]
 }

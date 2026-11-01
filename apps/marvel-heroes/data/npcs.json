@@ -113,6 +113,11 @@
    "book": "MX3 Reap the Whirlwind",
    "code": "TSR6877",
    "pages": "Adventure 6-27, 31-32"
+  },
+  {
+   "book": "MX4 Flames of Doom",
+   "code": "TSR6888",
+   "pages": "Adventure 25-31"
   }
  ],
  "books": [
@@ -495,6 +500,26 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mx4",
+   "short": "MX4",
+   "title": "MX4 Flames of Doom",
+   "pages": [
+    25,
+    31
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       25,
+       31
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -572,7 +597,8 @@
   "Revenge of Kang Heroes",
   "MT3 The Revenge of Kang",
   "MX2 The X-Potential",
-  "MX3 Reap the Whirlwind"
+  "MX3 Reap the Whirlwind",
+  "MX4 Flames of Doom"
  ],
  "characters": [
   {
@@ -80748,6 +80774,1353 @@
    ],
    "appearances": [],
    "book": "mx3"
+  },
+  {
+   "id": "alpha-sentinel-mx4",
+   "name": "Alpha Sentinel",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "alpha-sentinel-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      25,
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "250",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "250",
+        "corrected": "290",
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": "0"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Insulation"
+      },
+      {
+       "name": "Darts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "mark-iv-sentinel-mx4",
+   "name": "Mark IV Sentinel",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "mark-iv-sentinel-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "165",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-Web Cables"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "mark-v-sentinel-mx4",
+   "name": "Mark V Sentinel",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "mark-v-sentinel-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "190",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Cold Beams"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "mark-vi-sentinel-mx4",
+   "name": "Mark VI Sentinel",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "mark-vi-sentinel-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "250",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Gas Jets"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "nimrod-mx4",
+   "name": "Nimrod",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "nimrod-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Ty"
+        ]
+       ],
+       "health": "300",
+       "karma": "70",
+       "resources": "In (40)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "R",
+        "printed": {
+         "number": 30,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "I",
+          "printed": {
+           "number": 30,
+           "code": "Gd"
+          },
+          "corrected": {
+           "number": 30,
+           "code": "Rm"
+          }
+         },
+         {
+          "verdict": "misprint",
+          "field": "P",
+          "printed": {
+           "number": 10,
+           "code": "Ty"
+          },
+          "corrected": {
+           "number": 10,
+           "code": "Gd"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Matrix Battle Computer"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Auto-Repair"
+      },
+      {
+       "name": "Disintegrator Beam"
+      },
+      {
+       "name": "Pressor-Tractor Beam"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Nerveshock"
+      },
+      {
+       "name": "Inhibitor Field"
+      },
+      {
+       "name": "Scanners"
+      },
+      {
+       "name": "Shockweb"
+      },
+      {
+       "name": "Holo-form"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "omega-sentinel-mx4",
+   "name": "Omega Sentinel",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "omega-sentinel-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "0",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Computer Link"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Beam"
+      },
+      {
+       "name": "Encephalo-scan"
+      },
+      {
+       "name": "Insulation"
+      },
+      {
+       "name": "Darts"
+      },
+      {
+       "name": "Learning Program"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "cannonball-mx4",
+   "name": "Cannonball",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "cannonball-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "Sam Guthrie, Rebel, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "90",
+       "karma": "10",
+       "resources": "Pr (Ex)",
+       "popularity": "-10",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "10",
+        "corrected": "40"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "lila-cheney-mx4",
+   "name": "Lila Cheney",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "lila-cheney-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      27,
+      28
+     ],
+     "identity": [
+      "Intergalactic Thief, Ex-Rock Star, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "66",
+       "karma": "20",
+       "resources": "Pr (In)",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "20",
+        "corrected": "40"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Specialized Teleport"
+      },
+      {
+       "name": "Dyson Sphere"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "magma-mx4",
+   "name": "Magma",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "magma-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Amara Juliana Olivians Aquilla, Consort of Sunspot, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         16,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "100",
+       "karma": "60",
+       "resources": "Gd",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "100",
+        "corrected": "86",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "60",
+          "corrected": "70"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Earth Control"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Lava Blasts"
+      },
+      {
+       "name": "Healing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "mirage-mx4",
+   "name": "Mirage",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "mirage-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      28,
+      29
+     ],
+     "identity": [
+      "Danielle (Dani) Moonstar, Rebel, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "80",
+       "karma": "20",
+       "resources": "Pr",
+       "popularity": "-10",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "80",
+        "corrected": "90",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "20",
+          "corrected": "70"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Image Generation"
+      },
+      {
+       "name": "Limited Telepathy"
+      },
+      {
+       "name": "Death Sense"
+      },
+      {
+       "name": "Brightwind"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "mystique-mx4",
+   "name": "Mystique",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "mystique-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      29,
+      30
+     ],
+     "identity": [
+      "Raven Darkholme, Member of Project Wideawake and DARPA (Defense Advanced Research Planning Agency), Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "90",
+       "karma": "150*",
+       "resources": "Mn",
+       "popularity": "20",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "150*"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Imitation"
+      },
+      {
+       "name": "Combat Suit"
+      },
+      {
+       "name": "Psionic Scrambler"
+      },
+      {
+       "name": "Weapons"
+      },
+      {
+       "name": "Personal Mask"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "prose",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "marco-pene-mx4",
+   "name": "Marco Pene",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "marco-pene-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      30
+     ],
+     "identity": [
+      "Government Hound, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         16,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         15,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         16,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "35",
+       "karma": "60",
+       "resources": "0",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "35",
+        "corrected": "61",
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "60",
+          "corrected": "46"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Vision"
+      },
+      {
+       "name": "Mutant Flash"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
+  },
+  {
+   "id": "sunspot-mx4",
+   "name": "Sunspot",
+   "team": "MX4 Flames of Doom",
+   "versions": [
+    {
+     "id": "sunspot-mx4",
+     "label": null,
+     "team": "MX4 Flames of Doom",
+     "part": "Adventure",
+     "pages": [
+      30,
+      31
+     ],
+     "identity": [
+      "Roberto Da Costa, ex-New Mutant, Leader of the Mutant Coalition, Mutant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         16,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "76",
+       "karma": "30",
+       "resources": "Ex",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "30",
+        "corrected": "46"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Strength"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mx4"
   }
  ]
 }
