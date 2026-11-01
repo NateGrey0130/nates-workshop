@@ -3086,6 +3086,74 @@
       "split_grids_note": "MT3's: a grid broken across a column, its last rows at the top of the next (the Invisible Girl's I and P, printed 9; the Human Torch's A-P, 10; Peter Parker's non-powered R-P, 11). roster.grid_at reads it to the Popularity line in the next column, re-reading the first column's part from a crop as every whole grid is (Peter Parker's A, S and E read sideways in the page TSV; the image prints TY 6 on each) (survey mt3.md, Which reader fits item 7). Off, the Invisible Girl and the Human Torch have no block and Peter Parker's non-powered block is not read: 45 blocks for 48, two cards with no entry, and roster.py exits 1 (measured 2026-10-30).",
       "res_label": true,
       "res_label_note": "MT3's: Res: read as Resources on a grid of one form (the Mandarin, printed 15), which only slash_forms renamed (Moon Knight's), by roster.rows_from (survey mt3.md, Which reader fits item 8). Off, the Mandarin's Res: runs into his Karma, which is not a number, and roster.py exits 1 (measured 2026-10-30)."
+    },
+    "mx2": {
+      "title": "MX2 The X-Potential",
+      "short": "MX2",
+      "code": "TSR6875",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6875 MX2 The X-Potential Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "bc26da8f6b2dbf8ca50a23b80fc8addb9cb9702fe5681f83d6ce4b465c9284fa",
+      "pdf_pages": 35,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 33], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [34, 34], "offset": null},
+        {"name": "Newspaper handouts", "cite": null, "pdf": [35, 35], "offset": null}
+      ],
+      "offset_evidence": "2026-10-31, scripts/msh/survey.py tsv_folio: 23 pages vote printed = PDF - 1 (PDF 11-33, every one). PDF 3-10 print their folios (2-9), read on the page images, faint at the foot and missed by Tesseract; PDF 2 is printed 1, the title and Contents page, which prints no folio, and the Contents lists the Introduction at 2, whose banner opens PDF 3. PDF 34's vote of 34 (folio 0) is the bar code's leading digit, not a folio. So PDF 2-33 are the 32-page booklet (594 x 767 pt), printed 1-32. PDF 1 (596 x 774 pt) is the front cover; PDF 34 (596 x 774) the back cover (product code 6875 inside the bar code, ISBN 0-88038-403-4); PDF 35 (1513 x 2335 pt) is a sheet of four newspaper front pages, the adventure's handouts. None of PDF 1, 34 and 35 prints a folio or a stat block. Survey mx2.md, The scan.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Two spellings, read on the page images 2026-10-31. The six sentinel cards and Nimrod (printed 11-12) print Health =, Karma =, Resources = and Popularity = with an equals sign; Popularity = 0 on all seven, Karma = 0 and Resources = 0 on every sentinel but Nimrod (Karma = 70, Resources = with IN (40) on the next line). Senator Joseph McGrafton (printed 10) and Lorelei (printed 15) print Health:, Karma:, Resources: and Popularity: with a colon beside their seven rows; McGrafton's Resources: MN wraps its (75) onto the next line, Lorelei's prints TY with no number and her Popularity is -30. The codes-only grids (printed 13-16) print Health: and Karma: on lines of their own under the codes; Vincent Scarlesi's alone adds Resources: IN and Popularity: 20.",
+      "section_labels": ["Known Powers", "Talents", "Talent", "Contacts", "Background", "Equipment"],
+      "section_labels_note": "Counted on the OCR of printed 10-17 and read on the page images 2026-10-31, each a run-in ending in a colon, in title case. Known Powers: 8 (the eight full cards; the sentinels' and Nimrod's powers are italic run-in heads ending in a colon, Lorelei's four too), Talents: 11, Talent: 2 (the Typical Policeman, printed 13, and Jay Atkinson, printed 17), Contacts: 8 and Background: 8 (McGrafton, Lorelei and the six named codes-only grids), Equipment: 4 (the Typical Policeman, SWAT:AM, Soldiers and Camp Guards and the Secret Service Anti-Mutant Teams; gear, not imported). Bold on the full cards and on Vincent Scarlesi's; Talents: is plain under most codes-only grids. The Mutant Affairs Committee's five members have run-in paragraphs headed by the member's name and a colon (Chuck: and so on, printed 15-16). No Weakness or Personality label is printed.",
+      "rank_aliases": {"FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "AM": "amazing", "MN": "monstrous", "UN": "unearthly", "Shift X": "shift-x"},
+      "rank_aliases_note": "The codes every card and grid prints, in capitals, read on the page images 2026-10-31: FE (Phil's Agility, printed 15, the only one), PR, TY, GD, EX, RM, IN, AM, MN (the Mark IV's Endurance, McGrafton's Resources), UN (the Mark V's Endurance) and Shift X (four sentinels' and Nimrod's Endurance, 150). Nimrod's Reason prints EX (30), a misprint of RM, not an alias (survey mx2.md decision 4). No Fb, Cl or Shift Y code is printed in a grid.",
+      "sections": [
+        ["Introduction", null, 2, "Adventure Book"],
+        ["The Nightmare World of the Future", null, 3, "Adventure Book"],
+        ["Special Rules", null, 9, "Adventure Book"],
+        ["Villains, NPCs, and Equipment", null, 10, "Adventure Book"],
+        ["Running the Adventure", null, 19, "Adventure Book"],
+        ["The Rally", null, 22, "Adventure Book"],
+        ["The Mutant Affairs Committee", null, 25, "Adventure Book"],
+        ["The Mutant Resettlement Center", null, 27, "Adventure Book"],
+        ["The Army Base", null, 28, "Adventure Book"],
+        ["McGrafton Industries, Inc.", null, 29, "Adventure Book"],
+        ["The McGrafton Committee Hearings", null, 31, "Adventure Book"]
+      ],
+      "contents_note": "The Contents on printed 1 (PDF 2), transcribed from the page image 2026-10-31 (the OCR mangles the dot leaders), in two columns: the eleven entries here. Every entry was read on its page image and its banner (capitals in a brick band) is at the top of column 1 of the page the Contents gives, in the Contents' words. No page differs, so there is no contents_errata. A bold subhead inside Villains, NPCs, and Equipment, The Mutant Affairs Committee (printed 15), has the same words as the chapter at printed 25 (survey mx2.md, Columns, labels and ranks). No index: the coverage checklist is this survey's list (survey mx2.md, Stat blocks).",
+      "columns": 3,
+      "columns_note": "Three columns on every booklet page read (printed 10-17 at 50-150 dpi, and every page at 30 dpi), a block's rows and its labels as two sub-columns of one column on the full cards. Read on the page images 2026-10-31.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [10, 17]}],
+      "character_ranges_note": "Every stat block in the book is in Villains, NPCs, and Equipment (printed 10-17): the eight full cards (printed 10-12 and 15), the eleven codes-only grids (printed 13-16) and the Mutant Affairs Committee's table (printed 15). Jay Atkinson's grid is on printed 16 and his text runs on to printed 17, where the Equipment subhead ends the characters. No page outside it prints a Health, Karma or rank row (the OCR of all 35 pages, 2026-10-31), so the entry has no opponents. Survey mx2.md, Where the blocks are.",
+      "cards": [
+        ["Adventure Book", 10, "Senator Joseph McGrafton"],
+        ["Adventure Book", 11, "Mark IV Sentinel"],
+        ["Adventure Book", 11, "Mark V Sentinel"],
+        ["Adventure Book", 11, "Mark VI Sentinel"],
+        ["Adventure Book", 11, "Alpha Sentinel"],
+        ["Adventure Book", 11, "Omega Sentinel"],
+        ["Adventure Book", 12, "Nimrod"],
+        ["Adventure Book", 15, "Lorelei"]
+      ],
+      "cards_note": "The 8 headers in bold title case with a seven-row block under them, as printed, read on the page images 2026-10-31: the code, then the number in brackets (TY (5), Shift X (150)). Lorelei alone has an identity line (her real name); the others have none. The Omega Sentinel's powers run on to printed 12. Survey mx2.md, Stat blocks.",
+      "one_line_grids": [
+        {"part": "Adventure Book", "page": 13, "name": "Typical Policeman", "health": 36, "karma": 18, "subhead": "Typical Policeman"},
+        {"part": "Adventure Book", "page": 14, "name": "SWAT:AM", "health": 46, "karma": 22, "subhead": "SWAT:AM"},
+        {"part": "Adventure Book", "page": 14, "name": "Soldiers and Camp Guards", "health": 46, "karma": 16, "subhead": "Soldiers and Camp Guards"},
+        {"part": "Adventure Book", "page": 14, "name": "Secret Service Anti-Mutant Teams", "health": 50, "karma": 30, "subhead": "Secret Service Anti-Mutant Teams"},
+        {"part": "Adventure Book", "page": 14, "name": "Knights of Genetic Purity", "health": 32, "karma": 14, "subhead": "Knights of Genetic Purity"},
+        {"part": "Adventure Book", "page": 14, "name": "Vincent Scarlesi", "health": 20, "karma": 30, "subhead": "Vincent Scarlesi"},
+        {"part": "Adventure Book", "page": 15, "name": "General William B. Braddock", "health": 29, "karma": 37, "subhead": "General William B. Braddock"},
+        {"part": "Adventure Book", "page": 16, "name": "Dr. Yagami Fuchido", "health": 20, "karma": 46, "subhead": "Dr. Yagami Fuchido"},
+        {"part": "Adventure Book", "page": 16, "name": "Dr. Paolo Hernandez", "health": 20, "karma": 56, "subhead": "Dr. Paolo Hernandez"},
+        {"part": "Adventure Book", "page": 16, "name": "William Shiver", "health": 28, "karma": 50, "subhead": "William Shiver"},
+        {"part": "Adventure Book", "page": 16, "name": "Jay Atkinson", "health": 22, "karma": 32, "subhead": "Jay Atkinson"}
+      ],
+      "one_line_grids_note": "The eleven codes-only grids (an F A S E R I P row, a row of seven codes, then Health: and Karma: on lines of their own), as MX1's, each under a bold title-case subhead, read on the page images 2026-10-31. page is the grid's; SWAT:AM's subhead is on printed 13 and its grid on 14, where gridbooks.line_grids looks for a subhead on the grid's page only. health does not tie a name to one grid on a page in this book: 46 is SWAT:AM's and the Soldiers' (both printed 14) and 20 is Fuchido's and Hernandez's (both printed 16; Scarlesi's and the committee table's too), so karma is recorded as well, and the pair is unique; gridbooks reads health alone today (survey mx2.md, Which reader fits). The six named ones have identity lines under the subhead (Scarlesi's one line, the others' two; the Knights' is a bracketed line of other names); Braddock's subhead runs to two lines, his rank and name with a trailing comma, then U.S. Army; subhead and name are the first line without its comma (survey mx2.md decision 3). The Mutant Affairs Committee's table (printed 15) is a shape of its own, five named rows of codes under one Health: and Karma:, and is not listed here (decision 6). The printed Health and Karma of five grids do not add up (survey mx2.md, Stat blocks).",
+      "tiers": ["Typical Policeman", "SWAT:AM", "Soldiers and Camp Guards", "Secret Service Anti-Mutant Teams", "Knights of Genetic Purity", "Vincent Scarlesi", "General William B. Braddock", "Dr. Yagami Fuchido", "Dr. Paolo Hernandez", "Jay Atkinson", "William Shiver"],
+      "tiers_note": "The eleven codes-only grids (survey mx2.md decision 3), as a checklist, as MX1's: tiers is the only list scripts/msh/gridbooks.py coverage reads with no page, and these are read in a character range, not an opponents page. The committee's five members join it once decision 6 is taken."
     }
   }
 }
