@@ -22,7 +22,7 @@
      "printed": {"number": 12, "code": "Gd"}, "checked": "2026-11-01",
      "also": [{"verdict": "as_printed", "field": "E", "printed": {"number": 7, "code": "Ty"}}],
      "note": "Printed A GD 12 with no brackets and E TY (7) (printed 8): each inside its rank's range (Good 8-15, Typical 5-7) but not its standard number, and Health 31 = 6 + 12 + 6 + 7 holds on them, so both are kept as printed in one override. Survey decision 6."},
-    {"match": {"page": 53, "header": "Black Talon", "codes": ["Rm", "Rm", "Rm", "Rm", "Sh0", "Sh0", "Sh0"]}, "verdict": "as_printed", "field": "health",
+    {"match": {"page": 53, "header": "Black Talon's Zombie", "codes": ["Rm", "Rm", "Rm", "Rm", "Sh0", "Sh0", "Sh0"]}, "verdict": "as_printed", "field": "health",
      "printed": 80, "checked": "2026-11-01",
      "note": "Printed Health: 80 over four RM (30) rows (printed 53, the zombie inside the Black Talon's Necromancy power): his text gives a zombie's Health as his own Power rank number, 80, and the skeleton's as half of it, 40, which F + A + S + E also gives. The book's rule, not a misprint. Survey decision 5."},
     {"match": {"page": 60, "header": "Sentinels, Mark IV"}, "verdict": "as_printed", "field": "karma",

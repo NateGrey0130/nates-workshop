@@ -3530,7 +3530,12 @@
       "subhead_exact_case": true,
       "dash_shift_codes": true,
       "dash_marks": true,
-      "code_grids_by_pitch": true
+      "code_grids_by_pitch": true,
+      "karma_grids": [["Adventure Book", 40, "Bartholomew Jacobs"]],
+      "grid_cards": [
+        ["Adventure Book", 53, "Black Talon", 2, "Black Talon's Zombie"],
+        ["Adventure Book", 53, "Black Talon", 3, "Black Talon's Skeleton"]
+      ]
     }
   }
 }
