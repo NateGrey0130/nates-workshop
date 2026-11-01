@@ -1,9 +1,5 @@
 # Survey: MX4 Flames of Doom (TSR6888)
 
-> **DRAFT** (rows 7a and 7c, 2026-11-01). Every section is measured,
-> *Which reader fits* by a trial parse on a scratch copy; the Marvel smoke
-> suite has not yet run over it. No data has been built from this book.
-
 Official Game Adventure for Marvel Super Heroes, David "Zeb" Cook, 1987; the
 fourth module of the MX series (the back cover).
 Registry entry: `scripts/msh/books.json` -> `mx4`. Measured 2026-11-01.
