@@ -1,7 +1,7 @@
 # Survey: MSL1 X-Terminate (TSR6899)
 
-> **DRAFT.** Written up to *Which reader fits*, which is not finished: the
-> trial parse (plan row 22c) runs a reader over this book and writes it. No
+> **DRAFT.** Written through *Which reader fits*, from the trial parse
+> (plan rows 22c and 22c1); the Marvel suite has not been run on it yet. No
 > `layout` is set, and nothing of the book is imported yet.
 
 Marvel Super Heroes adventure, product code 6899 on the cover (PDF 1). The
@@ -14,6 +14,8 @@ imported yet, and the data row sets this line from production.
 Everything here was measured and read on the page images by plan row 22a,
 and recorded in its registry commit (`a700fcf6`); this document was written
 from that record and the registry entry, with no page read again.
+*Which reader fits* and the decisions it changes were written from the
+trial parse's record (plan rows 22c and 22c1), kept in the plan's store.
 
 Through `scripts/msh/` only. Characters only (Nate, 2026-10-21): the
 adventure, items and places are not imported.
@@ -277,27 +279,168 @@ Archangel's stray single (decision 10).
 
 ## Which reader fits
 
-**Not finished.** Plan row 22c runs the trial parse and writes this
-section. What it has to see, from the measurements above:
+**`grid-booklets` (`scripts/msh/gridbooks.py`, MT2's), with things taught
+to it.** Measured 2026-11-02 (plan rows 22c and 22c1): a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at this branch's `5c119cbd`
+(`main` at `b944eb39`), the msl1 entry as row 22a left it (`parts`,
+`character_ranges`, `opponents`) given `"layout": "grid-booklets"`, the
+fields `main`'s `gridbooks.py` already reads set for this book
+(`card_headers`, `cards`, `teams`, `one_line_grids`, `letters_marks`,
+`code_marks`, `derived_totals`, `line_grid_resources`, `popularity_minus`,
+`title_case_labels`, `subhead_labels`, `bracketed_card_names`,
+`speck_lines`, `art_boxes`, `body_top`), the trial's own reader fields
+below, and a trial `msl1-overrides.json`, run on a copy of the cache under
+its own `WORKSHOP_MSH_CACHE`. Twelve runs (run0 to run11), each run's whole
+output kept.
 
-- MT3's verdict was `grid-booklets` (`scripts/msh/gridbooks.py`), for a
-  `parts` entry with `character_ranges` and `opponents`, which MSL1's entry
-  is too. MSL1's grids are a different shape from MT3's: three stacked rows
-  (letters, codes, numbers) rather than a row per ability, with labels in
-  two lines under the grid in three orders.
-- Every code is in capitals over its number; FB, CL1000 and Shift-X are
-  aliases, and Dominus's `N/A` over a dash must read as a value the check
-  takes as 0 (decision 7).
-- The 19 cards are the checklist (decision 3): fifteen on printed 26-32 and
-  four opponents on printed 4, 9 and 12. The grids on printed 13 and 14 and
-  the two item grids must not become cards.
-- Printed 9 carries Chapter 5's banner, Map 1 and Caliban's grid, and two
-  Contents entries start there.
-- `KNOWN POWERS` has no colon, and Angel (Clone) prints `KNOWN POWER`;
-  `TALENTS:` is broken over a line on Dominus's card.
-- The chapter grids end where the adventure resumes, at an `AFTERMATH:`,
-  `KARMA:` or `POPULARITY:` run-in.
-- The overrides the trial will need: decisions 6 and 7.
+**`code-grids` was not tried.** `codegrids.py` reads one `offset` and one
+`character_pages`, and MSL1's entry is a `parts` entry with neither, which
+is where it stopped on MT2 and MT3 (`KeyError: 'offset'` in
+`roster.page_stream`, MT3's *Which reader fits*); `main`'s `gridbooks.py`
+reads `parts`, `character_ranges` and `opponents` already, so the trial
+went there. The other readers fit less: `roster.py` (MA1) reads one offset;
+`booklet.py` (MHSP1) and `coverpanels.py` (MH1, MH2) read rank words with
+no numbers.
+
+**The stock grid-booklets reads no grid.** With `layout` alone (run0),
+`roster.py msl1` exits 1: 633 stream lines, 5 entries, 19 blocks, **none
+passing and all 19 unread** (the codes row is taken and the numbers row
+under it dropped, item 1), no powers, the four opponents found by no
+entry, and five statted entries on no checklist (the two roster headings
+and three unnamed entries on printed 4, 9 and 12). With MT3's and MX1's
+fields set (run1) it stops at Dominus (printed 30), `a one-line grid read
+wrong`, and writes nothing (item 2).
+
+| measure | stock (run0) | with every trial change (run11) |
+|---|---|---|
+| stream lines | 633 | 570 |
+| entries | 5 | 19, every one with a block |
+| stat blocks | 19, all unread | 19 |
+| blocks passing every check | 0 | 15, and 4 known from the overrides (3 `misprint`, 1 `as_printed`) |
+| failing | 19 | 0 |
+| checklist names with no entry | 4 (Pestilence, War, Caliban, Sunstroke) | 0 (19 cards, 4 opponents, all found) |
+| powers | 0 | 53 across 19 entries |
+| exit code | 1 | 0 |
+
+The 19 blocks are this survey's 19 cards (decision 3). The grids of
+printed 13 and 14 fall in no range the registry reads, so neither is a
+block (decision 4), and neither item grid is read as one (decision 8). The
+two roster headings were blockless entries until run9: they were the
+page-wide roster titles (item 14).
+
+What grid-booklets must learn. Each change was made in the scratch copy,
+marked as the trial's; the reader changes 1-8 each behind a field of their
+own, in the diff kept in the plan's store:
+
+1. **The codes row printed above the numbers row** (every grid, printed
+   4-32): the stock reads the codes as `rank_only` and drops the numbers.
+   Reader: `codes_over_numbers`.
+2. **Dominus's two odd values** (printed 30): `Shift- X`, set with a space
+   after the hyphen, is one code, and `N/A` over a dash is no code over 0
+   (decision 7). Reader, inside `codes_over_numbers`.
+3. **Health beside Resources, Karma beside Popularity** (War, printed 4;
+   Caliban, 9; Sunstroke, 12): the second label order of *Columns, labels
+   and ranks*. Reader: `resources_beside_health`.
+4. **A mark on a code** (`GD~`, printed 29) on the codes-first path.
+   Reader: `code_marks`, reused on the new path.
+5. **Popularity's minus read as U+FFFD** on a one-line grid's Resources line
+   (printed 4, 29 and 30). Reader: `line_popularity_minus`.
+6. **`TALENTS:` hyphenated over two lines** (Dominus, printed 30). Reader:
+   `split_labels`.
+7. **The identity run-ins after the powers** (every roster card, printed
+   26-32) read as powers or as the talents' text (73 powers in run4). Reader:
+   `identity_background`, which opens a background before the first one.
+8. **A run-in label after a sentence on the same line**. Reader:
+   `mid_runins`; its entries are item 13.
+9. **The clones lose `(Clone)` in `npcs.py`** (printed 26-28):
+   `npcs.base_name` drops every parenthesis, so the 19 entries build 15
+   slugs; Beast, Cyclops, Iceman and Marvel Girl (Clone) take the Player
+   Characters' ids (98 text rows, 76 distinct keys, 22 of them twice), and
+   Angel (Clone) and Professor X (Clone) lose the `(Clone)`. `card_names`
+   renames only a header with no parenthesis, and `page_names` keeps one
+   but is read for cover panels only. Reader (`npcs.py`): let a book with
+   no panels keep a parenthesis as part of the name, by `page_names` beyond
+   panels or a field of its own. **Not made in the trial**, which changed
+   no `.py` for it; decision 3 needs it.
+10. **`KNOWN POWER`** (Angel (Clone), printed 26). Registry only:
+    `speck_lines`.
+11. **`KNOWN POWERS` with no colon** (every grid with powers). Registry
+    only: `subhead_labels`.
+12. **The clone headers on the cards checklist** (printed 26-28) with
+    `(Clone)`. Registry only: `bracketed_card_names`, which reaches the
+    checklist and not `npcs.py` (item 9).
+13. **The `mid_runins` entries**: `TALENTS` on printed 29 (Mister
+    Sinister), 30 (the X-Terminator Robots), 31 (Beast) and 32 (Cyclops),
+    `GROUPS` on 29, and `Real Name` on 28 (Marvel Girl (Clone)). Registry
+    only.
+14. **The page-wide roster titles** (printed 26 and 31) sit inside the
+    body, and their column-2 half landed in whichever entry continues column
+    2 (Angel (Clone)'s Legal Status on 26, Beast's text on 31); printed 31's
+    strip of art at its foot read as junk. Registry only: three `art_boxes`,
+    `[P,26,0,560,2476,700]`, `[P,31,0,560,2476,700]` and
+    `[P,31,0,2660,2476,3197]`.
+15. **Masthead linework under the body top** (the HEROES box's lower edge,
+    printed 29), read as a stray letter in Professor X (Clone)'s text.
+    Registry only: `body_top` 0.16 (the masthead's specks reach y 481 on
+    printed 7, 17, 20 and 29; the highest chapter banner is at y 544).
+16. **Archangel's stray single** (printed 31) is U+2019 after his Flight
+    line, so that line ends no sentence and Winged Missiles was read as
+    Flight's text, not a power. Registry only: `speck_lines` on that line,
+    with the next line's `IN` (read with a backslash before the N) in the
+    same field (decision 10). His powers are then Flight, Winged Missiles
+    and Body Armor.
+17. **`card_names` for PESTILENCE** (printed 4) finds no entry and stops
+    `npcs.py`, which builds the capitals header as Pestilence already.
+    Registry only: leave the field out (decision 5).
+
+**So grid-booklets must learn 17 things: 9 reader changes** (1-9) **and 8
+registry-only** (10-17). Items 1-8 are made, each behind a field of its own;
+item 9 is not made. The trial did not run the proof that every earlier book
+builds byte-identical (`marvel-book`, *Prove every earlier book did not
+move*); the reader row does. The overrides file holds 6 entries, each
+matching one block: the three misprints of decision 6, Dominus's S
+`as_printed` (decision 7), and two `text` verdicts read on a render of PDF
+28 (decision 10): the clones' nicknames on printed 27 print double quotes
+with no space after, and the chain made Cyclops (Clone)'s closing mark a
+single (an odd count, which stops `npcs.py`) and Iceman (Clone)'s two marks
+singles. **Both text verdicts are unproven**: with the clones' row keys
+colliding (item 9), a scratch `npcs.py` exits 1, `2 text override(s) found
+no single match`. The registry patch, the reader diff, the overrides and
+every run are kept in the plan's store (rows 22c and 22c1, `trial/msl1/`),
+not the repo.
+
+**The open checks, answered by the trial:**
+
+- **The feet marks** under `npcs.pair_quotes`: Beast's `30'` (printed 31)
+  stays a single mark after the digit, as MT3's did. The `10'` of printed 9
+  is not in the trial's record.
+- **The Player Characters' nicknames** (printed 31 and 32) build as doubles
+  with their space, as printed; only the clones' (printed 27) need verdicts.
+- **Printed 9** (Chapter 5's banner, Map 1 and Caliban): Caliban is found
+  on the opponents checklist with his block. Which section the page's
+  prose is given is not in the trial's record, and no section is imported.
+- **The chapter grids' ends** (`AFTERMATH:`, `KARMA:`, `POPULARITY:`): the
+  four opponents are found and their blocks pass; where each entry's text
+  stops is not in the trial's record, and the data row reads it on the
+  built rows.
+- **`GROUPS:`** is a capitals run-in that opens no section, so
+  `gridbooks.py` gives it to the entry's notes as `Groups: ...`, after the
+  identity block's background (decision 11).
+- **Seen and left, not counted:** `Ill.` for III in Angel (Clone)'s and
+  Archangel's Real Names (two `text` verdicts for the data row), and
+  `X- Factor` in Cyclops's GROUPS (printed 32), likely a line-end hyphen
+  joined with a space, not read on the page (the clones' `X- Clones` on
+  printed 27 is printed with the space).
+
+**Verdict: grid-booklets.** It reads this book's `parts`,
+`character_ranges` and `opponents` as row 22a wrote them, and every field
+an earlier book taught it carries over; code-grids reads no `parts` entry.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above, the six overrides, a field of its
+own for each of the reader changes 1-8 with the byte-identical proof for
+every earlier book, and item 9 in `npcs.py`. This survey sets no
+`layout`.
 
 ## Decisions this survey leaves open
 
@@ -322,7 +465,9 @@ ruled (Nate, 2026-10-21), and so are second cards with `-msl1` ids
    rest), each a card of its own, so the parenthesis is not read as a
    version of the Player Character's card of the same name. Not taken: the
    clones as versions of Beast, Cyclops, Iceman and Marvel Girl, who are
-   other beings on the other side.
+   other beings on the other side. **The trial found this needs a reader
+   change** (*Which reader fits*, item 9): `npcs.py` drops the parenthesis
+   today, and the 19 entries build 15 ids.
 4. **The two chapter grids that are not cards** (recommended): the
    X-Terminator Mark III (printed 13) and Mister Sinister (printed 14) each
    print a roster card's seven numbers in another order under that card's
@@ -332,14 +477,16 @@ ruled (Nate, 2026-10-21), and so are second cards with `-msl1` ids
    to no total the book prints and the roster already cards the same being.
 5. **Names as printed**, title case for the capitals (recommended):
    PESTILENCE is Pestilence; Mister Sinister and the X-Terminator Robots as
-   printed. No header here starts with The.
+   printed. No header here starts with The. The trial found `npcs.py` makes
+   Pestilence of the capitals already, so no `card_names` (item 17).
 6. **The failing totals and codes** as `misprint` overrides, printed and
    corrected kept (recommended, as MT3 decision 7): Cyclops (Clone)'s F, EX
    to TY; the X-Terminator Robots' F, IN to AM; Iceman (Clone)'s Health, 56
    to 42, with his Karma, 20 to 16, in the same override's `also` (one
    override matches one block). Not taken: Iceman (Clone)'s rows changed to
    fit the Player Character's totals, since each row's number and code
-   agree.
+   agree. **The trial bears these three out**: with them (and decision 7)
+   no block fails, and each matches one block.
 7. **Dominus's `S N/A`** (recommended): an `as_printed` override with that
    reason, S read as 0 for the check, which Health 1020 bears out, and no
    number shown as printed; as MA1's robots' `Karma = -` passes unread. Not
@@ -354,10 +501,25 @@ ruled (Nate, 2026-10-21), and so are second cards with `-msl1` ids
    or filter depends on it. Not taken: a `text` verdict to Grey, which would
    change the book's prose rather than mend a misread.
 10. **Archangel's stray single** (printed 31, after his Flight line)
-    (recommended): dropped by a `text` verdict, printed kept, if the trial
-    finds it in his text, since the book prints no single quotes of its own
-    in a card's text. Not taken: kept, which would leave an unpaired mark in
-    the Codex.
+    (recommended, changed by the trial): dropped by a `speck_lines` entry
+    (*Which reader fits*, item 16), since the book prints no single quotes
+    of its own in a card's text. The trial found the mark (U+2019) also
+    keeps the line from ending a sentence, so Winged Missiles was read as
+    Flight's text: a `text` verdict would drop the mark and leave the power
+    lost, and `speck_lines` restores it. Not taken: kept, which would leave
+    an unpaired mark in the Codex; a `text` verdict, as above. **The same
+    class, also recommended:** the clones' nicknames on printed 27, printed
+    between double quotes with no space after and built with singles, as
+    two `text` verdicts with printed kept; they apply once each clone has a
+    row key of its own (item 9).
+11. **`GROUPS:`** (every roster card, printed 26-32) (recommended): left
+    where `gridbooks.py` puts it, in the card's notes as `Groups: ...`,
+    whose row follows the background row, so it still reads directly after
+    the identity block. It needs no reader change, and every grid-booklets
+    book gives a capitals run-in that opens no section to the notes the
+    same way. Not taken: a field that moves it into the background beside
+    the other identity run-ins, an 18th thing to learn for one line per
+    card.
 
 ## How to reproduce
 
