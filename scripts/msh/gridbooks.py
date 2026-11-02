@@ -97,10 +97,15 @@ def stream_of(book, slug, part, first, last):
         # MLA1 (registry body_top): the first line of a column sets at 9.6-10%
         # of the page (Gypsy Moth's header, printed 57, y 314 of 3197), so the
         # body starts higher; every other book's starts at 10%
-        body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < 0.935 * H
+        # MLBA1 (registry page_bottoms [part, page, fraction]): the card page's
+        # lower cards run to 95.7% of the page (Wolverine's and Sunspot's
+        # Talents, printed 32), under the 93.5% every other page ends at
+        bottom = next((d[2] for d in book.get('page_bottoms', []) if d[:2] == [part, printed]), 0.935)
+        body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < bottom * H
                 and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
         if not body:
             continue
+        page_start = len(stream)
         body_h = statistics.median(w['h'] for w in body if any(c.isalpha() for c in w['t']))
         edges = [0] + roster.gutters(body, W, book['columns']) + [W]
         for c in range(book['columns']):
@@ -127,6 +132,10 @@ def stream_of(book, slug, part, first, last):
                 # case ("Known Powers:") is raised to the capitals roster.RUN_IN
                 # and roster.SECTION read
                 for lab in labels:
+                    # MLBA1 (registry semicolon_labels): a run-in label read
+                    # with a semicolon (Boom-Boom's Talents;, printed 32)
+                    if book.get('semicolon_labels') and l['text'].startswith(lab + ';'):
+                        l['text'] = lab + ':' + l['text'][len(lab) + 1:]
                     if l['text'].startswith(lab + ':'):
                         # MLA1 (registry label_powers [part, page, label]): a
                         # power whose name is a section label (the Whirlwind's
@@ -162,6 +171,18 @@ def stream_of(book, slug, part, first, last):
                 l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=max(left, edge or 0), body_h=body_h,
                          col_x0=max(0, edges[c] if c else left - 20), col_x1=edges[c + 1], big=False)
                 stream.append(l)
+        # MLBA1 (registry banner_bands [part, page, y], TSV pixels): a band
+        # set across the page's columns above a page-wide banner or the card
+        # page's cards (printed 26: Goliath's text above VII. King's Pawn;
+        # printed 32: the Conclusion above the cards) is read column by column
+        # before the band under it, not each column top to bottom across it.
+        # Each cut must have lines on both sides, or the build stops.
+        for d in [d for d in book.get('banner_bands', []) if d[:2] == [part, printed]]:
+            seg = stream[page_start:]
+            above, below = [l for l in seg if l['y0'] < d[2]], [l for l in seg if l['y0'] >= d[2]]
+            if not above or not below:
+                raise SystemExit('%s: banner_bands %s p.%d at y %d cuts no band' % (slug, part, printed, d[2]))
+            stream[page_start:] = above + below
     for (p, page, lab), n in stopped.items():
         if n != 1:
             raise SystemExit('%s: stop_labels finds %r %d times on %s p.%d, not once' % (slug, lab + '.', n, p, page))
@@ -197,11 +218,33 @@ def stream_of(book, slug, part, first, last):
     # forms, Adventure p.4; Mephisto's Enlargement after "Galactus.]",
     # Resource p.6) is marked as a power head, which roster.read_entries takes
     # as a new power. Each must be found exactly once on its page.
-    for p, page, head in [d for d in book.get('power_heads', []) if d[0] == part and first <= d[1] <= last]:
+    for d in [d for d in book.get('power_heads', []) if d[0] == part and first <= d[1] <= last]:
+        p, page, head = d[:3]
+        # MLBA1 (a fourth field, the line's start as read): a power head that
+        # roster.POWER_HEAD cannot read, a lower-case word in its name or a
+        # semicolon for its colon (Richtor's Vibration touch;, printed 32; the
+        # Chimpanzee's Light manipulation:, printed 31), is read as the head,
+        # its name kept as printed (roster.read_entries reads power_name)
+        if len(d) > 3:
+            hits = [l for l in stream if l['printed'] == page and l['text'].startswith(d[3])]
+            if len(hits) != 1:
+                raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, d[3], len(hits), part, page))
+            hits[0]['text'] = head + ':' + hits[0]['text'][len(d[3]):]
+            hits[0]['power_name'] = head
         hits = [l for l in stream if l['printed'] == page and l['text'].startswith(head + ':')]
         if len(hits) != 1:
             raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
         hits[0]['power_head'] = True
+    # MLBA1 (registry powers_open [part, page, the first power's name]): a
+    # codes-only grid's powers set as run-ins under it with no Known Powers
+    # label (the three animals, printed 31) open a powers section at the
+    # first, as a KNOWN POWERS: line would. Each must be found once.
+    for p, page, head in [d for d in book.get('powers_open', []) if d[0] == part and first <= d[1] <= last]:
+        at = [k for k, l in enumerate(stream) if l['printed'] == page and l['text'].startswith(head + ':')]
+        if len(at) != 1:
+            raise SystemExit('%s: powers_open finds %r %d times on %s p.%d, not once' % (slug, head, len(at), part, page))
+        label = {k: v for k, v in stream[at[0]].items() if k not in ('power_head', 'power_name')}
+        stream.insert(at[0], dict(label, text='KNOWN POWERS:', synthetic_label=True))
     # MT2 (registry indented_power_heads [part, page, power name]): a power
     # inside a chapter's block set indented like the chapter's paragraphs (the
     # Twain android's Body Armor and Radio Communication, printed 36), which

@@ -770,6 +770,11 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             cur['members'][-1]['text'].append(text)
         elif sec == 'powers':
             pm = POWER_HEAD.match(text)
+            # MLBA1 (gridbooks.stream_of, a power_heads entry's fourth field):
+            # a head POWER_HEAD cannot read ("Vibration touch:"), named as
+            # printed
+            if line.get('power_name'):
+                pm = re.match(r'^(' + re.escape(line['power_name']) + r'):\s*(.*)$', text)
             # Power paragraphs are set flush like their continuation lines, so
             # a new power is told by the line before it ending a sentence (or
             # the section having just opened), not by indentation.
