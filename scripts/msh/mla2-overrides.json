@@ -60,6 +60,18 @@
      "note": "Printed 58 (PDF 59): Plasma Bolt Generators ends its column on Iron Man's name, and the capital I reads as a bar. Found while reading the row's doubles, which are printed as read."},
     {"match": {"row": "mla2:min-lee-mla2:background"}, "verdict": "text", "checked": "2026-11-02",
      "read": "\"porn\"", "printed": "\"born\"",
-     "note": "Printed 61 (PDF 62), where the background of his card (printed 60) runs on: the quoted word is born, its b read as p. Found while reading the row's doubles, which are printed as read."}
+     "note": "Printed 61 (PDF 62), where the background of his card (printed 60) runs on: the quoted word is born, its b read as p. Found while reading the row's doubles, which are printed as read."},
+    {"match": {"row": "mla2:spider-man-mla2:power:2"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "lf this", "printed": "If this",
+     "note": "Printed 6 (PDF 7): the capital I of If reads as an l. Found by row 18c's smoke check for a bar, a backslash or an l for a capital I."},
+    {"match": {"row": "mla2:guardsmen-mla2:power:2"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\\ncredible protection", "printed": "Incredible protection",
+     "note": "Printed 36 (PDF 37): Body Armor's rank word, its capital I read as a backslash. Found by the same check."},
+    {"match": {"row": "mla2:dragons-control-device-mla2:power:1"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\\t is protected", "printed": "It is protected",
+     "note": "Printed 42 (PDF 43): the first word of Body Armor, its capital I read as a backslash. Found by the same check."},
+    {"match": {"row": "mla2:thor-mla2:power:6"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\\t increases", "printed": "It increases",
+     "note": "Printed 63 (PDF 64), where his card (printed 62) runs on: the first word of the power, its capital I read as a backslash. Found by the same check."}
   ]
 }

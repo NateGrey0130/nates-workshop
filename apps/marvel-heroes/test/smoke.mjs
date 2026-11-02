@@ -2580,6 +2580,123 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MLA2 is read by scripts/msh/gridbooks.py (mla2-overrides.json), with the
+  // survey's decisions applied as it recommends (mla2.md; Nate 2026-10-31).
+  // Its cards are in the Adventure Book: the seven Player Characters and six
+  // faction grids (printed 3-8), the chapters' grids (23-49) and the roster
+  // (54-64), laid out as MLA1 is.
+  if (data.npcs.characters.some((c) => c.book === 'mla2')) {
+    const mla2 = data.npcs.characters.filter((c) => c.book === 'mla2');
+    const blocksN = mla2.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkN = (id, i = 0) => mla2.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamN = (t) => mla2.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const playedN = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MLA2: 47 characters, each id ending -mla2 with one version, the seven Player Characters as Night Moves Heroes and 40 under the book\'s title, and no name starting The (teams)',
+      mla2.length === 47 && mla2.every((c) => c.id.endsWith('-mla2') && c.versions.length === 1)
+      && teamN('Night Moves Heroes') === 'Cloak,Dagger,Daredevil,Iron Fist,Moon Knight,Power Man,Spider-Man'
+      && mla2.filter((c) => c.team === 'MLA2 Night Moves').length === 40
+      && !mla2.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mla2.length} ${[...new Set(mla2.map((c) => c.team))]}`);
+    check('MLA2: the cards sort by the Adventure page each starts on, 3 to 63, the chapters\' grids between the factions and the roster',
+      mla2.map((c) => c.id).join() === ['cloak', 'dagger', 'daredevil', 'iron-fist', 'moon-knight', 'power-man', 'spider-man', 'typical-batboy',
+        'typical-dragonlord', 'typical-maggia-technician', 'typical-maggia-thug', 'typical-si-fan-assassin', 'typical-tiger-s-claw', 'old-man', 'tak',
+        'guardsmen', 'mechanical-monster', 'werewolf-robot', 'clown-robot', 'robot-children', 'vampire-robot', 'mechanical-mummy', 'mechanical-skeletons',
+        'dragon-robots', 'dragons-control-device', 'skeletal-ghosts', 'beetle', 'blizzard', 'captain-america', 'chemist', 'constrictor',
+        'deathlok-simulacrum', 'dreadnoughts', 'fixer', 'hammerhead', 'iron-man', 'killer-shrike', 'manchu-fu', 'mentallo', 'min-lee', 'sersi',
+        'shang-chi', 'silver-samurai', 'starfox', 'thor', 'vision', 'white-dragon'].map((id) => `${id}-mla2`).join(),
+      mla2.map((c) => c.id).join());
+    check('MLA2: 49 blocks: Iron Man\'s and Thor\'s second grids labelled (Tony Stark, Eric Masterson; survey decision 4), two version labels (Captain America Original, Iron Man Mark VIII Armor), and no one-line, partial, ranks-only or derived block',
+      blocksN.length === 49
+      && blocksN.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === 'iron-man-mla2:Iron Man,iron-man-mla2:Tony Stark,thor-mla2:Thor,thor-mla2:Eric Masterson'
+      && mla2.filter((c) => c.versions[0].label).map((c) => `${c.id}:${c.versions[0].label}`).join() === 'captain-america-mla2:Original,iron-man-mla2:Mark VIII Armor'
+      && !blocksN.some(({ b }) => b.kind || b.rank_only || b.karma_derived || b.health_derived),
+      blocksN.filter(({ b }) => b.kind || b.label || b.rank_only || b.karma_derived || b.health_derived).map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}`).join());
+    const vN = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+    const fixesN = [['iron-fist-mla2'], ['guardsmen-mla2'], ['clown-robot-mla2'], ['thor-mla2', 0]].map(([id, i]) => {
+      const o = blkN(id, i)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${vN(o?.printed)}>${vN(o?.corrected)} [${(o?.also || []).map((a) => `${a.verdict} ${a.field} ${vN(a.printed)}`)}] plays ${playedN(id, i)}`;
+    });
+    check('MLA2: the four misprints keep the printed value and carry the corrected one (Iron Fist\'s P 75 Am as 75 Mn, the Guardsmen\'s Health 70 as 100, the Clown Robot\'s E 30 Ex as 30 Rm, Thor\'s Health 200 as 270; survey decision 5)',
+      fixesN.join(' | ') === [
+        'iron-fist-mla2 misprint P 75 Am>75 Mn [] plays 100/125',
+        'guardsmen-mla2 misprint health 70>100 [] plays 100/18',
+        'clown-robot-mla2 misprint E 30 Ex>30 Rm [as_printed karma 0] plays 80/0',
+        'thor-mla2 misprint health 200>270 [] plays 270/50',
+      ].join(' | ')
+      && bookNpc({ character: 'iron-fist-mla2' }).snapshot?.abilities.psyche.rank === 'monstrous'
+      && bookNpc({ character: 'clown-robot-mla2' }).snapshot?.abilities.endurance.rank === 'remarkable',
+      fixesN.join(' | '));
+    const robotsN = ['mechanical-monster', 'werewolf-robot', 'robot-children', 'vampire-robot', 'mechanical-mummy', 'mechanical-skeletons', 'dragon-robots',
+      'dragons-control-device', 'skeletal-ghosts'].map((s) => `${s}-mla2`);
+    check('MLA2: the robots\' and the ghosts\' printed Karma 0 and the Dreadnoughts\' None are kept as printed (survey decision 6), playing 0 and none',
+      robotsN.every((id) => blkN(id)?.override?.verdict === 'as_printed' && blkN(id)?.override?.field === 'karma' && blkN(id)?.karma === '0' && playedN(id).endsWith('/0'))
+      && blkN('dreadnoughts-mla2')?.override?.verdict === 'as_printed' && blkN('dreadnoughts-mla2')?.karma === 'None'
+      && playedN('dreadnoughts-mla2') === '165/null',
+      `${robotsN.map((id) => `${id}:${blkN(id)?.override?.verdict}:${blkN(id)?.karma}:${playedN(id)}`).join()} ${playedN('dreadnoughts-mla2')}`);
+    const ovN = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla2-overrides.json'), 'utf8')).overrides;
+    const textN = ovN.filter((o) => o.verdict === 'text');
+    check('MLA2: 24 overrides: four misprints, two labels, ten as printed and eight text verdicts (the Si-Fan Assassin\'s lost last line, and seven word misreads: the Beetle\'s R I P, Iron Man\'s name, Min Lee\'s born, and four capital I), and only those 14 blocks carry a misprint or as-printed one',
+      ovN.length === 24 && ovN.filter((o) => o.verdict === 'misprint').length === 4 && ovN.filter((o) => o.verdict === 'label').length === 2
+      && ovN.filter((o) => o.verdict === 'as_printed').length === 10
+      && textN.map((o) => o.match.row.replace(/^mla2:/, '')).join() === ['typical-si-fan-assassin-mla2:talents', 'beetle-mla2:power:1', 'iron-man-mla2:power:4',
+        'min-lee-mla2:background', 'spider-man-mla2:power:2', 'guardsmen-mla2:power:2', 'dragons-control-device-mla2:power:1', 'thor-mla2:power:6'].join()
+      && blocksN.filter(({ b }) => b.override).map(({ id }) => id).join() === ['iron-fist', 'guardsmen', 'mechanical-monster', 'werewolf-robot', 'clown-robot',
+        'robot-children', 'vampire-robot', 'mechanical-mummy', 'mechanical-skeletons', 'dragon-robots', 'dragons-control-device', 'skeletal-ghosts',
+        'dreadnoughts', 'thor'].map((s) => `${s}-mla2`).join(),
+      `${ovN.length} ${JSON.stringify(ovN.map((o) => [o.verdict, o.match.row || o.match.header]))}`);
+    const powN = mla2.flatMap((c) => c.versions[0].powers);
+    check('MLA2: 140 powers across 39 cards, 41 of them linked to the UPB',
+      powN.length === 140 && powN.filter((p) => p.upb).length === 41 && mla2.filter((c) => c.versions[0].powers.length).length === 39,
+      `${powN.length} ${powN.filter((p) => p.upb).length} ${mla2.filter((c) => c.versions[0].powers.length).length}`);
+    const bookN = data.npcs.books.find((b) => b.slug === 'mla2');
+    const twoN = ['iron-man-mla2', 'thor-mla2'];
+    const choicesN = mla2.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MLA2: the book reads Adventure 3-8, 23-49 and 54-64, a card cites its Adventure page, and every card is one GM choice but Iron Man\'s and Thor\'s, two each',
+      JSON.stringify(bookN?.ranges) === '[{"part":"Adventure","pages":[[3,8],[23,49],[54,64]]}]'
+      && tagline(bookNpc({ character: 'cloak-mla2' }).snapshot).startsWith('MLA2 Night Moves, Adventure p.3;')
+      && tagline(bookNpc({ character: 'white-dragon-mla2' }).snapshot).startsWith('MLA2 Night Moves, Adventure p.63;')
+      && mla2.every((c, i) => choicesN[i] === (twoN.includes(c.id) ? 2 : 1)),
+      `${JSON.stringify(bookN?.ranges)} ${tagline(bookNpc({ character: 'cloak-mla2' }).snapshot)} ${tagline(bookNpc({ character: 'white-dragon-mla2' }).snapshot)} ${mla2.map((c, i) => `${c.id}:${choicesN[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsN = [['cloak-mla2'], ['daredevil-mla2'], ['typical-si-fan-assassin-mla2'], ['old-man-mla2'], ['captain-america-mla2'], ['iron-man-mla2', 0],
+      ['iron-man-mla2', 1], ['thor-mla2', 1], ['manchu-fu-mla2'], ['white-dragon-mla2']].map(([id, b]) => playedN(id, b)).join();
+    check('MLA2: cards play their printed Health and Karma (Cloak 76/36, Daredevil 110/91, the Si-Fan Assassin 60/32, the Old Man 22/22, Captain America 150/90, Iron Man 165/66 and as Tony Stark 22/66, Thor as Eric Masterson 28/46, Manchu Fu 46/140, the White Dragon 70/30)',
+      playsN === '76/36,110/91,60/32,22/22,150/90,165/66,22/66,28/46,46/140,70/30', playsN);
+    // The text verdicts and the quote marks move only the book's text, which
+    // is msh_book_text's: read the generated .sql in the cache, by keys,
+    // counts and the overrides' own fragments, never a sentence of the book
+    // in this file.
+    const sqlN = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mla2', 'book-text.sql');
+    if (!existsSync(sqlN)) {
+      check(`MLA2: skipped the text checks: no ${rel(sqlN) || sqlN}`, true);
+    } else {
+      const rowsN = [...readFileSync(sqlN, 'utf8').matchAll(/VALUES \('([^']+)', 'mla2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entN = new Set(rowsN.map((r) => r.key.split(':')[1]));
+      const oddN = rowsN.filter((r) => (r.body.match(/"/g) || []).length % 2);
+      // Row 18b read every mark on the page: a row holding a double quote or a
+      // single that is not inside a word. Each was printed as read.
+      const markedN = rowsN.filter((r) => /"/.test(r.body) || [...r.body.matchAll(/'/g)].some((x) => !(/[A-Za-z]/.test(r.body[x.index - 1] || '') && /[A-Za-z]/.test(r.body[x.index + 1] || ''))));
+      check('MLA2 text: 215 rows over 45 entries (the Old Man and Tak print none), no row with an odd count of double quotes, and the 24 rows holding a mark that row 18b read on the page',
+        rowsN.length === 215 && entN.size === 45
+        && mla2.filter((c) => !entN.has(c.id)).map((c) => c.id).join() === 'old-man-mla2,tak-mla2'
+        && oddN.length === 0 && markedN.length === 24,
+        `${rowsN.length} ${entN.size} ${mla2.filter((c) => !entN.has(c.id)).map((c) => c.id)} ${oddN.map((r) => r.key)} ${markedN.length}`);
+      const countN = (row, s) => (rowsN.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      // The Si-Fan Assassin's read is the start of what is printed; every other
+      // read is gone from its row.
+      check('MLA2 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textN.length === 8 && textN.every((o) => countN(o.match.row, o.printed) >= 1
+          && countN(o.match.row, o.read) === (o.printed.includes(o.read) ? countN(o.match.row, o.printed) : 0)),
+        textN.map((o) => `${o.match.row} ${countN(o.match.row, o.printed)}/${countN(o.match.row, o.read)}`).join(' | '));
+      const noiseN = rowsN.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mla2:/, ''));
+      check('MLA2 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
+        noiseN.length === 0, noiseN.join());
+      check('MLA2 text: every card\'s power rows match its powers',
+        mla2.every((c) => rowsN.filter((r) => r.key.startsWith(`mla2:${c.id}:power:`)).length === c.versions[0].powers.length),
+        mla2.map((c) => `${c.id}:${rowsN.filter((r) => r.key.startsWith(`mla2:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; }).join());
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
