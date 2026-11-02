@@ -4438,6 +4438,58 @@
       "run_on_prose_note": "MSL3's (roster.read_entries; Which reader fits item 4): in an opponent_indented_paragraphs entry, an indented paragraph after a power's sentence is the encounter resumed under the powers and is kept as the entry's prose, not the last power's text (the Ice Bat, printed 13; the Vapor Wasp, 18; the Bubble Beast, 21-22; Ashta, 22-23). Off, the last power swallows the prose in 4 entries (the Vapor Wasp's 145 characters to 1143, the Bubble Beast's 466 to 2057) (ablation, plan row 28c1, 2026-11-02).",
       "bracket_given_names": [["Adventure Book", 18, "Alien Trader (Torr)"], ["Adventure Book", 22, "Flying Stallion (Ashta)"]],
       "bracket_given_names_note": "[part, printed page, header], MSL3's (npcs.py; Which reader fits item 6; survey msl3.md decision 5, recommended, applied unanswered): the parenthesis is the being's own name and the rest its kind, so the cards are Torr and Ashta (torr-msl3, ashta-msl3) with Alien Trader and Flying Stallion as their identity lines. Each must find exactly one entry with a parenthesis and no identity, or npcs.py stops. Off, the cards are named Alien Trader and Flying Stallion (ablation, plan row 28c1, 2026-11-02)."
+    },
+    "msl4": {
+      "title": "MSL4 Stygian Knight",
+      "short": "MSL4",
+      "code": "TSR6904",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6904 MSL4 Stygian Knight Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "e783fcbd0f798e75bceac167461f15be8cbed6331eeed40d89a6e415b3e0499c",
+      "pdf_pages": 36,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Map: Ryker's Island of Tomorrow", "cite": null, "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 34], "offset": 2},
+        {"name": "Map: Ryker's Island of Today", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [36, 36], "offset": null}
+      ],
+      "offset_evidence": "2026-11-02, scripts/msh/survey.py tsv_folio: 4 pages vote printed = PDF - 2 (PDF 14, 22, 24 and 27) and no vote disagrees. Tesseract reads few folios because each body page sets a small folio centred under a strip of comic panels at its foot. Read on a strip of every booklet page's foot at 45 dpi (PDF 3-34): 30 pages print their folio, every one PDF - 2, from 2 (PDF 4) to 31 (PDF 33), with no outlier; two print none: the title page (printed 1, PDF 3, the Contents, the credits and the ISBN) and printed 32 (PDF 34), a whole-page advertisement for the Basic Set. So PDF 3-34 (596 x 768 pt) are the 32-page booklet, printed 1-32. PDF 1 (595 x 772 pt) is the cover (MSL4, ADVENTURE and 6904) and PDF 36 (595 x 772 pt) the back cover (the blurb and the ISBN, no product code read). PDF 2 (594 x 767 pt) is the inside front cover, the map Ryker's Island of Tomorrow with its key, and PDF 35 (594 x 767 pt) the inside back cover, the map Ryker's Island of Today. None of PDF 1, 2, 35 and 36 prints a folio or a stat block. The scan holds no map sheet. Survey msl4.md, The scan and Offset.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Every grid in the book (11 read on the page images at 110-120 dpi 2026-11-02) is three stacked rows across one column, the letters F A S E R I P, the rank codes in capitals, then the numbers, each code above its number with no brackets (MSL1's, MSL2's and MSL3's shape), then Health: at the left and Karma: at the right on one line. The eight roster grids (printed 27-31) print a second line, Resources: at the left and Popularity: at the right; the three adventure grids (the Spy-Eye, printed 14; the Spray-Bots and the Phase-Bot, 17) print Health and Karma only. Annihilus's Karma is set with no space after the colon (Karma:70) and his Popularity is a minus with a space before the number (-30), printed 27. Resources is a code and its number in brackets: MN (75) for Annihilus, FB (2) for the five cyborg and City Scout cards, AM (50) for Stygorr and his human form. Every other Popularity is 0.",
+      "section_labels": ["KNOWN POWERS", "LIMITATION", "Equipment", "TALENTS", "ROLE-PLAYING NOTES", "IN BRIEF"],
+      "section_labels_note": "Counted on the OCR of PDF 16, 19-20 and 29-33 and read on the page images 2026-11-02. KNOWN POWERS in bold capitals with no colon heads the powers of all eleven grids, on a line of its own, but Fiona Dunbar's (printed 29), which runs into the word None on its line; Stygorr's human form is printed inside his. Each power is an italic run-in with a colon, stunts and options as bulleted lines. On the seven roster cards: LIMITATION: (Annihilus only, printed 27), Equipment: in bold title case (Fiona Dunbar only, printed 29, her three items as italic run-ins on printed 29-30), TALENTS: on all seven, ROLE-PLAYING NOTES: on all seven (the Mark I's set as ROLE-PLAYING NOTES (for all Cyborgs):, printed 28, the Mark II's and Mark III's pointing to it, printed 29) and IN BRIEF: on the four that are not cyborgs (Annihilus 27-28, Fiona Dunbar 30, Rigger 30-31, Stygorr 31). Each roster header is followed by a title-case line in a subhead face reading Real Name: and the name (Irrelevant on the Mark I and Mark II, two names on the Mark III); the three adventure grids print no real-name line and no label but KNOWN POWERS. No CONTACTS, Background or Weakness anywhere.",
+      "rank_aliases": {"FB": "feeble", "FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "AM": "amazing", "MN": "monstrous"},
+      "rank_aliases_note": "The codes the eleven grids print, in capitals, read on the page images 2026-11-02: FB and FE both for Feeble (FB on Rigger's F and S, printed 30, and in the Resources of the five cyborg and City Scout cards; FE on the Spray-Bots' and the Phase-Bot's I and P, printed 17), PR, TY, GD, EX, RM, IN, AM (Annihilus's S; Stygorr's Resources) and MN (Annihilus's E and Resources, printed 27, the only Monstrous). No UN, no Class or Shift code and no title-case code on a grid. Every number on every grid is its code's standard number.",
+      "sections": [
+        ["Introduction", null, 2, "Adventure Book"],
+        ["Ryker's Island of Today", null, 3, "Adventure Book"],
+        ["Ryker's Island of Tomorrow", null, 5, "Adventure Book"],
+        ["Chapter 1: An Invitation", null, 7, "Adventure Book"],
+        ["Chapter 2: Guest Appearance", null, 8, "Adventure Book"],
+        ["Chapter 3: Man and Machine", null, 10, "Adventure Book"],
+        ["Chapter 4: Into Darkness", null, 14, "Adventure Book"],
+        ["Chapter 5: Deathtrap!", null, 16, "Adventure Book"],
+        ["Chapter 6: Attack of the Cyborgs!", null, 21, "Adventure Book"],
+        ["Chapter 7: The Resistance", null, 23, "Adventure Book"],
+        ["Chapter 8: Stygian Knight", null, 25, "Adventure Book"],
+        ["Non-Player Character Roster", null, 27, "Adventure Book"]
+      ],
+      "contents_note": "The printed Contents (printed 1, PDF 3, two columns headed Table of Contents under the title and author line), transcribed from a render at 130 dpi, then each entry checked against its page, 2026-11-02, in the Contents' order. Every page agrees, so there are no contents_errata. Each banner is bold capitals and prints the Contents' title: INTRODUCTION (printed 2), RYKER'S ISLAND OF TODAY (3), RYKER'S ISLAND OF TOMORROW (5), CHAPTER 1 (7), CHAPTER 2 (8), CHAPTER 3 (10), CHAPTER 4 (14), CHAPTER 6 (21) and CHAPTER 8 (25) at the top of their pages under the masthead; CHAPTER 5 (16), CHAPTER 7 (23) and NON-PLAYER CHARACTER ROSTER (27) mid-page, under a large piece of art. Tesseract reads all twelve. The two Ryker's Island sections are text; the maps of the same names are the inside covers (PDF 2 and 35), not booklet pages. The Contents names no character, and the book prints no index.",
+      "columns": 2,
+      "columns_note": "Two columns on every booklet page but the title page and the advertisement (printed 2-31 on a 24-30 dpi sheet, and the grid pages, printed 14, 17 and 27-31, at 60-120 dpi), a grid spanning one column. No grid breaks across a column, but the Phase-Bot's grid ends column 2 of printed 17 and its KNOWN POWERS opens column 1 of printed 18. Read on the page images 2026-11-02.",
+      "panels": [],
+      "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1, 2, 35 and 36 holds no Health, Karma or rank row, and their images show the cover, two maps and the back cover's blurb. The scan holds no cover-panel card. Survey msl4.md, Cover-panel cards.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [27, 31]}],
+      "character_ranges_note": "The card pages, read on the page images 2026-11-02: the NON-PLAYER CHARACTER ROSTER, from its banner mid-page on printed 27 (Chapter 8 ends above it) to the end of printed 31. Seven cards: ANNIHILUS (27, column 1; his IN BRIEF ends at the top of column 1 of printed 28), CYBORG, MARK I (HUNTER-WORKER) (28, column 1), CYBORG, MARK II (GATHERER) (28, column 2; to column 1 of printed 29), CYBORG, MARK III (MAYOR AND WARDEN) (29, column 1, the header over two lines), DUNBAR, FIONA (CITY SCOUT) (29, column 2; to column 1 of printed 30), RIGGER (CITY SCOUT) (30, column 2; to column 1 of printed 31) and STYGORR (31, column 1, to the foot of column 2). Each card is a capitals header, a Real Name: line in a title-case subhead face, a grid, KNOWN POWERS and the run-ins of section_labels. Seven grids, and Stygorr's second (one_line_grids). In MT3's, MSL1's and MSL2's form (each range with its part); which reader takes them is survey msl4.md, Which reader fits.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 14, "names": ["Spy-Eye"]},
+        {"part": "Adventure Book", "page": 17, "names": ["Spray-Bots", "Phase-Bot (Shugnaggorak)"]}
+      ],
+      "opponents_note": "Every grid inside the chapters (printed 2-26), found by the OCR's rank-code rows and Health: lines and on a 24-30 dpi sheet of every page, and read on crops of the page images at 120 dpi 2026-11-02: three, each under a header in bold body type, title case, the roster's grid shape with Health: and Karma: only, KNOWN POWERS on a line of its own, and no other label. Spy-Eye (printed 14, column 2, after the ENCOUNTER: run-in), Chapter 4; Spray-Bots (17, column 1, trap 1) and Phase-Bot (Shugnaggorak) (17, foot of column 2, trap 3, its powers on printed 18), Chapter 5. After its powers each runs on into the chapter's play: the Spy-Eye's to the run-in subhead A Talk with the Nightlord. (printed 14), the Spray-Bots' to trap 2 (column 2 of printed 17), the Phase-Bot's on printed 18. No other chapter page prints a rank row; the Fantastic Four, the police and the civilians are sent to the Basic and Advanced books (printed 2 and 12).",
+      "one_line_grids": [{"part": "Adventure Book", "page": 31, "entry": "Stygorr", "label": "Lew Shiner"}],
+      "one_line_grids_note": "Stygorr's human form (printed 31, column 1): a second full grid with no header of its own, the letters, a codes row, a numbers row and Health: and Karma: over Resources: and Popularity:, printed inside his KNOWN POWERS after the Alter Ego power's text, before Body Armor (column 2). In MSL2's form for the same form of the same being (entry and label): a block of Stygorr's card labelled with the name his text gives the form, not a card of its own (survey msl4.md decision 4). MSL1's and MSL2's reader rows later listed every grid here in MX1's form; whether this book needs that is Which reader fits. Read on the page image 2026-11-02."
     }
   }
 }
