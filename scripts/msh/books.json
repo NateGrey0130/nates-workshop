@@ -3568,6 +3568,76 @@
       "card_names_note": "SWF Operatives (printed 32) prints SWF in capitals, which npcs.py's title case gives as Swf, as MH8's SWAT Team Member; Frankenstein's Monster's header (printed 56) reads a curly apostrophe that every other book's card name prints straight. Each card's name as printed; the id is the same either way (swf-operatives-mla1, frankenstein-s-monster-mla1). Row 12a, 2026-11-01.",
       "derived_totals": true,
       "derived_totals_note": "MT3's card flag: a total the block lists under derived (derived_karma above: the Alligator, Rat, pack of 10 and Mosquito Swarm, printed 42, print no Karma) is flagged karma_derived on the card, as MT3's Snakes and Scorpions (survey mla1.md decision 7). MLA1 prints no one-line grid, so gridbooks.line_grids, its other reader, reads nothing here and roster.json is the same with it on or off. Off, the three cards play Karma 6 with nothing saying the book prints none (row 12a, 2026-11-01)."
+    },
+    "mlba1": {
+      "title": "MLBA1 Mutating Mutants",
+      "short": "MLBA1",
+      "code": "TSR6893",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6893 MLBA1 Mutating Mutants Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "b3840093bb0160d9e53d618f54a31e023bfc536a936ac9921856309d00690b66",
+      "pdf_pages": 38,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 33], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [34, 34], "offset": null},
+        {"name": "Maps: Shaw Industries, Jeenex Grounds", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Map: Castle Plastics", "cite": null, "pdf": [36, 36], "offset": null},
+        {"name": "Map: Bulk Rifle Corporation", "cite": null, "pdf": [37, 37], "offset": null},
+        {"name": "Map: Jeenex Building", "cite": null, "pdf": [38, 38], "offset": null}
+      ],
+      "offset_evidence": "2026-11-01, scripts/msh/survey.py tsv_folio: 18 pages vote printed = PDF - 1 (PDF 11-32 but 14, 20, 23 and 30) and no booklet page disagrees. PDF 3-10, 23 and 30 print their folio (2-9, 22 and 29) at the foot, read on a strip of each page's foot, Tesseract missing it; PDF 30's one other vote (k = -209) is that folio misread. PDF 2 is printed 1, the title page with the Contents and the credits, and prints no folio; the Contents' first entry is printed 2 and PDF 3 opens it. Three booklet pages print no folio, each read on its image: PDF 14 and 20 (printed 13 and 19), full-page maps (II. Castle Plastics; III. Bulk Rifle Corporation), and PDF 33 (printed 32), the Player Character Cards, whose foot prints only three copyright lines; each is printed PDF - 1 by position and the Contents (Player Character Cards 32). Sizes (PyMuPDF): PDF 1 and 34 are 592 x 784 pt (the outside covers: PDF 1 prints MLBA1 and 6893, PDF 34 the code 6893XXX1401 and the ISBN 0-88038-841-2), PDF 2-33 are 594 x 767 (the 32-page booklet), PDF 35-37 are 1188 x 1535 (larger prints of the booklet's maps: I. Shaw Industries with IV. Jeenex Grounds, II. Castle Plastics, III. Bulk Rifle Corporation) and PDF 38 is 1191 x 773 (V. Jeenex Building, a floor plan the booklet does not print). None of PDF 1 and 34-38 prints a folio or a stat block. So parts, as MX1's and MX4's single booklet, with the covers and each map page as parts of their own. Survey mlba1.md, The scan and Offset.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Four grid shapes, each read on the page images 2026-11-01. (a) The nine villains (printed 3, 8, 9, 12, 18, 25 and 29): seven rows that print the ability's whole name, the code in capitals and its number in brackets (Fighting RM (30)), then Health:, Karma:, Resources: and Popularity: as four lines UNDER the grid, Resources a code and its number in brackets (IN (40)); the Sentinel, Mark IV (printed 18) prints NA for Karma, Resources and Popularity. (b) The five minor grids (printed 4 and 6): a column of row letters with the code and its number in brackets (GD (10)), Health: beside row E and Karma: beside row P, and no Resources or Popularity. (c) The three animals (printed 31): a row of the seven letters, a row of seven title-case codes and no numbers, then Health: alone; no Karma. (d) The six Player Character Cards (printed 32): a column of row letters with the code in capitals and its number with no brackets (GD 10), Health: beside F, Karma: beside S, Resources: beside R (a code and its number in brackets, PR (4)) and Popularity: beside P; Sunspot prints Health: 52(76).",
+      "section_labels": ["Background", "Known Powers", "Talents", "Summarized Powers", "Weakness"],
+      "section_labels_note": "Counted on the OCR of every booklet page and read on the page images 2026-11-01. The nine villains: Background (9) and Known Powers (9) are bold title-case headings on lines of their own with no colon, Background first, its identity run-ins under it (Real Name:, Occupation:, Identity:, Legal Status:, Other Known Aliases:, Place of Birth: or the Sentinel's Place of Construction:, Marital Status:, Known Relatives:, Base of Operations:, Group Affiliation:, and Present Group Affiliation: on five), each power an italic run-in under Known Powers; Talents: is a bold run-in on three (Mauler, printed 10; Mad-Dog, 12; Sabretooth, 14, on a line of its own). The six cards: Summarized Powers: (6) and Talents: (4: Cannonball, Boom-Boom, Wolverine, Sunspot) are bold run-ins, and Sunspot adds Weakness: (an italic run-in among his powers). The minor grids and the animals print no label under the grid. No Contacts: anywhere.",
+      "rank_aliases": {"FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "AM": "amazing", "MN": "monstrous", "Fe": "feeble", "Pr": "poor", "Ty": "typical", "Gd": "good", "Ex": "excellent", "Am": "amazing"},
+      "rank_aliases_note": "The codes the 23 grids print, read on the page images 2026-11-01. Shapes (a), (b) and (d) print capitals: FE (Resources only: Rusty Collins and Richtor, printed 32), PR, TY, GD, EX, RM, IN, AM (the Black King's E, the Sentinel's S) and MN (the Sentinel's and Goliath's E, Wolverine's I). The animals' codes-only rows (printed 31) print title case: Fe, Pr, Ty, Gd, Ex and Am. No UN, no Shift rank and no misspelt code in a grid. NA is not a rank (the Sentinel, Mark IV's Karma, Resources and Popularity, printed 18). Schiz's R PR (6) and I TY (4) and Ee-ha's R PR (6) (printed 4) are misprints, not aliases (survey mlba1.md, Stat blocks).",
+      "sections": [
+        ["Introduction", null, 2, "Adventure Book"],
+        ["I. Hot Time in the Old Town Tonight", null, 4, "Adventure Book"],
+        ["II. It's One of Those Nights", null, 6, "Adventure Book"],
+        ["III. Arms and Armor", null, 8, "Adventure Book"],
+        ["IV. Fight Like Cats and Dogs", null, 12, "Adventure Book"],
+        ["V. Mutants, Just Say No!", null, 17, "Adventure Book"],
+        ["VI. Mountain and the Mole Hill", null, 23, "Adventure Book"],
+        ["VII. King's Pawn", null, 26, "Adventure Book"],
+        ["Player Character Cards", null, 32, "Adventure Book"]
+      ],
+      "contents_note": "The Contents on printed 1 (PDF 2), transcribed from the page image 2026-11-01 (the OCR mangles the dot leaders and the roman numerals), in two columns: nine entries, as printed. Every entry was read on its page. Introduction and chapters I-VI open under a banner (white on a grey band) at the top of the page the Contents gives (PDF 3, 5, 7, 9, 13, 18 and 24); VII. King's Pawn opens mid-page on printed 26, under Goliath's text. Player Character Cards (printed 32) has no heading: the six cards fill the lower half of the page, under the prose that ends the adventure. Every page agrees, so there is no contents_errata. One heading has no Contents line: VIII. Conclusion (printed 32, column 2, a bold title-case subhead, not a banner), between the villain doubles' prose and the cards.",
+      "columns": 3,
+      "columns_note": "Three columns on every booklet page read (every page at 30-85 dpi, the grid pages at 130-220), a block's rows and its labels two sub-columns of one column. A grid can break across columns: Mauler's F and A at the foot of column 1 of printed 9, his S-P at the top of column 2; Mad-Dog's rows at the foot of column 1 of printed 12, his Health to Popularity at the top of column 2. The cards' half of printed 32 is three card boxes across, two deep. Read on the page images 2026-11-01.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [32, 32]}],
+      "character_ranges_note": "The card page, read on the page images 2026-11-01: the six Player Character Cards in the lower half of printed 32 (Cannonball, Boom-Boom, Rusty Collins, Wolverine, Richtor, Sunspot), each a box with a header, a real-name line (none on Rusty Collins's) and a portrait. The upper half of the same page is adventure prose (the villain doubles' run-ins and VIII. Conclusion), which the range also holds. Every other grid in the book sits inside a chapter's prose, so it is an opponent (below). Survey mlba1.md, Where the blocks are.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 3, "names": ["Black King"]},
+        {"part": "Adventure Book", "page": 4, "names": ["Generic Punk", "Schiz", "Ee-ha", "Rocco"]},
+        {"part": "Adventure Book", "page": 6, "names": ["Generic Goon"]},
+        {"part": "Adventure Book", "page": 8, "names": ["Beetle"], "continues": [9]},
+        {"part": "Adventure Book", "page": 9, "names": ["Mauler"], "continues": [10]},
+        {"part": "Adventure Book", "page": 12, "names": ["Mad-Dog", "Sabretooth"], "continues": [14]},
+        {"part": "Adventure Book", "page": 18, "names": ["Sentinel, Mark IV"]},
+        {"part": "Adventure Book", "page": 25, "names": ["Armadillo", "Goliath"], "continues": [26]},
+        {"part": "Adventure Book", "page": 29, "names": ["Ramhorn"]},
+        {"part": "Adventure Book", "page": 31, "names": ["Chimpanzee", "Giant Dalmatian", "Chicken"]}
+      ],
+      "opponents_note": "Every grid inside the chapters (and the Introduction's Black King), found by the OCR's Health lines and rank rows on all 38 pages and read on the page images 2026-11-01, each under a bold title-case header but the animals, whose headers carry a room key (R1. Chimpanzee, R2. Giant Dalmatian, R3. Chicken): names here drop the key (survey mlba1.md decision 3). Shape (a), a full villain block with Background and Known Powers: the Black King (printed 3, the Introduction), Beetle (8), Mauler (9), Mad-Dog and Sabretooth (12), the Sentinel, Mark IV (18), Armadillo and Goliath (25) and Ramhorn (29, under the room key L. Ramhorn). Shape (b): Generic Punk, Schiz, Ee-ha and Rocco (printed 4) and Generic Goon (6). Shape (c): the three animals (31). continues: Beetle's powers run on to the top of column 1 of printed 9, above Mauler's header; Mauler's Talents to printed 10; Sabretooth's last powers and Talents to printed 14, skipping printed 13 (the full-page Castle Plastics map); Goliath's Background and powers to printed 26. Printed 9 is both a continuation and an opponents page: whether the reader reads Mauler's grid once is the trial's to measure (survey mlba1.md, Which reader fits). Prose only, no grid: Dr. Karl Malus, and the six villain doubles (printed 31-32).",
+      "one_line_grids": [
+        {"part": "Adventure Book", "page": 31, "name": "Chimpanzee", "health": 72, "subhead": "R1. Chimpanzee"},
+        {"part": "Adventure Book", "page": 31, "name": "Giant Dalmatian", "health": 46, "subhead": "R2. Giant Dalmatian"},
+        {"part": "Adventure Book", "page": 31, "name": "Chicken", "health": 38, "subhead": "R3. Chicken"}
+      ],
+      "one_line_grids_note": "The three codes-only grids of printed 31 (a row of the letters F A S E R I P, a row of seven title-case codes, then Health: on a line of its own and no Karma), as MX1's and MT3's one-line grids. health ties each name to the grid printing that Health; subhead is the bold room key over the paragraph that introduces the grid, where its entry starts. Read on the page images 2026-11-01. No tiers: every typed grid (the punks, the goon, the animals) is in opponents, which the checklist reads with its page.",
+      "cards": [
+        ["Adventure Book", 32, "Cannonball"],
+        ["Adventure Book", 32, "Boom-Boom"],
+        ["Adventure Book", 32, "Rusty (Russell) Collins"],
+        ["Adventure Book", 32, "Wolverine"],
+        ["Adventure Book", 32, "Richtor"],
+        ["Adventure Book", 32, "Sunspot"]
+      ],
+      "cards_note": "The six Player Character Cards, headers as printed, read on the page images 2026-11-01, left to right and top to bottom. Each prints a bold header, a bold real-name line under it but Rusty Collins's (Sam Guthrie; Tabitha (last name unrevealed); Logan (last name unrevealed); (Unrevealed); Roberto Da Costa) and a grid of shape (d). Richtor is the book's spelling. Survey mlba1.md, Stat blocks and decision 3."
     }
   }
 }
