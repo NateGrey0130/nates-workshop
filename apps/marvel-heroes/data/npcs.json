@@ -148,6 +148,11 @@
    "book": "MSL2 Warlord of Baluur",
    "code": "TSR6901",
    "pages": "Adventure 4-5, 19-19, 28-32"
+  },
+  {
+   "book": "MSL3 Spore of Arthros",
+   "code": "TSR6902",
+   "pages": "Adventure 5-30"
   }
  ],
  "books": [
@@ -710,6 +715,26 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "msl3",
+   "short": "MSL3",
+   "title": "MSL3 Spore of Arthros",
+   "pages": [
+    5,
+    30
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       5,
+       30
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -798,7 +823,8 @@
   "Night Life Heroes",
   "MLA3 Night Life",
   "MSL1 X-Terminate",
-  "MSL2 Warlord of Baluur"
+  "MSL2 Warlord of Baluur",
+  "MSL3 Spore of Arthros"
  ],
  "characters": [
   {
@@ -98911,6 +98937,681 @@
    ],
    "appearances": [],
    "book": "msl2"
+  },
+  {
+   "id": "nop-yaan-peasant-msl3",
+   "name": "Nop Yaan Peasant",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "nop-yaan-peasant-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "22",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "flying-robotic-snake-msl3",
+   "name": "Flying Robotic Snake",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "flying-robotic-snake-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": null
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "ice-bat-msl3",
+   "name": "Ice Bat",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "ice-bat-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "90",
+       "karma": "12",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Ice Entrapment"
+      },
+      {
+       "name": "Ice Missiles"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "torr-msl3",
+   "name": "Torr",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "torr-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      18,
+      19
+     ],
+     "identity": [
+      "Alien Trader"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "46",
+       "karma": "42",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "vapor-wasp-msl3",
+   "name": "Vapor Wasp",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "vapor-wasp-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "60",
+       "karma": "8",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Sting"
+      },
+      {
+       "name": "Vapor Form"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "bubble-beast-msl3",
+   "name": "Bubble Beast",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "bubble-beast-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      21,
+      22
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "70",
+       "karma": "16",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Sphere Projection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "ashta-msl3",
+   "name": "Ashta",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "ashta-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      22,
+      23
+     ],
+     "identity": [
+      "Flying Stallion"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "90",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "A",
+        "printed": {
+         "number": 10,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 20,
+         "code": "Ex"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
+  },
+  {
+   "id": "robotic-dragon-msl3",
+   "name": "Robotic Dragon",
+   "team": "MSL3 Spore of Arthros",
+   "versions": [
+    {
+     "id": "robotic-dragon-msl3",
+     "label": null,
+     "team": "MSL3 Spore of Arthros",
+     "part": "Adventure",
+     "pages": [
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "See text",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": "See text",
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": null
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl3"
   }
  ]
 }
