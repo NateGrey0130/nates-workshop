@@ -760,7 +760,8 @@ def table_grids(book, stream, reader, keyed):
 
 
 def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False,
-         unread_codes=False, specks=False, end_at_popularity=False, by_pitch=False, dash_shift=False):
+         unread_codes=False, specks=False, end_at_popularity=False, by_pitch=False, dash_shift=False,
+         rising_pitch=False, undashed_shift=False, s_numbers=False, aliases=None, health_mend=False):
     """`resources_below` is the registry's code_rows_resources_below (MX2),
     passed to scripts/msh/codegrids.py's row reader. MX3's, each with
     code_rows: `unread_codes` (registry unread_codes) and `specks` (registry
@@ -768,7 +769,16 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
     (registry code_rows_end_at_popularity) is codegrids.grid_at's. MLA1's,
     each with code_rows: `dash_shift` (registry dash_shift_codes) is
     codegrids.code_row's, and `by_pitch` (registry code_grids_by_pitch) reads
-    a grid seven row pitches down where no Popularity line ends it."""
+    a grid seven row pitches down where no Popularity line ends it. MLA2's,
+    each with code_rows and a registry field of its own: `rising_pitch`
+    (rising_row_pitch) tries larger pitches where by_pitch's least one cuts
+    the grid; `undashed_shift` (undashed_shift_zero) and `s_numbers`
+    (s_before_number) are codegrids.code_row's; `aliases` (code_rank_aliases,
+    booklet.ladder(book)) gives code_row the spellings roster.canon cannot
+    read and codegrids.code_of their codes; `health_mend` (mend_by_health) is
+    codegrids.rows_from's."""
+    extra =tuple(sorted(k for k in (aliases or {}) if re.match(r'^[A-Z]{1,2}$', k) and roster.canon(k) is None))
+    rules = dict(aliases=aliases, fold_shift=undashed_shift, health_mend=health_mend)
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
@@ -781,21 +791,34 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
         # pitch the least gap of the column's next lines; 6.9 pitches cut the
         # Mosquito Swarm's P, printed 42)
         import codegrids
-        row = codegrids.code_row(unread_codes, specks, dash_shift)
+        row = codegrids.code_row(unread_codes, specks, dash_shift, undashed_shift, s_numbers, extra)
         same = [j for j in range(i, min(len(stream), i + 12))
                 if stream[j]['pdf'] == line['pdf'] and stream[j]['col'] == line['col']]
         gaps = [stream[b]['y0'] - stream[a]['y0'] for a, b in zip(same, same[1:4]) if stream[b]['y0'] > stream[a]['y0']]
         if gaps:
-            pitch = min(gaps)
-            bottom = line['y0'] + 7 * pitch + 10
-            box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
-            got = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row, unread_codes=unread_codes)
-            if len(got) >= 7:
-                end = i + 1
-                while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
-                        and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
-                    end += 1
-                return got[:7], end
+            pitches = [min(gaps)]
+            if rising_pitch:
+                # MLA2 (registry rising_row_pitch): a lone row letter read
+                # low makes the least gap too small (the Old Man's S 24 px
+                # under his A, his rows 46 px apart, printed 23), so the
+                # pitch is at least half the Health-to-Karma distance, then
+                # the median of the column's next three gaps; the first crop
+                # that gives seven rows wins
+                kar = next((j for j in same if 'Karma' in stream[j]['text']), None)
+                first = pitches[0]
+                if kar is not None and stream[kar]['y0'] > line['y0']:
+                    first = max(first, (stream[kar]['y0'] - line['y0']) / 2)
+                pitches = sorted({first, max(first, sorted(gaps)[len(gaps) // 2])})
+            for pitch in pitches:
+                bottom = line['y0'] + 7 * pitch + 10
+                box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
+                got = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row, unread_codes=unread_codes, **rules)
+                if len(got) >= 7:
+                    end = i + 1
+                    while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
+                            and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
+                        end += 1
+                    return got[:7], end
     if rows is None and end == i and end_at_p and roster.ANCHOR.search(line['text']):
         # ME3 (registry grids_end_at_p): a grid that prints no Resources and
         # no Popularity (Mephisto's Thralls and Footsoldiers, Resource p.7; the
@@ -814,9 +837,9 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
         # brackets ("F Gd (10) Health: 64"), MA4's order, read by
         # scripts/msh/codegrids.py's row in title case
         import codegrids
-        row = codegrids.code_row(unread_codes, specks, dash_shift)
+        row = codegrids.code_row(unread_codes, specks, dash_shift, undashed_shift, s_numbers, extra)
         rows2, end2 = codegrids.grid_at(stream, i, reader, pattern=row, resources_below=resources_below,
-                                        unread_codes=unread_codes, end_at_popularity=end_at_popularity)
+                                        unread_codes=unread_codes, end_at_popularity=end_at_popularity, **rules)
         if rows2 is not None:
             return rows2, end2
         # the stream can lose the Karma line under confidence 45 (Bernard
@@ -827,7 +850,7 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
         if pop is not None:
             box = (line['col_x0'], line['y0'] - 45, line['col_x1'], stream[pop]['y1'] + 10)
             rows3 = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row,
-                                        resources_below=resources_below, unread_codes=unread_codes)
+                                        resources_below=resources_below, unread_codes=unread_codes, **rules)
             if len(rows3) == 7:
                 return rows3, end
     return rows, end
@@ -1067,6 +1090,14 @@ def parse(book, slug):
     mx3 = dict(unread_codes=bool(book.get('unread_codes')), specks=bool(book.get('code_row_specks')),
                end_at_popularity=bool(book.get('code_rows_end_at_popularity')),
                by_pitch=bool(book.get('code_grids_by_pitch')), dash_shift=bool(book.get('dash_shift_codes')))
+    # MLA2's, each a registry field of its own (grid's docstring)
+    if book.get('code_rank_aliases'):
+        import booklet
+        mx3['aliases'] = booklet.ladder(book)
+    for k, field in (('rising_pitch', 'rising_row_pitch'), ('undashed_shift', 'undashed_shift_zero'),
+                     ('s_numbers', 's_before_number'), ('health_mend', 'mend_by_health')):
+        if book.get(field):
+            mx3[k] = True
     read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below, **mx3)) \
         if code_rows or end_at_p else grid
     unlabelled = [0]
@@ -1289,22 +1320,27 @@ def slash_forms(book, entries, ranges):
         hits[0]['blocks'] = out
 
 
-def forms(name):
+def forms(name, bracketed=False):
     """A checklist name as a header may print it. ME2's Contents inverts some
     ("Chimaera, The", "Asgardian, Typical") where the header reads CHIMAERA,
-    The FENRIS WOLF or Typical ASGARDIAN; a leading The is dropped either way."""
-    out = {roster.norm(name)}
+    The FENRIS WOLF or Typical ASGARDIAN; a leading The is dropped either way.
+    `bracketed` is MLA2's registry bracketed_card_names: a name with a
+    variant in brackets (Captain America (Original), printed 54; Iron Man
+    (Mark VIII Armor), 58) is matched as base() reads its header too, with
+    the bracket gone."""
+    out = {roster.norm(name)} | ({base(name)} if bracketed else set())
     if ', ' in name:
         surname, given = name.split(', ', 1)
         out.add(roster.norm(given + ' ' + surname))
     return out | {re.sub(r'^the ', '', n) for n in out}
 
 
-def match(name, entries, part=None, page=None):
+def match(name, entries, part=None, page=None, bracketed=False):
     """The one entry with a block that a checklist name names. A name on two
     checklists (ME2's Titans and Zeus: a Resource Book entry and a second grid
-    in a chapter) is told apart by the booklet and page each list gives."""
-    n = forms(name)
+    in a chapter) is told apart by the booklet and page each list gives.
+    `bracketed` is forms'."""
+    n = forms(name, bracketed)
     hits = [e for e in entries if e['blocks'] and re.sub(r'^the ', '', base(e['header'])) in n
             and (part is None or e['part'] == part) and (page is None or page in e['pages'])]
     return hits[0] if len(hits) == 1 else None
@@ -1354,11 +1390,12 @@ def coverage(book, entries, overrides):
     cards += [(n, part, page) for part, page, _host, _k, n in book.get('grid_cards', [])]
     where += cards
     listed = contents + opponents + book.get('tiers', []) + [c[0] for c in cards]
+    bracketed = bool(book.get('bracketed_card_names'))
     for n, part, page in where + [(t, None, None) for t in book.get('tiers', [])]:
-        if not match(n, entries, part, page):
+        if not match(n, entries, part, page, bracketed):
             lines.append('  CHECKLIST NAME WITH NO ENTRY: %s' % n)
             bad = True
-    known = {f for n in listed for f in forms(n)} | {roster.norm(r[0]) for r in summary['heroes']}
+    known = {f for n in listed for f in forms(n, bracketed)} | {roster.norm(r[0]) for r in summary['heroes']}
     for e in entries:
         if e['blocks'] and e['kind'] != 'summary' and re.sub(r'^the ', '', base(e['header'])) not in known:
             lines.append('  STATTED ENTRY ON NO CHECKLIST: %s (%s p.%s)' % (e['header'], e['part'], e['pages'][0]))

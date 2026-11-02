@@ -386,7 +386,8 @@ class GridReader:
         self.mends = {k for k in ('popularity_below', 'code_first_rows', 'class_mark', 'trailing_marks', 'popularity_notes',
                                   'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail',
                                   'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids',
-                                  'wrapped_alternates', 'dash_marks', 'inner_grids')
+                                  'wrapped_alternates', 'dash_marks', 'inner_grids', 'opponent_grid_ends',
+                                  'power_heads_not_run_ins')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -633,6 +634,8 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
     labels = labels or {}
     entries, cur = [], None
     after_inner = -1                    # the line after an inner grid (registry inner_grids)
+    after_grid = -1                     # the line after any grid (registry opponent_grid_ends)
+    mends = getattr(reader, 'mends', ())
 
     def start(kind, name, line):
         nonlocal cur
@@ -695,6 +698,7 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             # it is the grid's (the Werewolf's Claws under his human
             # statistics, printed 62)
             after_inner = end if inner else after_inner
+            after_grid = end
             i = end
             continue
         if line['big']:
@@ -731,11 +735,14 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             r = RUN_IN.match(text.replace('\u2019', "'"))
             # a paragraph indented right under a one-line grid (ME2's chapters,
             # gridbooks.line_grids) is the chapter again: those grids end on
-            # "Karma: 56", not on a sentence
+            # "Karma: 56", not on a sentence; and in MLA2 (registry
+            # opponent_grid_ends) right under any grid (the Old Man, printed
+            # 23, at the next column's top; Tak, printed 25)
             resumes = (r and line['x0'] - line['left'] < 40
                        and not (section_of(r.group(1).strip()) or labels.get(r.group(1).strip()))) or (
                 line['x0'] - line['left'] >= 25 and (prev_text.endswith(('.', '!', '?', '"', '\u201d'))
-                                                     or (i and stream[i - 1].get('line_grid')))
+                                                     or (i and stream[i - 1].get('line_grid'))
+                                                     or (i == after_grid and 'opponent_grid_ends' in mends))
                 and (cur['pages'][0], cur['header']) not in run_on)
             # ...but not at a power the registry says is set indented (MT2's
             # indented_power_heads, gridbooks.stream_of)
@@ -744,7 +751,10 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
                 i += 1
                 continue
         add_page(line)
-        if m and line['x0'] - line['left'] < 40:
+        # MLA2 (registry power_heads_not_run_ins): a power named in capitals
+        # (Iron Man's ECM, printed 59) matches RUN_IN; a line the registry's
+        # power_heads names is a power, never a run-in
+        if m and not (line.get('power_head') and 'power_heads_not_run_ins' in mends) and line['x0'] - line['left'] < 40:
             label = m.group(1).strip()
             key = section_of(label) or (opponent and labels.get(label))
             if key:

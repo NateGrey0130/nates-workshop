@@ -56,7 +56,7 @@ ROW = re.compile(r'^\s*(\S{0,3}?)\s*[~_=-]*\s*(' + CODE + r')(?![A-Za-z0-9])' + 
 ROW_TITLE_CASE = re.compile(ROW.pattern.replace('|FE|', '|FE|FB|'), re.IGNORECASE)
 
 
-def code_row(unread_codes=False, specks=False, dash_shift=False):
+def code_row(unread_codes=False, specks=False, dash_shift=False, undashed_shift=False, s_numbers=False, extra_codes=()):
     """ROW_TITLE_CASE, or with MX3's mends, read through scripts/msh/gridbooks.py
     grid. `unread_codes` (registry unread_codes): a one- or two-letter token
     set hard against a bracketed number is a code the row cannot read (Gilda
@@ -64,18 +64,32 @@ def code_row(unread_codes=False, specks=False, dash_shift=False):
     `specks` (registry code_row_specks): a full stop or comma between the row
     letter and the code is a speck ("P . TY (6)", the Mark IV's P, printed 31).
     `dash_shift` (MLA1's registry dash_shift_codes): Shift 0 printed Sh-0 (the
-    Black Talon's zombie and skeleton, printed 53), where CODE reads Shift 0."""
-    if not (unread_codes or specks or dash_shift):
+    Black Talon's zombie and skeleton, printed 53), where CODE reads Shift 0.
+    MLA2's, each a registry field of its own: `undashed_shift`
+    (undashed_shift_zero) widens that to Sh0 printed with no dash and read
+    Sho, ShO or Sh0O (the House of Madness robots, printed 39-42);
+    `s_numbers` (s_before_number): a number read with an S before it is
+    still the row's number (Silver Samurai's 'RM (S80)', printed 61), where
+    the S made no number and the row welded to the one above; `extra_codes`
+    (code_rank_aliases): the registry's rank_aliases spellings that CODE does
+    not read, read as codes (the mechanical mummy's R 'RP (4)', printed 41)."""
+    if not (unread_codes or specks or dash_shift or undashed_shift or s_numbers or extra_codes):
         return ROW_TITLE_CASE
     pattern = ROW_TITLE_CASE.pattern
     if unread_codes:
         pattern = pattern.replace('|[XYZ])', r'|[XYZ]|[A-Z]{1,2}(?=\(\d))', 1)
     if specks:
         pattern = pattern.replace('[~_=-]*', '[~_=.,-]*', 1)
-    if dash_shift:
-        pattern = pattern.replace(r'|Shift\s?[0XYZ]|', r'|Shift\s?[0XYZ]|Sh-?0|', 1)
+    shift = r'|Sh-?[0oO]{1,2}|' if undashed_shift else r'|Sh-?0|'
+    if dash_shift or undashed_shift:
+        pattern = pattern.replace(r'|Shift\s?[0XYZ]|', r'|Shift\s?[0XYZ]' + shift, 1)
+    if s_numbers:
+        pattern = pattern.replace(r'([\d$]{1,4})', r'((?:S(?=\d))?[\d$]{1,4})', 1)
+    if extra_codes:
+        pattern = pattern.replace('|FE|FB|', '|FE|FB|' + ''.join(re.escape(c) + '|' for c in extra_codes), 1)
     assert pattern.count(r'[A-Z]{1,2}(?=\(\d)') == int(unread_codes) and pattern.count('[~_=.,-]*') == int(specks) \
-        and pattern.count('|Sh-?0|') == int(dash_shift)
+        and pattern.count(shift) == int(dash_shift or undashed_shift) and pattern.count('(?:S(?=\\d))?') == int(s_numbers) \
+        and pattern.count('|FE|FB|' + ''.join(re.escape(c) + '|' for c in extra_codes)) == 1
     return re.compile(pattern, re.IGNORECASE)
 # a code that must print a number to be a row: with none, the line is prose
 # (a mixed-case line above MX1's grids, 'ere eee', reads as Re)
@@ -84,9 +98,13 @@ SHIFT = {'X': 'ShX', 'Y': 'ShY', 'Z': 'ShZ'}
 DASH = chr(0x2013) + chr(0x2014) + '-'
 
 
-def code_of(printed):
+def code_of(printed, aliases=None, fold_shift=False):
     """The canonical code (roster.RANK_NUMBER's) for a code as printed, or None
-    for N/A."""
+    for N/A. MLA2's: `fold_shift` (registry undashed_shift_zero) reads Sh0
+    read with an o or a doubled 0 (Sho, ShO, Sh0O, printed 39-42) as Sh0;
+    `aliases` is booklet.ladder(book) for a book that sets code_rank_aliases,
+    where a spelling roster.canon cannot read is looked up (the mechanical
+    mummy's RP, printed 41)."""
     p = re.sub(r'\s', '', printed)
     if p.upper().startswith('N'):
         return None
@@ -95,7 +113,12 @@ def code_of(printed):
     m = re.match(r'^C[L1lIt]?([135]000)$', p)
     if m:
         return 'C-' + m.group(1)
-    return roster.canon(p)
+    if fold_shift:
+        p = re.sub(r'^(Sh-?)[0oO]{1,2}$', r'\g<1>0', p)
+    c = roster.canon(p)
+    if c is None and aliases and p.upper() in aliases:
+        return aliases[p.upper()][0]
+    return c
 
 
 def number_of(code, raw):
@@ -116,13 +139,16 @@ def number_of(code, raw):
     return n, None
 
 
-def rows_from(texts, pattern=ROW, resources_below=False, unread_codes=False):
+def rows_from(texts, pattern=ROW, resources_below=False, unread_codes=False, aliases=None, fold_shift=False,
+              health_mend=False):
     """The grid's rows from the crop's lines, in order. A line that is not a
     row after the first is the tail of a value that wrapped, and joins the row
     above, as in roster.rows_from. `pattern` is ROW, or MX1's ROW_TITLE_CASE.
     `resources_below` is MX2's registry code_rows_resources_below.
     `unread_codes` is MX3's registry unread_codes (code_row): a row whose code
-    is no code keeps its number, where N/A keeps none."""
+    is no code keeps its number, where N/A keeps none. `aliases` and
+    `fold_shift` are code_of's; `health_mend` is MLA2's registry
+    mend_by_health (mend_by_health below)."""
     rows = []
     for t in texts:
         m = pattern.match(t)
@@ -133,7 +159,7 @@ def rows_from(texts, pattern=ROW, resources_below=False, unread_codes=False):
             # "IN (40)", printed 12) is the value's tail, not the next row
             ok = False
         if ok and len(rows) < 7:
-            code = code_of(m.group(2))
+            code = code_of(m.group(2), aliases, fold_shift)
             number, read_as = number_of(code, m.group(3))
             if code is None and not (unread_codes and not m.group(2).upper().startswith('N')):
                 number = None
@@ -144,10 +170,33 @@ def rows_from(texts, pattern=ROW, resources_below=False, unread_codes=False):
             rows.append(row)
         elif rows:
             rows[-1]['rest'] += ' ' + t.strip()
+    if health_mend:
+        mend_by_health(rows)
     return rows
 
 
-def grid_at(stream, i, reader, pattern=ROW, resources_below=False, unread_codes=False, end_at_popularity=False):
+def mend_by_health(rows):
+    """MLA2 (registry mend_by_health): a 3 or 5 read as 8 in F, A, S or E that
+    number_of could not mend, because the code is itself the misprint (the
+    Clown Robot's E, printed 40, prints EX (30) and reads EX (80); 30 is not
+    Excellent's number), mended where the Health printed on F's row says so,
+    and only where exactly one such reading makes F+A+S+E. read_as keeps the
+    number as read."""
+    h = re.search(r'Health\s*[:=;]?\s*(\d+)', rows[0]['rest']) if len(rows) >= 4 else None
+    nums = [r['number'] for r in rows[:4]]
+    if not h or None in nums or sum(nums) == int(h.group(1)):
+        return
+    fixes = [(k, int(t)) for k, r in enumerate(rows[:4]) if 'read_as' not in r and '8' in str(r['number'])
+             for t in {str(r['number']).replace('8', '3'), str(r['number']).replace('8', '5')}
+             if sum(nums) - r['number'] + int(t) == int(h.group(1))]
+    if len(fixes) == 1:
+        k, n = fixes[0]
+        rows[k]['read_as'] = str(rows[k]['number'])
+        rows[k]['number'] = n
+
+
+def grid_at(stream, i, reader, pattern=ROW, resources_below=False, unread_codes=False, end_at_popularity=False,
+            aliases=None, fold_shift=False, health_mend=False):
     """If stream[i] is a grid's Health line, return (rows, first index after
     the grid), as roster.grid_at does. The box runs from a line above the
     Health label to the Popularity line in the same column, or seven row
@@ -155,7 +204,9 @@ def grid_at(stream, i, reader, pattern=ROW, resources_below=False, unread_codes=
     registry code_rows_end_at_popularity: where the crop gives no seven rows,
     the stream's lines are read to the Popularity line and no further (the
     Mark IV's, printed 31, took the next four, its Known Powers among them,
-    into its Popularity)."""
+    into its Popularity). `aliases`, `fold_shift` and `health_mend` are
+    rows_from's (MLA2)."""
+    mla2 = dict(aliases=aliases, fold_shift=fold_shift, health_mend=health_mend)
     line = stream[i]
     if not roster.ANCHOR.search(line['text']):
         return None, i
@@ -168,10 +219,10 @@ def grid_at(stream, i, reader, pattern=ROW, resources_below=False, unread_codes=
     pitch = (stream[karma]['y0'] - line['y0']) / 2 or 60
     bottom = stream[pop]['y1'] + 10 if pop is not None else line['y0'] + 7 * pitch + 10
     box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
-    rows = rows_from(reader.read(line['pdf'], box), pattern, resources_below, unread_codes)
+    rows = rows_from(reader.read(line['pdf'], box), pattern, resources_below, unread_codes, **mla2)
     if len(rows) != 7:
         stop = pop + 1 if end_at_popularity and pop is not None else (pop if pop is not None else karma) + 5
-        rows = rows_from([s['text'] for s in stream[i:stop]], pattern, resources_below, unread_codes)
+        rows = rows_from([s['text'] for s in stream[i:stop]], pattern, resources_below, unread_codes, **mla2)
     end = i + 1
     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
             and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
