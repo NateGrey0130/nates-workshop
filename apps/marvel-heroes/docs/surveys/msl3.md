@@ -241,31 +241,140 @@ chain builds each as a pair of doubles (decision 7).
 
 ## Which reader fits
 
-**Not finished.** Plan row 28c runs the trial parse and writes this
-section. What it has to see, from the measurements above:
+**`grid-booklets` (`scripts/msh/gridbooks.py`, MSL1's and MSL2's), with
+six things taught to it.** Measured 2026-11-02 (plan rows 28c and 28c1): a
+scratch copy of `scripts/msh/` and `apps/marvel-heroes/data` at this
+branch's `b0c76ba7` (`main` at `85df911d`), the msl3 entry as row 28a left
+it (`parts`, `character_ranges` empty, `opponents`) given `"layout":
+"grid-booklets"`, the fields `main`'s `gridbooks.py` already reads set for
+this book, the trial's own reader fields below, and a trial
+`msl3-overrides.json`, run on a copy of the cache under its own
+`WORKSHOP_MSH_CACHE`. Eight runs (run0 to run7), each run's whole output
+kept, then an ablation that turned each field of the last run off in turn.
 
-- MSL1's and MSL2's verdict was `grid-booklets` (`scripts/msh/gridbooks.py`)
-  with the fields their reader rows added, for the same three-row grid in
-  a `parts` entry. MSL3's grids are all opponents, with no card page, as
-  MSL1's four chapter grids and MSL2's Debris Creature were.
-- The label line is `Health = n` and `Karma = n` on one line, with spaces
-  round the `=`, not MSL1's and MSL2's `Health:` beside `Karma:`; two grids
-  print no Karma line, and one prints `Health = See text`. No grid prints
-  Resources or Popularity.
-- Headers are title case at a subhead's size, one in body type, so a header
-  is found from its grid, not its size.
-- `KNOWN POWERS` runs into the first power on two grids (MSL2's
-  `subhead_line_powers`) and stands alone on two; four grids print no label
-  and only indented prose.
-- Every paragraph after a grid is indented, so an opponent's entry cannot
-  end at the first indented paragraph, or four cards are a grid and no
-  text. Each entry ends at the next numbered encounter or subhead (listed
-  under *Stat blocks*).
-- Torr's grid ends a column and his text starts the next page.
-- Two header names carry the being's name in brackets (decision 5).
-- `Booy Armor` for Body Armor on the Ice Bat (printed 13) and the Vapor Wasp
-  (18) in the OCR, and `\t` and `|t` for It at the start of power lines
-  (13, 18, 21): MSL2's `speck_lines` handled the same `Booy`.
+**`code-grids` was not tried.** `codegrids.py` reads one `offset` and one
+`character_pages`, and MSL3's entry is a `parts` entry with neither, which
+is where it stopped on MT2 and MT3 (MSL1's *Which reader fits*). `main`'s
+`gridbooks.py` reads `parts`, `character_ranges` and `opponents` already,
+so the trial went there. The other readers fit less: `roster.py` (MA1)
+reads one offset; `booklet.py` (MHSP1) and `coverpanels.py` (MH1, MH2) read
+rank words with no numbers.
+
+**The stock grid-booklets finds no grid.** With `layout` alone (run0),
+`roster.py msl3` exits 1: 560 stream lines, **0 entries and 0 blocks**, all
+8 opponents on no entry. The `=` in `Health = n` gives the line-grid parser
+no anchor (item 1). With MSL2's fields set (`codes_over_numbers`,
+`subhead_labels`, `cards`, `teams`, `one_line_grids`; run1) it stops at
+once, `one_line_grids not found: Nop Yaan Peasant` (printed 5), for the
+same reason.
+
+| measure | stock (run0) | with every trial change (run7) |
+|---|---|---|
+| stream lines | 560 | 708 (Torr's printed 19, the Bubble Beast's 22 and Ashta's 23 read on) |
+| entries | 0 | 8, every one with a block |
+| stat blocks | 0 | 8 |
+| blocks passing every check | 0 | 5, and 3 known from the overrides (2 `as_printed`, 1 `misprint`) |
+| failing | 0 | 0 |
+| checklist names with no entry | 8 (every opponent) | 0 (8 opponents, all found) |
+| powers | 0 | 13 across 4 entries |
+| exit code | 1 | 0 |
+
+`npcs.py msl3` on run7's roster exits 0: **8 cards** (8 blocks, 13 powers,
+8 of them linked to the UPB), **21 text rows over 21 distinct keys**, the
+1090 cards of other books kept. Torr and Ashta are `torr-msl3` and
+`ashta-msl3`, named per decision 5 with Alien Trader and Flying Stallion
+as their identity lines. Torr's four quotations (printed 19) build as four
+pairs of doubles, so decision 7 needs no `text` verdict. The 8 blocks are
+this survey's 8 cards (decision 3).
+
+What grid-booklets must learn. Each reader change was made in the scratch
+copy, marked as the trial's, R1-R4 and R6 behind a field of their own, in
+the diff kept in the plan's store:
+
+1. **`Health = n` and `Karma = n`** on every grid's label line (printed
+   5-30), with a space either side of the `=`: the stock reads only
+   `Health:` and `Karma:`, so no grid is found. Reader (R1):
+   `equals_labels`, which reads the line as MSL2's.
+2. **`Health = See text`** (the Robotic Dragon, printed 30): with R1 alone
+   the Dragon is an entry with no block, on no checklist (run2). Reader
+   (R2): `text_health`, a `[part, page, words]` the line grid keeps as
+   printed, with an anchor for it in `roster.read_entries`.
+3. **No Karma line** (the Flying Robotic Snake, printed 6, and the Robotic
+   Dragon, 30): the stock writes Karma as the string `'None'`, and the
+   check reports `KARMA IS NOT A NUMBER` (run2). Reader (R3):
+   `no_karma_line`, which leaves Karma null.
+4. **An indented paragraph after the last power** (the Ice Bat, printed
+   13; the Vapor Wasp, 18; the Bubble Beast, 21-22; Ashta, 22-23): every
+   paragraph after a grid is indented (*Columns, labels and ranks*), and
+   the stock gives the resumed encounter text to the last power (Vapor
+   Form 1143 characters, Sphere Projection 2057, run5). Reader (R4):
+   `run_on_prose`, which in an `opponent_indented_paragraphs` entry reads
+   an indented paragraph after a power's sentence as prose.
+5. **A book whose every grid is an opponent** (`character_ranges` empty):
+   `npcs.py` stops with `KeyError: 'character_pages'` twice, in
+   `source_pages` and `book_listing`. Reader (R5, `npcs.py`, no field):
+   read the book's span from `npcs.ranges()`.
+6. **A bracket giving the being's own name** (Alien Trader (Torr), printed
+   18; Flying Stallion (Ashta), 22; decision 5): `card_names` refuses a
+   bracketed header and `npcs.base_name` drops the bracket, so the cards
+   come out as Alien Trader and Flying Stallion. Reader (R6, `npcs.py`):
+   `bracket_given_names`, a `[part, page, header]` that names the card from
+   the bracket and makes the rest its identity line.
+
+**So the reader must learn 6 things**, R1-R6, all made in the trial. The
+rest is registry-only, fields `main`'s reader already reads, and the
+overrides file. The trial did not run the proof that every earlier book
+builds byte-identical (`marvel-book`, *Prove every earlier book did not
+move*); the reader row does.
+
+**The registry-only fields and the overrides, and which are needed.** The
+ablation (row 28c1) reproduced run7 byte for byte, then ran it with each
+field off in turn, comparing `roster.json`, the msl3 records of
+`npcs.json` and `book-text.sql` with run7's:
+
+| field | without it |
+|---|---|
+| `codes_over_numbers` | all 8 blocks read `rank_only`, every number taken from its code (Ashta's A 10 becomes 20 with no override) |
+| `subhead_labels` (`KNOWN POWERS`, no colon) | exit 1: `subhead_line_powers` finds no Body Armor on printed 13 |
+| `teams` (every card under MSL3 Spore of Arthros, decision 1) | `npcs.py` exits 1, `KeyError: 'side'` |
+| `one_line_grids` (the 8 grids, MX1's form, by header as read) | exit 1: `opponent_indented_paragraphs` finds no entry for the Peasant |
+| `bracketed_card_names` (Torr's and Ashta's headers) | exit 1: both on no checklist |
+| `opponent_indented_paragraphs` (all 8) | every entry's prose empty; printed 19, 22 and 23 lost |
+| `entry_ends` (7: encounters 4, 5, 13, 14, 18 and 22, and the subhead Events) | 7 entries run on into the encounters (the Ice Bat's prose 300 characters to 2954, Ashta's 525 to 4314) |
+| `opponents` `continues` (Torr 19, Ashta 23) and `runs_on` (the Bubble Beast 22) | Torr's prose 2940 characters to 0, the Bubble Beast's 1590 to 293, Ashta's 525 to 178 |
+| `speck_lines` (6: `Booy` for Body on printed 13 and 18; `\t` and `\|t` for It on 13, 18 and 21) | exit 1: the same Body Armor not found on printed 13 |
+| `subhead_line_powers` (`KNOWN POWERS` run into Body Armor on printed 13 and 18) | 5 powers across 2 entries, not 13 across 4; the Ice Bat and the Vapor Wasp keep none |
+| `cards` (the 8 headers as read) | **not needed**: every output byte-identical; kept only as the record of the cards as read |
+| `msl3-overrides.json` | exit 1: 1 failing (Ashta) and Health or Karma not a number on the Snake and the Dragon |
+
+Every reader field (R1-R4, R6) is needed in the same way: without
+`equals_labels` or `text_health` the run exits 1, without `no_karma_line`
+the two machines' Karma is `'None'`, without `run_on_prose` the last power
+swallows four entries' prose, and without `bracket_given_names` Torr and
+Ashta keep their kinds as names. R5 has no field.
+
+**The overrides**, 3 entries, each matching one block (decision 8):
+Ashta's `A 10->20` a `misprint` (printed 22), with printed and corrected
+kept; the Snake's Karma `as_printed` null (printed 6); the Robotic Dragon's
+Health `as_printed` `See text`, with its Karma `as_printed` null in `also`
+(printed 30).
+
+**What the trial did not check:** the six speck fixes and the seven entry
+ends were read off the stream, not on a render of the page; and the prose
+above each grid, which introduces it, is the encounter's and is in no
+entry. The trial's registry patches, the reader diff, the overrides and
+every run are kept in the plan's store (rows 28c and 28c1,
+`trial/msl3/`), not the repo.
+
+**Verdict: grid-booklets.** It reads this book's `parts`, empty
+`character_ranges` and `opponents` as row 28a wrote them, and every field
+an earlier book taught it carries over; code-grids reads no `parts` entry.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above (`cards` optional), the three
+overrides, a field of its own for each of R1-R4 and R6, R5 in `npcs.py`,
+and the byte-identical proof for every earlier book. This survey sets no
+`layout`.
 
 ## Decisions this survey leaves open
 
