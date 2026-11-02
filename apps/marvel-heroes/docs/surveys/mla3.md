@@ -2,7 +2,8 @@
 
 > **DRAFT.** Written through every stat block of the book, the vehicle
 > lines, *Names the Codex already has*, *Quote marks* and *Decisions* (plan
-> rows 19a and 19b). *Which reader fits* is not finished (plan row 19c).
+> rows 19a and 19b) and *Which reader fits* (plan row 19c). The Marvel
+> suite has not been run on it yet (plan row 19d).
 
 Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 1990, the third module of the Gang Wars trilogy (the MLA series, after MLA1
@@ -506,7 +507,139 @@ on an odd double.
 
 ## Which reader fits
 
-Not finished (plan row 19c).
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with MLA2's fields and
+four things taught to it.** Measured 2026-11-02 (plan rows 19c and 19c1):
+a scratch copy of `scripts/msh/` and `apps/marvel-heroes/data` at this
+branch's `162a65c7` (`main` at `d94b50ac`, MLA2's reader #2055 on it), the
+entry given `"layout": "grid-booklets"`, run on a copy of the cache under
+its own `WORKSHOP_MSH_CACHE` (no page re-OCR'd; only grid crops were added,
+to the copy). Twelve runs. `code-grids` was not tried, since this one fits
+(as MLA1).
+
+- **Stock, `layout` alone:** exit 1. 46 entries, 36 blocks, **none
+  passing**: the grids read as number-then-code rows, entries are named by
+  their identity line, and the nine chapter grids, the Guardsmen, Colossal
+  Deathlok and Vortex have no entry.
+- **With the MX1 family** (workaround 1): exit 1. 47 entries, 36 blocks,
+  35 passing, 1 failing.
+- **With MLA2's fields as well** (workaround 2) and the trial overrides:
+  exit 1. 51 entries, 46 blocks, 43 passing and 3 known, 0 failing; the
+  Hammerhead Robot (printed 15), Cameron's Machine (printed 30) and the
+  Creature From the Void (printed 44) have no block.
+- **With every registry workaround and reader change below:** exit 0.
+
+| measure | trial, last run |
+|---|---|
+| entries | 51: the 45 characters (36 cards and the nine chapter grids) and 6 without a block |
+| stat blocks | 49: one per character, and a second grid on Iron Man (Mark VIII Armor), the Mandroid, Thor and Typhoid Mary (decision 4) |
+| blocks passing every check | 44, and 5 known from the trial overrides (2 `misprint`, 3 `as_printed`); failing 0 |
+| powers | 133 across 34 entries |
+| checklist | every card and tier found |
+| exit code | 0 |
+
+The trial overrides are the survey's decisions 4, 5 and 6 written for the
+trial only, not re-read on the images: the Guardsmen's and Thor's Health
+`misprint`s, the three machines' Karma 0 `as_printed`, and the four second
+grids' labels (Tony Stark, Eric Masterson, Mary, Rocko), each matching one
+block. The data row writes the real file.
+
+`npcs.py mla3` on the copy exits 0: 45 characters, 49 blocks, 133 powers
+(33 linked to the UPB), 212 book-text rows, and the 1,018 cards of the
+other books kept.
+
+**Registry-only workarounds** (fields `scripts/msh/` already reads; each
+worked in the trial):
+
+1. **The MX1 family.** `code_rows`, `card_headers` with the 36 card
+   headers as `cards`, `title_case_labels`, and `teams` as decision 1.
+   0 passing became 35.
+2. **MLA2's fields:** `bracketed_card_names`, `code_row_specks`,
+   `trailing_marks`, `dash_marks`, `dash_shift_codes`, `override_values`,
+   `code_grids_by_pitch`, `rising_row_pitch`, `inner_grids`,
+   `code_rank_aliases`, `s_before_number`, `mend_by_health`,
+   `subhead_exact_case`, `body_top` 0.08, `identity_lines` 2 and
+   `opponent_grid_ends`; MLA1's `derived_karma` (Bertha the Gorilla's 12
+   and the Alligators' 6, decision 7); `extra_titles` for the four faction
+   subheads (The Faces of Fear, The Maggia and The Si Fan on printed 7, The
+   Wildboys on printed 8); and `card_names` for Cameron's Machine's curly
+   apostrophe (decision 8). `rising_row_pitch` is needed: without it Bertha
+   the Gorilla, Hound Dog, the Security Guards and Vortex lose their blocks.
+3. **`undashed_shift_zero`**, for Cameron's Machine's S, which reads
+   `Sh-O0` (printed 30). Needed alone: without it the Hammerhead Robot and
+   Cameron's Machine lose their blocks, two overrides match nothing and the
+   build exits 1 (47 blocks).
+4. **Seven text checks, each fixed by a field alone** (run on the last
+   run's parse against the one before; nothing else moved, powers 126 to
+   133):
+   - the Typical Batboy (printed 7): `entry_ends` where the Faces of Fear's
+     own text resumes; his notes 76 words to 18;
+   - Iron Man (Mark VIII Armor) (printed 55): `power_heads` ECM with
+     `power_heads_not_run_ins`; notes 105 words to none, powers 12 to 15;
+   - the Kingpin (printed 55) and Typhoid Mary (printed 61): `label_powers`
+     Weaponry, so the italic run-in is a power and not notes (Mary's
+     Weaponry and Alter-Ego);
+   - the Vision (printed 62): `power_heads` with its fourth field, the line
+     as read. `roster.POWER_HEAD` does not read the em dash in his Density
+     Manipulation-Self head, so 165 words sat under the powers section; the
+     power is named with a hyphen, as the Vision card `main` already has
+     (`vision-mla2`), and his powers go 3 to 4;
+   - the Alligators (printed 42): `entry_ends` at the chapter's flush line
+     under the grid; 19 words of chapter text out of the card;
+   - the Hammerhead Robot (printed 15): `speck_lines`, its power read
+     `Boay Armor` and printed Body Armor (read on the render), so the data
+     row needs no `text` verdict for it.
+
+   Left as MLA2 left them: the Typical Si Fan Assassin's notes (117 words,
+   Weaponry and Mental Barrier) and the 34 words before Captain America
+   (Original)'s first power.
+5. **The overrides**, as above.
+
+Not used: `grid_headers` (every MLA3 grid prints a header).
+
+**What the reader must learn: four things**, the first three applied in
+the trial (`codegrids.py` and `gridbooks.py`, ungated), the fourth not:
+
+1. **The least row gap, as a last pitch** (the Creature From the Void,
+   printed 44). `rising_row_pitch` tries 45 and 46 px, and both crops read
+   the I row with no number; a crop at the least gap, 44 px, reads it.
+   Without it the Creature has no block. It adds a pitch, never replaces
+   one: without `rising_row_pitch` four other grids are lost (workaround
+   2). Suggested field `least_row_pitch`.
+2. **`SH-O` in capitals** (the Hammerhead Robot's I, printed 15).
+   `codegrids.code_of` folds `Sh-O` to `Sh-0` under `fold_shift`, but only
+   in that case, so the capitals give no code. Needed alone: without it
+   the counts do not move and the build exits 0, but the I is unread and
+   the block passes only because `roster.check` skips a value it cannot
+   read. Suggested field `upper_shift_zero`.
+3. **The stream's own lines when no crop gives seven rows** (the
+   Hammerhead Robot's P, printed 15). Every crop reads a bar before the
+   row letter, so `code_grids_by_pitch` finds no grid and has no fallback.
+   The trial reads the stream's lines over seven of the first pitch.
+   Without it the Hammerhead Robot has no block. Suggested field
+   `stream_row_fallback`.
+4. **A shortened card identity** (Colossal Deathlok, printed 51, decision
+   12). **The chain has no field for it.** `npcs.py`'s identity fields are
+   `identity_to_block`, `line_identity` (needs no identity line and the
+   prose to match), `bracket_identity` (needs a parenthesis in the header
+   and no identity line) and `identity_lines` (joins lines, never shortens
+   them); none commits Luther Manning as the identity while the printed
+   line goes to D1 with the prose. MLA2's Deathlok Simulacrum ships the
+   same Real Name sentence as its identity on `main` today. Suggested field
+   `short_identity` (part, printed page, header, identity). Not applied.
+
+**So grid-booklets must learn 4 things: 3 reader changes** (1-3, each
+shown needed alone) **and 1 `npcs.py` field** (4); the parse leaves
+nothing unfixed. Items 1-3 are ungated in the trial: the reader row gives
+each a field of its own, or builds every earlier book byte-identical
+(`marvel-book`, *Prove every earlier book did not move*). The trial did not
+run that proof.
+
+**Verdict: grid-booklets.** **The decision it settles** (the reader row
+sets it): `"layout": "grid-booklets"`, with the fields above, the nine
+overrides, and a field for each of items 1-4. This survey sets no
+`layout`. The registry patch, the trial overrides, the reader diff (LF,
+ASCII; it applies to `162a65c7`) and every run's output are kept in the
+plan store, `trial\mla3\`, not the repo.
 
 ## Decisions this survey leaves open
 
