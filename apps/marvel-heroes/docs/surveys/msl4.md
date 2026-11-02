@@ -1,8 +1,9 @@
 # Survey: MSL4 Stygian Knight (TSR6904)
 
-> **DRAFT.** Written up to *Which reader fits*, which is not finished: the
-> trial parse (plan row 31c) runs a reader over this book and writes it. No
-> `layout` is set, and nothing of the book is imported yet.
+> **DRAFT** until the Marvel smoke suite has run over it (plan row 31d).
+> Every section is written, *Which reader fits* from the trial parse (plan
+> rows 31c and 31c1). No `layout` is set, and nothing of the book is
+> imported yet.
 
 Marvel Super Heroes adventure, product code 6904 on the cover (PDF 1). By
 Anthony Herring (the title page), 1991, MSL2's author. Registry entry:
@@ -256,37 +257,193 @@ printed kept if not), and that no adventure entry reaches back to the
 
 ## Which reader fits
 
-**Not finished.** Plan row 31c runs the trial parse and writes this
-section. What it has to see, from the measurements above:
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with two reader changes
+and the rest registry-only.** Measured 2026-11-02 (plan rows 31c and
+31c1): a scratch copy of `scripts/msh/` and `apps/marvel-heroes/data` at
+this branch's `0b3d5336` (`main` at `ebf46fb7`), the msl4 entry as row 31a
+left it (`parts`, `character_ranges`, `opponents`) given `"layout":
+"grid-booklets"`, the fields `main`'s `gridbooks.py` already reads set for
+this book (MSL1's and MSL2's base fields, then the trial's), and the two
+reader changes below, run on a copy of the cache under its own
+`WORKSHOP_MSH_CACHE`. Nine runs (run0, run0d, run1 to run7), `npcs.py` on
+run5 and run7, and an ablation of every field of the final patch, each
+run's whole output kept. No overrides file: every block adds up
+(decision 7).
 
-- MSL1's, MSL2's and MSL3's verdict was `grid-booklets`
-  (`scripts/msh/gridbooks.py`) with the fields their reader rows added, for
-  the same three-row grid in a `parts` entry. MSL4's layout is MSL2's
-  nearest: an NPC roster of capitals headers with a real-name line under
-  each, Stygorr's human form inside his card, and a few chapter grids.
-- The roster grids print `Health:`/`Karma:` over `Resources:`/`Popularity:`
-  (MSL1's and MSL2's `line_grid_resources`); Annihilus's `Karma:70` has no
-  space, and his Popularity's minus reads as a dash (MSL1's
-  `line_popularity_minus`). The adventure grids print no Resources line.
-- The human form prints all seven numbers (MSL2's needed
-  `short_number_rows`) and its own Resources and Popularity (MSL2's
-  `form_resources`).
-- Two headers are surname-first (`CYBORG, MARK ...`, `DUNBAR, FIONA`), one
-  is set over two lines (the Mark III), and every roster header but
-  Annihilus's and Stygorr's carries a role in brackets (decision 6). The
-  Mark III's `Real Name:` line runs over two lines and names two people.
-- The `Real Name:` line is a subhead-face line with its label printed,
-  where MSL2's was the name alone (MSL2's `line_identity`) and MSL1's a
-  bold run-in.
-- `KNOWN POWERS None.` runs into its line on Fiona Dunbar's card (MSL2's
-  `subhead_line_powers`, for a power-less card). `Equipment:` is title case
-  (MX1's and MT2's `title_case_labels`). `LIMITATION:` and `ROLE-PLAYING
-  NOTES:` are labels no MSL book has printed; MT2 printed the second, and
-  the Mark I's carries `(for all Cyborgs)` before its colon.
-- The adventure grids' entries run on into the chapter's play, each to a
-  different end (above), and the Phase-Bot's powers open the next page.
-- The OCR reads `|t` and `\t` for It at the start of power lines (printed
-  14 and 18), as MSL3's did.
+**`code-grids` was not tried.** It reads no `parts` entry (MSL1's and
+MSL2's finding), and `main`'s `gridbooks.py` reads `parts`,
+`character_ranges` and `opponents` already.
+
+**The stock grid-booklets stops at once.** With `layout` alone (run0),
+`roster.py msl4` exits 1, `one_line_grids: Stygorr names 0 entries, not 1`,
+as MSL2's run0 did, and writes nothing. With `one_line_grids` removed too
+(run0d) it runs to the end and exits 1: 503 stream lines, 1 entry, 8
+blocks, 0 passing and 8 failing, 0 powers, the three opponents on no
+entry, and the roster banner a statted entry on no checklist.
+
+| measure | layout, `one_line_grids` removed (run0d) | with every trial change (run7) |
+|---|---|---|
+| stream lines | 503 | 544 |
+| entries | 1 | 11: 10 with a block, and the roster banner blockless (`npcs.py` ignores it) |
+| stat blocks | 8 | 11 |
+| blocks passing every check | 0 | 11, and 0 known from overrides |
+| failing | 8 | 0 |
+| checklists | the 3 opponents on no entry | all found (10 cards, 3 opponents) |
+| powers | 0 | 40 across 9 entries |
+| exit code | 1 | 0 |
+
+`npcs.py msl4` on run7 exits 0: **10 characters**, 10 versions, 11 blocks
+(Stygorr's 2: Stygorr and Lew Shiner, decision 4), 40 powers (13 linked to
+the UPB), **55 book-text rows** with 55 distinct keys, 7 identities. The
+names are decision 6's: Spy-Eye, Phase-Bot, Spray-Bots, Annihilus, Mark I
+Cyborg, Mark II Cyborg, Fiona Dunbar, Mark III Cyborg, Rigger and Stygorr,
+with no version labels. The 7 identities are the `Real Name:` lines as
+printed, label kept (decisions 5 and 8). The ablation took each field of
+the final patch out in turn: every one changes the output, none is a
+no-op. Part is Adventure Book throughout and pages are printed (PDF =
+printed + 2).
+
+What the stock reader misses. **G** is registry-only, a field `main`'s
+reader already reads; **R** is a reader change, made in the scratch copy
+and kept in the diff in the plan's store. Each line says what the trial
+saw with that field off.
+
+1. **`layout` grid-booklets** (book-wide). G. Off: `roster.py` exits 1,
+   `KeyError: 'offset'` (MA1's reader on a parts book).
+2. **The codes row printed above the numbers row** (every grid). G,
+   `codes_over_numbers`. Off: exit 0, but all 11 blocks marked `rank_only`,
+   wrong since the book prints the numbers.
+3. **Resources and Popularity on a line under the grid** (the roster
+   cards). G, `line_grid_resources`. Off: 552 lines, those lines fall into
+   prose, and `npcs.py` stops (`line_identity` for Annihilus does not match
+   the prose).
+4. **Annihilus's Popularity minus** (printed 27). G,
+   `line_popularity_minus`. Off: Popularity kept as dash text, not -30;
+   nothing else moves.
+5. **Lew Shiner's Resources and Popularity** (printed 31). G,
+   `form_resources`. Off: exit 1 at `line_grid_resources` on printed 31.
+6. **`KNOWN POWERS` with no colon** (every card). G, `subhead_labels`.
+   Off: 0 powers, and `npcs.py` stops on `line_identity`.
+7. **Fiona Dunbar's title-case `Equipment:` run-ins** (printed 29-30). G,
+   `title_case_labels`. Off: exit 0, but Equipment and her three items
+   become 4 powers of hers (44 powers, 59 rows); she prints none.
+8. **Headers with a parenthesis on the checklist** (printed 17-30). G,
+   `bracketed_card_names`. Off: exit 1, checklist not all found.
+9. **`cards`, 10 headers as read** (printed 14-31). G. Off: exit 1,
+   checklist not all found.
+10. **`teams`**, one, MSL4 Stygian Knight from printed 14 (decision 1). G.
+    Off: `npcs.py` stops, `KeyError: 'side'`.
+11. **`one_line_grids` for the 10 headers** (MX1's form). G. Off: exit 1,
+    `opponent_indented_paragraphs` finds 0 Spray-Bots entries (no headers,
+    no entries). With `layout` alone it is run0's stop.
+12. **`one_line_grids` for Stygorr's human form** (Lew Shiner, printed 31,
+    ME2's form). G. Off: exit 1, 549 lines, 10 passing and 1 failing, 37
+    powers.
+13. **A misread letters line** (`iS)` for S, Annihilus printed 27 and the
+    Mark II printed 28). G, `letters_marks`. Off: exit 1, `one_line_grids`
+    does not find ANNIHILUS or CYBORG, MARK II.
+14. **The Mark I's header read with a bar for I** (printed 28). G,
+    `speck_lines`. Off: exit 1, subhead not on printed 28. A render
+    (2026-11-02) shows I.
+15. **The Mark III's header on two lines** (printed 29). G,
+    `two_line_headers`. Off: exit 1, subhead not on printed 29.
+16. **The three chapter grids** (the Spy-Eye printed 14, the Spray-Bots and
+    the Phase-Bot printed 17). G, `opponents`. Off: exit 1,
+    `opponent_indented_paragraphs` finds no opponent entries.
+17. **The Phase-Bot's powers on the next page** (printed 18). G,
+    `opponents` continues [18]. Off: 460 lines, 35 powers across 8; the
+    Phase-Bot loses its printed-18 powers.
+18. **An indented paragraph inside a robot's powers** (the Spray-Bots and
+    the Phase-Bot, printed 17). G, `opponent_indented_paragraphs`. Off: 35
+    powers, 50 rows; the Spray-Bots lose Flight and the Phase-Bot keeps only
+    Elongation.
+19. **Trap 2 after the robots** (printed 17). G, `entry_ends`. Off:
+    `npcs.py` stops on an unpaired double quote (the trap's text joins the
+    robot's prose).
+20. **Trap 4 after the Phase-Bot's powers** (printed 18). G, `entry_ends`.
+    Off: exit 0, counts unchanged, `book-text.sql` 25136 -> 27632 bytes
+    (the trap's text joins the Phase-Bot's prose).
+21. **It read as `|t`** (the Spy-Eye's Flight, printed 14). G,
+    `speck_lines`. Off: one misread left in the text; nothing else moves.
+22. **It read with a backslash for I** (the Phase-Bot's Flight, printed
+    18). G, `speck_lines`. Off: the same.
+23. **`Enhanced Senses (Hearing, Smell)`** (printed 18), a parenthesis
+    `roster.POWER_HEAD` cannot read. G, `power_heads`. Off: 39 powers, 54
+    rows.
+24. **`KNOWN POWERS None.` on one line** (Fiona Dunbar, printed 29). G,
+    `speck_lines` (a colon after the label), not MSL2's
+    `subhead_line_powers`. Off: `npcs.py` stops on `line_identity` for
+    Fiona (the line stays in her prose).
+25. **The Mark I's `ROLE-PLAYING NOTES (for all Cyborgs):`** (printed 28).
+    G, `speck_lines` moving the colon before the bracket. Off: 54 rows (the
+    notes run-in is swallowed by TALENTS). A render (2026-11-02) shows the
+    book prints the bracket before the colon, so this is not an OCR misread.
+    A run-in rule allowing a bracketed qualifier before the colon is worth a
+    reader change only if a second book prints that shape; for this one
+    line, the speck moves only the colon in the D1 prose. **Recommended
+    against for now.**
+26. **`Force Field, Personal`** (the Mark I, printed 28), a comma that
+    defeats `POWER_HEAD`. G, `power_heads`. Off: 39 powers.
+27. **`Force Field, Personal` twice on one page** (the Mark II and the Mark
+    III, printed 29). **R**, `repeated_power_heads` [part, page, power
+    name, how many] in `gridbooks.py`: `power_heads` allows one per page.
+    Every line of the page that starts with the name and a colon is a head,
+    and there must be exactly that many. Key off, or `main`'s
+    `gridbooks.py` with the key kept: 38 powers, 53 rows.
+28. **Mark I, II and III misread in the cyborgs' text**, seven times (bar,
+    `Il`, `IIl`, `Ill`; printed 28 twice, 29 five times). G, `speck_lines`.
+    Off: counts unchanged, the misreads stay in the text. A render
+    (2026-11-02) shows all seven print Mark I, II or III.
+29. **A bracket that is a role, not a name** (decision 6), six headers: the
+    Phase-Bot (printed 17), the Mark I and Mark II (28), the Mark III and
+    Fiona Dunbar (29), Rigger (30). **R**, `role_brackets` [part, page,
+    header, card name] in `npcs.py`: `card_names` stops on a parenthesis,
+    so the parenthesis is dropped, the card is named by the registry, and
+    the version has no label; each must find exactly one entry with a
+    parenthesis and no name of its own. Key off, or `main`'s `npcs.py`:
+    `npcs.py` stops at `line_identity` (no card of that name); with
+    `line_identity` off too (run5) the cards are named from the header,
+    `Cyborg, Mark I` with the version HUNTER-WORKER.
+30. **The `Real Name:` lines**, seven (Annihilus printed 27, the Mark I and
+    Mark II 28, the Mark III and Fiona Dunbar 29, Rigger 30, Stygorr 31). G,
+    `line_identity` (MX2's field), the label kept. Off: 0 identities and 62
+    rows (the lines become prose).
+
+**So grid-booklets must learn 2 things** (items 27 and 29), **and 28 are
+registry-only.** Item 25 is an optional third, recommended against. The
+trial's record holds no proof that every earlier book builds byte-identical
+with the two reader changes (`marvel-book`, *Prove every earlier book did
+not move*); the reader row runs it. The registry patch (`p7.json`), the
+reader diff and every run are kept in the plan's store (rows 31c and
+31c1, `trial/msl4/`), not the repo.
+
+**The open checks, answered by the trial:**
+
+- **Stygorr's closing double** (printed 31) is built as a pair of doubles
+  (run5), so it needs no `text` verdict (decision 9).
+- **The feet marks** after a digit (printed 28 and 29), and whether an
+  adventure entry reaches back to the `'X'` above the Spy-Eye's grid, are
+  not in the trial's record: unmeasured, for the data row to read on the
+  built rows.
+- **Where each chapter grid's text ends:** the Spy-Eye's entry ends at its
+  indented paragraph, so the play after it is cut, earlier than the
+  run-in subhead *Stat blocks* names as its text's end; the Spray-Bots'
+  ends at trap 2 (item 19) and the Phase-Bot's at trap 4 (item 20).
+- **Seen and left, not counted:** Rigger's bulleted implant powers stay in
+  its text, as Annihilus's Cosmic Control Rod bullets do; `LIMITATION`,
+  `ROLE-PLAYING NOTES`, `IN BRIEF` and Fiona Dunbar's Equipment go to the
+  notes as run-ins; the roster banner is a blockless entry `npcs.py`
+  ignores.
+
+**Verdict: grid-booklets.** It reads this book's `parts`,
+`character_ranges` and `opponents` as row 31a wrote them, and every field
+an earlier book taught it carries over; code-grids reads no `parts` entry.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above, no overrides, `repeated_power_heads`
+in `gridbooks.py` and `role_brackets` in `npcs.py` each behind a field of
+its own, with the byte-identical proof for every earlier book. This survey
+sets no `layout`.
 
 ## Decisions this survey leaves open
 
