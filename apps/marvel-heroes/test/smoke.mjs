@@ -2484,7 +2484,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && bookNpc({ character: 'schiz-mlba1' }).snapshot?.abilities.intuition.number === 6
       && bookNpc({ character: 'cannonball-mlba1' }).snapshot?.abilities.agility.rank === 'poor',
       fixesB.join(' | '));
-    check('MLBA1: the Sentinel\'s Karma NA and Sunspot\'s Health 52(76) are kept as printed (survey decision 6), the Sentinel playing no Karma and Sunspot his 52',
+    check('MLBA1: the Sentinel\'s Karma NA and Sunspot\'s Health 52(76) are kept as printed (survey decisions 4 and 6), the Sentinel playing no Karma and Sunspot his 52',
       blkB('sentinel-mark-iv-mlba1')?.override?.verdict === 'as_printed' && blkB('sentinel-mark-iv-mlba1')?.karma === 'NA'
       && blkB('sunspot-mlba1')?.override?.verdict === 'as_printed' && blkB('sunspot-mlba1')?.health === '52(76)'
       && playedB('sentinel-mark-iv-mlba1') === '165/null' && playedB('sunspot-mlba1') === '52/20',
