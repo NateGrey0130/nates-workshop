@@ -475,6 +475,20 @@ def main(slug_arg):
         if len(hits) != 1 or not variant(c[2]):
             raise SystemExit('%s: count_headers %r finds %d entries, not 1 with a parenthesis' % (slug_arg, c[2], len(hits)))
         counted.add(id(hits[0]))
+    # A card header whose parenthesis is the character's given name, on a card
+    # that prints no real-name line (MLBA1's Rusty (Russell) Collins, printed
+    # 32; registry bracket_identity [part, printed page, header, identity],
+    # survey mlba1.md decision 3), is not a version label either: the version
+    # has none, and its identity is the registry's. Each must find exactly one
+    # entry with a parenthesis and no identity line. Only a grid-booklets book
+    # sets the field, and only MLBA1 does.
+    bracketed = {}
+    for c in (book.get('bracket_identity', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2]]
+        if len(hits) != 1 or not variant(c[2]) or hits[0]['identity']:
+            raise SystemExit('%s: bracket_identity %r finds %d entries, not 1 with a parenthesis and no identity'
+                             % (slug_arg, c[2], len(hits)))
+        bracketed[id(hits[0])] = c[3]
     by_name = {}
     for e in statted:
         by_name.setdefault(norm(name_of(e) if booklet else group_name(e['header'])), []).append(e)
@@ -750,6 +764,8 @@ def main(slug_arg):
                                      % (slug_arg, key[2]))
                 line_identity_used.add(key)
                 identity, prose = [ascii_fold(x) for x in line_identity[key]], ''
+            if id(e) in bracketed:
+                identity = [ascii_fold(bracketed[id(e)])]
             text_row(eslug, 'prose', None, None, page0, prose)
             members = []
             for n, m in enumerate(e['members'], 1):
@@ -757,7 +773,7 @@ def main(slug_arg):
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
                 'id': eslug, 'label': variant(e['header']) if (grid or not booklet) and e['header'] not in page_named
-                and id(e) not in counted else None,
+                and id(e) not in counted and id(e) not in bracketed else None,
                 'team': team_of_panel_card(e) if panels else team_of_entry(e) if booklet
                 else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),

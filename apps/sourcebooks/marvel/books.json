@@ -429,6 +429,20 @@
     ]
    ],
    "total": 47
+  },
+  {
+   "slug": "mlba1",
+   "title": "MLBA1 Mutating Mutants",
+   "code": "TSR6893",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     23
+    ]
+   ],
+   "total": 23
   }
  ]
 }
