@@ -213,6 +213,19 @@ def stream_of(book, slug, part, first, last):
         k = hits[0]
         m = rx.match(stream[k]['text'])
         stream[k:k + 1] = [dict(stream[k], text=m.group(1)), dict(stream[k], text=m.group(2))]
+    # MSL2 (registry subhead_line_powers [part, page, power name]): a
+    # subhead_labels label printed with no colon and run into the first power
+    # on its line ("KNOWN POWERS Alter Ego:", Stygorr, printed 31) is cut into
+    # the label, given its colon, and the power. Each must be found exactly
+    # once on its page.
+    for p, page, head in [d for d in book.get('subhead_line_powers', []) if d[0] == part and first <= d[1] <= last]:
+        rx = re.compile(r'^(' + '|'.join(re.escape(s) for s in sorted(subheads)) + r')\s+(' + re.escape(head) + r':.*)$')
+        hits = [k for k, l in enumerate(stream) if l['printed'] == page and rx.match(l['text'].strip())]
+        if len(hits) != 1:
+            raise SystemExit('%s: subhead_line_powers finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
+        k = hits[0]
+        m = rx.match(stream[k]['text'].strip())
+        stream[k:k + 1] = [dict(stream[k], text=m.group(1) + ':'), dict(stream[k], text=m.group(2))]
     # ME3 (registry power_heads [part, page, power name]): a run-in power whose
     # line above ends no sentence (Firelord's Energy Sheath after a list of
     # forms, Adventure p.4; Mephisto's Enlargement after "Galactus.]",
@@ -547,6 +560,12 @@ def read_line_grid(stream, i, sentence=False, mends=()):
             codes = [c if c is None else re.sub(r'[^0-9A-Za-z-]', '', c) for c in codes]
             codes = [c for c in codes if c != '']
         canon = [None if c is None else (SHIFT.get(c) or roster.canon(c)) for c in codes]
+        # MSL2 (registry short_number_rows [part, page, numbers row as read]):
+        # a numbers row printed short (Stygorr's six numbers under seven
+        # codes, printed 31) is read as printed and the rows it does not
+        # reach are null; the book's misprint override corrects them
+        if ('short', stream[i]['part'], stream[i]['printed'], texts[1]) in mends and len(numbers) < 7:
+            numbers = numbers + [None] * (7 - len(numbers))
         if len(canon) != 7 or len(numbers) != 7 or any(c is None and codes[n] is not None for n, c in enumerate(canon)) \
                 or any(c is None and numbers[n] != 0 for n, c in enumerate(canon)):
             raise SystemExit('a one-line grid read wrong, %s p.%d: %r' % (stream[i]['part'], stream[i]['printed'], texts))
@@ -600,6 +619,8 @@ def line_grids(book, stream, keyed, labelled, derived=None):
     letters = LETTERS_MARKS if book.get('letters_marks') else LETTERS
     sentence = bool(book.get('health_sentence'))
     mends = {k for k in ('class_i_digit', 'code_marks', 'derived_totals', 'codes_over_numbers') if book.get(k)}
+    # MSL2: short_number_rows, read in read_line_grid
+    mends |= {('short', d[0], d[1], d[2]) for d in book.get('short_number_rows', [])}
     if book.get('resources_beside_health'):
         # MSL1 (registry resources_beside_health): a chapter grid prints
         # "Health: 70 Resources: GD (10)" over "Karma: 26 Popularity: 0"
@@ -716,13 +737,21 @@ def line_grids(book, stream, keyed, labelled, derived=None):
             rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma) + extra
             out.append(dict(stream[grid_end - 1], text=rows[0]['rest'], line_grid=rows))
             keyed[(l['pdf'], l['col'], health)] = rank_only
-        elif extra:
+        elif extra and not book.get('form_resources'):
             raise SystemExit('line_grid_resources: %s p.%d: the form %s prints%s, which a labelled grid does not read'
                              % (l['part'], l['printed'], g['label'], extra))
         else:
             block = {'label': g['label'], 'kind': 'line', 'page': l['printed'], 'pdf': l['pdf'], 'col': l['col'],
                      'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code')} for r in rows],
                      'health': health, 'karma': karma, 'resources': None, 'popularity': None}
+            if extra:
+                # MSL2 (registry form_resources): a form's grid that prints
+                # its own Resources and Popularity lines (Stygorr's human
+                # form, printed 31) keeps them on its block
+                rp = re.match(r'^\s*Resources:\s*(.+?)\s+Popularity:\s*(\S+)\s*$', extra)
+                if not rp:
+                    raise SystemExit('form_resources: %s p.%d: the form %s prints %r' % (l['part'], l['printed'], g['label'], extra))
+                block['resources'], block['popularity'] = rp.group(1), rp.group(2)
             if rank_only:
                 block['rank_only'] = True
             if made:

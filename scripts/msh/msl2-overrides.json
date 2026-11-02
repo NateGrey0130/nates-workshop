@@ -1,0 +1,15 @@
+{
+  "about": [
+    "Hand decisions about MSL2 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and one text verdict npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl2.md, Stat blocks; decisions 6 and 8); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, label}: the printed page in the Adventure Book, the whole header as the card prints it and the block's label",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            text        match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them, 'printed' as the page prints them",
+    "  also      further values of the same block: one override matches one block",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 31, "header": "STYGORR", "label": ""}, "verdict": "misprint", "field": "P", "printed": {"number": null, "code": "Rm"}, "corrected": {"number": 30, "code": "Rm"}, "checked": "2026-11-02", "also": [{"verdict": "misprint", "field": "E", "printed": {"number": 40, "code": "Ex"}, "corrected": {"number": 20, "code": "Ex"}}, {"verdict": "misprint", "field": "R", "printed": {"number": 30, "code": "In"}, "corrected": {"number": 40, "code": "In"}}], "note": "Printed codes RM IN EX EX IN RM RM over six numbers, 30 40 20 40 30 30, P blank (printed 31): the numbers row lost E's 20, so R, I and P's numbers sit one column left. Restored, every number is its code's standard, Health 110 = 30 + 40 + 20 + 20 and Karma 100 = 40 + 30 + 30, and his human form's grid prints R 40, I 30, P 30 and Karma 100. Survey decision 6. Read on a render 2026-11-02 (plan row 26a)."},
+    {"match": {"row": "msl2:nick-fury-msl2:notes"}, "verdict": "text", "checked": "2026-11-02", "read": "'Howling Commandos,'", "printed": "\"Howling Commandos,\"", "note": "Nick Fury's IN BRIEF, printed 29: the page prints the commandos' name between double quotes (read on a render 2026-11-02, plan row 26a); the chain paired the two marks as singles, and no card's text prints a single quote (survey decision 8)."}
+  ]
+}
