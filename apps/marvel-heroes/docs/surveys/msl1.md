@@ -1,9 +1,5 @@
 # Survey: MSL1 X-Terminate (TSR6899)
 
-> **DRAFT.** Written through *Which reader fits*, from the trial parse
-> (plan rows 22c and 22c1); the Marvel suite has not been run on it yet. No
-> `layout` is set, and nothing of the book is imported yet.
-
 Marvel Super Heroes adventure, product code 6899 on the cover (PDF 1). The
 author and the year are not read. Registry entry: `scripts/msh/books.json`
 -> `msl1`. Measured 2026-11-02.
