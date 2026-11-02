@@ -489,6 +489,19 @@ def main(slug_arg):
             raise SystemExit('%s: bracket_identity %r finds %d entries, not 1 with a parenthesis and no identity'
                              % (slug_arg, c[2], len(hits)))
         bracketed[id(hits[0])] = c[3]
+    # A card whose Real Name: line is a sentence and not a name (MLA3's
+    # Colossal Deathlok, printed 51; registry short_identity [part, printed
+    # page, header, identity], survey mla3.md decision 12) commits only the
+    # name the line gives, and the line as printed goes to D1 with the prose.
+    # Each must find exactly one entry with an identity line, and the name
+    # must be words of that line. Only a grid-booklets book sets the field,
+    # and only MLA3 does.
+    shortened = {}
+    for c in (book.get('short_identity', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2] and e['identity']]
+        if len(hits) != 1:
+            raise SystemExit('%s: short_identity %r finds %d entries, not 1 with an identity line' % (slug_arg, c[2], len(hits)))
+        shortened[id(hits[0])] = c[3]
     by_name = {}
     for e in statted:
         by_name.setdefault(norm(name_of(e) if booklet else group_name(e['header'])), []).append(e)
@@ -766,6 +779,12 @@ def main(slug_arg):
                 identity, prose = [ascii_fold(x) for x in line_identity[key]], ''
             if id(e) in bracketed:
                 identity = [ascii_fold(bracketed[id(e)])]
+            if id(e) in shortened:
+                line = ' '.join(identity)
+                if not line or (' %s ' % norm(shortened[id(e)])) not in (' %s ' % norm(line)):
+                    raise SystemExit('%s: short_identity %r is not words of the identity line %r' % (slug_arg, shortened[id(e)], line))
+                prose = line + ' ' + prose
+                identity = [ascii_fold(shortened[id(e)])]
             text_row(eslug, 'prose', None, None, page0, prose)
             members = []
             for n, m in enumerate(e['members'], 1):

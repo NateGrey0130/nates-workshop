@@ -465,6 +465,24 @@
     ]
    ],
    "total": 47
+  },
+  {
+   "slug": "mla3",
+   "title": "MLA3 Night Life",
+   "code": "TSR6897",
+   "status": "imported",
+   "date": "2026-11-02",
+   "added": [
+    [
+     "Characters",
+     45
+    ],
+    [
+     "Rows of the book's text",
+     213
+    ]
+   ],
+   "total": 45
   }
  ]
 }
