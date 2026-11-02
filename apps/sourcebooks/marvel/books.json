@@ -447,6 +447,20 @@
     ]
    ],
    "total": 23
+  },
+  {
+   "slug": "mla2",
+   "title": "MLA2 Night Moves",
+   "code": "TSR6895",
+   "status": "imported",
+   "date": "2026-11-01",
+   "added": [
+    [
+     "Characters",
+     47
+    ]
+   ],
+   "total": 47
   }
  ]
 }
