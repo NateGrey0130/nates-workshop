@@ -97,10 +97,15 @@ def stream_of(book, slug, part, first, last):
         # MLA1 (registry body_top): the first line of a column sets at 9.6-10%
         # of the page (Gypsy Moth's header, printed 57, y 314 of 3197), so the
         # body starts higher; every other book's starts at 10%
-        body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < 0.935 * H
+        # MLBA1 (registry page_bottoms [part, page, fraction]): the card page's
+        # lower cards run to 95.7% of the page (Wolverine's and Sunspot's
+        # Talents, printed 32), under the 93.5% every other page ends at
+        bottom = next((d[2] for d in book.get('page_bottoms', []) if d[:2] == [part, printed]), 0.935)
+        body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < bottom * H
                 and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
         if not body:
             continue
+        page_start = len(stream)
         body_h = statistics.median(w['h'] for w in body if any(c.isalpha() for c in w['t']))
         edges = [0] + roster.gutters(body, W, book['columns']) + [W]
         for c in range(book['columns']):
@@ -127,6 +132,10 @@ def stream_of(book, slug, part, first, last):
                 # case ("Known Powers:") is raised to the capitals roster.RUN_IN
                 # and roster.SECTION read
                 for lab in labels:
+                    # MLBA1 (registry semicolon_labels): a run-in label read
+                    # with a semicolon (Boom-Boom's Talents;, printed 32)
+                    if book.get('semicolon_labels') and l['text'].startswith(lab + ';'):
+                        l['text'] = lab + ':' + l['text'][len(lab) + 1:]
                     if l['text'].startswith(lab + ':'):
                         # MLA1 (registry label_powers [part, page, label]): a
                         # power whose name is a section label (the Whirlwind's
@@ -141,6 +150,11 @@ def stream_of(book, slug, part, first, last):
                 # its section as a run-in does
                 if l['text'].strip() in subheads:
                     l['text'] = l['text'].strip() + ':'
+                    # MLBA1 (registry subhead_caps): a title-case subhead
+                    # (Background, Known Powers, every villain) is raised to
+                    # the capitals roster.RUN_IN and roster.SECTION read
+                    if book.get('subhead_caps'):
+                        l['text'] = l['text'].upper()
                 # MT2 (registry stop_labels [part, page, label]): a run-in label
                 # printed with a full stop for its colon (the Twain android's
                 # Talents. and Contacts., printed 36) is read as the run-in
@@ -157,6 +171,18 @@ def stream_of(book, slug, part, first, last):
                 l.update(pdf=pdf, printed=printed, part=part, col=c + 1, left=max(left, edge or 0), body_h=body_h,
                          col_x0=max(0, edges[c] if c else left - 20), col_x1=edges[c + 1], big=False)
                 stream.append(l)
+        # MLBA1 (registry banner_bands [part, page, y], TSV pixels): a band
+        # set across the page's columns above a page-wide banner or the card
+        # page's cards (printed 26: Goliath's text above VII. King's Pawn;
+        # printed 32: the Conclusion above the cards) is read column by column
+        # before the band under it, not each column top to bottom across it.
+        # Each cut must have lines on both sides, or the build stops.
+        for d in [d for d in book.get('banner_bands', []) if d[:2] == [part, printed]]:
+            seg = stream[page_start:]
+            above, below = [l for l in seg if l['y0'] < d[2]], [l for l in seg if l['y0'] >= d[2]]
+            if not above or not below:
+                raise SystemExit('%s: banner_bands %s p.%d at y %d cuts no band' % (slug, part, printed, d[2]))
+            stream[page_start:] = above + below
     for (p, page, lab), n in stopped.items():
         if n != 1:
             raise SystemExit('%s: stop_labels finds %r %d times on %s p.%d, not once' % (slug, lab + '.', n, p, page))
@@ -192,11 +218,33 @@ def stream_of(book, slug, part, first, last):
     # forms, Adventure p.4; Mephisto's Enlargement after "Galactus.]",
     # Resource p.6) is marked as a power head, which roster.read_entries takes
     # as a new power. Each must be found exactly once on its page.
-    for p, page, head in [d for d in book.get('power_heads', []) if d[0] == part and first <= d[1] <= last]:
+    for d in [d for d in book.get('power_heads', []) if d[0] == part and first <= d[1] <= last]:
+        p, page, head = d[:3]
+        # MLBA1 (a fourth field, the line's start as read): a power head that
+        # roster.POWER_HEAD cannot read, a lower-case word in its name or a
+        # semicolon for its colon (Richtor's Vibration touch;, printed 32; the
+        # Chimpanzee's Light manipulation:, printed 31), is read as the head,
+        # its name kept as printed (roster.read_entries reads power_name)
+        if len(d) > 3:
+            hits = [l for l in stream if l['printed'] == page and l['text'].startswith(d[3])]
+            if len(hits) != 1:
+                raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, d[3], len(hits), part, page))
+            hits[0]['text'] = head + ':' + hits[0]['text'][len(d[3]):]
+            hits[0]['power_name'] = head
         hits = [l for l in stream if l['printed'] == page and l['text'].startswith(head + ':')]
         if len(hits) != 1:
             raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
         hits[0]['power_head'] = True
+    # MLBA1 (registry powers_open [part, page, the first power's name]): a
+    # codes-only grid's powers set as run-ins under it with no Known Powers
+    # label (the three animals, printed 31) open a powers section at the
+    # first, as a KNOWN POWERS: line would. Each must be found once.
+    for p, page, head in [d for d in book.get('powers_open', []) if d[0] == part and first <= d[1] <= last]:
+        at = [k for k, l in enumerate(stream) if l['printed'] == page and l['text'].startswith(head + ':')]
+        if len(at) != 1:
+            raise SystemExit('%s: powers_open finds %r %d times on %s p.%d, not once' % (slug, head, len(at), part, page))
+        label = {k: v for k, v in stream[at[0]].items() if k not in ('power_head', 'power_name')}
+        stream.insert(at[0], dict(label, text='KNOWN POWERS:', synthetic_label=True))
     # MT2 (registry indented_power_heads [part, page, power name]): a power
     # inside a chapter's block set indented like the chapter's paragraphs (the
     # Twain android's Body Armor and Radio Communication, printed 36), which
@@ -798,8 +846,187 @@ def restore_colons(book, value):
     return value
 
 
+# MLBA1's grid shapes, each gated by a registry field of its own (survey
+# mlba1.md, Which reader fits, reader changes 1-9), rewritten into the shape
+# the code_rows path reads (MLA1's: Health beside F, Karma beside S,
+# Resources beside R, Popularity beside P)
+WORD_ROWS = {'Fighting': 'F', 'Agility': 'A', 'Strength': 'S', 'Endurance': 'E',
+             'Reason': 'R', 'Intuition': 'I', 'Psyche': 'P'}
+CAPS_CODE = r'(?:FE|PR|TY|GD|EX|RM|IN|AM|MN|UN)'
+WELDED = re.compile(r'(?<![A-Za-z])(' + CAPS_CODE + r')(\d{1,3})(?!\d)')
+SEMI_TOTAL = re.compile(r'\b(Heal?th|Karma);')
+TOTAL_LABEL = re.compile(r'^(Health|Karma|Resources|Popularity):\s*(.*)$')
+BESIDE_ROW = {'F': 'Health', 'S': 'Karma', 'R': 'Resources', 'P': 'Popularity'}
+# a minus read as U+FFFD, an em dash, an en dash or a tilde
+MINUS_MARKS = '[' + chr(0xfffd) + chr(0x2014) + chr(0x2013) + '~]'
+GRID_MENDS = ('welded_codes', 'semicolon_labels', 'card_art', 'popularity_minus', 'one_as_i')
+
+
+def total_mends(book, t):
+    """A grid line's misreads, each gated by its registry field."""
+    # MLBA1 (registry welded_codes): a code welded to its number ("TY6",
+    # "GD10": the cards, printed 32, and the low grids, printed 4 and 6)
+    if book.get('welded_codes'):
+        t = WELDED.sub(r'\1 \2', t)
+    # MLBA1 (registry semicolon_labels): "Health;" and "Karma;" (printed 32)
+    if book.get('semicolon_labels'):
+        t = SEMI_TOTAL.sub(r'\1:', t)
+    # MLBA1 (registry card_art): a card's portrait read beside its totals
+    # ("Health: 110 nt, oe", printed 32): a total keeps its number, and a
+    # bracketed second (Sunspot's 52(76)), and a Resources its code
+    if book.get('card_art'):
+        t = re.sub(r'((?:Heal?th|Karma):\s*\d+(?:\(\d+\))?)\s+(?!(?:Health|Karma|Resources|Popularity)\b)[^\n]*$', r'\1', t)
+        t = re.sub(r'(Resources:\s*[A-Z]{2}\s*\(\d+\))\s+[^\n]*$', r'\1', t)
+    # MLBA1 (registry popularity_minus): a Popularity's minus read as U+FFFD,
+    # a dash or a spaced hyphen (printed 12, 25)
+    if book.get('popularity_minus'):
+        t = re.sub(r'(Popularity:\s*)(?:' + MINUS_MARKS + r'\s*-?|-\s+)(\d+)', r'\1-\2', t)
+    return t
+
+
+def mend_reader(book, reader):
+    """The grid crop's lines mended as the stream's are (MLBA1). A book that
+    sets none of GRID_MENDS keeps the reader as it is."""
+    if not any(book.get(k) for k in GRID_MENDS):
+        return reader
+    read = reader.read
+
+    def mended(pdf, box, psm='6'):
+        out = []
+        for t in read(pdf, box, psm):
+            # MLBA1 (registry one_as_i): a 1 read as i in a row's number
+            # (Richtor's P "GD i0", printed 32)
+            if book.get('one_as_i'):
+                t = re.sub(r'(?<=' + CAPS_CODE + r' )i(?=\d)', '1', t)
+            t = total_mends(book, t)
+            m = re.match(r'^(\S{0,3}\s*' + CAPS_CODE + r'\s*\(?\s*\d{1,3}\s*\)?)\s*(.*)$', t)
+            if book.get('card_art') and m:
+                # a card's portrait read beside its rows ("A RM 30 '", printed
+                # 32): what is not a total after the row is art
+                lab = re.search(r'\b(?:Heal?th|Karma|Resources|Popularity):', m.group(2))
+                t = m.group(1) + (' ' + m.group(2)[lab.start():] if lab else '')
+            out.append(t)
+        return out
+    reader.read = mended
+    return reader
+
+
+def synth_rows(lines, rows, labels):
+    """Seven lines in MLA1's shape from rows [(letter, code and number)] and
+    totals {label: value}; each line copies its source line's place."""
+    out = []
+    first = lines[0]
+    for k, (letter, value) in enumerate(rows):
+        src = lines[k] if k < len(lines) else lines[-1]
+        lab = BESIDE_ROW.get(letter)
+        text = '%s %s' % (letter, value)
+        if lab and labels.get(lab) is not None:
+            text += ' %s: %s' % (lab, labels[lab])
+        out.append(dict(src, text=text, col=first['col'], col_x0=first['col_x0'], col_x1=first['col_x1'],
+                        y0=first['y0'] + 46 * k, y1=first['y0'] + 46 * k + 36, big=False, synth_row=True))
+    return out
+
+
+def word_rows(book, stream, log):
+    """MLBA1 (registry word_rows): a grid of seven full-word rows ("Fighting
+    RM (30)") with Health, Karma, Resources and Popularity as four lines under
+    it (printed 3, 8, 9, 12, 18, 25, 29)."""
+    if not book.get('word_rows'):
+        return stream
+    out, i = [], 0
+    while i < len(stream):
+        at, m, k, skipped = [], [], i, []
+        for w in WORD_ROWS:
+            x = re.match(r'^\s*(' + w + r')\s+(.*)$', stream[k]['text']) if k < len(stream) else None
+            # MLBA1 (registry split_word_rows): a grid broken across a column
+            # (Mauler, printed 9) with a map's lettering between its parts in
+            # the stream: up to four lines that are no row are skipped where
+            # the column changes
+            if x is None and at and book.get('split_word_rows'):
+                for kk in range(k, min(len(stream), k + 5)):
+                    y = re.match(r'^\s*(' + w + r')\s+(.*)$', stream[kk]['text'])
+                    if y and stream[kk]['col'] != stream[at[-1]]['col']:
+                        skipped += stream[k:kk]
+                        x, k = y, kk
+                        break
+            if x is None:
+                break
+            at.append(k)
+            m.append(x)
+            k += 1
+        if len(m) == 7:
+            rows = [(WORD_ROWS[x.group(1)], x.group(2).strip()) for x in m]
+            j, labels = k, {}
+            while j < len(stream) and len(labels) < 4:
+                lm = TOTAL_LABEL.match(stream[j]['text'].strip())
+                if not lm or lm.group(1) in labels:
+                    break
+                labels[lm.group(1)] = lm.group(2).strip()
+                j += 1
+            log.append('word_rows p.%d: %s / %s%s' % (stream[i]['printed'], ' '.join(r[1] for r in rows), labels,
+                                                     ' skipped %r' % [s['text'] for s in skipped] if skipped else ''))
+            out += synth_rows([stream[a] for a in at], rows, labels)
+            i = j
+            continue
+        out.append(stream[i])
+        i += 1
+    return out
+
+
+def low_grids(book, stream, reader, log):
+    """MLBA1 (registry low_grids [part, page, header]): rows F to P under a
+    header, Health beside E and Karma beside P, whose row letters the stream
+    reads sideways (printed 4, 6), so the rows come from a crop of the grid,
+    the header's foot to the Karma line. Each header must be one line of its
+    page, with a Karma line under it and seven rows in the crop."""
+    import codegrids
+    want = [g for g in book.get('low_grids', []) if any((l['part'], l['printed']) == (g[0], g[1]) for l in stream)]
+    for part, page, name in want:
+        at = [k for k, l in enumerate(stream) if (l['part'], l['printed']) == (part, page) and l['text'].strip() == name]
+        if len(at) != 1:
+            raise SystemExit('low_grids: %r on %d lines of p.%d, not 1' % (name, len(at), page))
+        h = at[0]
+        head = stream[h]
+        kar = next((k for k in range(h + 1, min(len(stream), h + 12)) if stream[k]['col'] == head['col']
+                    and re.search(r'Karma:\s*\d+\s*$', stream[k]['text'])), None)
+        if kar is None:
+            raise SystemExit('low_grids: no Karma line under %r' % name)
+        box = (head['col_x0'], head['y1'] + 2, head['col_x1'], stream[kar]['y1'] + 10)
+        texts = reader.read(head['pdf'], box)
+        got = codegrids.rows_from(texts, pattern=codegrids.code_row())
+        if len(got) != 7:
+            raise SystemExit('low_grids: %r crop gives %d rows: %r' % (name, len(got), texts))
+        rest = ' '.join(r['rest'] for r in got)
+        labels = {k: (re.search(k + r':\s*(\S+)', rest) or [None, None])[1] for k in ('Health', 'Karma')}
+        rows = [(roster.ABILITIES[n], '%s (%s)' % (r['printed_code'], r['number'])) for n, r in enumerate(got)]
+        log.append('low_grids p.%d %s: %s / %s' % (page, name, ' '.join(r[1] for r in rows), labels))
+        lines = [stream[k] for k in range(h + 1, kar + 1) if stream[k]['col'] == head['col']]
+        lines.sort(key=lambda l: l['y0'])
+        new = synth_rows([dict(lines[0], y0=head['y1'] + 10)] + lines[1:], rows, labels)
+        stream = stream[:h + 1] + new + stream[kar + 1:]
+    return stream
+
+
+def total_lines(book, stream):
+    return [dict(l, text=total_mends(book, l['text'])) if re.match(r'^\s*\S{0,3}\s*' + CAPS_CODE + r'\s*\(?\d', l['text'])
+            or SEMI_TOTAL.search(l['text']) or l['text'].lstrip().startswith('Popularity:') else l for l in stream]
+
+
+def mend_grids(book, stream, reader):
+    """MLBA1's grid shapes read into MLA1's (see WORD_ROWS above). A book that
+    sets none of their fields gets its stream back as it was."""
+    if not any(book.get(k) for k in GRID_MENDS + ('word_rows', 'low_grids')):
+        return stream
+    log = []
+    stream = total_lines(book, word_rows(book, total_lines(book, stream), log))
+    stream = low_grids(book, stream, reader, log)
+    for x in log:
+        print('  grid', x)
+    return stream
+
+
 def parse(book, slug):
-    reader = roster.GridReader(book, slug)
+    reader = mend_reader(book, roster.GridReader(book, slug))
     ranges = roster.rank_ranges(book)
     streams, keyed, labelled, derived = [], {}, [], {}
     karma_keyed = set()
@@ -810,7 +1037,7 @@ def parse(book, slug):
     # other book reads three
     identity_lines = book.get('identity_lines', 3)
     for r in book['character_ranges']:
-        s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
+        s = mend_grids(book, stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1]), reader)
         s = table_grids(book, place_headers(book, s), reader, keyed)
         s = mark_titles(book, line_grids(book, s, keyed, labelled, derived))
         streams.append((mark_breaks(book, s, r['part'], mark_headers(s, cards, identity_lines + 1 if 'identity_lines' in book else 3)),
@@ -829,6 +1056,7 @@ def parse(book, slug):
         # start on it are left to its own opponent
         for page in o.get('runs_on', []):
             s += stream_of(book, slug, o['part'], page, page)
+        s = mend_grids(book, s, reader)
         s = line_grids(book, place_headers(book, s), keyed, labelled, derived)
         s = mark_titles(book, karma_grids(book, s, reader, karma_keyed))
         mark_headers(s, cards)

@@ -1,0 +1,44 @@
+{
+  "about": [
+    "Hand decisions about MLBA1 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image by the survey (apps/marvel-heroes/docs/surveys/mlba1.md, Stat blocks, the misprints table; decisions 4 and 6); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 4, "header": "Generic Punk"}, "verdict": "misprint", "field": "karma",
+     "printed": "4", "corrected": "14", "checked": "2026-11-01",
+     "note": "Printed Karma 4 (printed 4): R+I+P = 4 + 6 + 4 = 14, as the other minor grids' corrected Karma. Survey decision 4."},
+    {"match": {"page": 4, "header": "Schiz"}, "verdict": "misprint", "field": "R",
+     "printed": {"number": 6, "code": "Pr"}, "corrected": {"number": 4, "code": "Pr"}, "checked": "2026-11-01",
+     "also": [
+       {"verdict": "misprint", "field": "I", "printed": {"number": 4, "code": "Ty"}, "corrected": {"number": 6, "code": "Ty"}},
+       {"verdict": "misprint", "field": "karma", "printed": "6", "corrected": "14"}
+     ],
+     "note": "Printed R PR (6) and I TY (4) (printed 4): 6 is not Poor and 4 is not Typical, the two numbers swapped; the other four minor grids print R PR (4) and I TY (6), so the codes win. His printed Karma 6 holds on no reading: R+I+P = 4 + 6 + 4 = 14. Survey decision 4."},
+    {"match": {"page": 4, "header": "Ee-ha"}, "verdict": "misprint", "field": "R",
+     "printed": {"number": 6, "code": "Pr"}, "corrected": {"number": 4, "code": "Pr"}, "checked": "2026-11-01",
+     "also": [
+       {"verdict": "misprint", "field": "karma", "printed": "6", "corrected": "14"}
+     ],
+     "note": "Printed R PR (6) (printed 4): 6 is not Poor, as Schiz's R; Karma R+I+P = 4 + 6 + 4 = 14 once it is corrected, printed 6. Survey decision 4."},
+    {"match": {"page": 4, "header": "Rocco"}, "verdict": "misprint", "field": "karma",
+     "printed": "4", "corrected": "14", "checked": "2026-11-01",
+     "note": "Printed Karma 4 (printed 4): R+I+P = 4 + 6 + 4 = 14. Survey decision 4."},
+    {"match": {"page": 6, "header": "Generic Goon"}, "verdict": "misprint", "field": "karma",
+     "printed": "10", "corrected": "14", "checked": "2026-11-01",
+     "note": "Printed Karma 10 (printed 6): R+I+P = 4 + 6 + 4 = 14. Survey decision 4."},
+    {"match": {"page": 18, "header": "Sentinel, Mark IV"}, "verdict": "as_printed", "field": "karma",
+     "printed": "NA", "checked": "2026-11-01",
+     "note": "Printed Karma: NA (printed 18), with Resources and Popularity NA: a robot, as MLA1's Sentinels, Mark IV print theirs. Its R, I and P are printed, so R+I+P cannot hold. Survey decision 4."},
+    {"match": {"page": 32, "header": "Cannonball"}, "verdict": "misprint", "field": "A",
+     "printed": {"number": 6, "code": "Ty"}, "corrected": {"number": 4, "code": "Pr"}, "checked": "2026-11-01",
+     "note": "Printed A TY 6 on his card (printed 32): Health 54 = 10 + 4 + 10 + 30 holds with Poor 4, and MA1 and MHSP2 print his A Pr 4 and Health 54, every other row as here (MX1's Nimrod shape). Survey decision 4."},
+    {"match": {"page": 32, "header": "Sunspot"}, "verdict": "as_printed", "field": "health",
+     "printed": "52(76)", "checked": "2026-11-01",
+     "note": "Printed Health: 52(76) on his card (printed 32): 52 = F+A+S+E, and 76 with his S at RM 30 while his power, Strength, is active, as MA1's Sunspot keeps 52 (76). Survey decision 6."}
+  ]
+}
