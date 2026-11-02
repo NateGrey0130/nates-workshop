@@ -1,9 +1,5 @@
 # Survey: MSL2 Warlord of Baluur (TSR6901)
 
-> **DRAFT.** Written through *Which reader fits* (the trial parse, plan row
-> 25c); marvel smoke has not been run on it (row 25d). No `layout` is set,
-> and nothing of the book is imported yet.
-
 Marvel Super Heroes adventure, product code 6901 on the cover (PDF 1) and on
 the title page. By Anthony Herring, 1991 (the title page). Registry entry:
 `scripts/msh/books.json` -> `msl2`. Measured 2026-11-02.
