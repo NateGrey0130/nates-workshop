@@ -507,11 +507,15 @@
    "title": "MSL2 Warlord of Baluur",
    "code": "TSR6901",
    "status": "imported",
-   "date": null,
+   "date": "2026-11-02",
    "added": [
     [
      "Characters",
      8
+    ],
+    [
+     "Rows of the book's text",
+     41
     ]
    ],
    "total": 8
