@@ -290,6 +290,51 @@ def stream_of(book, slug, part, first, last):
         k = at[0]
         stream[k] = dict(stream[k], text=stream[k]['text'].strip() + ' ' + stream[k + 1]['text'].strip(), y1=stream[k + 1]['y1'])
         del stream[k + 1]
+    # MSL1 (registry split_labels [part, page, first line's end, second
+    # line's start], as read): a run-in label hyphenated over two lines
+    # ("TAL-" / "ENTS:", Dominus, printed 30) is one label on the second line
+    for p, page, a_end, b_start in [d for d in book.get('split_labels', []) if d[0] == part and first <= d[1] <= last]:
+        at = [k for k in range(len(stream) - 1) if stream[k]['printed'] == page
+              and stream[k]['text'].rstrip().endswith(a_end) and stream[k + 1]['text'].startswith(b_start)]
+        if len(at) != 1:
+            raise SystemExit('%s: split_labels finds %r / %r %d times on %s p.%d, not once' % (slug, a_end, b_start, len(at), part, page))
+        k = at[0]
+        head = stream[k]['text'].rstrip()[:-len(a_end)].rstrip()
+        label = (a_end.rstrip('-') + b_start).upper()
+        stream[k + 1] = dict(stream[k + 1], text=label + stream[k + 1]['text'][len(b_start):])
+        if head:
+            stream[k] = dict(stream[k], text=head)
+        else:
+            del stream[k]
+    # MSL1 (registry mid_runins [part, page, label as read]): a run-in
+    # label set after a sentence on the same line ("... actions. TALENTS:",
+    # Mister Sinister, printed 29) starts a line of its own, so it opens its
+    # section. Each must be found exactly once on its page.
+    for p, page, lab in [d for d in book.get('mid_runins', []) if d[0] == part and first <= d[1] <= last]:
+        rx = re.compile(r'^(.*?[.!?])\s+(' + re.escape(lab) + r':.*)$')
+        at = [k for k, l in enumerate(stream) if l['printed'] == page and rx.match(l['text'])]
+        if len(at) != 1:
+            raise SystemExit('%s: mid_runins finds %r %d times on %s p.%d, not once' % (slug, lab, len(at), part, page))
+        k = at[0]
+        m = rx.match(stream[k]['text'])
+        stream[k:k + 1] = [dict(stream[k], text=m.group(1)), dict(stream[k], text=m.group(2), x0=stream[k]['left'])]
+    # MSL1 (registry identity_background [labels]): a card's identity
+    # run-ins set after its powers and talents (Real Name:, Occupation: ...,
+    # printed 26-32) open a BACKGROUND section at the first of them after a
+    # KNOWN POWERS label, as MT2's BACKGROUND subhead does, so they are not
+    # read as powers or as the talents' text
+    opens = tuple(l + ':' for l in book.get('identity_background', []))
+    if opens:
+        k, after_powers = 0, False
+        while k < len(stream):
+            t = stream[k]['text'].lstrip()
+            if t.startswith('KNOWN POWER'):
+                after_powers = True
+            elif after_powers and t.startswith(opens):
+                stream.insert(k, dict(stream[k], text='BACKGROUND:', synthetic_label=True))
+                after_powers = False
+                k += 1
+            k += 1
     return stream
 
 
@@ -486,6 +531,28 @@ def read_line_grid(stream, i, sentence=False, mends=()):
         karma, end = KARMA_LINE.match(stream[h + 1]['text'].strip()).group(1), h + 2
     texts = [stream[j]['text'].strip() for j in range(i + 1, h)]
     numbers = None
+    dash = r'[-\u2013\u2014]'
+    if 'codes_over_numbers' in mends and len(texts) == 2 \
+            and all(re.fullmatch(r'[0-9OolI]{1,4}|' + dash, t) for t in texts[1].split()) \
+            and not all(re.search(r'\d', t) for t in texts[0].split()):
+        # MSL1 (registry codes_over_numbers): the codes row is printed
+        # above the numbers row; a Shift code set with a space after its
+        # hyphen ("Shift- X", Dominus's R, printed 30) is one code, and N/A
+        # over a dash (his S) is no code over 0
+        codes_t = re.sub(r'\bShift-?\s+([XYZ0])\b', r'Shift-\1', texts[0])
+        numbers = [0 if re.fullmatch(dash, t) else roster.fix_digits(re.sub(r'[^0-9OolI]', '', t)) for t in texts[1].split()]
+        codes = [None if re.sub(r'[^A-Za-z]', '', t).upper() == 'NA' else t for t in codes_t.split()]
+        if 'code_marks' in mends:
+            # MT3's code_marks: a mark hung on a code ("GD~", printed 29)
+            codes = [c if c is None else re.sub(r'[^0-9A-Za-z-]', '', c) for c in codes]
+            codes = [c for c in codes if c != '']
+        canon = [None if c is None else (SHIFT.get(c) or roster.canon(c)) for c in codes]
+        if len(canon) != 7 or len(numbers) != 7 or any(c is None and codes[n] is not None for n, c in enumerate(canon)) \
+                or any(c is None and numbers[n] != 0 for n, c in enumerate(canon)):
+            raise SystemExit('a one-line grid read wrong, %s p.%d: %r' % (stream[i]['part'], stream[i]['printed'], texts))
+        rows = [{'letter': roster.ABILITIES[n], 'number': numbers[n], 'code': c,
+                 'printed_code': codes[n] if codes[n] is not None else 'N/A', 'rest': ''} for n, c in enumerate(canon)]
+        return rows, health, karma, end
     if texts and all(re.search(r'\d', t) for t in texts[0].split()):
         # a mark OCR hangs on a number ('�50', Charon's P) is not a digit
         numbers = [roster.fix_digits(re.sub(r'[^0-9OolI]', '', t)) for t in texts.pop(0).split()]
@@ -532,7 +599,19 @@ def line_grids(book, stream, keyed, labelled, derived=None):
         return stream
     letters = LETTERS_MARKS if book.get('letters_marks') else LETTERS
     sentence = bool(book.get('health_sentence'))
-    mends = {k for k in ('class_i_digit', 'code_marks', 'derived_totals') if book.get(k)}
+    mends = {k for k in ('class_i_digit', 'code_marks', 'derived_totals', 'codes_over_numbers') if book.get(k)}
+    if book.get('resources_beside_health'):
+        # MSL1 (registry resources_beside_health): a chapter grid prints
+        # "Health: 70 Resources: GD (10)" over "Karma: 26 Popularity: 0"
+        # (printed 4, 9, 12), which is read as the roster's two lines,
+        # "Health: 70 Karma: 26" over "Resources: GD (10) Popularity: 0"
+        hr = re.compile(r'^(Heal?th:\s*\S+)\s+(Resources:\s*.+)$')
+        kp = re.compile(r'^(Karma:\s*\S+)\s+(Popularity:\s*.+)$')
+        for k in range(len(stream) - 1):
+            a, b = hr.match(stream[k]['text'].strip()), kp.match(stream[k + 1]['text'].strip())
+            if a and b and (stream[k]['part'], stream[k]['printed']) in want and stream[k]['col'] == stream[k + 1]['col']:
+                stream[k] = dict(stream[k], text=a.group(1) + ' ' + b.group(1))
+                stream[k + 1] = dict(stream[k + 1], text=a.group(2) + ' ' + b.group(2))
     # ME3 (a grid's `wrapped`: the serpent, Adventure p.11 column 2): a grid
     # wrapped after R, letters "F A S E R" / "I P" and codes "Un Mn Mn Un Fe" /
     # "Rm Fe", is joined to one line of each on the pages of such a grid
@@ -577,6 +656,11 @@ def line_grids(book, stream, keyed, labelled, derived=None):
             # Resources and Popularity on lines of their own under its Karma
             # (Vincent Scarlesi's, printed 14) keeps them, not its prose
             extra += ' ' + stream[end]['text'].strip()
+            if book.get('line_popularity_minus'):
+                # MSL1 (registry line_popularity_minus): MLBA1's
+                # popularity_minus on a one-line grid's Resources line
+                # (a minus read as U+FFFD, printed 4, 29 and 30)
+                extra = re.sub(r'(Popularity:\s*)(?:' + MINUS_MARKS + r'\s*-?|-\s+)(\d+)', r'\1-\2', extra)
             end += 1
         made = []
         if 'derived_totals' in mends:
@@ -603,6 +687,9 @@ def line_grids(book, stream, keyed, labelled, derived=None):
         else:
             g = want[key].pop(0)
         rank_only = not re.search(r'\d', (stream[i] if lost else stream[i + 1])['text'])
+        if 'codes_over_numbers' in mends and not lost:
+            # MSL1: the numbers are the row under the codes
+            rank_only = rank_only and not re.search(r'\d', stream[i + 2]['text'])
         if g.get('name') and g.get('subhead'):
             # MX1: the grid's name is the subhead above the paragraph that
             # introduces it ("The Blue Knight" over a typical policeman's

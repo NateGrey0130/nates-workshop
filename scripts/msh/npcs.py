@@ -502,6 +502,22 @@ def main(slug_arg):
         if len(hits) != 1:
             raise SystemExit('%s: short_identity %r finds %d entries, not 1 with an identity line' % (slug_arg, c[2], len(hits)))
         shortened[id(hits[0])] = c[3]
+    # A card header whose parenthesis is part of the name (MSL1's clones,
+    # Angel (Clone) to Professor X (Clone), printed 26-28; registry
+    # bracket_names [part, printed page, header], survey msl1.md decision 3)
+    # is not a version label either: each clone is a card of its own beside
+    # the Player Character of the same name, and its name and id keep the
+    # parenthesis, as page_names' do on a cover-panels book. Each must find
+    # exactly one entry with a parenthesis. Only a grid-booklets book sets
+    # the field, and only MSL1 does.
+    bracket_named = set()
+    for c in (book.get('bracket_names', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2]]
+        if len(hits) != 1 or not variant(c[2]) or hits[0].get('name'):
+            raise SystemExit('%s: bracket_names %r finds %d entries, not 1 with a parenthesis and no name of its own'
+                             % (slug_arg, c[2], len(hits)))
+        hits[0]['name'] = c[2]
+        bracket_named.add(id(hits[0]))
     by_name = {}
     for e in statted:
         by_name.setdefault(norm(name_of(e) if booklet else group_name(e['header'])), []).append(e)
@@ -792,7 +808,7 @@ def main(slug_arg):
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
                 'id': eslug, 'label': variant(e['header']) if (grid or not booklet) and e['header'] not in page_named
-                and id(e) not in counted and id(e) not in bracketed else None,
+                and id(e) not in counted and id(e) not in bracketed and id(e) not in bracket_named else None,
                 'team': team_of_panel_card(e) if panels else team_of_entry(e) if booklet
                 else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
