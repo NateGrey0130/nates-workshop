@@ -1,16 +1,12 @@
 # Survey: MLA3 Night Life (TSR6897)
 
-> **DRAFT.** Written through every stat block of the book, the vehicle
-> lines, *Names the Codex already has*, *Quote marks* and *Decisions* (plan
-> rows 19a and 19b) and *Which reader fits* (plan row 19c). The Marvel
-> suite has not been run on it yet (plan row 19d).
-
 Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 1990, the third module of the Gang Wars trilogy (the MLA series, after MLA1
 After Midnight and MLA2 Night Moves). Registry entry:
 `scripts/msh/books.json` -> `mla3`. Measured 2026-11-02.
 
-**Rows citing this book:** none yet (no data is built).
+**Rows citing this book:** 0 `msh_book_text` rows (no data is built; the
+data row sets this line from the production read-back).
 
 Everything here was measured and read on the page images.
 
