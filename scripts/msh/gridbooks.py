@@ -761,7 +761,8 @@ def table_grids(book, stream, reader, keyed):
 
 def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=False,
          unread_codes=False, specks=False, end_at_popularity=False, by_pitch=False, dash_shift=False,
-         rising_pitch=False, undashed_shift=False, s_numbers=False, aliases=None, health_mend=False):
+         rising_pitch=False, undashed_shift=False, s_numbers=False, aliases=None, health_mend=False,
+         least_pitch=False, upper_shift=False, stream_fallback=False):
     """`resources_below` is the registry's code_rows_resources_below (MX2),
     passed to scripts/msh/codegrids.py's row reader. MX3's, each with
     code_rows: `unread_codes` (registry unread_codes) and `specks` (registry
@@ -776,9 +777,14 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
     (s_before_number) are codegrids.code_row's; `aliases` (code_rank_aliases,
     booklet.ladder(book)) gives code_row the spellings roster.canon cannot
     read and codegrids.code_of their codes; `health_mend` (mend_by_health) is
-    codegrids.rows_from's."""
+    codegrids.rows_from's. MLA3's, each a registry field of its own:
+    `least_pitch` (least_row_pitch) and `stream_fallback`
+    (stream_row_fallback) are the by_pitch path's, below; `upper_shift`
+    (upper_shift_zero, with undashed_shift_zero) has codegrids.code_of fold
+    the Shift 0 it reads in capitals too."""
     extra =tuple(sorted(k for k in (aliases or {}) if re.match(r'^[A-Z]{1,2}$', k) and roster.canon(k) is None))
-    rules = dict(aliases=aliases, fold_shift=undashed_shift, health_mend=health_mend)
+    rules = dict(aliases=aliases, fold_shift=('any_case' if undashed_shift and upper_shift else undashed_shift),
+                 health_mend=health_mend)
     line = stream[i]
     if line.get('line_grid'):
         return line['line_grid'], i + 1
@@ -809,10 +815,30 @@ def grid(stream, i, reader, code_rows=False, end_at_p=False, resources_below=Fal
                 if kar is not None and stream[kar]['y0'] > line['y0']:
                     first = max(first, (stream[kar]['y0'] - line['y0']) / 2)
                 pitches = sorted({first, max(first, sorted(gaps)[len(gaps) // 2])})
+                if least_pitch and min(gaps) not in pitches:
+                    # MLA3 (registry least_row_pitch): where neither gives
+                    # seven rows, the least gap itself, last (the Creature
+                    # From the Void, printed 44: the 45 px and 46 px crops
+                    # read its I row with no number, the 44 px crop reads it)
+                    pitches.append(min(gaps))
             for pitch in pitches:
                 bottom = line['y0'] + 7 * pitch + 10
                 box = (line['col_x0'], line['y0'] - 45, line['col_x1'], bottom)
                 got = codegrids.rows_from(reader.read(line['pdf'], box), pattern=row, unread_codes=unread_codes, **rules)
+                if len(got) >= 7:
+                    end = i + 1
+                    while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
+                            and stream[end]['y0'] < bottom - 10 and not roster.RUN_IN.match(stream[end]['text']):
+                        end += 1
+                    return got[:7], end
+            if stream_fallback:
+                # MLA3 (registry stream_row_fallback): no crop gives seven
+                # rows (the Hammerhead Robot's P, printed 15, reads with a bar
+                # before its row letter in every crop), so the stream's own
+                # lines over seven of the first pitch
+                bottom = line['y0'] + 7 * pitches[0] + 10
+                got = codegrids.rows_from([stream[j]['text'] for j in same if stream[j]['y0'] < bottom - 10],
+                                          pattern=row, unread_codes=unread_codes, **rules)
                 if len(got) >= 7:
                     end = i + 1
                     while end < len(stream) and stream[end]['pdf'] == line['pdf'] and stream[end]['col'] == line['col'] \
@@ -1095,7 +1121,10 @@ def parse(book, slug):
         import booklet
         mx3['aliases'] = booklet.ladder(book)
     for k, field in (('rising_pitch', 'rising_row_pitch'), ('undashed_shift', 'undashed_shift_zero'),
-                     ('s_numbers', 's_before_number'), ('health_mend', 'mend_by_health')):
+                     ('s_numbers', 's_before_number'), ('health_mend', 'mend_by_health'),
+                     # MLA3's (grid's docstring)
+                     ('least_pitch', 'least_row_pitch'), ('upper_shift', 'upper_shift_zero'),
+                     ('stream_fallback', 'stream_row_fallback')):
         if book.get(field):
             mx3[k] = True
     read_grid = (lambda st, i, rd: grid(st, i, rd, code_rows=code_rows, end_at_p=end_at_p, resources_below=below, **mx3)) \

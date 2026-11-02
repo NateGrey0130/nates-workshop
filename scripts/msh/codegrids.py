@@ -104,7 +104,10 @@ def code_of(printed, aliases=None, fold_shift=False):
     read with an o or a doubled 0 (Sho, ShO, Sh0O, printed 39-42) as Sh0;
     `aliases` is booklet.ladder(book) for a book that sets code_rank_aliases,
     where a spelling roster.canon cannot read is looked up (the mechanical
-    mummy's RP, printed 41)."""
+    mummy's RP, printed 41). MLA3's: `fold_shift` 'any_case' (registry
+    upper_shift_zero, with undashed_shift_zero) folds it in capitals too
+    (the Hammerhead Robot's I, printed 15, prints SH-0 and reads SH-O, which
+    gave no code, so the check skipped the row as unread)."""
     p = re.sub(r'\s', '', printed)
     if p.upper().startswith('N'):
         return None
@@ -114,7 +117,7 @@ def code_of(printed, aliases=None, fold_shift=False):
     if m:
         return 'C-' + m.group(1)
     if fold_shift:
-        p = re.sub(r'^(Sh-?)[0oO]{1,2}$', r'\g<1>0', p)
+        p = re.sub(r'^(Sh-?)[0oO]{1,2}$', r'\g<1>0', p, flags=re.I if fold_shift == 'any_case' else 0)
     c = roster.canon(p)
     if c is None and aliases and p.upper() in aliases:
         return aliases[p.upper()][0]

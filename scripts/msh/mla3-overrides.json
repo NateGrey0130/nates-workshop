@@ -1,0 +1,36 @@
+{
+  "about": [
+    "Hand decisions about MLA3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). The two misprints were read off the page images at 250 dpi (survey apps/marvel-heroes/docs/surveys/mla3.md, the misprints tables of Stat blocks; decision 5), the printed Karma 0 and the second grids' labels are decisions 6 and 4; none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, codes}: the printed page in the Adventure Book, the start of the entry's header, and where one card holds two blocks the block's seven codes as read",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            label       the name of a second block on a card (decision 4)",
+    "            text        match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops.",
+    "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
+    "  checked   the date the page image was read",
+    "The book's other Feeble and Shift 0 spellings (FE, SH-0, Sh-0) have no override: the numbers are right, and they are rank_aliases and the registry's Shift 0 fields (decision 5)."
+  ],
+  "overrides": [
+    {"match": {"page": 53, "header": "Guardsmen"}, "verdict": "misprint", "field": "health",
+     "printed": "70", "corrected": "100", "checked": "2026-11-02",
+     "note": "Printed Health 70 (printed 53): F and A EX 20, S and E RM 30, each code agreeing with its number (read at 250 dpi), sum to 100, and the Karma 18 holds; MLA2's Guardsmen print the same misprint. Survey decision 5."},
+    {"match": {"page": 60, "header": "Thor", "codes": ["Un", "Ex", "Mn", "Mn", "Gd", "Gd", "Rm"]}, "verdict": "misprint", "field": "health",
+     "printed": "200", "corrected": "270", "checked": "2026-11-02",
+     "note": "Printed Health 200 (printed 60): F UN 100, A EX 20, S and E MN 75, each code agreeing with its number, sum to 270, and the Karma 50 holds; MLA2's Thor prints the same misprint. The codes match his own block, not Eric Masterson's on the same card. Survey decision 5."},
+    {"match": {"page": 61, "header": "Thor", "codes": ["Ty", "Ty", "Ty", "Gd", "Gd", "Ty", "Rm"]}, "verdict": "label", "label": "Eric Masterson", "checked": "2026-11-02",
+     "note": "The second grid on Thor's card, inside his Known Powers (printed 61), Health 28 and Karma 46: his mortal form, as MLA2's. Survey decision 4."},
+    {"match": {"page": 54, "header": "Iron Man", "codes": ["Ty", "Ty", "Pr", "Ty", "In", "Ex", "Ty"]}, "verdict": "label", "label": "Tony Stark", "checked": "2026-11-02",
+     "note": "The second grid on Iron Man (Mark VIII Armor)'s card, inside his Known Powers (printed 54): his normal statistics, as MLA2's. Survey decision 4."},
+    {"match": {"page": 57, "header": "Mandroid", "codes": ["Ex", "Gd", "Gd", "Gd", "Ty", "Ty", "Ty"]}, "verdict": "label", "label": "Rocko", "checked": "2026-11-02",
+     "note": "The second grid on the Mandroid's card (printed 57): the wearer out of the suit, as Tony Stark out of the armor; not a card of his own, since the Mandroid grid is statted for him in the suit. Survey decision 4."},
+    {"match": {"page": 62, "header": "Typhoid Mary", "codes": ["Pr", "Ty", "Pr", "Ty", "Ty", "Gd", "Pr"]}, "verdict": "label", "label": "Mary", "checked": "2026-11-02",
+     "note": "The second grid on Typhoid Mary's card, where her text runs on (printed 62): her other personality, the same body. Survey decision 4."},
+    {"match": {"page": 15, "header": "Hammerhead Robot"}, "verdict": "as_printed", "field": "karma", "printed": "0", "checked": "2026-11-02",
+     "note": "Printed Karma 0 (printed 15), a robot (R+I+P 6); kept as printed, the GM tools playing the printed value, as MLA2's robots. Survey decision 6."},
+    {"match": {"page": 28, "header": "Security Robots"}, "verdict": "as_printed", "field": "karma", "printed": "0", "checked": "2026-11-02",
+     "note": "Printed Karma 0 (printed 28), robots (R+I+P 6). Survey decision 6."},
+    {"match": {"page": 30, "header": "Cameron"}, "verdict": "as_printed", "field": "karma", "printed": "0", "checked": "2026-11-02",
+     "note": "Printed Karma 0 (printed 30), Cameron's Machine, a machine with a card of its own (decision 8; R+I+P 20). Survey decision 6."}
+  ]
+}
