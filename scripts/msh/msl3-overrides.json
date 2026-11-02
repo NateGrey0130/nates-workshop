@@ -22,9 +22,9 @@
      "note": "Printed 30: Health = See text and no Karma line; its text gives its Health after Annihilus' attacks, and its F A S E sum to the full Health. Survey decision 8: kept as printed, no Karma derived."},
     {"match": {"row": "msl3:ice-bat-msl3:power:2"}, "verdict": "text", "checked": "2026-11-02",
      "read": "\\t can", "printed": "It can",
-     "note": "Flight, printed 13: the OCR read the capital I of It as a backslash; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream, as the survey's speck fixes were, not on a render."},
+     "note": "Flight, printed 13: the OCR read the capital I of It as a backslash; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."},
     {"match": {"row": "msl3:ice-bat-msl3:power:3"}, "verdict": "text", "checked": "2026-11-02",
      "read": "|t sprays", "printed": "It sprays",
-     "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream, as the survey's speck fixes were, not on a render."}
+     "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."}
   ]
 }
