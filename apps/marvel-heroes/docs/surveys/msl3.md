@@ -4,8 +4,8 @@ Marvel Super Heroes adventure, product code 6902 on the cover (PDF 1) and
 6902XXX1401 on the back cover (PDF 34). By Rick Swan, 1991 (the title page).
 Registry entry: `scripts/msh/books.json` -> `msl3`. Measured 2026-11-02.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production: nothing is
-imported yet, and the data row sets this line from production.
+**Rows citing this book:** 21 `msh_book_text` rows over 8 character entries
+in production (`DB_MARVEL`, read back 2026-11-02).
 
 Everything here was measured and read on the page images by plan row 28a
 (renders at 30-160 dpi, PyMuPDF), and recorded in the registry entry.
