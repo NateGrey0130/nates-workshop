@@ -4360,12 +4360,84 @@
         {"part": "Adventure Book", "page": 5, "names": ["Nop Yaan Peasant"]},
         {"part": "Adventure Book", "page": 6, "names": ["Flying Robotic Snake"]},
         {"part": "Adventure Book", "page": 13, "names": ["Ice Bat"]},
-        {"part": "Adventure Book", "page": 18, "names": ["Vapor Wasp", "Alien Trader (Torr)"]},
-        {"part": "Adventure Book", "page": 21, "names": ["Bubble Beast"]},
-        {"part": "Adventure Book", "page": 22, "names": ["Flying Stallion (Ashta)"]},
+        {"part": "Adventure Book", "page": 18, "names": ["Vapor Wasp", "Alien Trader (Torr)"], "continues": [19]},
+        {"part": "Adventure Book", "page": 21, "names": ["Bubble Beast"], "runs_on": [22]},
+        {"part": "Adventure Book", "page": 22, "names": ["Flying Stallion (Ashta)"], "continues": [23]},
         {"part": "Adventure Book", "page": 30, "names": ["Robotic Dragon"]}
       ],
-      "opponents_note": "Every grid in the book, found by the OCR's rank-code rows and Health = lines and on a 30 dpi sheet of every page, and read on crops of the page images at 110 dpi 2026-11-02: eight, each under a title-case header as printed, MSL1's form. Nop Yaan Peasant (printed 5, column 2, under the subhead Mind-Controlled Peasants), Chapter One; Flying Robotic Snake (6, column 1, inside encounter 3, Phony Tree), Chapter One; Ice Bat (13, column 1, encounter 4, Crystal Mist), Chapter Two; Vapor Wasp (18, column 1, encounter 12, Derelict Craft) and Alien Trader (Torr) (18, column 2, at its foot, encounter 13, Radiant Web), Chapter Two; Bubble Beast (21, column 2, encounter 17, Portal Guardian), Chapter Two; Flying Stallion (Ashta) (22, column 2, encounter 21, Winged Visitor), Chapter Two; Robotic Dragon (30, column 2, before the subhead Events), Chapter Four. The headers box at 44-46 px at 300 dpi, the size of the chapters' own subheads (Encounter Key-Map 1, Mind-Controlled Peasants: 45), and the Robotic Dragon's at 56 beside the Events subhead's 57; the Vapor Wasp's is set in body type (39). So no size separates a header from a subhead: the grid under it does. Survey msl3.md, Stat blocks."
+      "opponents_note": "Every grid in the book, found by the OCR's rank-code rows and Health = lines and on a 30 dpi sheet of every page, and read on crops of the page images at 110 dpi 2026-11-02: eight, each under a title-case header as printed, MSL1's form. Nop Yaan Peasant (printed 5, column 2, under the subhead Mind-Controlled Peasants), Chapter One; Flying Robotic Snake (6, column 1, inside encounter 3, Phony Tree), Chapter One; Ice Bat (13, column 1, encounter 4, Crystal Mist), Chapter Two; Vapor Wasp (18, column 1, encounter 12, Derelict Craft) and Alien Trader (Torr) (18, column 2, at its foot, encounter 13, Radiant Web), Chapter Two; Bubble Beast (21, column 2, encounter 17, Portal Guardian), Chapter Two; Flying Stallion (Ashta) (22, column 2, encounter 21, Winged Visitor), Chapter Two; Robotic Dragon (30, column 2, before the subhead Events), Chapter Four. The headers box at 44-46 px at 300 dpi, the size of the chapters' own subheads (Encounter Key-Map 1, Mind-Controlled Peasants: 45), and the Robotic Dragon's at 56 beside the Events subhead's 57; the Vapor Wasp's is set in body type (39). So no size separates a header from a subhead: the grid under it does. Survey msl3.md, Stat blocks. continues (Torr's text goes on at the top of printed 19, Ashta's on 23) and runs_on (the Bubble Beast's on 22) set by row 29a from the trial (survey msl3.md, Which reader fits): without them Torr's prose is 2940 characters to 0, the Bubble Beast's 1590 to 293 and Ashta's 525 to 178 (ablation, plan row 28c1, 2026-11-02).",
+      "layout": "grid-booklets",
+      "layout_note": "ME1's, ME2's, ME3's, MT2's, MT3's, MSL1's and MSL2's reader, scripts/msh/gridbooks.py (survey msl3.md, Which reader fits, verdict grid-booklets; measured by plan rows 28c and 28c1's trial 2026-11-02, set by row 29a). It reads parts, the empty character_ranges and opponents as row 28a wrote them; code-grids reads no parts entry. Five reader changes, each behind a field of its own: equals_labels, text_health, no_karma_line, run_on_prose and bracket_given_names (npcs.py); and npcs.py lists the opponents' span for a book with no character_pages, where it stopped with KeyError 'character_pages'.",
+      "codes_over_numbers": true,
+      "codes_over_numbers_note": "MSL1's: every grid prints its codes row above its numbers row, read by gridbooks.read_line_grid as each code over its number. Off, roster.py exits 0 but all 8 blocks read rank_only, every number taken from its code (Ashta's A 10 becomes 20 with no override) (ablation, plan row 28c1, 2026-11-02).",
+      "subhead_labels": ["KNOWN POWERS"],
+      "subhead_labels_note": "MT3's, MSL1's and MSL2's: KNOWN POWERS in bold capitals with no colon heads four grids' powers, and gridbooks.stream_of gives it its colon. Off, roster.py exits 1: subhead_line_powers finds no Body Armor on printed 13 (ablation, plan row 28c1, 2026-11-02).",
+      "cards": [
+        ["Adventure Book", 5, "Nop Yaan Peasant"],
+        ["Adventure Book", 6, "Flying Robotic Snake"],
+        ["Adventure Book", 13, "Ice Bat"],
+        ["Adventure Book", 18, "Vapor Wasp"],
+        ["Adventure Book", 18, "Alien Trader (Torr)"],
+        ["Adventure Book", 21, "Bubble Beast"],
+        ["Adventure Book", 22, "Flying Stallion (Ashta)"],
+        ["Adventure Book", 30, "Robotic Dragon"]
+      ],
+      "cards_note": "The 8 cards as read, by booklet and printed page (survey msl3.md decision 3: every grid a card), since the book prints no index and its Contents names no character. gridbooks.coverage reads opponents as a checklist too, so without this field every output is byte-identical (ablation, plan row 28c1, 2026-11-02); it is kept as the record of the cards as read.",
+      "teams": [["Adventure Book", 5, "MSL3 Spore of Arthros"]],
+      "teams_note": "[part, printed page, team] (gridbooks.team_of). Survey msl3.md decision 1 (recommended, applied unanswered; Nate 2026-10-31): every card under the book's title, as MSL1's and MSL2's chapter opponents; no card is a team member, since the heroes print no grid. Off, npcs.py exits 1, KeyError 'side' (ablation, plan row 28c1, 2026-11-02).",
+      "one_line_grids": [
+        {"part": "Adventure Book", "page": 5, "name": "Nop Yaan Peasant", "subhead": "Nop Yaan Peasant"},
+        {"part": "Adventure Book", "page": 6, "name": "Flying Robotic Snake", "subhead": "Flying Robotic Snake"},
+        {"part": "Adventure Book", "page": 13, "name": "Ice Bat", "subhead": "Ice Bat"},
+        {"part": "Adventure Book", "page": 18, "name": "Vapor Wasp", "subhead": "Vapor Wasp"},
+        {"part": "Adventure Book", "page": 18, "name": "Alien Trader (Torr)", "subhead": "Alien Trader (Torr)"},
+        {"part": "Adventure Book", "page": 21, "name": "Bubble Beast", "subhead": "Bubble Beast"},
+        {"part": "Adventure Book", "page": 22, "name": "Flying Stallion (Ashta)", "subhead": "Flying Stallion (Ashta)"},
+        {"part": "Adventure Book", "page": 30, "name": "Robotic Dragon", "subhead": "Robotic Dragon"}
+      ],
+      "one_line_grids_note": "[{part, page, name, subhead}], MX1's form, for the eight grids (printed 5, 6, 13, 18 twice, 21, 22 and 30), each named for the header over it as read: the letters, a codes row, a numbers row, then Health and Karma on one line (survey msl3.md, Stat blocks). Off, roster.py exits 1: opponent_indented_paragraphs finds no entry for the Nop Yaan Peasant, printed 5 (ablation, plan row 28c1, 2026-11-02).",
+      "equals_labels": true,
+      "equals_labels_note": "MSL3's (gridbooks.line_grids; survey msl3.md, Which reader fits item 1): every grid prints its labels with an equals sign and a space either side, Health = n Karma = n (printed 5-30), and on a page one_line_grids names the line is read as the roster's Health: n Karma: n. Off, roster.py exits 1: one_line_grids not found: Nop Yaan Peasant (ablation, plan row 28c1, 2026-11-02).",
+      "text_health": [["Adventure Book", 30, "See text"]],
+      "text_health_note": "[part, printed page, the Health as printed], MSL3's (gridbooks.read_line_grid and roster.read_entries; Which reader fits item 2): the Robotic Dragon's Health = See text (printed 30) is kept as printed, its grid read as if the line printed a number, and the line anchors its block. Off, roster.py exits 1: one_line_grids not found: Robotic Dragon (ablation, plan row 28c1, 2026-11-02). msl3-overrides.json records it as_printed (decision 8).",
+      "no_karma_line": true,
+      "no_karma_line_note": "MSL3's (gridbooks.line_grids; Which reader fits item 3): the Flying Robotic Snake (printed 6) and the Robotic Dragon (30) print a Health line and no Karma line, and their Karma stays null (decision 8: none derived). Off, roster.py exits 0 but both Karmas are the string 'None' in roster.json and npcs.json (ablation, plan row 28c1, 2026-11-02).",
+      "bracketed_card_names": true,
+      "bracketed_card_names_note": "MLA2's: Alien Trader (Torr) (printed 18) and Flying Stallion (Ashta) (22) are matched whole to the checklist by gridbooks.coverage. It reaches the checklist only; npcs.py's names are bracket_given_names. Off, roster.py exits 1: both on no checklist (ablation, plan row 28c1, 2026-11-02).",
+      "speck_lines": [
+        ["Adventure Book", 13, "KNOWN POWERS Booy Armor: The creature\u2019s solid ice", "KNOWN POWERS Body Armor: The creature\u2019s solid ice"],
+        ["Adventure Book", 18, "KNOWN POWERS Booy Armor: Metal plates cover the", "KNOWN POWERS Body Armor: Metal plates cover the"],
+        ["Adventure Book", 18, "Flight: \\t can fly ten areas per round.", "Flight: It can fly ten areas per round."],
+        ["Adventure Book", 21, "Flight: \\t can fly eight areas per round.", "Flight: It can fly eight areas per round."]
+      ],
+      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of, each matched once whole and replaced: Booy Armor for Body Armor (printed 13 and 18), and a backslash before t for It (18 and 21). Read off the stream by plan row 28c, not on a render. The trial's two other It lines of printed 13 (Flight, Ice Entrapment) are ten words each as a whole line, which the Marvel smoke suite's leak check refuses, so they are text verdicts in msl3-overrides.json instead (row 29a). Off, roster.py exits 1: subhead_line_powers finds no Body Armor on printed 13 (ablation, plan row 28c1, 2026-11-02).",
+      "subhead_line_powers": [["Adventure Book", 13, "Body Armor"], ["Adventure Book", 18, "Body Armor"]],
+      "subhead_line_powers_note": "[part, printed page, power name], MSL2's (gridbooks.stream_of): KNOWN POWERS run into Body Armor on its line (the Ice Bat, printed 13; the Vapor Wasp, 18). Off, 5 powers across 2 entries, not 13 across 4, and the Ice Bat and the Vapor Wasp keep none (ablation, plan row 28c1, 2026-11-02).",
+      "opponent_indented_paragraphs": [
+        ["Adventure Book", 5, "Nop Yaan Peasant"],
+        ["Adventure Book", 6, "Flying Robotic Snake"],
+        ["Adventure Book", 13, "Ice Bat"],
+        ["Adventure Book", 18, "Vapor Wasp"],
+        ["Adventure Book", 18, "Alien Trader (Torr)"],
+        ["Adventure Book", 21, "Bubble Beast"],
+        ["Adventure Book", 22, "Flying Stallion (Ashta)"],
+        ["Adventure Book", 30, "Robotic Dragon"]
+      ],
+      "opponent_indented_paragraphs_note": "[part, printed page, header], MT2's: every paragraph under these grids is set indented (survey msl3.md, Columns, labels and ranks), so an indented paragraph does not end the entry; entry_ends does. Off, every entry's prose is empty and printed 19, 22 and 23 are lost (ablation, plan row 28c1, 2026-11-02).",
+      "entry_ends": [
+        ["Adventure Book", 6, "4. Light Tower. Three of these 150-foot-tall steel tow-"],
+        ["Adventure Book", 13, "5. Energy Beam. WA Reading: Concentrated waves of"],
+        ["Adventure Book", 18, "13. Radiant Web. WA Reading: Bands of powerful"],
+        ["Adventure Book", 19, "14. Debris Band. This is identical to the encounter 2"],
+        ["Adventure Book", 22, "18. Energy Beam WA Reading: Concentrated waves of"],
+        ["Adventure Book", 23, "22. Magnetized Warrior WA Reading: Powerful elec-"],
+        ["Adventure Book", 30, "Events"]
+      ],
+      "entry_ends_note": "[part, printed page, the whole line as read], MT3's: where the chapter resumes under an opponent's text, at encounters 4, 5, 13, 14, 18 and 22 and at the subhead Events (printed 30). Read off the stream by plan row 28c, not on a render. Off, 7 entries run on into the encounters (the Ice Bat's prose 300 characters to 2954, Ashta's 525 to 4314) (ablation, plan row 28c1, 2026-11-02).",
+      "run_on_prose": true,
+      "run_on_prose_note": "MSL3's (roster.read_entries; Which reader fits item 4): in an opponent_indented_paragraphs entry, an indented paragraph after a power's sentence is the encounter resumed under the powers and is kept as the entry's prose, not the last power's text (the Ice Bat, printed 13; the Vapor Wasp, 18; the Bubble Beast, 21-22; Ashta, 22-23). Off, the last power swallows the prose in 4 entries (the Vapor Wasp's 145 characters to 1143, the Bubble Beast's 466 to 2057) (ablation, plan row 28c1, 2026-11-02).",
+      "bracket_given_names": [["Adventure Book", 18, "Alien Trader (Torr)"], ["Adventure Book", 22, "Flying Stallion (Ashta)"]],
+      "bracket_given_names_note": "[part, printed page, header], MSL3's (npcs.py; Which reader fits item 6; survey msl3.md decision 5, recommended, applied unanswered): the parenthesis is the being's own name and the rest its kind, so the cards are Torr and Ashta (torr-msl3, ashta-msl3) with Alien Trader and Flying Stallion as their identity lines. Each must find exactly one entry with a parenthesis and no identity, or npcs.py stops. Off, the cards are named Alien Trader and Flying Stallion (ablation, plan row 28c1, 2026-11-02)."
     }
   }
 }

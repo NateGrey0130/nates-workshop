@@ -489,6 +489,18 @@ def main(slug_arg):
             raise SystemExit('%s: bracket_identity %r finds %d entries, not 1 with a parenthesis and no identity'
                              % (slug_arg, c[2], len(hits)))
         bracketed[id(hits[0])] = c[3]
+    # MSL3 (registry bracket_given_names [part, printed page, header]): a
+    # header whose parenthesis is the being's own name and the rest its kind
+    # (Alien Trader (Torr), printed 18; Flying Stallion (Ashta), 22; survey
+    # msl3.md decision 5): the card is named by the parenthesis, and the rest
+    # is its identity
+    for c in (book.get('bracket_given_names', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2]]
+        if len(hits) != 1 or not variant(c[2]) or hits[0]['identity'] or hits[0].get('name'):
+            raise SystemExit('%s: bracket_given_names %r finds %d entries, not 1 with a parenthesis and no identity'
+                             % (slug_arg, c[2], len(hits)))
+        hits[0]['name'] = variant(c[2])
+        bracketed[id(hits[0])] = base_name(c[2])
     # A card whose Real Name: line is a sentence and not a name (MLA3's
     # Colossal Deathlok, printed 51; registry short_identity [part, printed
     # page, header, identity], survey mla3.md decision 12) commits only the
@@ -973,14 +985,17 @@ def main(slug_arg):
         if r.get('layout') == 'cover-panels':
             x = panel_listing(r)
             return '; '.join(['%s %d-%d' % (x['part'], x['pages'][0], x['pages'][1])] + x['panels'])
-        if r.get('character_ranges'):
+        # MSL3: a book with no character_pages whose grids are all opponents
+        # (character_ranges empty) lists its opponents' span; every book with
+        # character_pages reads them as before
+        if r.get('character_ranges') or (r.get('opponents') and 'character_pages' not in r):
             return '; '.join('%s %s' % (g['part'], ', '.join('%d-%d' % tuple(p) for p in g['pages'])) for g in ranges(r))
         return '%d-%d' % tuple(r['character_pages'])
 
     def book_listing(r):
         if r.get('layout') == 'cover-panels':
             return panel_listing(r)
-        if r.get('character_ranges'):
+        if r.get('character_ranges') or (r.get('opponents') and 'character_pages' not in r):
             return {'pages': ranges(r)[0]['pages'][0], 'ranges': ranges(r)}
         return {'pages': list(r['character_pages']),
                 **({'part': part_cite(r, r['character_part'])} if r.get('character_part') else {})}

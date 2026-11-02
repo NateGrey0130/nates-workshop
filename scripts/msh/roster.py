@@ -387,7 +387,7 @@ class GridReader:
                                   'code_first_caps', 'row_marks', 'slash_forms', 'bracket_tail',
                                   'two_ranks', 'spaced_marks', 'slash_title_case', 'res_label', 'split_grids',
                                   'wrapped_alternates', 'dash_marks', 'inner_grids', 'opponent_grid_ends',
-                                  'power_heads_not_run_ins')
+                                  'power_heads_not_run_ins', 'run_on_prose')
                       if book.get(k)}
 
     def read(self, pdf, box, psm='6'):
@@ -660,7 +660,10 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
             continue
         # MLA1 (gridbooks.karma_grids, registry karma_grids): a grid of R, I
         # and P under a Karma line, no Health (Bartholomew Jacobs, printed 40)
-        anchored = bool(ANCHOR.search(line['text'])) or bool(line.get('karma_grid'))
+        # MSL3 (gridbooks.line_grids, registry text_health): a one-line grid
+        # whose Health is printed in words ("See text", the Robotic Dragon,
+        # printed 30)
+        anchored = bool(ANCHOR.search(line['text'])) or bool(line.get('karma_grid')) or bool(line.get('text_health'))
         rows, nxt = grid(stream, i, reader) if anchored else (None, i)
         if anchored and nxt > i:
             if rows is None:
@@ -750,6 +753,15 @@ def read_entries(stream, reader, opponent=False, grid=None, ranges=None, labels=
                 cur = None
                 i += 1
                 continue
+            # MSL3 (registry run_on_prose): in an entry whose indented
+            # paragraphs run on (opponent_indented_paragraphs), an indented
+            # paragraph after a power's sentence is the encounter resumed
+            # under the powers (the Ice Bat, printed 13), kept as the entry's
+            # prose, not the last power's text
+            if 'run_on_prose' in mends and cur['_sec'] == 'powers' and not line.get('indented_head') \
+                    and (cur['pages'][0], cur['header']) in run_on and line['x0'] - line['left'] >= 25 \
+                    and prev_text.endswith(('.', '!', '?', '"', '\u201d', ')')):
+                cur['_sec'] = 'after-grid'
         add_page(line)
         # MLA2 (registry power_heads_not_run_ins): a power named in capitals
         # (Iron Man's ECM, printed 59) matches RUN_IN; a line the registry's
