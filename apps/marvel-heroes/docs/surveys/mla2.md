@@ -5,8 +5,8 @@ Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 After Midnight). Registry entry: `scripts/msh/books.json` -> `mla2`.
 Measured 2026-11-01.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production
-(`DB_MARVEL`, read back 2026-11-01); no data is built yet.
+**Rows citing this book:** 215 `msh_book_text` rows over 45 character entries
+in production (`DB_MARVEL`, read back 2026-11-02).
 
 Everything here was measured and read on the page images.
 

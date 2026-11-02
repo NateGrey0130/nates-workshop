@@ -128,6 +128,11 @@
    "book": "MLBA1 Mutating Mutants",
    "code": "TSR6893",
    "pages": "Adventure 3-31, 32-32"
+  },
+  {
+   "book": "MLA2 Night Moves",
+   "code": "TSR6895",
+   "pages": "Adventure 3-8, 23-49, 54-64"
   }
  ],
  "books": [
@@ -582,6 +587,34 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mla2",
+   "short": "MLA2",
+   "title": "MLA2 Night Moves",
+   "pages": [
+    3,
+    8
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       3,
+       8
+      ],
+      [
+       23,
+       49
+      ],
+      [
+       54,
+       64
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -664,7 +697,9 @@
   "After Midnight Heroes",
   "MLA1 After Midnight",
   "MLBA1 Mutating Mutants",
-  "Mutating Mutants Heroes"
+  "Mutating Mutants Heroes",
+  "Night Moves Heroes",
+  "MLA2 Night Moves"
  ],
  "characters": [
   {
@@ -88136,6 +88171,4157 @@
    ],
    "appearances": [],
    "book": "mlba1"
+  },
+  {
+   "id": "cloak-mla2",
+   "name": "Cloak",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "cloak-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [
+      "Real Name: Tyrone Johnson"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "76",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "Spirit Vampirism",
+       "upb": "MG11"
+      },
+      {
+       "name": "Intangibility"
+      },
+      {
+       "name": "Darkforce Generation"
+      },
+      {
+       "name": "Shadow Casting"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "dagger-mla2",
+   "name": "Dagger",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "dagger-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      3,
+      4
+     ],
+     "identity": [
+      "Real Name: Tandy Bowen"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "44",
+       "karma": "30",
+       "resources": "FB (2)",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Light Daggers"
+      },
+      {
+       "name": "Light Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "daredevil-mla2",
+   "name": "Daredevil",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "daredevil-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Real Name: Matthew Murdock"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "110",
+       "karma": "91",
+       "resources": "PR (4)",
+       "popularity": "6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Senses"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Billy Club"
+      },
+      {
+       "name": "Blindness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "iron-fist-mla2",
+   "name": "Iron Fist",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "iron-fist-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Real Name: Daniel Rand"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         75,
+         "Am"
+        ]
+       ],
+       "health": "100",
+       "karma": "125",
+       "resources": "PR (4)",
+       "popularity": "20",
+       "override": {
+        "verdict": "misprint",
+        "field": "P",
+        "printed": {
+         "number": 75,
+         "code": "Am"
+        },
+        "corrected": {
+         "number": 75,
+         "code": "Mn"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Chi"
+      },
+      {
+       "name": "Iron Fist"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "moon-knight-mla2",
+   "name": "Moon Knight",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "moon-knight-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Real Name: Marc Spector"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "90",
+       "karma": "60",
+       "resources": "RM (30)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Nunchakus"
+      },
+      {
+       "name": "Scarab Darts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "power-man-mla2",
+   "name": "Power Man",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "power-man-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      5,
+      6
+     ],
+     "identity": [
+      "Real Name: Luke Cage"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "130",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "18"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "spider-man-mla2",
+   "name": "Spider-Man",
+   "team": "Night Moves Heroes",
+   "versions": [
+    {
+     "id": "spider-man-mla2",
+     "label": null,
+     "team": "Night Moves Heroes",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Real Name: Peter Parker"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "160",
+       "karma": "70",
+       "resources": "TY (6)",
+       "popularity": "30/6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Spider-Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      },
+      {
+       "name": "Spider-Tracer"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-batboy-mla2",
+   "name": "Typical Batboy",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-batboy-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "14",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-dragonlord-mla2",
+   "name": "Typical Dragonlord",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-dragonlord-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "36",
+       "karma": "16",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-maggia-technician-mla2",
+   "name": "Typical Maggia Technician",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-maggia-technician-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      7,
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "24",
+       "karma": "36",
+       "resources": "GD (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-maggia-thug-mla2",
+   "name": "Typical Maggia Thug",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-maggia-thug-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "32",
+       "karma": "16",
+       "resources": "GD (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-si-fan-assassin-mla2",
+   "name": "Typical Si Fan Assassin",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-si-fan-assassin-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "60",
+       "karma": "32",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "typical-tiger-s-claw-mla2",
+   "name": "Typical Tiger's Claw",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "typical-tiger-s-claw-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "36",
+       "karma": "18",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "old-man-mla2",
+   "name": "Old Man",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "old-man-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      23
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "22",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "tak-mla2",
+   "name": "Tak",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "tak-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "28",
+       "karma": "14",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "guardsmen-mla2",
+   "name": "Guardsmen",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "guardsmen-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      36
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "70",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "70",
+        "corrected": "100"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Air Supply"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Pistol"
+      },
+      {
+       "name": "Protected Senses"
+      },
+      {
+       "name": "Resistance"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "mechanical-monster-mla2",
+   "name": "Mechanical Monster",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "mechanical-monster-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      39
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "104",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Huge Size"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "werewolf-robot-mla2",
+   "name": "Werewolf Robot",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "werewolf-robot-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      39
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "90",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "clown-robot-mla2",
+   "name": "Clown Robot",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "clown-robot-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "80",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "E",
+        "printed": {
+         "number": 30,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": "0"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Juggling Balls"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "robot-children-mla2",
+   "name": "Robot Children",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "robot-children-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "52",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Corrosive Cake"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "vampire-robot-mla2",
+   "name": "Vampire Robot",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "vampire-robot-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "90",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Eye Beams"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "mechanical-mummy-mla2",
+   "name": "Mechanical Mummy",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "mechanical-mummy-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      41
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 41,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "110",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "mechanical-skeletons-mla2",
+   "name": "Mechanical Skeletons",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "mechanical-skeletons-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      41
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 41,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "34",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Knockout Gas"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "dragon-robots-mla2",
+   "name": "Dragon Robots",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "dragon-robots-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      42
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "100",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Bite"
+      },
+      {
+       "name": "Breath Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "dragons-control-device-mla2",
+   "name": "Dragons' Control Device",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "dragons-control-device-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      42
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         0,
+         "Sh0"
+        ],
+        [
+         "A",
+         0,
+         "Sh0"
+        ],
+        [
+         "S",
+         0,
+         "Sh0"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "30",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "skeletal-ghosts-mla2",
+   "name": "Skeletal Ghosts",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "skeletal-ghosts-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      49
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 49,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "0"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "beetle-mla2",
+   "name": "Beetle",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "beetle-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      54
+     ],
+     "identity": [
+      "Real Name: Abner Jenkins"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "70",
+       "karma": "56",
+       "resources": "EX (20)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Battle Computer"
+      },
+      {
+       "name": "Electro-Bite"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wall-Crawling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "blizzard-mla2",
+   "name": "Blizzard",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "blizzard-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      54
+     ],
+     "identity": [
+      "Real Name: Donny Gill"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "50",
+       "karma": "22",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Battlesuit"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "captain-america-mla2",
+   "name": "Captain America",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "captain-america-mla2",
+     "label": "Original",
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      54,
+      55
+     ],
+     "identity": [
+      "Real Name: Steve Rogers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "150",
+       "karma": "90",
+       "resources": "TY (6)",
+       "popularity": "100/6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shield"
+      },
+      {
+       "name": "Armor"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "chemist-mla2",
+   "name": "Chemist",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "chemist-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      55,
+      56
+     ],
+     "identity": [
+      "Real Name: Ulysses Greitzer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 55,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "22",
+       "karma": "70",
+       "resources": "EX (20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Delayed Mind Control"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Mirrored Sunglasses"
+      },
+      {
+       "name": "Ultimate Skill"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "constrictor-mla2",
+   "name": "Constrictor",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "constrictor-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      56
+     ],
+     "identity": [
+      "Real Name: Frank Schlichting"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "50",
+       "karma": "24",
+       "resources": "GD (10)",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Tentacles"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "deathlok-simulacrum-mla2",
+   "name": "Deathlok Simulacrum",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "deathlok-simulacrum-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      56
+     ],
+     "identity": [
+      "Real Name: The original Deathlok was named Luther Manning."
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         2,
+         "Fb"
+        ]
+       ],
+       "health": "140",
+       "karma": "22",
+       "resources": "FB (2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Enhanced Senses"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "dreadnoughts-mla2",
+   "name": "Dreadnoughts",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "dreadnoughts-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      57
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fb"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fb"
+        ]
+       ],
+       "health": "165",
+       "karma": "None",
+       "resources": "None",
+       "popularity": "-10",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "None"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Weapon Systems"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "fixer-mla2",
+   "name": "Fixer",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "fixer-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      57
+     ],
+     "identity": [
+      "Real Name: Norbert Ebersol"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "32",
+       "karma": "70",
+       "resources": "RM (30)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body-Suit"
+      },
+      {
+       "name": "Battle-Vest"
+      },
+      {
+       "name": "Sonic Blaster"
+      },
+      {
+       "name": "Electrification"
+      },
+      {
+       "name": "Launchers"
+      },
+      {
+       "name": "Ammunition"
+      },
+      {
+       "name": "Gravity Clamp"
+      },
+      {
+       "name": "Pistol"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Helmet"
+      },
+      {
+       "name": "Psi-Screen Device"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "hammerhead-mla2",
+   "name": "Hammerhead",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "hammerhead-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      58
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "60",
+       "karma": "50",
+       "resources": "EX (20)",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Marksman"
+      },
+      {
+       "name": "Metal-Plated Skull"
+      },
+      {
+       "name": "Exoskeleton"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "iron-man-mla2",
+   "name": "Iron Man",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "iron-man-mla2",
+     "label": "Mark VIII Armor",
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      58,
+      59
+     ],
+     "identity": [
+      "Real Name: Anthony Stark"
+     ],
+     "blocks": [
+      {
+       "label": "Iron Man",
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "165",
+       "karma": "66",
+       "resources": "EX (20)",
+       "popularity": "25"
+      },
+      {
+       "label": "Tony Stark",
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "66",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Plasma Bolt Generators"
+      },
+      {
+       "name": "Repulsors"
+      },
+      {
+       "name": "Unibeam"
+      },
+      {
+       "name": "Heat Beam"
+      },
+      {
+       "name": "Magnetism",
+       "upb": "EE9"
+      },
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Protected Senses"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "ECM"
+      },
+      {
+       "name": "Electromagnetic Pulse"
+      },
+      {
+       "name": "Anti-theft Device"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "killer-shrike-mla2",
+   "name": "Killer Shrike",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "killer-shrike-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      59
+     ],
+     "identity": [
+      "Real Name: Simon Maddicks"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "120",
+       "karma": "22",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Bracelets"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "manchu-fu-mla2",
+   "name": "Manchu, Fu",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "manchu-fu-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      59,
+      60
+     ],
+     "identity": [
+      "Real Name: Fu Manchu (alias the Celestial One)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "46",
+       "karma": "140",
+       "resources": "IN (40)",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Techno-Wizardry"
+      },
+      {
+       "name": "Precognition",
+       "upb": "M24"
+      },
+      {
+       "name": "Magical Spells"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "mentallo-mla2",
+   "name": "Mentallo",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "mentallo-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      60
+     ],
+     "identity": [
+      "Real Name: Marvin Flumm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "52",
+       "karma": "90",
+       "resources": "TY (6)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Hallucination"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Anti-Psionic Helmet"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "min-lee-mla2",
+   "name": "Min, Lee",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "min-lee-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      60,
+      61
+     ],
+     "identity": [
+      "Real Name: Lee Min"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "66",
+       "karma": "86",
+       "resources": "RM (30)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Blindness"
+      },
+      {
+       "name": "Combat Sense"
+      },
+      {
+       "name": "Psi-Screen"
+      },
+      {
+       "name": "Stasis Gun"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "sersi-mla2",
+   "name": "Sersi",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "sersi-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      61
+     ],
+     "identity": [
+      "Real Name: Sersi"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "140",
+       "karma": "90",
+       "resources": "RM (30)",
+       "popularity": "25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Cosmic Energy Manipulation"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Psionic Abilities"
+      },
+      {
+       "name": "Uni-Mind"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "shang-chi-mla2",
+   "name": "Shang-Chi",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "shang-chi-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      61
+     ],
+     "identity": [
+      "Real Name: Shang-Chi"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "130",
+       "karma": "80",
+       "resources": "TY (6)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ki-Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "silver-samurai-mla2",
+   "name": "Silver Samurai",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "silver-samurai-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      61,
+      62
+     ],
+     "identity": [
+      "Real Name: Kenuichio Harada"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "110",
+       "karma": "70",
+       "resources": "EX (20)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Tachyon Field"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "starfox-mla2",
+   "name": "Starfox",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "starfox-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      62
+     ],
+     "identity": [
+      "Real Name: Eros"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "120",
+       "karma": "56",
+       "resources": "EX (20)",
+       "popularity": "75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Body Resistance",
+       "upb": "P2"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "thor-mla2",
+   "name": "Thor",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "thor-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      62,
+      63
+     ],
+     "identity": [
+      "Real Name: Thor; Dr. Donald Blake; Sigurd Jarlson; Eric Masterson"
+     ],
+     "blocks": [
+      {
+       "label": "Thor",
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "200",
+       "karma": "50",
+       "resources": "EX (20)",
+       "popularity": "50",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": "200",
+        "corrected": "270"
+       }
+      },
+      {
+       "label": "Eric Masterson",
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "28",
+       "karma": "46",
+       "resources": "RM (30)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Illusion Detection"
+      },
+      {
+       "name": "Mjolnir"
+      },
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Gauntlets"
+      },
+      {
+       "name": "Belt of Strength"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "vision-mla2",
+   "name": "Vision",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "vision-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      63
+     ],
+     "identity": [
+      "Real Name: Vision"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "140",
+       "karma": "60",
+       "resources": "PR (4)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Density Manipulation-Self"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Solar Beams"
+      },
+      {
+       "name": "Solar Regeneration"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
+  },
+  {
+   "id": "white-dragon-mla2",
+   "name": "White Dragon",
+   "team": "MLA2 Night Moves",
+   "versions": [
+    {
+     "id": "white-dragon-mla2",
+     "label": null,
+     "team": "MLA2 Night Moves",
+     "part": "Adventure",
+     "pages": [
+      63,
+      64
+     ],
+     "identity": [
+      "Real Name: Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "70",
+       "karma": "30",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Flaming Breath"
+      },
+      {
+       "name": "Gas"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mla2"
   }
  ]
 }
