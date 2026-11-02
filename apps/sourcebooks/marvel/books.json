@@ -489,11 +489,15 @@
    "title": "MSL1 X-Terminate",
    "code": "TSR6899",
    "status": "imported",
-   "date": null,
+   "date": "2026-11-02",
    "added": [
     [
      "Characters",
      19
+    ],
+    [
+     "Rows of the book's text",
+     100
     ]
    ],
    "total": 19
