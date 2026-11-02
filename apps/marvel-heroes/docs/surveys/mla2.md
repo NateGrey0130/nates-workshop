@@ -1,8 +1,8 @@
 # Survey: MLA2 Night Moves (TSR6895)
 
 > **DRAFT.** Every stat block of the book is measured (plan rows 16a and
-> 16b), with *Names the Codex already has*, *Quote marks* and *Decisions*.
-> *Which reader fits* is not finished (plan row 16c).
+> 16b), with *Names the Codex already has*, *Quote marks* and *Decisions*,
+> and *Which reader fits* measured by a trial (plan rows 16c-16c3).
 
 Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 1990, the second module of the Gang Wars trilogy (the MLA series, after MLA1
@@ -455,7 +455,146 @@ on an odd double.
 
 ## Which reader fits
 
-Not finished (plan row 16c).
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with MLA1's fields and
+eight things taught to it.** Measured 2026-11-01 (plan rows 16c, 16c1 and
+16c2), not argued: a scratch copy of `scripts/msh/` and
+`apps/marvel-heroes/data` at this branch's `f78ce918` (`main`'s scripts at
+`1ea50faf` plus this entry), the entry given `"layout": "grid-booklets"`
+and the fields below, a trial `mla2-overrides.json`, run on a copy of the
+cache under its own `WORKSHOP_MSH_CACHE` (no page re-OCR'd). The last run
+was rebuilt on a fresh copy with every change applied at once and matched
+the stepwise run byte for byte. `code-grids` (MA4's) was not tried: MLA1,
+the same series and layout, went to grid-booklets, and this one fits.
+
+- **Stock, `layout` alone:** exit 1. 38 entries, 34 blocks, **none
+  passing**, 34 failing: code-first rows (`EX (20)`) read as
+  number-then-code, entries are named by their identity line, and the 13
+  chapter grids and the Maggia Technician have no entry.
+- **With the MX1 family** (W1): exit 1. 38 entries, 34 blocks, 31
+  passing, 3 failing.
+- **With every registry workaround and reader change below:** exit 0.
+
+| measure | stock | trial, last run |
+|---|---|---|
+| entries | 38 | 54: 47 with a block, 7 without (The Player Characters, Non-Player Character Factions and five faction subheads: The Dragonlords, The Faces of Fear, The Maggia, The Si Fan, The Tiger's Claw) |
+| stat blocks | 34 | 49, the book's whole count (*Stat blocks*) |
+| blocks passing every check | 0 | 35, and 14 known from the trial overrides (4 `misprint`, 10 `as_printed`); failing 0 |
+| powers | not counted | 140 across 39 entries |
+| checklist | not all found | 34 cards, 8 tiers and 13 opponents, all found |
+| exit code | 1 | 0 |
+
+`npcs.py mla2` on the same copy exits 0: 47 characters, 49 blocks, 140
+powers and 215 book-text rows. The 14 known are decisions 5 and 6: Iron
+Fist, the Guardsmen, the clown (its Karma `0` in the same override's
+`also`) and Thor as `misprint`; the Dreadnoughts, the eight other House of
+Madness grids and the skeletal ghosts as `as_printed`. The mummy's `RP` is
+its `rank_aliases` entry (decision 5), read through reader item 4. The
+overrides were written from this survey's tables for the trial only, not
+re-read on the images; the data row writes the real file.
+
+**Registry-only workarounds** (no reader change; each worked in the trial):
+
+1. **The MX1 family** (`code_rows`, `card_headers` with the 34 headers as
+   `cards`, `title_case_labels`, `teams` as decision 1). 0 passing became
+   31.
+2. **MLA1's code-first mends** (`code_row_specks`, `trailing_marks`,
+   `dash_marks`, `dash_shift_codes`, `override_values`,
+   `code_grids_by_pitch`, `inner_grids`), `extra_titles` for the five
+   faction subheads with `subhead_exact_case`, and `grid_headers` naming
+   the 12 headerless chapter grids by decision 8's names (the Guardsmen
+   print their own). Tony Stark's grid then reads on Iron Man's card, and
+   the Maggia Technician, Tak and the Guardsmen are found.
+3. **`body_top` 0.08** (the skeletal ghosts, printed 49). Their Health's
+   number boxes at y 319 of 3197, above the default 10%, so no Health line
+   anchored the grid and it had no entry. A column's first line sits at
+   8.6% (printed 24) and 9.6-10% on eleven pages, and nothing between 5.3%
+   and 8.6% is text.
+4. **A `label` override, Eric Masterson**, on Thor's second grid (printed
+   62), matched by its codes, as MLA1's Jack Russell (decision 4).
+5. **A `label` override, Tony Stark**, on Iron Man's second grid (printed
+   58), inside his Known Powers (decision 4).
+6. **`entry_ends`** (MT3's field) for the Typical Batboy (printed 7): the
+   Faces of Fear's text resumes under his Weaponry with no header, and ran
+   on as his notes (76 words became 18).
+7. **`power_heads`** `[Adventure Book, 59, ECM]` (Iron Man), with reader
+   item 7.
+8. **`opponent_grid_ends: true`**, with reader item 8.
+9. **`identity_lines` 2**, as MLA1's: Deathlok (printed 56), Fu Manchu (59)
+   and Thor (62) wrap their real-name line over two. The six faction
+   headings keep two lines, and `npcs.py` rejoins a heading's identity and
+   prose.
+10. **`card_names`** for the Typical Tiger's Claw (printed 8), whose header
+    prints a curly apostrophe (the id is unchanged), and **a `text`
+    verdict** for the Si Fan's Talents, whose last line (printed 8) reads at
+    confidence 30 and `stream_of` drops at its 45 floor: the only character
+    text line lost that way.
+
+**What the reader must learn: eight things**, each applied in the trial
+(`codegrids.py` 29 lines added and 5 removed, `gridbooks.py` 18 and 10,
+`roster.py` 6 and 3), numbered as the trial found them (its R7 turned out
+registry-only, workaround 3):
+
+1. **A bracketed card header** (Captain America (Original), printed 54;
+   Iron Man (Mark VIII Armor), 58). `gridbooks.coverage`'s `forms()` keeps
+   the bracket and `base()` strips it, so neither spelling in `cards`
+   passes. The trial's `forms()` adds `base(name)`.
+2. **`Sh0` printed with no dash** (the House of Madness robots, printed
+   39-42), read `Sho`, `ShO` or `Sh0O` in the crop. `dash_shift_codes`'
+   `Sh-?0` and `codegrids.code_of` miss it. The trial reads
+   `Sh-?[0oO]{1,2}` and `code_of` folds it to Sh0.
+3. **The row pitch** (the Old Man, printed 23). `code_grids_by_pitch`
+   takes the least line gap as the pitch, and a lone row letter read low
+   (S 24 px under A, where his rows are 46 px apart) cut I and P. The
+   trial tries pitches rising, at least half the Health-to-Karma distance,
+   then the median of the column's next three gaps; the first crop giving
+   seven rows wins.
+4. **A rank alias in a code-first row** (the mechanical mummy's R `RP`,
+   printed 41, decision 5). `code_of` ignores `rank_aliases`, so the row
+   was unread and the block's Karma override hid it. The trial adds `RP` to
+   `codegrids.CODE` and sets `codegrids.ALIASES` from `booklet.ladder` for a
+   `code_rows` book with `rank_aliases`, used only where `roster.canon`
+   reads nothing. With the override removed the block then fails on Karma
+   (R+I+P 4, printed 0), so the override explains a real mismatch.
+5. **A letter before a number** (Silver Samurai, printed 61): a row reads
+   `RM (S80)`, the S makes no number and the row welds to the one above,
+   six rows. The trial's row pattern takes a leading S before a digit,
+   `number_of` strips it and its 8-for-3 mend gives 30.
+6. **A misread 8 under a misprinted code** (the clown's E, printed 40,
+   prints `EX (30)` and reads `EX (80)`). `number_of` mends an 8 only to
+   the code's own standard number, and the code is the misprint. The
+   trial's `codegrids.mend_by_health`: where F+A+S+E misses the printed
+   Health and exactly one unmended 8-for-3 or 8-for-5 reading makes it,
+   take it, keeping `read_as`.
+7. **A power named in capitals** (Iron Man's ECM, printed 59) matches
+   `RUN_IN`, so it and the next two powers went to his notes. The trial's
+   `roster.read_entries` never takes a `power_heads` line as a run-in (with
+   workaround 7). Iron Man went from 12 powers to 15.
+8. **The chapter resuming right under a grid** (the Old Man, printed 23;
+   Tak, 25): an indented paragraph follows the grid, and a grid's last line
+   ends no sentence, so it ran on as their prose (66 and 60 words). The
+   trial's `roster.read_entries` ends an opponent at an indented line right
+   after its grid, behind `opponent_grid_ends` in `GridReader.mends`
+   (workaround 8). Both now hold no prose.
+
+**Gating:** items 1-5 and 7 are ungated. Item 7 touches only a line a
+`power_heads` entry names, and no earlier book's is in capitals. Item 6 is
+ungated but fires only where the Health misses and one 8 reading makes it.
+Item 8 is gated by `opponent_grid_ends`. Item 3 changes MLA1's by-pitch
+path only where its first pitch fails, item 4 reaches every `code_rows`
+book with `rank_aliases` and item 5 every book `codegrids` reads, so **none
+has had the earlier-books byte-compare** (`marvel-book`); the reader row
+runs it. Causes the trial could not find: none.
+
+Read and fine as it is: Dagger's notes, Fu Manchu's Weakness, Mentallo's
+and the Dreadnoughts' Weaknesses, the other five factions' Weaponry and the
+Si Fan's Mental Barrier, each its own text and ending where it should. Fu
+Manchu's card name reads `Manchu, Fu`, as the page and decision 3 have it.
+
+The entry still sets no `layout`: that is the reader row's to write, with
+items 1-8 behind the registry where they need to be and every earlier
+book's build proved byte-identical. The scratch registry patch, the trial
+overrides, the reader diff (CRs stripped) and every run's output are kept
+in the plan store, `trial\mla2\`.
 
 ## Decisions this survey leaves open
 
