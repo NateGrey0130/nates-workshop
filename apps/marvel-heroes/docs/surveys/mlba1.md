@@ -1,8 +1,7 @@
 # Survey: MLBA1 Mutating Mutants (TSR6893)
 
 > **DRAFT** (row 13a, 2026-11-01). Everything down to *Quote marks* is
-> measured; *Which reader fits* is not finished and is the trial parse's
-> (row 13c). No data has been built from this book.
+> measured. No data has been built from this book.
 
 Official Advanced Game Adventure for Marvel Super Heroes (the cover and the
 title page), Bruce Nesmith, 1990; the first MLBA module (the cover prints
@@ -304,35 +303,162 @@ confirm it on the character pages** before relying on it.
 
 ## Which reader fits
 
-**Not finished.** The trial parse is row 13c's. What this survey measured
-for it: the nearest reader is `grid-booklets` (`scripts/msh/gridbooks.py`),
-MX1's and MT3's, with opponents and one-line grids. The places to look:
+**`grid-booklets` (`scripts/msh/gridbooks.py`), with things taught to
+it.** Measured 2026-11-01 (plan rows 13c and 13c1): a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at `main`'s `8676101c`, this
+branch's `scripts/msh/books.json` (`0ec45561`), the mlba1 entry given
+`"layout": "grid-booklets"` and the fields `main`'s `gridbooks.py` already
+reads for earlier books, set for this one: `code_rows`, `card_headers`,
+`title_case_labels`, trial `teams` (decision 1), `cards` (the six card
+headers, decision 3's `Rusty Collins`), `subhead_labels` (MT3's),
+`lost_letters` (MT2's), `derived_totals` (MT3's),
+`code_rows_end_at_popularity` (MX3's), `code_grids_by_pitch` (MLA1's),
+`opponent_indented_paragraphs` (MT2's) and `entry_ends` (MT3's); a trial
+`mlba1-overrides.json`; and the reader changes below in a scratch module,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE` (no page
+re-OCR'd). Ten runs, 0 to 9. No other reader was tried: `codegrids.py`
+reads one `offset` and no `parts` (MT3's code-grids stop), and the
+rank-word readers do not read numbers.
 
-1. **Shape (a)'s full-word rows** (`Fighting RM (30)`): no earlier book
-   prints them, and the totals sit under the grid, not beside rows F, S, R
-   and P. Measure them first.
-2. **Shape (b)'s labels beside rows E and P**, not F and S (MLA1's code and
-   bracketed number otherwise).
-3. **Shape (d)'s code then number with no brackets** (MT3's
-   `code_first_caps`), labels beside F, S, R and P, the OCR reading Health
-   with a semicolon on Boom-Boom's and Richtor's, and Sunspot's `52(76)`.
-4. **Shape (c)'s codes-only rows with no Karma** (MT3's `derived_totals`),
-   named by `one_line_grids` under their room keys.
-5. **Background and Known Powers as headings with no colon** (MT3's
-   `subhead_labels` for Kang), and the identity run-ins under Background.
-6. **Grids broken across columns**: Mauler (printed 9) and Mad-Dog (12)
-   (MT3's `split_grids`).
-7. **Opponents running on**: Beetle onto printed 9, which is Mauler's
-   opponents page too (MX1 read a grid twice when a page was in two
-   streams); Sabretooth onto printed 14 past the map of 13; Goliath onto 26.
-8. **The cards' page**: printed 32's upper half is the villain doubles'
-   italic run-ins and VIII. Conclusion (a heading outside the Contents,
-   MX1's `extra_titles`), all inside the character range; the cards are
-   boxes three across with portraits beside the grids.
-9. **Ramhorn's room key** `L. Ramhorn` over his header, and the animals'
-   `R1.`-`R3.` keys.
+**The stock grid-booklets stops at the animals.** With `layout` alone, and
+again with MX1's `code_rows`, `card_headers`, `title_case_labels` and
+`teams`, `roster.py mlba1` exits 1 on `one_line_grids not found:
+Chimpanzee, Giant Dalmatian, Chicken` (printed 31: the letters row is lost
+from the stream). `lost_letters` and `derived_totals` take it past the stop.
 
-The entry sets no `layout` until then.
+| measure | stock (runs 0, 1) | past the stop (run 2) | with every trial change (run 9) |
+|---|---|---|---|
+| entries | none (stops) | 23 | 24: 23 with a block, 1 without (the Player Character Cards heading) |
+| stat blocks | none | 16 | 23 of 23 |
+| blocks passing every check | none | 3 | 15, and 8 known from the overrides (6 `misprint`, 2 `as_printed`) |
+| failing | none | 13 | 0 |
+| checklist names with no entry | not reached | 17 (every opponent but the animals, and three cards) | 0 (17 opponents, 6 cards, all found) |
+| powers | not reached | 14 across 4 entries | 50 across 14 entries |
+| exit code | 1 | 1 | 0 |
+
+At run 2 the ten shape (a) blocks were entries named by their Psyche row
+(`Psyche RM (30)`, on no checklist) and four cards' Health and Karma ran on
+into the next rows. Read off run 9's `roster.json` by row 13c2: **every
+block's rows, Health and printed Karma are the *Stat blocks* table's**;
+Beetle's S reads `80` and is stored RM 30 (`read_as` keeps the 80). The 15 passing are the eight villains with no
+override, Wolverine, Boom-Boom, Rusty Collins, Richtor and the three animals
+(Karma derived and marked `derived`).
+
+**The overrides** are 8 entries, each matching one block: decision 4's
+nine misprints (Generic Punk's, Rocco's and Generic Goon's Karma; Schiz's R
+with his I and Karma in its `also`; Ee-ha's R with his Karma; Cannonball's
+A), the Sentinel, Mark IV's Karma `NA` `as_printed`, and Sunspot's Health
+`52(76)` `as_printed`. They were written from the survey's tables and not
+re-read on the images, except Sunspot's (printed 32); the data row writes
+the real file. Sunspot's `as_printed` is the trial's: decision 6 reads the
+value before the bracket, which no reader does yet (coverpanels'
+`health_note` keeps such a bracket); without it run 5 exits 1, `HEALTH IS
+NOT A NUMBER`.
+
+**Registry-only workarounds** (no reader change; each worked in the trial):
+
+1. **The animals' grids** (printed 31): `lost_letters` for the lost letters
+   row and `derived_totals` for the Karma they do not print (decision 5).
+2. **`code_rows_end_at_popularity`** and **`code_grids_by_pitch`** for the
+   cards' code-first rows (printed 32).
+3. **Beetle's opponent** reads printed 9 by `runs_on: [9]`, not
+   `continues` (printed 9 is Mauler's opponents page too).
+4. **`cards` names `Rusty Collins`**; the header reads `Rusty (Russell)
+   Collins` and the roster entry keeps that header, so the card's name is
+   the data row's to set (decision 3; not measured past the roster).
+5. **The overrides**, above.
+6. **`opponent_indented_paragraphs` for Mad-Dog alone** (printed 12): an
+   indented paragraph inside his Known Powers ended his entry (1 power;
+   with it, 4 and his Talents). Set for all nine statted opponents (run 7),
+   every one swallows the adventure after it (Mauler's Talents 3,986
+   characters, the Sentinel's last power 2,250, Ramhorn's 2,203). Rejected.
+7. **`entry_ends`** on printed 14 (an unindented line after Sabretooth's
+   last power, Tumbling, with no full stop between them) and printed 29 (the
+   room key `M. Isolation Chambers` after Ramhorn).
+
+**What the reader must learn: 13 things**, 1-9 written in the trial
+(`trial_mends.py`, 162 lines, each change named by a `trial_` field in the
+trial's registry patch, and 9 lines of `gridbooks.py`) and run green, 10-13
+not written:
+
+1. **Shape (a)'s full-word rows** (`Fighting RM (30)`) with Health, Karma,
+   Resources and Popularity as four lines under the grid (printed 3, 8, 9,
+   12, 18, 25, 29).
+2. **That grid split across columns with map lettering between** (Mauler,
+   printed 9: the trial skips two lines of the Shaw Industries map read
+   among his rows).
+3. **Shape (b)'s low grids**: Health beside E, Karma beside P, the letters
+   read sideways in the stream, so the rows come from a `--psm 6` crop
+   (printed 4, 6). The trial names the five grids in a field of their own.
+4. **A code welded to its number** (`TY6`, `GD10`; the cards, printed 32,
+   and printed 4, 6).
+5. **`Health;` and `Karma;` read with semicolons** (printed 32).
+6. **Card portraits read beside the rows and totals** in the crop
+   (Wolverine, Rusty Collins and Sunspot, printed 32).
+7. **A 1 read as i in a row's number** (Richtor's P `GD i0`, printed 32;
+   MT3's item 1 is the same misread in a code).
+8. **A minus read as U+FFFD, a dash or a spaced hyphen in Popularity**
+   (printed 12, 25).
+9. **Title-case subheads with no colon** (Background, Known Powers) raised
+   to capitals after `subhead_labels` adds the colon, so `roster.RUN_IN`
+   and `SECTION` read them (every villain): MT3's item 10 needed a
+   `speck_lines` entry for Kang alone; here it is all nine.
+10. **A page-wide chapter banner cuts the columns into bands**, and the
+    stream reads each column top to bottom across it. Printed 26: the
+    banner VII. King's Pawn ends Goliath's Background at the foot of
+    column 1's upper band, and his Known Powers, at the top of column 2,
+    never join him: **Goliath has 0 powers**. Printed 32: the Conclusion's
+    upper band runs into Richtor's last power and Wolverine's Talents.
+    Cause read off the stream and the render. No registry field orders
+    bands. Not written.
+11. **Card power lines end with no full stop**, so a power head is found
+    only after a line that ends a sentence: Wolverine has 2 of 6 powers
+    (Resistance, Claws and Adamantium Skeleton welded into Regeneration,
+    Invisibility into Tracking), Richtor 2 of 3 (his lower-case `Vibration
+    touch:` is no head) (printed 32). Read off the stream, not traced in
+    the code. Not written.
+12. **The card's copyright footer** (OCR `TSA`, `TER`, `79990`) is read into
+    each card's last section: Cannonball's, Boom-Boom's and Rusty
+    Collins's (printed 32). Not written.
+13. **`Talents;` with a semicolon is no label** (item 5 covers Health and
+    Karma only): Boom-Boom's Talents weld into Energy Bombs (printed 32).
+    Not written.
+
+**`roster.py` exits 0 with items 10-13 misread**: it gates the numbers and
+the checklists, not the prose. The Player Character Cards heading entry
+(no block) also carries adventure text as its identity and prose. Two more
+were read off run 9's `roster.json` by row 13c2 and are on no list above.
+**Cause not found** for either; nothing was tried beyond reading that
+file (the trial was not re-run):
+
+- **Rocco has no prose** (printed 4), where Schiz, Ee-ha and the two
+  generic grids have theirs; whether his paragraph went to another entry
+  was not measured.
+- **The three animals have 0 powers** (printed 31), where *Entry kinds*
+  reads italic power run-ins under each grid; each entry holds 405 to 857
+  characters of prose, and whether the run-ins are in it was not read.
+
+**Failing blocks with cause not found: none.**
+
+**So grid-booklets must learn 13 things, 9 written and 4 not, beside 7
+registry-only workarounds**, and the two misreads above are the reader
+row's to trace. No earlier book was built with the trial's scripts, so the
+byte-identical proof (`marvel-book`, *Prove every earlier book did not
+move*) was not measured; the trial's changes are gated only by their
+`trial_` fields.
+
+**Verdict: grid-booklets.** It reads this book's `parts`,
+`character_ranges` and `opponents` as row 13a wrote them, and every field
+the earlier books taught it carries over; it reaches every block, every
+checklist name and exit 0 with items 1-9.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above, the overrides' eight, and a field
+of its own for each of reader changes 1-13 or the byte-identical proof.
+This survey sets no `layout`. The registry patches (`p0.json` to
+`p9.json`), the trial overrides, the reader changes and every run's output
+are kept in the plan's store (rows 13c and 13c1, `trial/mlba1/`), not the
+repo.
 
 ## Decisions this survey leaves open
 
