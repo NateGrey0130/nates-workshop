@@ -4112,6 +4112,8 @@
         {"part": "Adventure Book", "page": 12, "names": ["Sunstroke"]}
       ],
       "opponents_note": "Every grid inside the chapters (printed 2-25), found by the OCR's rank-code rows and Health lines and on a 30 dpi render of every page, and read on crops of the page images at 110-130 dpi 2026-11-02: six, each a header over the roster's grid shape, KNOWN POWERS and italic powers, and no identity block. PESTILENCE (printed 4, column 1, in capitals) and War (4, column 2), Chapter 1; Caliban (9, column 2), Chapter 5; Sunstroke (12, column 2), Chapter 6; the X-Terminator Mark III (13, column 1), Chapter 7; and Mister Sinister (14, column 1), Chapter 7. The last two are not opponents here (survey msl1.md decision 4): each prints the seven numbers of a roster card (the X-Terminator Robots, printed 30; Mister Sinister, 29) in another order under that card's Health and Karma (the robots' power run-ins match by name; Sinister's Telepathy does), so each is the roster's being with its rows misprinted. No other chapter page prints a rank row.",
+      "opponent_indented_paragraphs": [["Adventure Book", 12, "Sunstroke"]],
+      "opponent_indented_paragraphs_note": "[part, printed page, header], MT2's: an opponent whose own lines are set indented, so an indent after a sentence does not end it (gridbooks.parse). Sunstroke (printed 12, column 2) lists his Energy Conversion results as three indented bullets, Heat, Light and Gliding, and a second power, Costume, after them; the entry ends at AFTERMATH:, a run-in that is no section. Read on the page image 2026-11-02 (row 24a). Off, his entry ends at the Light bullet: one power, not two, and his text stops after Heat.",
       "layout": "grid-booklets",
       "layout_note": "ME1's, ME2's, ME3's, MT2's and MT3's reader, scripts/msh/gridbooks.py (survey msl1.md, Which reader fits, verdict grid-booklets; measured by plan rows 22c and 22c1's trial 2026-11-02, set by row 23a). It reads parts, character_ranges (printed 26-32) and opponents (printed 4, 9 and 12) as row 22a wrote them; codegrids.py reads no parts entry. Off, roster.py stops: KeyError 'offset' in roster.page_stream (measured 2026-11-02).",
       "cards": [
@@ -4181,7 +4183,11 @@
       "speck_lines": [
         ["Adventure Book", 26, "KNOWN POWER:", "KNOWN POWERS:"],
         ["Adventure Book", 31, "Flight: EX speed. Can reach Shift-X speed.\u2019", "Flight: EX speed. Can reach Shift-X speed."],
-        ["Adventure Book", 31, "Winged Missiles: \\N edged throwing damage up to two", "Winged Missiles: IN edged throwing damage up to two"]
+        ["Adventure Book", 31, "Winged Missiles: \\N edged throwing damage up to two", "Winged Missiles: IN edged throwing damage up to two"],
+        ["Adventure Book", 26, "Real Name: Warren Kenneth Worthington Ill.", "Real Name: Warren Kenneth Worthington III."],
+        ["Adventure Book", 27, "Partial Invuinerability: Cyclops cannot be hurt by the re-", "Partial Invulnerability: Cyclops cannot be hurt by the re-"],
+        ["Adventure Book", 31, "Real Name: Warren Kenneth Worthington Ill.", "Real Name: Warren Kenneth Worthington III."],
+        ["Adventure Book", 32, "Telekinesis: |N ability to mentally manipulate objects.", "Telekinesis: IN ability to mentally manipulate objects."]
       ],
       "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of, each matched once whole and replaced. Printed 26: Angel (Clone)'s KNOWN POWER, after subhead_labels gave it its colon, raised to KNOWN POWERS: so it opens his powers (Which reader fits item 10). Printed 31: Archangel's Flight line ends in a stray U+2019 the page does not print, which kept the line from ending a sentence, and the next line's IN reads with a backslash for its I, so Winged Missiles was read as Flight's text (item 16; decision 10, recommended, applied unanswered). Off, 49 powers across 18 entries, not 53 across 19 (measured 2026-11-02).",
       "split_labels": [["Adventure Book", 30, "TAL-", "ENTS:"]],
@@ -4198,6 +4204,7 @@
       ],
       "mid_runins_note": "[part, printed page, label as read], MSL1's (Which reader fits items 8 and 13): a run-in label set after a sentence on the same line starts a line of its own, so it opens its section: TALENTS on printed 29 (Mister Sinister), 30 (the X-Terminator Robots), 31 (Beast) and 32 (Cyclops), GROUPS on 29 and Real Name on 28 (Marvel Girl (Clone)). Each must be found exactly once on its page, or the build stops. Off, 564 stream lines, not 570, each label left inside the sentence before it (measured 2026-11-02).",
       "art_boxes": [
+        ["Adventure Book", 4, 1238, 560, 2476, 700],
         ["Adventure Book", 26, 0, 560, 2476, 700],
         ["Adventure Book", 31, 0, 560, 2476, 700],
         ["Adventure Book", 31, 0, 2660, 2476, 3197]

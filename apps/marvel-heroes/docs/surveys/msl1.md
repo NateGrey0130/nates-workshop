@@ -4,8 +4,8 @@ Marvel Super Heroes adventure, product code 6899 on the cover (PDF 1). The
 author and the year are not read. Registry entry: `scripts/msh/books.json`
 -> `msl1`. Measured 2026-11-02.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production: nothing is
-imported yet, and the data row sets this line from production.
+**Rows citing this book:** 100 `msh_book_text` rows over 19 character entries
+in production (`DB_MARVEL`, read back 2026-11-02).
 
 Everything here was measured and read on the page images by plan row 22a,
 and recorded in its registry commit (`a700fcf6`); this document was written
