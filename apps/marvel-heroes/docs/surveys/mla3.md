@@ -1,10 +1,8 @@
 # Survey: MLA3 Night Life (TSR6897)
 
-> **DRAFT.** Written through the stat blocks of the Player Characters, the
-> factions and the Non-Player Character Roster from Ammo to Mentallo (plan
-> row 19a). The rest of the roster, the chapters' grids, the vehicle lines,
-> *Names the Codex already has*, *Quote marks*, *Which reader fits* and
-> *Decisions* are not finished.
+> **DRAFT.** Written through every stat block of the book, the vehicle
+> lines, *Names the Codex already has*, *Quote marks* and *Decisions* (plan
+> rows 19a and 19b). *Which reader fits* is not finished (plan row 19c).
 
 Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 1990, the third module of the Gang Wars trilogy (the MLA series, after MLA1
@@ -178,9 +176,12 @@ Contents' wording.
 - **Ranks.** FB, PR, TY, GD, EX, RM, IN, AM, MN and UN. **FB is the book's
   spelling of Feeble on these pages**, always `FB (2)`: Colossal Deathlok's
   I and P (printed 51) and Gator's Resources (52). **UN** is Colossal
-  Deathlok's S, `UN (100)` (printed 51). The OCR of PDF 43 holds an `FE`
-  code and of PDF 16, 29 and 31 a Shift 0 (`SH-0`, `Sh-0`), all in chapter
-  grids: row 19b reads them on the images.
+  Deathlok's S, `UN (100)` (printed 51). **The chapters' grids add three
+  spellings**, read on the images: `FE (2)` for Feeble on the Alligators'
+  R, I and P (printed 42), where every other Feeble in the book prints
+  `FB`; and Shift 0 as `SH-0 (0)` on the Hammerhead Robot's I and P
+  (printed 15) and as `Sh-0 (0)` on the Security Robots' (printed 28) and
+  Cameron's Machine's (printed 30). The registry aliases all three.
 - **`survey.py` finds 0 blocks**: it looks for MA1's `Health =`, and this
   book prints `Health:`. Its block count is not this book's measure.
 
@@ -281,41 +282,313 @@ field printed -> corrected):
 
 | misprint | the book's own arithmetic |
 |---|---|
-| 53:Guardsmen:Health 70 -> 100 | F `EX (20)`, A `EX (20)`, S `RM (30)`, E `RM (30)`, each code agreeing with its number (read at 250 dpi); 20+20+30+30 is 100, and their Karma 18 holds. The alternative, rows summing to 70, would change two rows whose codes and numbers agree, so the Health is the misprint, as MLA1 decision 5 (the Decisions' to confirm, not finished) |
+| 53:Guardsmen:Health 70 -> 100 | F `EX (20)`, A `EX (20)`, S `RM (30)`, E `RM (30)`, each code agreeing with its number (read at 250 dpi); 20+20+30+30 is 100, and their Karma 18 holds. The alternative, rows summing to 70, would change two rows whose codes and numbers agree, so the Health is the misprint (decision 5) |
 
 **Noted, not a block:** Hammerhead's `Exoskeleton` power (printed 53,
 column 3) gives a second Health for him while the device is worn, as in
 MLA1 and MLA2; it is prose, not a grid. The Spirit Bombs (printed 9) and
-the chapter pages print `Health` in prose too (printed 12, 26, 32 and 47
-among them); row 19b reads every chapter page.
+the chapter pages print `Health` in prose too (printed 9, 12, 26, 30, 32
+and 47); none of those mentions is a grid (next section).
 
-## The rest of the roster and the chapters' grids
+## Where the blocks are
 
-Not finished (plan row 19b): the roster from Mongoose to Vortex (printed
-58-63, PDF 59-64; Mongoose's header is in column 1 of printed 58, under
-the end of Mentallo's text), the grids inside the chapters (PDF 14, 16, 29,
-31, 41, 43, 44 and 45, printed 13, 15, 28, 30, 40, 42, 43 and 44; the OCR
-places a `Health` on each) and the vehicle lines (Control, Speed, Body,
-Protection; PDF 14, 16 and 34).
+Printed 3-8 (the Player Characters and the factions), printed 50-63 (the
+Non-Player Character Roster) and eight chapter pages: printed 13, 15, 28,
+30, 40, 42, 43 and 44. Found by counting `Health`, `Karma`, `KNOWN POWERS`
+and a rank code before a bracketed number on the OCR of all 69 pages, each
+page with a hit then read on its image: no other page holds a grid. Printed
+9 (The Spirit Bombs), 12, 26, 32 and 47 print `Health` in a sentence (as
+printed 30 does beside its grid), and
+printed 2, 18, 19, 21, 24, 33 and 48 `Karma`; none is a grid. The card
+pages are the registry's `character_ranges`; the chapters' grids are its
+`opponents`, each statted inside a chapter's prose. No chapter prints a
+one-line grid, so the entry has no `one_line_grids`.
+
+## Stat blocks: the rest of the roster and the chapters
+
+Every block of printed 58-63 (PDF 59-64) and the nine grids inside the
+chapters (PDF 14, 16, 29, 31, 41, 43, 44 and 45) was read on the page image
+(150 dpi, and 250 dpi for Thor) and checked the same way. Mongoose's header
+is in column 1 of printed 58, under the end of Mentallo's text.
+
+**11 roster cards, 2 grids inside cards and 9 chapter grids.**
+
+| printed (PDF) | header as printed | F A S E R I P | Health | Karma | Resources | Popularity |
+|---|---|---|---|---|---|---|
+| 58 (59) | MONGOOSE (Unknown) | RM 30, UN 100, RM 30, RM 30, TY 6, EX 20, GD 10 | 190 | 36 | GD (10) | 0 |
+| 58 (59) | PERSUADER (Roland Rayburn) | TY 6, TY 6, TY 6, GD 10, GD 10, GD 10, IN 40 | 28 | 60 | GD (10) | 0 |
+| 58 (59) | PHANTOM TONG (Varies) | RM 30, EX 20, GD 10, RM 30, TY 6, TY 6, EX 20 | 90 | 32 | PR (4) | 0 |
+| 59 (60) | RHINO (Unrevealed) | RM 30, EX 20, MN 75, AM 50, GD 10, TY 6, PR 4 | 175 | 20 | PR (4) | -15 |
+| 59 (60) | SEAVER, CAMERON (Cameron Seaver) | PR 4, TY 6, PR 4, TY 6, AM 50, GD 10, TY 6 | 20 | 66 | EX (20) | 0 |
+| 59 (60) | SERSI (Sersi) | GD 10, RM 30, AM 50, AM 50, EX 20, RM 30, IN 40 | 140 | 90 | RM (30) | 25 |
+| 60 (61) | STARFOX (Eros) | GD 10, EX 20, IN 40, AM 50, EX 20, TY 6, RM 30 | 120 | 56 | EX (20) | 75 |
+| 60 (61) | THOR (Thor; Dr. Donald Blake; Sigurd Jarlson; Eric Masterson) | UN 100, EX 20, MN 75, MN 75, GD 10, GD 10, RM 30 | **200** | 50 | EX (20) | 50 |
+| 61 (62) | Eric Masterson (grid inside Thor's card) | TY 6, TY 6, TY 6, GD 10, GD 10, TY 6, RM 30 | 28 | 46 | RM (30) | 0 |
+| 61 (62) | TYPHOID MARY (Mary, last name unrevealed) | IN 40, IN 40, GD 10, RM 30, TY 6, GD 10, PR 4 | 120 | 20 | GD (10) | 0 |
+| 62 (63) | Mary (grid inside Typhoid Mary's card) | PR 4, TY 6, PR 4, TY 6, TY 6, GD 10, PR 4 | 20 | 20 | GD (10) | 0 |
+| 62 (63) | VISION (Vision) | RM 30, EX 20, AM 50, IN 40, EX 20, GD 10, RM 30 | 140 | 60 | PR (4) | 30 |
+| 63 (64) | VORTEX (no identity line) | IN 40, AM 50, MN 75, IN 40, PR 4, PR 4, AM 50 | 205 | 58 | - | - |
+| 13 (14) | Typical Policeman (Chapter 4) | GD 10, GD 10, TY 6, GD 10, TY 6, TY 6, TY 6 | 36 | 18 | - | - |
+| 15 (16) | Hammerhead Robot (Chapter 5) | EX 20, RM 30, RM 30, IN 40, TY 6, SH-0 0, SH-0 0 | 120 | 0 | - | - |
+| 28 (29) | Security Robots (Chapter 16) | EX 20, EX 20, RM 30, IN 40, TY 6, Sh-0 0, Sh-0 0 | 110 | 0 | - | - |
+| 30 (31) | Cameron's Machine (Chapter 16) | Sh-0 0, Sh-0 0, Sh-0 0, RM 30, EX 20, Sh-0 0, Sh-0 0 | 30 | 0 | - | - |
+| 40 (41) | Bertha the Gorilla (Chapter 22) | TY 6, TY 6, EX 20, EX 20, FB 2, TY 6, PR 4 | 52 | - | - | - |
+| 42 (43) | Alligators (Chapter 23) | PR 4, GD 10, RM 30, EX 20, FE 2, FE 2, FE 2 | 64 | - | - | - |
+| 43 (44) | Hound Dog (Chapter 24) | GD 10, TY 6, GD 10, GD 10, FB 2, PR 4, TY 6 | 36 | 12 | - | - |
+| 44 (45) | The Security Guards (Chapter 25) | GD 10, GD 10, TY 6, GD 10, TY 6, TY 6, TY 6 | 36 | 18 | - | - |
+| 44 (45) | Creature From the Void (Chapter 25) | EX 20, RM 30, EX 20, RM 30, PR 4, TY 6, TY 6 | 100 | 16 | - | - |
+
+A `-` is a label the grid does not print. The identity in brackets is the
+card's `Real Name:` line, as printed (Typhoid Mary's wraps over two lines,
+`Mary (last name unrevealed)`, and Thor's lists four names over two); the
+chapter grids' is the chapter they sit in.
+
+**Where each card sits**, for the reader: Mongoose (printed 58, column 1)
+and the Persuader (column 2); the Phantom Tong (printed 58, column 3, its
+text on to printed 59, column 1) and the Rhino (printed 59, column 1, his
+text through column 2); Cameron Seaver and Sersi (printed 59, column 3, her
+text through printed 60, columns 1 and 2); Starfox (printed 60, column 2)
+and Thor (column 3, his text on to printed 61, columns 1 and 2); Typhoid
+Mary (printed 61, column 3, her text on to printed 62, column 1); the
+Vision (printed 62, column 2, under a picture across the top half of the
+page, his text on to printed 63, column 1) and Vortex (printed 63, column
+2, his text through column 3). Printed 63 ends the book's text.
+
+**Entry kinds** beyond the first half's:
+
+- **Eric Masterson's grid** (top of printed 61, column 1) is inside Thor's
+  KNOWN POWERS, introduced by a line of prose as Thor's statistics in that
+  mortal form, and prints all four labels. It is MLA2's Eric Masterson
+  grid, number for number.
+- **Mary's grid** (printed 62, column 1, under the picture) is inside
+  Typhoid Mary's KNOWN POWERS, under her `Alter-Ego:` power, which names
+  Mary as her other personality; a line of prose introduces the grid as
+  Mary's statistics. It prints all four labels. Typhoid Mary's `TALENTS:`
+  and `BACKGROUND:` follow it.
+- **The chapters' grids**: each a bold title-case header over a vertical
+  column of seven rows as the cards print, with `Health:` and `Karma:`
+  beside F and S and no Resources or Popularity, and no identity line.
+  Bertha the Gorilla and the Alligators print no `Karma:` at all. Under the
+  grid, the Typical Policeman and the Security Guards print `Talents:` and
+  `Weaponry:`; the Hammerhead Robot, the Security Robots and the Creature
+  From the Void print `KNOWN POWERS:` with italic run-ins; Cameron's
+  Machine, Bertha the Gorilla, the Alligators and Hound Dog are followed by
+  the chapter's prose (plan row 19c measures how each resumes).
+- **Cameron's Machine** (printed 30) is the device the heroes fight in
+  Chapter 16, a full grid with Shift 0 on every row but E and R. Its
+  header prints a curly apostrophe.
+- **Hound Dog's companions** (printed 43): the prose gives his four
+  companions the Typical Batboy's statistics by reference and prints no
+  grid for them. Not an entry.
+- **Characters in the prose only**, named and not statted, are not
+  entries.
+- **No grid repeats another inside the book.** The Hammerhead Robot is not
+  Hammerhead's card (other numbers: a machine made to look like him).
+
+**More labels on these pages**, read on the images: every card prints
+`KNOWN POWERS:`, `TALENTS:` and `BACKGROUND:` in capitals. The Phantom Tong
+add `Mental Barrier:` (under the grid's powers, pointing to the Typical Si
+Fan Assassin's) and `Weaponry:` (between `TALENTS:` and `BACKGROUND:`),
+each in bold as the faction grids print them. Typhoid Mary's `Weaponry:`
+and `Alter-Ego:` are italic powers under `KNOWN POWERS:`. Mentallo's
+`Weaknesses:` (top of printed 58, the end of his powers) prints in roman,
+the body's weight, neither bold nor italic. Vortex and the Guardsmen are
+the two cards with no `Real Name:` line.
+
+**The OCR**, as on the first half's pages: it reads `(30)` as `(80)` on
+these grids too (Mongoose, the Phantom Tong, the Rhino, Starfox, Thor, the
+Vision, Cameron's Machine and the Alligators among them), and drops the row
+letters of the Persuader's, the Phantom Tong's, Cameron Seaver's, Thor's,
+Eric Masterson's and Mary's grids. So every number here was read on the
+image.
+
+**The book checks itself, the whole book counted** (49 blocks: 32 cards,
+4 faction grids, 4 grids inside cards and 9 chapter grids; no one-line
+grid):
+
+| measure | count |
+|---|---|
+| Health = F+A+S+E | **47 of 49**; the Guardsmen's (100, printed 70) and Thor's (270, printed 200). Cameron's Machine's 30 holds on Shift 0 as 0 |
+| Karma = R+I+P | **44 of 44** that print a number other than 0; the Hammerhead Robot, the Security Robots and Cameron's Machine print `Karma: 0` (R+I+P 6, 6 and 20; printed that way, below), and Bertha the Gorilla and the Alligators print no Karma (R+I+P 12 and 6) |
+| every ability number within its rank code's range (FB and FE as Feeble, SH-0 and Sh-0 as Shift 0) | **49 of 49** (343 numbers) |
+| every Resources number within its code's range | **36 of 36** that print one |
+| a number inside its range but not the rank's standard | **none**; every number in the book is its rank's standard |
+
+**The misprint of these pages, read on the page image (250 dpi):**
+
+| misprint | the book's own arithmetic |
+|---|---|
+| 60:Thor:Health 200 -> 270 | F `UN (100)`, A `EX (20)`, S `MN (75)`, E `MN (75)`, each code agreeing with its number; 100+20+75+75 is 270, and his Karma 50 holds. The alternative, rows summing to 200, would change rows whose codes and numbers agree, so the Health is the misprint (decision 5) |
+
+So the book's misprints, whole: **53:Guardsmen:Health 70->100,
+60:Thor:Health 200->270**. Both are the same misprints MLA2 printed on the
+same two cards (`mla2.md` decision 5): the cards are reprinted. Printed on
+purpose: the Karma 0 of the Hammerhead Robot (printed 15), the Security
+Robots (28) and Cameron's Machine (30), machines as MLA2's House of Madness
+robots.
+
+**The vehicle lines** (not characters; decision 11): three one-line rows
+of codes under a bold name, `Control`, `Speed`, `Body` and `Protection`
+over them, read on the images: the Armored Truck (printed 13, Chapter 4)
+`TY TY RM RM`, the Limousine (printed 15, Chapter 5) `PR GD EX GD` (the
+OCR loses its codes) and the Security Limo (printed 33, Chapter 18) `TY EX
+RM RM`. None prints a Health or a Karma.
 
 ## Names the Codex already has
 
-Not finished (plan row 19b).
+Read against `apps/marvel-heroes/data/npcs.json` (1,018 cards) by name. By
+the rule #1520 pinned (Nate, 2026-09-28), each is a card of its own with a
+`-mla3` id:
+
+- **The six Player Characters:** Daredevil (MHSP2, MH4, MH9, MT3, MLA1 and
+  MLA2: the same ranks; MLA1's and MLA2's Resources `PR (4)` and
+  Popularity 6 as here), Hawkeye (MHSP1, MHSP2, MH7, MH9: the same ranks;
+  their Resources Typical or Good, this book's `GD (10)`), Mockingbird
+  (MHSP2, MH7: the same), Moon Knight (MT2, MT3, MLA1, MLA2: the same,
+  MT2's and MT3's normal form), Shang-Chi (MLA2: the same) and Spider-Man
+  (MLA1, MLA2 and MT3's Spider-Man block: the same; MHSP1, MHSP2, MH8 and
+  MH9 print I `Am 50`, Karma 110).
+- **MLA2's cards, reprinted number for number:** the Typical Batboy, the
+  Typical Maggia Thug (MLA1 too), the Typical Si Fan Assassin, Captain
+  America (Original), Fixer (MLA1 too; MH1's ranks-only line prints F and A
+  Typical), the Guardsmen (with the same Health 70 misprint), Hammerhead
+  (MLA1 too), Iron Man (Mark VIII Armor) and its Tony Stark grid (MHSP2's
+  Iron Man block too; MT3's Tony Stark), Fu Manchu (MLA2's `Manchu, Fu`),
+  Mentallo (MH1 and MLA1 too), Sersi, Starfox (MH2's and MHSP2's print E
+  `In 40`, Health 110), Thor and its Eric Masterson grid (with the same
+  Health 200 misprint; every other book's Thor prints Health 320), and the
+  Vision (MT2 and MT3 too; MH2's prints I `Ty 6`, Karma 56).
+- **MLBA1's cards:** Goliath and Mad-Dog, the same numbers.
+- **Kingpin** (MHSP2, MH4): the same ranks and Health 100; this book's
+  Karma 40 as MHSP2's (MH4's 120), Resources `IN (40)`, Popularity 0
+  (theirs 31).
+- **Rhino** (MHSP2): another block, S `In 40` and I `Ex 20` (Health 140,
+  Karma 34; here 175 and 20).
+- **Typical Policeman** (MX1, MX2): the same numbers.
+- **Alligators**: MLA1's `Alligator` (printed 42 there), the same numbers,
+  this book's header plural.
+
+Not the same beings: MA1's Cameron Hodge (not Cameron Seaver), MT3's
+Security Robots (another block), MA4's Guardsman and MH9's Guardsmen
+Robots, MLA2's Deathlok Simulacrum (not Colossal Deathlok), MT3's Alligator
+Creatures. Every other name (Ammo, Colossal Deathlok, the Fly, Gator, the
+Mandroid and Rocko's grid, Mongoose, the Persuader, the Phantom Tong,
+Cameron Seaver, Typhoid Mary and Mary's grid, Vortex, the Typical Wildboy,
+and the chapters' Hammerhead Robot, Security Robots, Cameron's Machine,
+Bertha the Gorilla, Hound Dog, Security Guards and Creature From the Void)
+is new to the Codex.
 
 ## Quote marks
 
-Not finished (plan row 19b).
+**The book prints single quotes of its own**, so MA1's rule holds, not
+MHSP1's. Measured on the OCR of all 69 pages: 285 opening and 228 closing
+curly doubles, 4 straight doubles, 73 opening and 521 closing curly
+singles (mostly apostrophes) and 8 straight singles. 128 single marks are
+neither inside a word nor a plural possessive: most are dropped-g
+apostrophes in the chapters' dialogue, or a double read as a single or as
+a pair of singles. Read on the page images:
+
+- **Real single quotes**, each a quotation inside a quotation in the
+  chapters' prose: printed 11 and printed 12 (a news report quoting a
+  phrase) and printed 36 (dialogue quoting a word).
+- **On the character pages** every lone single read on the image was half
+  of a double: printed 3 (Daredevil's text), printed 4 (Mockingbird's
+  identity line, a nickname in doubles that the OCR reads as doubles and
+  singles together), printed 7 (the factions' text), printed 50 (Captain
+  America (Original)'s), printed 53 (Goliath's, a name opened as a single
+  and closed as a double) and printed 56 (Fu Manchu's powers). The one on
+  printed 8 is the OCR of a picture, not a mark. Printed 58-63 hold none.
+
+So a single mark may be real, and a lost closing single on a character page
+is a `text` override, never a rule (as `ma1.md` *Quote marks*). The data
+row confirms the count on the character pages, where `npcs.unpaired` stops
+on an odd double.
 
 ## Which reader fits
 
-Not finished (plan rows 19b and 19c).
+Not finished (plan row 19c).
 
 ## Decisions this survey leaves open
 
-Not finished (plan row 19b). Already ruled: characters only (Nate,
-2026-10-21), second cards with `-mla3` ids (2026-09-28), a leading The
-dropped from a name (2026-10-21), and each decision taken as this survey
-recommends (Nate, 2026-10-31).
+Each has a recommendation, the one MLA1 and MT3 took where they had the
+same question (Nate 2026-10-31: take the survey's recommendations).
+Already ruled: characters only (Nate, 2026-10-21), second cards with
+`-mla3` ids (2026-09-28) and a leading The dropped from a name
+(2026-10-21).
+
+1. **Teams.** Recommendation: **Night Life Heroes** for the six Player
+   Characters (as MLA1's After Midnight Heroes and MLA2's Night Moves
+   Heroes), and every other card, the faction grids, the roster and the
+   chapters' grids, under the book's title, **MLA3 Night Life** (as MLA1,
+   MLA2 and MT3 filed theirs). Not taken: a team per faction subhead, four
+   teams of one grid each; the faction stays in the grid's name.
+2. **Page citations.** Recommendation: MLA1's single-booklet shape,
+   `MLA3 Adventure p.58` (the part's `cite` is `Adventure`).
+3. **Names as printed** (recommended, as MLA1 and MLA2 decision 3), in
+   title case: the roster prints its headers in capitals where MLA1's and
+   MLA2's print title case, and the cards MLA2 already has keep MLA2's
+   spelling (`Manchu, Fu`, `Captain America (Original)`, `Iron Man (Mark
+   VIII Armor)`, `Guardsmen`). The inverted `Seaver, Cameron` is kept as
+   `Manchu, Fu` is; `THE FLY` is `Fly` and `The Security Guards` is
+   `Security Guards` (the leading The ruled). The plurals print as they
+   are (`Phantom Tong`, `Security Robots`, `Alligators`). Not taken: the
+   capitals as printed, which no other book's card names use.
+4. **The grids inside cards** (recommended, as MLA2 decision 4 and MLA1's
+   Werewolf): Tony Stark's grid a second block on Iron Man (Mark VIII
+   Armor)'s card, labelled **Tony Stark**; Eric Masterson's on Thor's,
+   labelled **Eric Masterson**; Mary's on Typhoid Mary's, labelled
+   **Mary** (her other personality, the same body); and Rocko's on the
+   Mandroid's, labelled **Rocko** (the wearer out of the suit, as Tony
+   Stark out of the armor). Not taken: Rocko a card of his own, since the
+   Mandroid grid above it is statted for him in the suit.
+5. **The misprints** as `misprint` overrides keeping printed and corrected
+   (recommended, as MLA2 decision 5, where the same two cards carry the
+   same two misprints): the Guardsmen's Health 70 to 100 and Thor's 200 to
+   270, each total corrected because every row's code and number agree.
+   The book's other Feeble and Shift 0 spellings (`FE`, `SH-0`, `Sh-0`) are
+   `rank_aliases`, not overrides: the numbers are right.
+6. **Karma printed as 0** (recommended, as MLA2 decision 6):
+   `as_printed` for the Hammerhead Robot's, the Security Robots' and
+   Cameron's Machine's `Karma: 0` (printed 15, 28 and 30), the GM tools
+   playing the printed value. Not taken: R+I+P derived for them, which
+   would give three machines a Karma the book withholds.
+7. **Totals a grid does not print** (recommended, as MLA1 decision 7, for
+   the same Alligator grid): Bertha the Gorilla's Karma derived, R+I+P =
+   12, and the Alligators', 6, each flagged as not printed. Resources and
+   Popularity left unset where a grid prints neither: the nine chapter
+   grids, Colossal Deathlok, the Guardsmen, Vortex and Tony Stark's grid.
+   Not taken: the two Karma left unset, which leaves cards the GM tools
+   cannot play.
+8. **The chapters' grids, every one a card** (recommended, as MLA1 and
+   MLA2 decision 8): all nine print a header, so each is named by it:
+   **Typical Policeman**, **Hammerhead Robot**, **Security Robots**,
+   **Cameron's Machine**, **Bertha the Gorilla**, **Alligators**, **Hound
+   Dog**, **Security Guards** and **Creature From the Void**. Cameron's
+   Machine is a card as MLA2's Dragons' Control Device was: the heroes
+   fight it, and it prints a full grid. Its curly apostrophe is renamed to
+   the straight mark through `card_names`, as MLA2's Typical Tiger's Claw.
+   Not taken: the machine left out as an item; a card for Hound Dog's
+   companions, which the book states by reference to the Typical Batboy
+   (MT3 decision 11).
+9. **Spider-Man's Popularity 30/6 and Captain America (Original)'s 100/6**
+   kept as printed, the card showing both values (recommended, as MLA1
+   decision 9 and MLA2's).
+10. **The faction grids and the generic types** as `tiers`, the checklist
+    (recommended, as MLA1's and MLA2's): the four Typical grids, the
+    roster's Guardsmen and Phantom Tong (`Real Name: Varies`, a band of
+    assassins), and the chapters' Typical Policeman, Security Robots,
+    Alligators and Security Guards. Not taken: the Mandroid as a tier,
+    though its `Real Name:` is `Varies` too, since its card is statted for
+    one wearer, Rocko.
+11. **Characters only.** The three vehicles (the Armored Truck, the
+    Limousine and the Security Limo), the Spirit Bombs, the faction and
+    chapter gear, the floor plans and the map sheet are not imported (Nate,
+    2026-10-21).
+12. **Colossal Deathlok's identity line** is a short sentence, not a name.
+    Recommendation: commit only the name it gives, **Luther Manning**, as
+    the card's identity (the repo commits short identity lines, never a
+    sentence of the book), the line itself going to D1 with the prose. If
+    the chain has no field for a shortened identity, plan row 19c says so.
 
 ## How to reproduce
 
