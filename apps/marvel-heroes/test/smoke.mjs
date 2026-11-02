@@ -2812,6 +2812,132 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MSL1 is read by scripts/msh/gridbooks.py (msl1-overrides.json), with the
+  // survey's decisions applied as it recommends (msl1.md; Nate 2026-10-31).
+  // Every card is in the Adventure Book: four opponents inside the chapters
+  // (printed 4, 9 and 12) and the roster's fifteen (printed 26-32). The
+  // registry fields whose absence roster.py would not stop on
+  // (opponent_indented_paragraphs, art_boxes, speck_lines) are each pinned
+  // here by what they change.
+  if (data.npcs.characters.some((c) => c.book === 'msl1')) {
+    const msl1 = data.npcs.characters.filter((c) => c.book === 'msl1');
+    const blocksS = msl1.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkS = (id, i = 0) => msl1.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamS = (t) => msl1.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const powersS = (id) => msl1.find((c) => c.id === id)?.versions[0].powers.map((p) => p.name).join() || '';
+    const playedS = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MSL1: 19 characters, each id ending -msl1 with one version and one block, the five X-Factor heroes as X-Factor, 14 under the book\'s title, and no name starting The',
+      msl1.length === 19 && msl1.every((c) => c.id.endsWith('-msl1') && c.versions.length === 1 && c.versions[0].blocks.length === 1)
+      && teamS('X-Factor') === 'Archangel,Beast,Cyclops,Iceman,Marvel Girl'
+      && msl1.filter((c) => c.team === 'MSL1 X-Terminate').length === 14
+      && !msl1.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${msl1.length} ${[...new Set(msl1.map((c) => c.team))]}`);
+    check('MSL1: the cards sort by the Adventure page each starts on, the four chapter opponents (4 to 12) before the roster (26 to 32)',
+      msl1.map((c) => c.id).join() === ['pestilence', 'war', 'caliban', 'sunstroke', 'angel-clone', 'beast-clone', 'cyclops-clone', 'iceman-clone',
+        'marvel-girl-clone', 'professor-x-clone', 'apocalypse', 'mister-sinister', 'dominus', 'x-terminator-robots', 'archangel', 'beast',
+        'cyclops', 'iceman', 'marvel-girl'].map((id) => `${id}-msl1`).join()
+      && msl1.map((c) => c.versions[0].blocks[0].page).join() === '4,4,9,12,26,26,27,27,27,28,29,29,30,30,31,31,31,32,32',
+      msl1.map((c) => `${c.id}:${c.versions[0].blocks[0].page}`).join());
+    check('MSL1: 19 one-line grids, none labelled, none ranks only and none with a derived total',
+      blocksS.length === 19 && blocksS.every(({ b }) => b.kind === 'line' && !b.label && !b.rank_only && !b.karma_derived && !b.health_derived),
+      blocksS.map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}`).join());
+    const fixesS = ['cyclops-clone-msl1', 'iceman-clone-msl1', 'x-terminator-robots-msl1'].map((id) => {
+      const o = blkS(id)?.override;
+      const v = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+      const also = (o?.also || []).map((a) => ` ${a.field} ${v(a.printed)}>${v(a.corrected)}`).join('');
+      return `${id} ${o?.verdict} ${o?.field} ${v(o?.printed)}>${v(o?.corrected)}${also} plays ${playedS(id)}`;
+    });
+    check('MSL1: the three misprints keep the printed value and carry the corrected one (Cyclops (Clone)\'s F 6 Ex as 6 Ty, Iceman (Clone)\'s Health 56 and Karma 20 as 42 and 16, the X-Terminator Robots\' F 50 In as 50 Am)',
+      fixesS.join(' | ') === [
+        'cyclops-clone-msl1 misprint F 6 Ex>6 Ty plays 42/50',
+        'iceman-clone-msl1 misprint health 56>42 karma 20>16 plays 42/16',
+        'x-terminator-robots-msl1 misprint F 50 In>50 Am plays 255/60',
+      ].join(' | ')
+      && bookNpc({ character: 'cyclops-clone-msl1' }).snapshot?.abilities.fighting.rank === 'typical'
+      && bookNpc({ character: 'x-terminator-robots-msl1' }).snapshot?.abilities.fighting.rank === 'amazing'
+      && playedS('iceman-msl1') === '56/20',
+      `${fixesS.join(' | ')} iceman-msl1 ${playedS('iceman-msl1')}`);
+    const domS = bookNpc({ character: 'dominus-msl1' }).snapshot;
+    check('MSL1: Dominus\'s S N/A is kept as printed and plays Shift 0, which his printed Health 1020 bears out, his E Class 1000 and R Shift X',
+      blkS('dominus-msl1')?.override?.verdict === 'as_printed' && blkS('dominus-msl1')?.override?.printed === 'N/A'
+      && blkS('dominus-msl1')?.abilities[2].slice(1).join(' ') === '0 '
+      && domS?.abilities.strength.rank === 'shift-0' && domS?.abilities.endurance.rank === 'class-1000' && domS?.abilities.reason.rank === 'shift-x'
+      && playedS('dominus-msl1') === '1020/255',
+      `${blkS('dominus-msl1')?.abilities[2]} ${JSON.stringify(domS?.abilities.strength)} ${playedS('dominus-msl1')}`);
+    const ovS = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl1-overrides.json'), 'utf8')).overrides;
+    const textS = ovS.filter((o) => o.verdict === 'text');
+    check('MSL1: six overrides: three misprints, one as printed and two text verdicts (the clones\' Slim and Bobby quotes), and only those four blocks carry one',
+      ovS.length === 6 && ovS.filter((o) => o.verdict === 'misprint').length === 3 && ovS.filter((o) => o.verdict === 'as_printed').length === 1
+      && textS.map((o) => o.match.row.replace(/^msl1:/, '')).join() === 'cyclops-clone-msl1:background,iceman-clone-msl1:background'
+      && blocksS.filter(({ b }) => b.override).map(({ id }) => id).join() === 'cyclops-clone-msl1,iceman-clone-msl1,dominus-msl1,x-terminator-robots-msl1',
+      JSON.stringify(ovS.map((o) => [o.verdict, o.match])));
+    const powS = msl1.flatMap((c) => c.versions[0].powers);
+    check('MSL1: 54 powers across all 19 cards, 19 of them linked to the UPB; Sunstroke has two (opponent_indented_paragraphs), Archangel\'s Winged Missiles is a power of its own and Cyclops (Clone)\'s Partial Invulnerability is spelt right (speck_lines)',
+      powS.length === 54 && powS.filter((p) => p.upb).length === 19 && msl1.every((c) => c.versions[0].powers.length)
+      && powersS('sunstroke-msl1') === 'Energy Conversion,Costume'
+      && powersS('archangel-msl1') === 'Flight,Winged Missiles,Body Armor'
+      && powersS('cyclops-clone-msl1') === 'Optic Blast,Partial Invulnerability',
+      `${powS.length} ${powS.filter((p) => p.upb).length} ${powersS('sunstroke-msl1')} | ${powersS('archangel-msl1')} | ${powersS('cyclops-clone-msl1')}`);
+    const bookS = data.npcs.books.find((b) => b.slug === 'msl1');
+    const choicesS = msl1.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MSL1: the book reads Adventure 4-12 and 26-32, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookS?.ranges) === '[{"part":"Adventure","pages":[[4,12],[26,32]]}]'
+      && tagline(bookNpc({ character: 'pestilence-msl1' }).snapshot).startsWith('MSL1 X-Terminate, Adventure p.4;')
+      && tagline(bookNpc({ character: 'marvel-girl-msl1' }).snapshot).startsWith('MSL1 X-Terminate, Adventure p.32;')
+      && choicesS.every((n) => n === 1),
+      `${JSON.stringify(bookS?.ranges)} ${tagline(bookNpc({ character: 'pestilence-msl1' }).snapshot)} ${msl1.map((c, i) => `${c.id}:${choicesS[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsS = ['pestilence-msl1', 'caliban-msl1', 'sunstroke-msl1', 'professor-x-clone-msl1', 'apocalypse-msl1', 'mister-sinister-msl1',
+      'archangel-msl1', 'beast-msl1', 'cyclops-msl1', 'marvel-girl-msl1'].map((id) => playedS(id)).join();
+    check('MSL1: cards play their printed Health and Karma (Pestilence 48/20, Caliban 100/76, Sunstroke 70/26, Professor X (Clone) 50/165, Apocalypse 160/50, Mister Sinister 150/170, Archangel 120/26, Beast 130/50, Cyclops 76/70, Marvel Girl 56/80)',
+      playsS === '48/20,100/76,70/26,50/165,160/50,150/170,120/26,130/50,76/70,56/80', playsS);
+    // The text verdicts and speck lines move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by a
+    // few words, never a sentence of the book in this file.
+    const sqlS = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'msl1', 'book-text.sql');
+    if (!existsSync(sqlS)) {
+      check(`MSL1: skipped the text checks: no ${rel(sqlS) || sqlS}`, true);
+    } else {
+      const rowsS = [...readFileSync(sqlS, 'utf8').matchAll(/VALUES \('([^']+)', 'msl1', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entS = new Set(rowsS.map((r) => r.key.split(':')[1]));
+      const bodyS = (row) => rowsS.find((r) => r.key === row)?.body || '';
+      // Row 24b read every quote mark on the page: 17 rows, 31 marks (18
+      // double, 13 single), each printed as read once the two clone verdicts
+      // were applied. Beast's feet mark (printed 31) stays a single.
+      const markedS = rowsS.filter((r) => /["']/.test(r.body));
+      const marksS = (re) => markedS.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MSL1 text: 100 rows over all 19 entries, no row with an odd count of double quotes, and the 17 rows holding 31 quote marks (18 double, 13 single) that row 24b read on the page',
+        rowsS.length === 100 && entS.size === 19 && msl1.every((c) => entS.has(c.id))
+        && !rowsS.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedS.length === 17 && marksS(/"/g) === 18 && marksS(/'/g) === 13
+        && bodyS('msl1:beast-msl1:power:5').includes('30\''),
+        `${rowsS.length} ${entS.size} ${rowsS.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedS.length} ${marksS(/"/g)} ${marksS(/'/g)}`);
+      const countS = (row, s) => (rowsS.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MSL1 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textS.length === 2 && textS.every((o) => countS(o.match.row, o.printed) === 1 && countS(o.match.row, o.read) === 0),
+        textS.map((o) => `${o.match.row} ${countS(o.match.row, o.printed)}/${countS(o.match.row, o.read)}`).join(' | '));
+      const noiseS = rowsS.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl1:/, ''));
+      check('MSL1 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
+        noiseS.length === 0, noiseS.join());
+      check('MSL1 text: every card\'s power rows match its powers, and the four chapter opponents carry no background',
+        msl1.every((c) => rowsS.filter((r) => r.key.startsWith(`msl1:${c.id}:power:`)).length === c.versions[0].powers.length)
+        && msl1.filter((c) => !entS.has(c.id) || !rowsS.some((r) => r.key === `msl1:${c.id}:background`)).map((c) => c.id).join() === 'pestilence-msl1,war-msl1,caliban-msl1,sunstroke-msl1',
+        msl1.map((c) => `${c.id}:${rowsS.filter((r) => r.key.startsWith(`msl1:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).join());
+      // What each registry fix changes in the text, read on the page (row 24a):
+      // Sunstroke's indented bullets stay in his Energy Conversion, Chapter 1's
+      // INTERLUDE banner no longer ends Pestilence's Disease, the clones' and
+      // Archangel's Real Names end in III, and Marvel Girl's Telekinesis opens
+      // on IN.
+      check('MSL1 text: Sunstroke\'s Energy Conversion keeps Light and Gliding, Pestilence\'s Disease carries no INTERLUDE banner, both Worthingtons read III, and Marvel Girl\'s Telekinesis opens on IN',
+        /\bLight\b/.test(bodyS('msl1:sunstroke-msl1:power:1')) && /\bGliding\b/.test(bodyS('msl1:sunstroke-msl1:power:1'))
+        && !/INTERLUDE/i.test(bodyS('msl1:pestilence-msl1:power:1'))
+        && ['angel-clone-msl1', 'archangel-msl1'].every((id) => countS(`msl1:${id}:background`, 'Worthington III') === 1)
+        && bodyS('msl1:marvel-girl-msl1:power:1').startsWith('IN '),
+        ['sunstroke-msl1:power:1', 'pestilence-msl1:power:1', 'angel-clone-msl1:background', 'archangel-msl1:background', 'marvel-girl-msl1:power:1']
+          .map((k) => `${k} ${bodyS('msl1:' + k).length}`).join(' | '));
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
@@ -3730,8 +3856,13 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   // Beyond is the one rank with no number (ranks.json): MHSP2's Beyonder
   // prints it in every row of his Original State, rank_only, so no number.
   const beyond = (b, a) => b.rank_only && a[1] === null && a[2] === 'B';
+  // N/A over a dash, kept as printed: no code over 0, which the block's
+  // printed Health bears out, and no rank derived (MSL1's Dominus, S, printed
+  // 30; survey msl1.md decision 7). Only a row its as_printed override names.
+  const notApplicable = (b, a) => a[1] === 0 && a[2] === null && b.override?.verdict === 'as_printed'
+    && b.override.printed === 'N/A' && (b.override.field || '').includes(a[0]);
   const shape = blocks.filter(({ b }) => b.abilities.map((a) => a[0]).join('') !== 'FASERIP'
-    || b.abilities.some((a) => !unprinted(b, a) && !beyond(b, a) && (!Number.isInteger(a[1]) || !(a[2] in RANK))));
+    || b.abilities.some((a) => !unprinted(b, a) && !beyond(b, a) && !notApplicable(b, a) && (!Number.isInteger(a[1]) || !(a[2] in RANK))));
   check('every block is F, A, S, E, R, I, P in order, each a whole number and a rank code the ladder knows',
     shape.length === 0, shape.slice(0, 3).map(({ c, b }) => `${c.id}: ${JSON.stringify(b.abilities)}`).join(' | '));
   const known = (b, field) => b.kind === 'table' || (b.override && (b.override.field === field
