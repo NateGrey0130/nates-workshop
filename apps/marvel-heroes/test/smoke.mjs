@@ -1046,10 +1046,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && mh2.every((c) => c.team === 'Avengers' || c.team === 'MH2 Time Trap'), `${mh2.length} ${avengers}`);
     const blk = (id) => mh2.find((c) => c.id === id)?.versions[0].blocks[0];
     const minions = bookNpc({ character: 'kang-s-minions-mh2' }).snapshot;
-    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two, MT3\'s Snakes and Scorpions, MLA1\'s Alligator, Rat, pack of 10 and Mosquito Swarm and MLBA1\'s three animals the only ones in any book',
+    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two, MT3\'s Snakes and Scorpions, MLA1\'s Alligator, Rat, pack of 10 and Mosquito Swarm, MLBA1\'s three animals and MLA3\'s Bertha the Gorilla and Alligators the only ones in any book',
       minions?.karma === 10 && blk('kang-s-minions-mh2')?.karma_derived === true
       && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).map((c) => c.id).sort().join()
-        === 'alligator-mla1,chicken-mlba1,chimpanzee-mlba1,giant-dalmatian-mlba1,kang-s-minions-mh2,miss-locke-mh3,mosquito-swarm-mla1,mr-chambers-mh3,rat-pack-of-10-mla1,scorpions-mt3,snakes-mt3',
+        === 'alligator-mla1,alligators-mla3,bertha-the-gorilla-mla3,chicken-mlba1,chimpanzee-mlba1,giant-dalmatian-mlba1,kang-s-minions-mh2,miss-locke-mh3,mosquito-swarm-mla1,mr-chambers-mh3,rat-pack-of-10-mla1,scorpions-mt3,snakes-mt3',
       `${minions?.karma} ${blk('kang-s-minions-mh2')?.karma_derived}`);
     const mimic = bookNpc({ character: 'mimic-mh2' }).snapshot;
     check('MH2: the Mimic\'s absorbed form is a second block on his card, so he is one NPC with two forms (24 and 170)',
@@ -2694,6 +2694,121 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       check('MLA2 text: every card\'s power rows match its powers',
         mla2.every((c) => rowsN.filter((r) => r.key.startsWith(`mla2:${c.id}:power:`)).length === c.versions[0].powers.length),
         mla2.map((c) => `${c.id}:${rowsN.filter((r) => r.key.startsWith(`mla2:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; }).join());
+    }
+  }
+
+  // MLA3 is read by scripts/msh/gridbooks.py (mla3-overrides.json), with the
+  // survey's decisions applied as it recommends (mla3.md; Nate 2026-10-31).
+  // Its cards are in the Adventure Book: the six Player Characters and five
+  // faction grids (printed 3-8), the chapters' grids (13-44) and the roster
+  // (50-63), laid out as MLA2 is.
+  if (data.npcs.characters.some((c) => c.book === 'mla3')) {
+    const mla3 = data.npcs.characters.filter((c) => c.book === 'mla3');
+    const blocksL = mla3.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkL = (id, i = 0) => mla3.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamL = (t) => mla3.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const playedL = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MLA3: 45 characters, each id ending -mla3 with one version, the six Player Characters as Night Life Heroes and 39 under the book\'s title, and no name starting The (teams)',
+      mla3.length === 45 && mla3.every((c) => c.id.endsWith('-mla3') && c.versions.length === 1)
+      && teamL('Night Life Heroes') === 'Daredevil,Hawkeye,Mockingbird,Moon Knight,Shang-Chi,Spider-Man'
+      && mla3.filter((c) => c.team === 'MLA3 Night Life').length === 39
+      && !mla3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mla3.length} ${[...new Set(mla3.map((c) => c.team))]}`);
+    check('MLA3: the cards sort by the Adventure page each starts on, 3 to 63, the chapters\' grids between the factions and the roster',
+      mla3.map((c) => c.id).join() === ['daredevil', 'hawkeye', 'mockingbird', 'moon-knight', 'shang-chi', 'spider-man', 'typical-batboy',
+        'typical-maggia-thug', 'typical-si-fan-assassin', 'typical-wildboy', 'typical-policeman', 'hammerhead-robot', 'security-robots',
+        'cameron-s-machine', 'bertha-the-gorilla', 'alligators', 'hound-dog', 'creature-from-the-void', 'security-guards', 'ammo', 'captain-america',
+        'colossal-deathlok', 'fixer', 'fly', 'gator', 'goliath', 'guardsmen', 'hammerhead', 'iron-man', 'kingpin', 'mad-dog', 'manchu-fu', 'mandroid',
+        'mentallo', 'mongoose', 'persuader', 'phantom-tong', 'rhino', 'seaver-cameron', 'sersi', 'starfox', 'thor', 'typhoid-mary', 'vision',
+        'vortex'].map((id) => `${id}-mla3`).join(),
+      mla3.map((c) => c.id).join());
+    check('MLA3: 49 blocks: four cards\' second grids labelled (Iron Man\'s Tony Stark, the Mandroid\'s Rocko, Thor\'s Eric Masterson, Typhoid Mary\'s Mary; survey decision 4), two version labels (Captain America Original, Iron Man Mark VIII Armor), Bertha the Gorilla\'s and the Alligators\' Karma derived, and no one-line, partial or ranks-only block',
+      blocksL.length === 49
+      && blocksL.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === 'iron-man-mla3:Iron Man,iron-man-mla3:Tony Stark,mandroid-mla3:Mandroid,mandroid-mla3:Rocko,thor-mla3:Thor,thor-mla3:Eric Masterson,typhoid-mary-mla3:Typhoid Mary,typhoid-mary-mla3:Mary'
+      && mla3.filter((c) => c.versions[0].label).map((c) => `${c.id}:${c.versions[0].label}`).join() === 'captain-america-mla3:Original,iron-man-mla3:Mark VIII Armor'
+      && blocksL.filter(({ b }) => b.karma_derived).map(({ id }) => id).join() === 'bertha-the-gorilla-mla3,alligators-mla3'
+      && !blocksL.some(({ b }) => b.kind || b.rank_only || b.health_derived),
+      blocksL.filter(({ b }) => b.kind || b.label || b.rank_only || b.karma_derived || b.health_derived).map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}`).join());
+    const fixesL = [['guardsmen-mla3'], ['thor-mla3', 0]].map(([id, i]) => {
+      const o = blkL(id, i)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${o?.printed}>${o?.corrected} [${(o?.also || []).map((a) => `${a.verdict} ${a.field} ${a.printed}`)}] plays ${playedL(id, i)}`;
+    });
+    check('MLA3: the two misprints keep the printed value and carry the corrected one (the Guardsmen\'s Health 70 as 100, Thor\'s Health 200 as 270, as MLA2\'s; survey decision 5)',
+      fixesL.join(' | ') === [
+        'guardsmen-mla3 misprint health 70>100 [] plays 100/18',
+        'thor-mla3 misprint health 200>270 [] plays 270/50',
+      ].join(' | '),
+      fixesL.join(' | '));
+    const zeroL = ['hammerhead-robot', 'security-robots', 'cameron-s-machine'].map((s) => `${s}-mla3`);
+    check('MLA3: the Hammerhead Robot\'s, the Security Robots\' and Cameron\'s Machine\'s printed Karma 0 are kept as printed (survey decision 6), playing 0',
+      zeroL.every((id) => blkL(id)?.override?.verdict === 'as_printed' && blkL(id)?.override?.field === 'karma' && blkL(id)?.karma === '0' && playedL(id).endsWith('/0')),
+      zeroL.map((id) => `${id}:${blkL(id)?.override?.verdict}:${blkL(id)?.karma}:${playedL(id)}`).join());
+    check('MLA3: Bertha the Gorilla\'s and the Alligators\' grids print no Karma, so theirs is derived as R+I+P (12 and 6) and flagged so (survey decision 7)',
+      blkL('bertha-the-gorilla-mla3')?.karma_derived === true && blkL('alligators-mla3')?.karma_derived === true
+      && playedL('bertha-the-gorilla-mla3').endsWith('/12') && playedL('alligators-mla3').endsWith('/6'),
+      `${playedL('bertha-the-gorilla-mla3')} ${playedL('alligators-mla3')}`);
+    check('MLA3: Colossal Deathlok\'s identity is the name his Real Name: line gives, Luther Manning, not the sentence (short_identity; survey decision 12)',
+      mla3.find((c) => c.id === 'colossal-deathlok-mla3')?.versions[0].identity.join('|') === 'Luther Manning',
+      JSON.stringify(mla3.find((c) => c.id === 'colossal-deathlok-mla3')?.versions[0].identity));
+    const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla3-overrides.json'), 'utf8')).overrides;
+    const textL = ovL.filter((o) => o.verdict === 'text');
+    check('MLA3: 18 overrides: two misprints, four labels, three as printed and nine text verdicts (Daredevil\'s Foggy in doubles, and eight bars, backslashes or an underscore for a capital I or nothing), and only those five blocks carry a misprint or as-printed one',
+      ovL.length === 18 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
+      && ovL.filter((o) => o.verdict === 'as_printed').length === 3
+      && textL.map((o) => o.match.row.replace(/^mla3:/, '')).join() === ['daredevil-mla3:background', 'hawkeye-mla3:power:3', 'hawkeye-mla3:power:5',
+        'hawkeye-mla3:power:5', 'spider-man-mla3:background', 'guardsmen-mla3:power:2', 'iron-man-mla3:power:4', 'iron-man-mla3:power:14',
+        'mandroid-mla3:power:2'].join()
+      && blocksL.filter(({ b }) => b.override).map(({ id }) => id).join() === ['hammerhead-robot', 'security-robots', 'cameron-s-machine', 'guardsmen',
+        'thor'].map((s) => `${s}-mla3`).join(),
+      `${ovL.length} ${JSON.stringify(ovL.map((o) => [o.verdict, o.match.row || o.match.header]))}`);
+    const powL = mla3.flatMap((c) => c.versions[0].powers);
+    check('MLA3: 133 powers across 34 cards, 33 of them linked to the UPB',
+      powL.length === 133 && powL.filter((p) => p.upb).length === 33 && mla3.filter((c) => c.versions[0].powers.length).length === 34,
+      `${powL.length} ${powL.filter((p) => p.upb).length} ${mla3.filter((c) => c.versions[0].powers.length).length}`);
+    const bookL = data.npcs.books.find((b) => b.slug === 'mla3');
+    const twoL = ['iron-man-mla3', 'mandroid-mla3', 'thor-mla3', 'typhoid-mary-mla3'];
+    const choicesL = mla3.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MLA3: the book reads Adventure 3-8, 13-44 and 50-63, a card cites its Adventure page, and every card is one GM choice but the four two-grid cards, two each',
+      JSON.stringify(bookL?.ranges) === '[{"part":"Adventure","pages":[[3,8],[13,44],[50,63]]}]'
+      && tagline(bookNpc({ character: 'daredevil-mla3' }).snapshot).startsWith('MLA3 Night Life, Adventure p.3;')
+      && tagline(bookNpc({ character: 'vortex-mla3' }).snapshot).startsWith('MLA3 Night Life, Adventure p.63;')
+      && mla3.every((c, i) => choicesL[i] === (twoL.includes(c.id) ? 2 : 1)),
+      `${JSON.stringify(bookL?.ranges)} ${tagline(bookNpc({ character: 'daredevil-mla3' }).snapshot)} ${tagline(bookNpc({ character: 'vortex-mla3' }).snapshot)} ${mla3.map((c, i) => `${c.id}:${choicesL[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsL = [['daredevil-mla3'], ['hawkeye-mla3'], ['typical-wildboy-mla3'], ['colossal-deathlok-mla3'], ['iron-man-mla3', 0], ['iron-man-mla3', 1],
+      ['mandroid-mla3', 0], ['mandroid-mla3', 1], ['thor-mla3', 1], ['typhoid-mary-mla3', 0], ['typhoid-mary-mla3', 1], ['vortex-mla3']].map(([id, b]) => playedL(id, b)).join();
+    check('MLA3: cards play their printed Health and Karma (Daredevil 110/91, Hawkeye 70/22, the Typical Wildboy 36/18, Colossal Deathlok 215/14, Iron Man 165/66 and as Tony Stark 22/66, the Mandroid 120/18 and as Rocko 50/18, Thor as Eric Masterson 28/46, Typhoid Mary 120/20 and as Mary 20/20, Vortex 205/58)',
+      playsL === '110/91,70/22,36/18,215/14,165/66,22/66,120/18,50/18,28/46,120/20,20/20,205/58', playsL);
+    // The text verdicts and the quote marks move only the book's text, which
+    // is msh_book_text's: read the generated .sql in the cache, by keys,
+    // counts and the overrides' own fragments, never a sentence of the book
+    // in this file.
+    const sqlL = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mla3', 'book-text.sql');
+    if (!existsSync(sqlL)) {
+      check(`MLA3: skipped the text checks: no ${rel(sqlL) || sqlL}`, true);
+    } else {
+      const rowsL = [...readFileSync(sqlL, 'utf8').matchAll(/VALUES \('([^']+)', 'mla3', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entL = new Set(rowsL.map((r) => r.key.split(':')[1]));
+      const oddL = rowsL.filter((r) => (r.body.match(/"/g) || []).length % 2);
+      // Row 21b read every double quote on the page: 17 rows, 38 marks, each
+      // printed as read once Daredevil's Foggy was restored.
+      const quotedL = rowsL.filter((r) => /"/.test(r.body));
+      check('MLA3 text: 213 rows over 41 entries (Cameron\'s Machine, Bertha the Gorilla, the Alligators and Hound Dog print none), no row with an odd count of double quotes, and the 17 rows holding 38 double quotes that row 21b read on the page',
+        rowsL.length === 213 && entL.size === 41
+        && mla3.filter((c) => !entL.has(c.id)).map((c) => c.id).join() === 'cameron-s-machine-mla3,bertha-the-gorilla-mla3,alligators-mla3,hound-dog-mla3'
+        && oddL.length === 0 && quotedL.length === 17 && quotedL.reduce((n, r) => n + r.body.split('"').length - 1, 0) === 38,
+        `${rowsL.length} ${entL.size} ${mla3.filter((c) => !entL.has(c.id)).map((c) => c.id)} ${oddL.map((r) => r.key)} ${quotedL.length}`);
+      const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MLA3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textL.length === 9 && textL.every((o) => countL(o.match.row, o.printed) >= 1
+          && countL(o.match.row, o.read) === (o.printed.includes(o.read) ? countL(o.match.row, o.printed) : 0)),
+        textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join(' | '));
+      const noiseL = rowsL.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mla3:/, ''));
+      check('MLA3 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
+        noiseL.length === 0, noiseL.join());
+      check('MLA3 text: every card\'s power rows match its powers',
+        mla3.every((c) => rowsL.filter((r) => r.key.startsWith(`mla3:${c.id}:power:`)).length === c.versions[0].powers.length),
+        mla3.map((c) => `${c.id}:${rowsL.filter((r) => r.key.startsWith(`mla3:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; }).join());
     }
   }
 
