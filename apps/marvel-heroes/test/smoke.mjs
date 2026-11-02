@@ -3268,11 +3268,19 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     for (const [slug, b] of Object.entries(registry)) {
       const dir = join(booksDir, slug, 'txt');
       if (!existsSync(dir)) continue;
-      const skip = existsSync(join(booksDir, slug, 'roster.json')) ? covered(b) : new Set();
+      const cards = covered(b);
+      const skip = existsSync(join(booksDir, slug, 'roster.json')) ? cards : new Set();
       for (const f of readdirSync(dir)) {
         if (skip.has(Number(f.slice(1, 4)))) continue;
         unparsed.push(`${slug} ${f.slice(0, 4)}`);
-        addText(readFileSync(join(dir, f), 'utf8').replace(/-\r?\n/g, ''));
+        let text = readFileSync(join(dir, f), 'utf8');
+        // A card page no parser has read yet (a book being surveyed) is
+        // compared whole but for its Real Name: lines, which the parsed text
+        // leaves out too: npcs.json carries them. A book that reprints a card
+        // another book has already built prints the line npcs.json holds
+        // (MLA3's Thor, printed 60: MLA2's ten-word identity line).
+        if (cards.has(Number(f.slice(1, 4)))) text = text.replace(/^[^\S\n]*Real Name:.*$/gim, '');
+        addText(text.replace(/-\r?\n/g, ''));
       }
     }
     check(`and every page no parser covers, from its OCR (${unparsed.length} pages)`, unparsed.length > 0);
