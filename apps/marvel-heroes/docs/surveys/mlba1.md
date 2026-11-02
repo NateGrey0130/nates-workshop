@@ -1,8 +1,5 @@
 # Survey: MLBA1 Mutating Mutants (TSR6893)
 
-> **DRAFT** (row 13a, 2026-11-01). Everything down to *Quote marks* is
-> measured. No data has been built from this book.
-
 Official Advanced Game Adventure for Marvel Super Heroes (the cover and the
 title page), Bruce Nesmith, 1990; the first MLBA module (the cover prints
 MLBA1 over 6893).
