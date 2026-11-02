@@ -31,6 +31,9 @@
     {"match": {"page": 28, "header": "Security Robots"}, "verdict": "as_printed", "field": "karma", "printed": "0", "checked": "2026-11-02",
      "note": "Printed Karma 0 (printed 28), robots (R+I+P 6). Survey decision 6."},
     {"match": {"page": 30, "header": "Cameron"}, "verdict": "as_printed", "field": "karma", "printed": "0", "checked": "2026-11-02",
-     "note": "Printed Karma 0 (printed 30), Cameron's Machine, a machine with a card of its own (decision 8; R+I+P 20). Survey decision 6."}
+     "note": "Printed Karma 0 (printed 30), Cameron's Machine, a machine with a card of its own (decision 8; R+I+P 20). Survey decision 6."},
+    {"match": {"row": "mla3:daredevil-mla3:background"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "Franklin 'Foggy' Nelson", "printed": "Franklin \"Foggy\" Nelson",
+     "note": "Printed 3, Daredevil's background: the page prints the nickname in double quotes, and the OCR read each as a single (a pair, so npcs.unpaired could not see it). The survey's Quote marks found every lone single on the character pages half of a double; this pair is the same misread. Seen on a 400 dpi crop of PDF 4. The other 16 rows of book-text.sql holding a quote mark were read on their pages and are right."}
   ]
 }
