@@ -313,6 +313,9 @@ export const SECTIONS = [
           } else if (o && o.verdict === 'rows') {
             // a grid that prints one line for several rows (ME1's Oolafat)
             out.push(['As printed', `${field} are printed as "${o.printed}"; played as ${show(o.corrected)}, as the printed Karma counts them`]);
+          } else if (o && o.verdict === 'as_printed' && o.printed === null) {
+            // no line printed and none derived (MSL3's machines: no Karma line)
+            out.push(['As printed', `${field} is not printed, and none is derived`]);
           } else if (o && o.verdict === 'as_printed' && typeof o.printed === 'object') {
             // a rank's number inside its range, not its standard one (ME1's Superkree)
             out.push(['As printed', `${field} is printed ${show(o.printed)}, inside the rank's range`]);
@@ -326,6 +329,8 @@ export const SECTIONS = [
             // Hammer's Karma, printed 26 beside his misprinted Health)
             if (x.verdict === 'misprint') {
               out.push(['Misprint', `${xf} is printed ${show(x.printed)}; the book's own ranks give ${show(x.corrected)}`]);
+            } else if (x.printed === null) {
+              out.push(['As printed', `${xf} is not printed, and none is derived`]);
             } else if (typeof x.printed === 'object') {
               out.push(['As printed', `${xf} is printed ${show(x.printed)}, inside the rank's range`]);
             } else {

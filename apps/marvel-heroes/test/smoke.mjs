@@ -3059,6 +3059,106 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MSL3 is read by scripts/msh/gridbooks.py (msl3-overrides.json), with the
+  // survey's decisions applied as it recommends (msl3.md; Nate 2026-10-31).
+  // Every card is a creature or bystander inside the Adventure Book's
+  // chapters (printed 5 to 30), one one-line grid each, filed under the
+  // book's title. Decision 8: the two machines print no Karma line and none
+  // is derived, so no MSL3 block joins MH2's karma_derived list.
+  if (data.npcs.characters.some((c) => c.book === 'msl3')) {
+    const msl3 = data.npcs.characters.filter((c) => c.book === 'msl3');
+    const blocksA = msl3.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkA = (id, i = 0) => msl3.find((c) => c.id === id)?.versions[0].blocks[i];
+    const powersA = (id) => msl3.find((c) => c.id === id)?.versions[0].powers.map((p) => p.name).join() || '';
+    const playedA = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MSL3: 8 characters, each id ending -msl3 with one version, all under the book\'s title, and no name starting The',
+      msl3.length === 8 && msl3.every((c) => c.id.endsWith('-msl3') && c.versions.length === 1)
+      && msl3.every((c) => c.team === 'MSL3 Spore of Arthros')
+      && !msl3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${msl3.length} ${[...new Set(msl3.map((c) => c.team))]}`);
+    check('MSL3: the cards sort by the Adventure page each starts on, 5 to 30, and the Flying Stallion is named Ashta',
+      msl3.map((c) => c.id).join() === ['nop-yaan-peasant', 'flying-robotic-snake', 'ice-bat', 'torr', 'vapor-wasp', 'bubble-beast', 'ashta',
+        'robotic-dragon'].map((id) => `${id}-msl3`).join()
+      && msl3.map((c) => c.versions[0].blocks[0].page).join() === '5,6,13,18,18,21,22,30'
+      && msl3.find((c) => c.id === 'ashta-msl3')?.versions[0].identity.join() === 'Flying Stallion',
+      msl3.map((c) => `${c.id}:${c.name}:${c.versions[0].blocks[0].page}`).join());
+    check('MSL3: 8 one-line grids, none labelled, none ranks only, none with a derived total, and none printing Resources or Popularity',
+      blocksA.length === 8 && blocksA.every(({ b }) => b.kind === 'line' && !b.label && !b.rank_only && !b.karma_derived && !b.health_derived
+        && b.resources === null && b.popularity === null),
+      blocksA.map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}:${b.resources}/${b.popularity}`).join());
+    const vA = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+    const fixA = blocksA.filter(({ b }) => b.override).map(({ id, b: { override: o } }) => `${id} ${o.verdict} ${o.field} ${vA(o.printed)}>${vA(o.corrected)}`
+      + (o.also || []).map((a) => ` ${a.verdict} ${a.field} ${vA(a.printed)}`).join('')).join(' | ');
+    check('MSL3: Ashta\'s misprint keeps the printed A 10 Ex and plays the corrected 20 Ex; the Flying Robotic Snake\'s Karma and the Robotic Dragon\'s Health (See text) and Karma are kept as printed (decision 8)',
+      fixA === 'flying-robotic-snake-msl3 as_printed karma null>undefined | ashta-msl3 misprint A 10 Ex>20 Ex | robotic-dragon-msl3 as_printed health See text>undefined as_printed karma null'
+      && bookNpc({ character: 'ashta-msl3' }).snapshot?.abilities.agility.number === 20
+      && bookNpc({ character: 'ashta-msl3' }).snapshot?.abilities.agility.rank === 'excellent'
+      && blkA('flying-robotic-snake-msl3')?.karma === null && blkA('robotic-dragon-msl3')?.health === 'See text',
+      `${fixA} | ${JSON.stringify(bookNpc({ character: 'ashta-msl3' }).snapshot?.abilities.agility)}`);
+    const ovA = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl3-overrides.json'), 'utf8')).overrides;
+    const textA = ovA.filter((o) => o.verdict === 'text');
+    check('MSL3: six overrides: one misprint, two as printed and three text verdicts (the Ice Bat\'s two, the Snake\'s If), and only those three blocks carry one',
+      ovA.length === 6 && ovA.filter((o) => o.verdict === 'misprint').length === 1 && ovA.filter((o) => o.verdict === 'as_printed').length === 2
+      && textA.map((o) => o.match.row.replace(/^msl3:/, '')).join() === 'ice-bat-msl3:power:2,ice-bat-msl3:power:3,flying-robotic-snake-msl3:prose'
+      && blocksA.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`).join() === 'flying-robotic-snake-msl3:0,ashta-msl3:0,robotic-dragon-msl3:0',
+      JSON.stringify(ovA.map((o) => [o.verdict, o.match])));
+    const powA = msl3.flatMap((c) => c.versions[0].powers);
+    check('MSL3: 13 powers across four cards, 8 of them linked to the UPB (each one\'s Body Armor and Flight)',
+      powA.length === 13 && powA.filter((p) => p.upb).length === 8 && msl3.filter((c) => c.versions[0].powers.length).length === 4
+      && powersA('ice-bat-msl3') === 'Body Armor,Flight,Ice Entrapment,Ice Missiles'
+      && powersA('vapor-wasp-msl3') === 'Body Armor,Flight,Sting,Vapor Form'
+      && powersA('bubble-beast-msl3') === 'Body Armor,Flight,Sphere Projection'
+      && powersA('ashta-msl3') === 'Body Armor,Flight'
+      && powA.filter((p) => p.upb).map((p) => p.name).every((n) => n === 'Body Armor' || n === 'Flight'),
+      `${powA.length} ${powA.filter((p) => p.upb).length} ${['ice-bat', 'vapor-wasp', 'bubble-beast', 'ashta'].map((id) => powersA(`${id}-msl3`)).join(' | ')}`);
+    const idA = msl3.map((c) => c.versions[0].identity.join('/')).join();
+    check('MSL3: two identity lines, Torr\'s and Ashta\'s, and the rest print none',
+      idA === ',,,Alien Trader,,,Flying Stallion,', idA);
+    const bookA = data.npcs.books.find((b) => b.slug === 'msl3');
+    const choicesA = msl3.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MSL3: the book reads Adventure 5-30, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookA?.ranges) === '[{"part":"Adventure","pages":[[5,30]]}]'
+      && tagline(bookNpc({ character: 'nop-yaan-peasant-msl3' }).snapshot).startsWith('MSL3 Spore of Arthros, Adventure p.5;')
+      && tagline(bookNpc({ character: 'robotic-dragon-msl3' }).snapshot).startsWith('MSL3 Spore of Arthros, Adventure p.30;')
+      && choicesA.every((n) => n === 1),
+      `${JSON.stringify(bookA?.ranges)} ${tagline(bookNpc({ character: 'nop-yaan-peasant-msl3' }).snapshot)} ${msl3.map((c, i) => `${c.id}:${choicesA[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsA = msl3.map((c) => playedA(c.id)).join();
+    check('MSL3: cards play their printed Health and Karma (Nop Yaan Peasant 22/10, the Snake 80 and no Karma, Ice Bat 90/12, Torr 46/42, Vapor Wasp 60/8, Bubble Beast 70/16, Ashta 90/10 on the corrected A, the Dragon neither)',
+      playsA === '22/10,80/null,90/12,46/42,60/8,70/16,90/10,null/null', playsA);
+    // The text verdicts move only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by a few words, never
+    // a sentence of the book in this file.
+    const sqlA = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'msl3', 'book-text.sql');
+    if (!existsSync(sqlA)) {
+      check(`MSL3: skipped the text checks: no ${rel(sqlA) || sqlA}`, true);
+    } else {
+      const rowsA = [...readFileSync(sqlA, 'utf8').matchAll(/VALUES \('([^']+)', 'msl3', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entA = new Set(rowsA.map((r) => r.key.split(':')[1]));
+      // Row 30b read every quote mark on the page and found none wrong; the
+      // doubles are Torr's four quotations, each printed and built as a pair.
+      const markedA = rowsA.filter((r) => /["']/.test(r.body));
+      const marksA = (re) => markedA.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MSL3 text: 21 rows over all 8 entries, no row with an odd count of double quotes, and the 8 rows holding 37 quote marks (8 double, 29 single)',
+        rowsA.length === 21 && entA.size === 8 && msl3.every((c) => entA.has(c.id))
+        && !rowsA.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedA.length === 8 && marksA(/"/g) === 8 && marksA(/'/g) === 29,
+        `${rowsA.length} ${entA.size} ${rowsA.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedA.length} ${marksA(/"/g)} ${marksA(/'/g)}`);
+      const countA = (row, s) => (rowsA.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MSL3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textA.length === 3 && textA.every((o) => countA(o.match.row, o.printed) === 1 && countA(o.match.row, o.read) === 0),
+        textA.map((o) => `${o.match.row} ${countA(o.match.row, o.printed)}/${countA(o.match.row, o.read)}`).join(' | '));
+      const noiseA = rowsA.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl3:/, ''));
+      check('MSL3 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
+        noiseA.length === 0, noiseA.join());
+      check('MSL3 text: every card\'s power rows match its powers, each card carries one prose row, and none a notes row',
+        msl3.every((c) => rowsA.filter((r) => r.key.startsWith(`msl3:${c.id}:power:`)).length === c.versions[0].powers.length)
+        && msl3.every((c) => rowsA.filter((r) => r.key === `msl3:${c.id}:prose`).length === 1)
+        && !rowsA.some((r) => r.key.endsWith(':notes')),
+        msl3.map((c) => `${c.id}:${rowsA.filter((r) => r.key.startsWith(`msl3:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).join());
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
@@ -3947,6 +4047,18 @@ section('The codex: every section loads, searches, filters and keeps its address
       check('Notable NPCs: a further misprint printed as a number reads as a misprint too (MH5\'s Justin Hammer, Health 28 and Karma 26)',
         lines.join(' | ') === 'Misprint: Health is printed 28; the book\'s own ranks give 30 | Misprint: Karma is printed 26; the book\'s own ranks give 36',
         JSON.stringify(lines));
+    }
+    // MSL3's machines print no Karma line, kept so with nothing derived: an
+    // override whose printed is null, first or in `also`, says so
+    const snake = npcs.byKey.get('flying-robotic-snake-msl3');
+    const dragon = npcs.byKey.get('robotic-dragon-msl3');
+    if (snake && dragon) {
+      const notes = (r) => npcs.stats(r).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`).join(' | ');
+      check('Notable NPCs: a Karma the book does not print, and no ruling derives, says so (MSL3\'s Flying Robotic Snake, and the Robotic Dragon\'s in its also)',
+        notes(snake) === 'As printed: Karma is not printed, and none is derived'
+        && notes(dragon).endsWith(' | As printed: Karma is not printed, and none is derived')
+        && npcs.stats(dragon).some(([k, v]) => k === 'Health / Karma' && v === 'See text / -'),
+        `${notes(snake)} || ${notes(dragon)}`);
     }
   }
 

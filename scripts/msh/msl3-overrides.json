@@ -1,6 +1,6 @@
 {
   "about": [
-    "Hand decisions about MSL3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and two text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl3.md, Stat blocks; decision 8); none is a guess from OCR.",
+    "Hand decisions about MSL3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and three text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl3.md, Stat blocks; decision 8); none is a guess from OCR.",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
@@ -25,6 +25,9 @@
      "note": "Flight, printed 13: the OCR read the capital I of It as a backslash; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."},
     {"match": {"row": "msl3:ice-bat-msl3:power:3"}, "verdict": "text", "checked": "2026-11-02",
      "read": "|t sprays", "printed": "It sprays",
-     "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."}
+     "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."},
+    {"match": {"row": "msl3:flying-robotic-snake-msl3:prose"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "lf the heroes discover", "printed": "If the heroes discover",
+     "note": "Printed 6, the paragraph after the Into the Portal section's: the OCR read the capital I of If as a small l, which the Marvel smoke suite's l-for-I scan found (row 30c). Read on a 400 dpi crop of printed 6 (row 30c)."}
   ]
 }
