@@ -4056,6 +4056,61 @@
       "derived_karma_note": "MLA1's field (survey mla3.md decision 7): Bertha the Gorilla's and the Alligators' grids print no Karma, so R+I+P is derived, 12 and 6, and flagged as not printed.",
       "derived_totals": true,
       "derived_totals_note": "MT3's card flag, as MLA1's: a total the block lists under derived (derived_karma above: Bertha the Gorilla, printed 40, and the Alligators, 42) is flagged karma_derived on the card. MLA3 prints no one-line grid, so gridbooks.line_grids reads nothing here and roster.json is the same with it on or off. Off, a scratch npcs.py mla3 gives the two cards Karma 12 and 6 with nothing saying the book prints none (row 20b, 2026-11-02)."
+    },
+    "msl1": {
+      "title": "MSL1 X-Terminate",
+      "short": "MSL1",
+      "code": "TSR6899",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6899 MSL1 X-Terminate Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "3d149981cffe020330418545de1919cfacfc229b468dcad5e6cc05ba545c13ff",
+      "pdf_pages": 36,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 33], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [34, 34], "offset": null},
+        {"name": "Map: Apocalypse's Headquarters", "cite": null, "pdf": [35, 35], "offset": null},
+        {"name": "Map: Factor Three Headquarters", "cite": null, "pdf": [36, 36], "offset": null}
+      ],
+      "offset_evidence": "2026-11-02, scripts/msh/survey.py tsv_folio: 4 pages vote printed = PDF - 1 (PDF 16, 26, 29 and 30) and two votes are not folios, each read on its page: PDF 28's 7 (k = 21) and PDF 32's 4 (k = 28) are specks read as digits in the strip of art at the page's foot, above the folio. Every other booklet page prints its folio, PDF - 1, read on a strip of each page's foot (60 dpi), Tesseract missing it: PDF 3-15, 17-22, 25, 27, 31 and 33. Three booklet pages print none: PDF 2 is printed 1, the title page with the Contents, the credits and the fine print (the code 6899XXX1401 and the ISBN), and PDF 23-24 are printed 22-23 by position, a two-page floor plan with rooms numbered 1-66 and no title, which the Contents calls Factor Three Headquarters (printed 22). So PDF 2-33 (594 x 767 pt) are the 32-page booklet, printed 1-32. PDF 1 and 34 are the outside of the cover (597 x 772 pt; PDF 1 prints MSL1, ADVENTURE and 6899, PDF 34 the code 6899XXX1401 and the price 6.95 U.S.). PDF 35 (1086 x 594 pt) is Map 1, Apocalypse's Headquarters (rooms 1-5), the map printed in the lower half of printed 9, on a page of its own. PDF 36 (1161 x 496 pt) is the floor plan of printed 22-23 on one page, with no title. None of PDF 1 and 34-36 prints a folio or a stat block. Survey msl1.md, The scan and Offset.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "stat_labels_note": "Every grid in the book (21 read on the page images 2026-11-02) is three stacked rows across the column, the letters F A S E R I P, the rank codes in capitals, then the numbers, each code above its number with no brackets, and two lines of labels under them in two columns. The roster's fifteen cards (printed 26-32) and Pestilence (printed 4) print Health: and Karma: on the first line and Resources: and Popularity: on the second; War (printed 4), Caliban (9), Sunstroke (12) and the X-Terminator Mark III (13) print Health: and Resources: over Karma: and Popularity:; Mister Sinister's grid inside Chapter 7 (printed 14) prints Health: and Popularity: over Karma: and Resources:. Resources is a code and its number in brackets (RM (30)); Pestilence's is set with no space (FB(2)). Popularity runs from -40 (Dominus) to 26 (Iceman). Two item grids print Control, Speed, Body and Protection as four codes and no number: the wheelchair inside Professor X (Clone)'s card (printed 28) and the Mind Shields (printed 25); neither is a character's.",
+      "section_labels": ["KNOWN POWERS", "KNOWN POWER", "TALENTS", "IN BRIEF", "Equipment", "Limitations"],
+      "section_labels_note": "Counted on the OCR of PDF 5-15 and 27-33 and read on the page images 2026-11-02. KNOWN POWERS in bold capitals with no colon heads the powers of every grid with powers: the fifteen roster cards (Angel (Clone), printed 26, prints KNOWN POWER) and the six chapter grids. Each power is an italic run-in under it, stunts as bulleted lines. TALENTS: in bold capitals is a run-in on every roster card (Dominus's broken over a line as TAL- ENTS, printed 30) and on Caliban (9), the X-Terminator Mark III (13) and Mister Sinister (14). The roster cards then print an identity block of bold run-ins: Real Name: (14 cards; the X-Terminator Robots print none), Occupation:, Identity:, Legal Status:, Place of Birth:, Marital Status:, Base of Operations: and GROUPS: (in capitals), the robots printing only Occupation:, Place of Birth:, Base of Operations: and GROUPS:. Cyclops (Clone) adds IN BRIEF: (printed 27) and Professor X (Clone) Equipment: and Limitations: (printed 28), his Equipment: items as italic run-ins. The chapter grids print no identity block: after their powers the chapter resumes, with AFTERMATH:, KARMA: and POPULARITY: as bold capital run-ins of the adventure.",
+      "rank_aliases": {"FB": "feeble", "FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "AM": "amazing", "MN": "monstrous", "UN": "unearthly", "CL1000": "class-1000", "Shift-X": "shift-x"},
+      "rank_aliases_note": "The codes every grid prints, in capitals: FB and FE for Feeble (FB on Pestilence's Resources and War's S and Resources, printed 4; FE on Caliban's Resources, 9, and Archangel's, 31), PR, TY, GD, EX, RM, IN, AM, MN and UN. Dominus (printed 30) adds CL1000 over 1000 on E and Shift- X over 150 on R, set with a space after the hyphen, and N/A over a dash on S. No title-case code. Read on the page images 2026-11-02. Three codes disagree with their numbers (survey msl1.md, Stat blocks): Cyclops (Clone)'s F EX over 6 (printed 27), and IN over 50 on the F of the X-Terminator Robots (30) and of the X-Terminator Mark III (13).",
+      "sections": [
+        ["Introduction", null, 2, "Adventure Book"],
+        ["Chapter 1: Interlude", null, 4, "Adventure Book"],
+        ["Chapter 2: Avengers Disassembled!", null, 5, "Adventure Book"],
+        ["Chapter 3: X-Terminate Mark I", null, 6, "Adventure Book"],
+        ["Chapter 4: The X-Clones Regroup", null, 7, "Adventure Book"],
+        ["Chapter 5: Apocalypse Now", null, 9, "Adventure Book"],
+        ["Chapter 6: The Domain of Dominus", null, 12, "Adventure Book"],
+        ["Chapter 7: The Malignant Mister Sinister", null, 13, "Adventure Book"],
+        ["Chapter 8: The Arizona Robotics Farm", null, 15, "Adventure Book"],
+        ["Chapter 9: The Lay of the Land", null, 17, "Adventure Book"],
+        ["Chapter 10: An Apocalyptic Epitaph", null, 20, "Adventure Book"],
+        ["New Gadgetry and Equipment", null, 24, "Adventure Book"],
+        ["The NPC Bad-Guy Roster", null, 26, "Adventure Book"],
+        ["Player Character Roster", null, 31, "Adventure Book"],
+        ["Apocalypse's Headquarters", null, 9, "Adventure Book"],
+        ["Factor Three Headquarters", null, 22, "Adventure Book"]
+      ],
+      "contents_note": "The printed Contents (printed 1, PDF 2, one column headed Table of Contents), transcribed from a render, then each entry checked against its page, 2026-11-02, in the Contents' order. Every page agrees, so there are no contents_errata. The Contents prints each chapter as Chapter N alone; its title is the banner's, a bold line in capitals at the top of the page under the masthead, CHAPTER N: TITLE, stored here in title case: Chapters 1-4 on printed 4-7, 5 on 9, 6 and 7 on 12 and 13, 8 on 15, 9 on 17 and 10 on 20, none mid-page. Tesseract reads all ten banners, the I of MARK I as a bar. INTRODUCTION (printed 2) and NEW GADGETRY AND EQUIPMENT (24) head their pages in the same style; The NPC Bad-Guy Roster (26) is headed The NON-PLAYER CHARACTER ROSTER on its page and Player Character Roster (31) THE PLAYER CHARACTER ROSTER. The last two entries are maps, not text: Apocalypse's Headquarters (printed 9) is Map 1 in the lower half of Chapter 5's page, and Factor Three Headquarters (printed 22) is the untitled floor plan across printed 22-23. Apocalypse's Headquarters shares printed 9 with Chapter 5's banner, and Caliban's grid is on that page, so the trial must see which section a reader gives printed 9. The Contents lists no character by name, and the book prints no index.",
+      "columns": 2,
+      "columns_note": "Two columns on every booklet page but the title page and the floor plan (printed 2-32 at 30 dpi, and the grid pages printed 4, 9, 12-14 and 26-32 at 100-130 dpi), a grid spanning one column. No grid breaks across a column. Read on the page images 2026-11-02.",
+      "panels": [],
+      "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1 and 34-36 holds no Health, Karma or rank row, and their images show the cover, the back cover's blurb and two maps. The scan holds no cover-panel card. Survey msl1.md, Cover-panel cards.",
+      "character_ranges": [{"part": "Adventure Book", "pages": [26, 32]}],
+      "character_ranges_note": "The card pages, read on the page images 2026-11-02: The NON-PLAYER CHARACTER ROSTER on printed 26-30 (ten cards, Angel (Clone) to the X-Terminator Robots, whose text ends partway down the right column of printed 30) and THE PLAYER CHARACTER ROSTER on printed 31-32 (five cards, Archangel to Marvel Girl), each card a title-case header over a grid, KNOWN POWERS, TALENTS: and an identity block. Fifteen grids, each a card. The wheelchair inside Professor X (Clone)'s card (printed 28) is an item grid of four codes, not a character's. No headerless grid, so no tiers and no one_line_grids. In MT3's form (each range with its part); which reader takes them is survey msl1.md, Which reader fits.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 4, "names": ["Pestilence", "War"]},
+        {"part": "Adventure Book", "page": 9, "names": ["Caliban"]},
+        {"part": "Adventure Book", "page": 12, "names": ["Sunstroke"]}
+      ],
+      "opponents_note": "Every grid inside the chapters (printed 2-25), found by the OCR's rank-code rows and Health lines and on a 30 dpi render of every page, and read on crops of the page images at 110-130 dpi 2026-11-02: six, each a header over the roster's grid shape, KNOWN POWERS and italic powers, and no identity block. PESTILENCE (printed 4, column 1, in capitals) and War (4, column 2), Chapter 1; Caliban (9, column 2), Chapter 5; Sunstroke (12, column 2), Chapter 6; the X-Terminator Mark III (13, column 1), Chapter 7; and Mister Sinister (14, column 1), Chapter 7. The last two are not opponents here (survey msl1.md decision 4): each prints the seven numbers of a roster card (the X-Terminator Robots, printed 30; Mister Sinister, 29) in another order under that card's Health and Karma (the robots' power run-ins match by name; Sinister's Telepathy does), so each is the roster's being with its rows misprinted. No other chapter page prints a rank row."
     }
   }
 }
