@@ -1,8 +1,8 @@
 # Survey: MSL2 Warlord of Baluur (TSR6901)
 
-> **DRAFT.** Written up to *Which reader fits*, which is not finished: the
-> trial parse (plan row 25c) runs a reader over this book and writes it. No
-> `layout` is set, and nothing of the book is imported yet.
+> **DRAFT.** Written through *Which reader fits* (the trial parse, plan row
+> 25c); marvel smoke has not been run on it (row 25d). No `layout` is set,
+> and nothing of the book is imported yet.
 
 Marvel Super Heroes adventure, product code 6901 on the cover (PDF 1) and on
 the title page. By Anthony Herring, 1991 (the title page). Registry entry:
@@ -224,26 +224,123 @@ as a pair of doubles (decision 8).
 
 ## Which reader fits
 
-**Not finished.** Plan row 25c runs the trial parse and writes this
-section. What it has to see, from the measurements above:
+**`grid-booklets` (`scripts/msh/gridbooks.py`, MT2's), with three things
+taught to it.** Measured 2026-11-02 (plan row 25c): a scratch copy of
+`scripts/msh/` and `apps/marvel-heroes/data` at this branch's `a391eadc`
+(`main` at `e7fa7a02`), the msl2 entry as row 25a left it (`parts`,
+`character_ranges`, `opponents`, `one_line_grids`, `tiers`) given `"layout":
+"grid-booklets"` and the fields below, and a trial `msl2-overrides.json`,
+run on a copy of the cache under its own `WORKSHOP_MSH_CACHE`. Eight runs
+(run0 to run7, plus the diagnostic run0d), each run's whole output kept.
 
-- MSL1's verdict was `grid-booklets` (`scripts/msh/gridbooks.py`) with the
-  fields its reader row added, for the same three-row grid in a `parts`
-  entry with `character_ranges` and `opponents`, which MSL2's entry is too.
-- MSL2's grids print the labels in one order only, and no Class, Shift,
-  `N/A` or FB code, so fewer of MSL1's reader fields may be needed.
-- Each card's real name is a title-case line under the capitals header,
-  not a `Real Name:` run-in, and no card prints an identity block.
-- `KNOWN POWERS` run into the first power on four grids; She-Hulk's
-  `Talents:` and `In BRIEF:` are mixed case; `IN BRIEF:` with no space
-  after the colon on three.
-- Stygorr's second grid has no header (decision 4) and his numbers row
-  holds six numbers (the misprint above); the reader must not take it as a
-  one-line grid or a welded row.
-- The first character range opens on Equipping the Heroes (printed 4), and
-  the Debris Creature's entry ends at a subhead, An Alien's Wrath.
-- `FURY, NICK` and `TYPICAL SHIELD OPERATIVE` need their names set
-  (decision 5).
+**`code-grids` was not tried.** `codegrids.py` reads one `offset` and one
+`character_pages`, and MSL2's entry is a `parts` entry with neither, which
+is where it stopped on MT3 and MSL1 (`KeyError: 'offset'` in
+`roster.page_stream`). The other readers fit less: `roster.py` (MA1) reads
+one offset; `booklet.py` (MHSP1) and `coverpanels.py` (MH1, MH2) read rank
+words with no numbers.
+
+**The stock grid-booklets stops at once.** With `layout` alone (run0),
+`roster.py msl2` exits 1 on `one_line_grids: Stygorr names 0 entries, not
+1`. With that field taken out as a diagnostic (run0d) it reads 465 lines, 4
+entries and 9 blocks, **none passing and all 9 unread** (the codes row is
+taken and the numbers row under it dropped, item 4), no powers, and the
+Debris Creature and the Typical SHIELD Operative on no entry. With MSL1's
+fields set (run1) it stops at Stygorr (printed 31), `a one-line grid read
+wrong` (item 1); after that, at his human form's Resources line (item 2).
+
+| measure | stock (run0d) | with every trial change (run7) |
+|---|---|---|
+| stream lines | 465 | 432 |
+| entries | 4 | 8, every one with a block |
+| stat blocks | 9, all unread | 9 |
+| blocks passing every check | 0 | 8, and 1 known from the overrides (`misprint`) |
+| failing | 9 | 0 |
+| checklist names with no entry | 2 (Debris Creature, Typical SHIELD Operative) | 0 (8 cards, 1 opponent, 1 tier, all found) |
+| powers | 0 | 27 across 8 entries |
+| exit code | 1 | 0 |
+
+The 9 blocks are this survey's 8 cards and Stygorr's human form (decisions 3
+and 4). `npcs.py msl2` run into the scratch copy exits 0 (run6): 8
+characters, 9 blocks, 27 powers, 41 rows, 41 distinct keys, every quoted
+phrase a pair of doubles.
+
+What grid-booklets must learn. Each change was made in the scratch copy; the
+reader changes (R) are in the diff kept in the plan's store, each behind a
+field of its own:
+
+1. **R1. Stygorr's numbers row prints six numbers under seven codes**
+   (printed 31): `codes_over_numbers` stops `a one-line grid read wrong`.
+   Reader: `short_number_rows`, which reads the row as printed and leaves the
+   rows it does not reach null.
+2. **R2. Stygorr's human form prints its own Resources and Popularity
+   lines** (printed 31): `line_grid_resources` stops on a labelled grid.
+   Reader: `form_resources`, which lets the form's block keep them.
+3. **R3. `KNOWN POWERS` run into the first power on its line, with no colon**
+   (the Debris Creature, printed 19; Nick Fury, 29; Stygorr, 31; the
+   operative, 32): the powers read as prose. Reader: `subhead_line_powers`,
+   which cuts the line into the label (colon given) and the power.
+4. **G4. Every grid named in `one_line_grids`**, MX1's form (`part`, `page`,
+   `name`, `subhead`, with the header as read) for the 8 headed grids, and
+   Stygorr's human form in ME2's form (`entry` Stygorr, `label` Lew Shiner).
+   Off, 4 entries and 0 passing.
+5. **G5. MSL1's fields:** `codes_over_numbers` (off: no check fails, but
+   every grid reads `rank_only` and the numbers row is dropped),
+   `line_grid_resources`, `subhead_labels` (`KNOWN POWERS`, off: a stop),
+   `title_case_labels` (She-Hulk's `Talents:` and `In BRIEF:`, off: 29
+   powers), `cards` (8, as read; off: statted entries on no checklist) and
+   `teams` ([A, 4, Fantastic Four], [A, 19, MSL2 Warlord of Baluur], decision
+   1). `letters_marks` and `code_marks`, which MSL1 needed, are **not
+   needed**: run7, without them, wrote a `roster.json` byte-identical to
+   run6's.
+6. **G6. `speck_lines`** on Nick Fury's `KNOWN POWERS` line (printed 29),
+   whose `Body` OCR reads as `Booy`; off, a stop. **Not read on a render by
+   this row.**
+7. **G7. `indented_power_heads`** [A, 19, Tentacles]: the Debris Creature's
+   second power is indented, and opponent mode ends the entry there; off, 26
+   powers (Tentacles lost).
+8. **G8. `card_names`** (decision 5): `Fury, Nick` as Nick Fury and
+   `Typical Shield Operative` as Typical SHIELD Operative; `npcs.py` builds
+   the capitals header as `Fury, Nick` and `Typical Shield Operative`
+   otherwise.
+9. **G9. `line_identity`** (MX2's, read by `npcs.py`) for the six title-case
+   real-name lines: Power Man (printed 4), She-Hulk (5), Blastaar (28),
+   Nick Fury (29), the Negalisk (30) and Stygorr (31). Off, each line is
+   the card's prose and the identity is empty, since a subhead header
+   prints no identity line.
+10. **G10. One `text` verdict** (decision 8): `nick-fury-msl2:notes`, whose
+    `Howling Commandos,` the chain built as singles, to doubles. The other
+    four quoted phrases build as doubles.
+
+**So grid-booklets must learn 10 things: 3 reader changes** (R1-R3, items
+1-3) **and 7 registry-only** (G4-G10, items 4-10). The overrides file holds
+two entries: the Stygorr misprint of decision 6 (`31:Stygorr:E 40->20, R
+30->40, P (none)->30`, matched by page 31, header STYGORR and an empty
+label; P null to 30 so `npcs.py` plays P) and the one `text` verdict of
+item 10. The trial did not run the proof that every earlier book builds
+byte-identical (`marvel-book`, *Prove every earlier book did not move*);
+the reader row does. The registry patch (`p0` to `p7`), the reader diff
+(`reader-changes.diff`), the overrides, `ablate.txt` (each field switched
+off from run6) and every run are kept in the plan's store (row 25c,
+`trial/msl2/`), not the repo.
+
+**Seen and left, not counted:** `IN BRIEF` lands in notes as `In brief: ...`,
+as MSL1's does; bullet marks (`e`, `(c)`, `e-cent`) stay in the text of
+Stygorr's Matter Fluctuation and the operative's Weapons, as MSL1's
+`roster.json` keeps them; the Equipping the Heroes gear (printed 4) is in no
+entry (decision 9); and the Fantastic Four, who print no grid, have none.
+**Not checked:** the `Booy` misread (item 6) and Nick Fury's quoted phrase
+(item 10) against the page images.
+
+**Verdict: grid-booklets.** It reads this book's `parts`,
+`character_ranges`, `opponents`, `tiers` and `one_line_grids` as row 25a
+wrote them, and every field an earlier book taught it carries over;
+code-grids reads no `parts` entry.
+
+**The decision it settles** (the reader row sets it): `"layout":
+"grid-booklets"`, with the fields above, the two overrides, a field of its
+own for each of the reader changes R1-R3 with the byte-identical proof for
+every earlier book. This survey sets no `layout`.
 
 ## Decisions this survey leaves open
 
