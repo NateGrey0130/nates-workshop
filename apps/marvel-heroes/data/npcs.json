@@ -138,6 +138,11 @@
    "book": "MLA3 Night Life",
    "code": "TSR6897",
    "pages": "Adventure 3-8, 13-44, 50-63"
+  },
+  {
+   "book": "MSL1 X-Terminate",
+   "code": "TSR6899",
+   "pages": "Adventure 4-12, 26-32"
   }
  ],
  "books": [
@@ -648,6 +653,30 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "msl1",
+   "short": "MSL1",
+   "title": "MSL1 X-Terminate",
+   "pages": [
+    4,
+    12
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       4,
+       12
+      ],
+      [
+       26,
+       32
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -734,7 +763,8 @@
   "Night Moves Heroes",
   "MLA2 Night Moves",
   "Night Life Heroes",
-  "MLA3 Night Life"
+  "MLA3 Night Life",
+  "MSL1 X-Terminate"
  ],
  "characters": [
   {
@@ -96367,6 +96397,1685 @@
    ],
    "appearances": [],
    "book": "mla3"
+  },
+  {
+   "id": "pestilence-msl1",
+   "name": "Pestilence",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "pestilence-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "48",
+       "karma": "20",
+       "resources": "FB(2)",
+       "popularity": "-30",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Disease"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "war-msl1",
+   "name": "War",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "war-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         2,
+         "Fb"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "46",
+       "karma": "22",
+       "resources": "FB (2)",
+       "popularity": "-30",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Detonation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "caliban-msl1",
+   "name": "Caliban",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "caliban-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "form": true,
+       "health": "100",
+       "karma": "76",
+       "resources": "FE (2)",
+       "popularity": "-10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Fear-Enhanced Strength"
+      },
+      {
+       "name": "Emotion Projection"
+      },
+      {
+       "name": "Night Vision"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "sunstroke-msl1",
+   "name": "Sunstroke",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "sunstroke-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "70",
+       "karma": "26",
+       "resources": "GD (10)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Costume"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "angel-clone-msl1",
+   "name": "Angel (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "angel-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "90",
+       "karma": "26",
+       "resources": "RM (30)",
+       "popularity": "12",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Aerial Adaptations"
+      },
+      {
+       "name": "Wing Buffeting"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "beast-clone-msl1",
+   "name": "Beast (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "beast-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      26,
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "100",
+       "karma": "50",
+       "resources": "GD (10)",
+       "popularity": "10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Feet"
+      },
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Balance"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Lightning Speed"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "cyclops-clone-msl1",
+   "name": "Cyclops (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "cyclops-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "42",
+       "karma": "50",
+       "resources": "PR (4)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "F",
+        "printed": {
+         "number": 6,
+         "code": "Ex"
+        },
+        "corrected": {
+         "number": 6,
+         "code": "Ty"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Optic Blast"
+      },
+      {
+       "name": "Partial Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "iceman-clone-msl1",
+   "name": "Iceman (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "iceman-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "56",
+       "karma": "20",
+       "resources": "TY (6)",
+       "popularity": "16",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 56,
+        "corrected": 42,
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": 20,
+          "corrected": 16
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Invulnerability to Cold"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "marvel-girl-clone-msl1",
+   "name": "Marvel Girl (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "marvel-girl-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      27,
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "form": true,
+       "health": "42",
+       "karma": "60",
+       "resources": "TY (6)",
+       "popularity": "10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "professor-x-clone-msl1",
+   "name": "Professor X (Clone)",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "professor-x-clone-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "form": true,
+       "health": "50",
+       "karma": "165",
+       "resources": "EX (20)",
+       "popularity": "20",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Astral Form",
+       "upb": "T1"
+      },
+      {
+       "name": "Mutant Detection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "apocalypse-msl1",
+   "name": "Apocalypse",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "apocalypse-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "160",
+       "karma": "50",
+       "resources": "MN (75)",
+       "popularity": "-20",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Molecular Rearrangement"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Damage Resistance"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "mister-sinister-msl1",
+   "name": "Mister Sinister",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "mister-sinister-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "form": true,
+       "health": "150",
+       "karma": "170",
+       "resources": "IN (40)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "dominus-msl1",
+   "name": "Dominus",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "dominus-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         0,
+         null
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         150,
+         "ShX"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "form": true,
+       "health": "1020",
+       "karma": "255",
+       "resources": "MN (75)",
+       "popularity": "-40",
+       "override": {
+        "verdict": "as_printed",
+        "field": "S",
+        "printed": "N/A"
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Hypnotic Ray"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "x-terminator-robots-msl1",
+   "name": "X-Terminator Robots",
+   "team": "MSL1 X-Terminate",
+   "versions": [
+    {
+     "id": "x-terminator-robots-msl1",
+     "label": null,
+     "team": "MSL1 X-Terminate",
+     "part": "Adventure",
+     "pages": [
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         50,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "255",
+       "karma": "60",
+       "resources": "MN (75)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "F",
+        "printed": {
+         "number": 50,
+         "code": "In"
+        },
+        "corrected": {
+         "number": 50,
+         "code": "Am"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Construct"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Self-Perpetuation"
+      },
+      {
+       "name": "Learned Immunity"
+      },
+      {
+       "name": "Speed"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "archangel-msl1",
+   "name": "Archangel",
+   "team": "X-Factor",
+   "versions": [
+    {
+     "id": "archangel-msl1",
+     "label": null,
+     "team": "X-Factor",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "120",
+       "karma": "26",
+       "resources": "FE (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Winged Missiles"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "beast-msl1",
+   "name": "Beast",
+   "team": "X-Factor",
+   "versions": [
+    {
+     "id": "beast-msl1",
+     "label": null,
+     "team": "X-Factor",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "130",
+       "karma": "50",
+       "resources": "RM (30)",
+       "popularity": "20",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Feet"
+      },
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Lightning Speed"
+      },
+      {
+       "name": "Balance"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "cyclops-msl1",
+   "name": "Cyclops",
+   "team": "X-Factor",
+   "versions": [
+    {
+     "id": "cyclops-msl1",
+     "label": null,
+     "team": "X-Factor",
+     "part": "Adventure",
+     "pages": [
+      31,
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "76",
+       "karma": "70",
+       "resources": "GD (10)",
+       "popularity": "20",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Optic Blasts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "iceman-msl1",
+   "name": "Iceman",
+   "team": "X-Factor",
+   "versions": [
+    {
+     "id": "iceman-msl1",
+     "label": null,
+     "team": "X-Factor",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "56",
+       "karma": "20",
+       "resources": "TY (6)",
+       "popularity": "26",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Invulnerability to Cold"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
+  },
+  {
+   "id": "marvel-girl-msl1",
+   "name": "Marvel Girl",
+   "team": "X-Factor",
+   "versions": [
+    {
+     "id": "marvel-girl-msl1",
+     "label": null,
+     "team": "X-Factor",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "form": true,
+       "health": "56",
+       "karma": "80",
+       "resources": "TY (6)",
+       "popularity": "20",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl1"
   }
  ]
 }

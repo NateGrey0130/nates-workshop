@@ -483,6 +483,20 @@
     ]
    ],
    "total": 45
+  },
+  {
+   "slug": "msl1",
+   "title": "MSL1 X-Terminate",
+   "code": "TSR6899",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     19
+    ]
+   ],
+   "total": 19
   }
  ]
 }
