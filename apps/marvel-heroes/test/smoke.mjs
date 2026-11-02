@@ -1046,10 +1046,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && mh2.every((c) => c.team === 'Avengers' || c.team === 'MH2 Time Trap'), `${mh2.length} ${avengers}`);
     const blk = (id) => mh2.find((c) => c.id === id)?.versions[0].blocks[0];
     const minions = bookNpc({ character: 'kang-s-minions-mh2' }).snapshot;
-    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two, MT3\'s Snakes and Scorpions and MLA1\'s Alligator, Rat, pack of 10 and Mosquito Swarm the only ones in any book',
+    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two, MT3\'s Snakes and Scorpions, MLA1\'s Alligator, Rat, pack of 10 and Mosquito Swarm and MLBA1\'s three animals the only ones in any book',
       minions?.karma === 10 && blk('kang-s-minions-mh2')?.karma_derived === true
       && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).map((c) => c.id).sort().join()
-        === 'alligator-mla1,kang-s-minions-mh2,miss-locke-mh3,mosquito-swarm-mla1,mr-chambers-mh3,rat-pack-of-10-mla1,scorpions-mt3,snakes-mt3',
+        === 'alligator-mla1,chicken-mlba1,chimpanzee-mlba1,giant-dalmatian-mlba1,kang-s-minions-mh2,miss-locke-mh3,mosquito-swarm-mla1,mr-chambers-mh3,rat-pack-of-10-mla1,scorpions-mt3,snakes-mt3',
       `${minions?.karma} ${blk('kang-s-minions-mh2')?.karma_derived}`);
     const mimic = bookNpc({ character: 'mimic-mh2' }).snapshot;
     check('MH2: the Mimic\'s absorbed form is a second block on his card, so he is one NPC with two forms (24 and 170)',
@@ -2430,6 +2430,153 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         && partsL('mentallo') === 'talents,background,notes' && partsL('pride-mr-maximilian') === 'talents,background'
         && mla1.every((c) => nPowL(c.id.replace(/-mla1$/, '')) === c.versions[0].powers.length),
         `${['jack-the-bartender', 'swf-operatives', 'security-officers'].map(partsL).join(' | ')} ${wordsL('mla1:typical-batboy-mla1:notes')} ${mla1.map((c) => `${c.id}:${nPowL(c.id.replace(/-mla1$/, ''))}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; })}`);
+    }
+  }
+
+  // MLBA1 is read by scripts/msh/gridbooks.py (mlba1-overrides.json), with the
+  // survey's decisions applied as it recommends (mlba1.md; Nate 2026-10-31).
+  // Every card is in the Adventure Book (printed 3-31, and the six cards of
+  // printed 32). The registry fields only this book sets (bracket_identity,
+  // power_heads' fourth field, powers_open, page_bottoms, banner_bands) and
+  // the ones it shares whose absence roster.py would not stop on (speck_lines,
+  // art_boxes, entry_ends) are each pinned here by what they change.
+  if (data.npcs.characters.some((c) => c.book === 'mlba1')) {
+    const mlba1 = data.npcs.characters.filter((c) => c.book === 'mlba1');
+    const blocksB = mlba1.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkB = (id, i = 0) => mlba1.find((c) => c.id === id)?.versions[0].blocks[i];
+    const cardB = (id) => mlba1.find((c) => c.id === `${id}-mlba1`)?.versions[0];
+    const teamB = (t) => mlba1.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const playedB = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MLBA1: 23 characters, each id ending -mlba1 with one version, the six cards of printed 32 as Mutating Mutants Heroes and 17 under the book\'s title, and no name starting The (the Black King)',
+      mlba1.length === 23 && mlba1.every((c) => c.id.endsWith('-mlba1') && c.versions.length === 1)
+      && teamB('Mutating Mutants Heroes') === 'Boom-Boom,Cannonball,Richtor,Rusty Collins,Sunspot,Wolverine'
+      && mlba1.filter((c) => c.team === 'MLBA1 Mutating Mutants').length === 17
+      && !mlba1.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id))
+      && mlba1.find((c) => c.id === 'black-king-mlba1')?.name === 'Black King',
+      `${mlba1.length} ${[...new Set(mlba1.map((c) => c.team))]}`);
+    check('MLBA1: the cards sort by the Adventure page each starts on, 3 to 32',
+      mlba1.map((c) => c.id).join() === ['black-king', 'ee-ha', 'generic-punk', 'rocco', 'schiz', 'generic-goon', 'beetle', 'mauler', 'mad-dog',
+        'sabretooth', 'sentinel-mark-iv', 'armadillo', 'goliath', 'ramhorn', 'chicken', 'chimpanzee', 'giant-dalmatian', 'boom-boom', 'cannonball',
+        'richtor', 'rusty-collins', 'sunspot', 'wolverine'].map((id) => `${id}-mlba1`).join(),
+      mlba1.map((c) => c.id).join());
+    check('MLBA1: 23 blocks, none labelled: the three animals\' one-line grids, ranks only, and 20 full blocks',
+      blocksB.length === 23 && !blocksB.some(({ b }) => b.label)
+      && blocksB.filter(({ b }) => b.kind === 'line').map(({ id }) => id).join() === 'chicken-mlba1,chimpanzee-mlba1,giant-dalmatian-mlba1'
+      && blocksB.filter(({ b }) => b.rank_only).map(({ id }) => id).join() === 'chicken-mlba1,chimpanzee-mlba1,giant-dalmatian-mlba1'
+      && blocksB.filter(({ b }) => !b.kind).length === 20,
+      blocksB.filter(({ b }) => b.kind || b.label || b.rank_only).map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}`).join());
+    const vB = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+    const fixesB = ['ee-ha', 'generic-punk', 'rocco', 'schiz', 'generic-goon', 'cannonball'].map((s) => {
+      const id = `${s}-mlba1`;
+      const o = blkB(id)?.override;
+      return `${id} ${o?.verdict} ${o?.field} ${vB(o?.printed)}>${vB(o?.corrected)} [${(o?.also || []).map((a) => `${a.field} ${vB(a.printed)}>${vB(a.corrected)}`)}] plays ${playedB(id)}`;
+    });
+    check('MLBA1: the six misprint blocks keep the printed values and carry the corrected ones (the five p.4-6 thugs\' Karma as 14, Ee-ha\'s and Schiz\'s R 6 Pr as 4, Schiz\'s I 4 Ty as 6, Cannonball\'s A 6 Ty as 4 Pr)',
+      fixesB.join(' | ') === [
+        'ee-ha-mlba1 misprint R 6 Pr>4 Pr [karma 6>14] plays 46/14',
+        'generic-punk-mlba1 misprint karma 4>14 [] plays 32/14',
+        'rocco-mlba1 misprint karma 4>14 [] plays 44/14',
+        'schiz-mlba1 misprint R 6 Pr>4 Pr [I 4 Ty>6 Ty,karma 6>14] plays 36/14',
+        'generic-goon-mlba1 misprint karma 10>14 [] plays 32/14',
+        'cannonball-mlba1 misprint A 6 Ty>4 Pr [] plays 54/22',
+      ].join(' | ')
+      && bookNpc({ character: 'schiz-mlba1' }).snapshot?.abilities.reason.number === 4
+      && bookNpc({ character: 'schiz-mlba1' }).snapshot?.abilities.intuition.number === 6
+      && bookNpc({ character: 'cannonball-mlba1' }).snapshot?.abilities.agility.rank === 'poor',
+      fixesB.join(' | '));
+    check('MLBA1: the Sentinel\'s Karma NA and Sunspot\'s Health 52(76) are kept as printed (survey decision 6), the Sentinel playing no Karma and Sunspot his 52',
+      blkB('sentinel-mark-iv-mlba1')?.override?.verdict === 'as_printed' && blkB('sentinel-mark-iv-mlba1')?.karma === 'NA'
+      && blkB('sunspot-mlba1')?.override?.verdict === 'as_printed' && blkB('sunspot-mlba1')?.health === '52(76)'
+      && playedB('sentinel-mark-iv-mlba1') === '165/null' && playedB('sunspot-mlba1') === '52/20',
+      `${playedB('sentinel-mark-iv-mlba1')} ${playedB('sunspot-mlba1')}`);
+    const ovB = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mlba1-overrides.json'), 'utf8')).overrides;
+    const textB = ovB.filter((o) => o.verdict === 'text');
+    check('MLBA1: fifteen overrides: six misprints, two as printed and seven text verdicts (five capital I misread, a speck, Armadillo\'s Claws colon), and only those eight blocks carry one',
+      ovB.length === 15 && ovB.filter((o) => o.verdict === 'misprint').length === 6 && ovB.filter((o) => o.verdict === 'as_printed').length === 2
+      && textB.map((o) => o.match.row.replace(/^mlba1:/, '')).join() === ['black-king-mlba1:power:1', 'beetle-mlba1:background', 'beetle-mlba1:power:5',
+        'chicken-mlba1:power:3', 'richtor-mlba1:power:3', 'sunspot-mlba1:notes', 'armadillo-mlba1:power:1'].join()
+      && blocksB.filter(({ b }) => b.override).map(({ id }) => id).join()
+        === 'ee-ha-mlba1,generic-punk-mlba1,rocco-mlba1,schiz-mlba1,generic-goon-mlba1,sentinel-mark-iv-mlba1,cannonball-mlba1,sunspot-mlba1',
+      JSON.stringify(ovB.map((o) => [o.verdict, o.match])));
+    check('MLBA1: the three animals print no Karma, so theirs is derived from their ranks (the Chicken 38/6, the Chimpanzee 72/12, the Giant Dalmatian 46/14) and flagged so, and no other MLBA1 block is',
+      ['chicken-mlba1', 'chimpanzee-mlba1', 'giant-dalmatian-mlba1'].every((id) => blkB(id)?.karma_derived === true && !blkB(id)?.health_derived)
+      && ['chicken-mlba1', 'chimpanzee-mlba1', 'giant-dalmatian-mlba1'].map((id) => playedB(id)).join() === '38/6,72/12,46/14'
+      && blocksB.filter(({ b }) => b.karma_derived || b.health_derived).length === 3,
+      `${['chicken-mlba1', 'chimpanzee-mlba1', 'giant-dalmatian-mlba1'].map((id) => playedB(id))} ${blocksB.filter(({ b }) => b.karma_derived || b.health_derived).map(({ id }) => id)}`);
+    check('MLBA1: Rusty Collins\'s header Rusty (Russell) Collins gives him no version label and Russell Collins as his identity, the five other cards of printed 32 keeping the line each prints (bracket_identity)',
+      mlba1.find((c) => c.id === 'rusty-collins-mlba1')?.name === 'Rusty Collins' && cardB('rusty-collins')?.label === null
+      && cardB('rusty-collins')?.identity.join() === 'Russell Collins'
+      && ['boom-boom', 'cannonball', 'richtor', 'sunspot', 'wolverine'].every((s) => cardB(s)?.identity.length === 1)
+      && !mlba1.some((c) => c.versions[0].label),
+      `${cardB('rusty-collins')?.label} ${cardB('rusty-collins')?.identity} ${mlba1.filter((c) => c.versions[0].label).map((c) => c.id)}`);
+    const powB = mlba1.flatMap((c) => c.versions[0].powers);
+    const namesB = (s) => cardB(s)?.powers.map((p) => p.name).join(' / ');
+    check('MLBA1: 65 powers across 18 cards, 20 of them linked to the UPB; Wolverine six and Richtor three (power_heads), the animals 1, 3 and 3 (powers_open), Goliath three (banner_bands) and the Beetle\'s second Wall-Crawling (speck_lines)',
+      powB.length === 65 && powB.filter((p) => p.upb).length === 20 && mlba1.filter((c) => c.versions[0].powers.length).length === 18
+      && namesB('wolverine') === 'Regeneration / Resistance / Claws / Adamantium Skeleton / Tracking / Invisibility'
+      && namesB('richtor') === 'Vibration touch / Vibration Ray / Earth Tremors'
+      && namesB('chimpanzee') === 'Light manipulation' && namesB('giant-dalmatian') === 'Resistant to Fire / Six Legs / Claws and Teeth'
+      && namesB('chicken') === 'Flight / Beak and Tail / Body Armor'
+      && namesB('goliath') === 'Growth / Body Armor / Invulnerability'
+      && cardB('beetle')?.powers[1]?.name === 'Wall-Crawling',
+      `${powB.length} ${powB.filter((p) => p.upb).length} ${mlba1.filter((c) => c.versions[0].powers.length).length} | ${['wolverine', 'richtor', 'chimpanzee', 'giant-dalmatian', 'chicken', 'goliath', 'beetle'].map(namesB).join(' | ')}`);
+    const bookB = data.npcs.books.find((b) => b.slug === 'mlba1');
+    check('MLBA1: the book reads Adventure 3-31 and 32, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookB?.ranges) === '[{"part":"Adventure","pages":[[3,31],[32,32]]}]'
+      && tagline(bookNpc({ character: 'black-king-mlba1' }).snapshot).startsWith('MLBA1 Mutating Mutants, Adventure p.3;')
+      && tagline(bookNpc({ character: 'chicken-mlba1' }).snapshot).startsWith('MLBA1 Mutating Mutants, Adventure p.31;')
+      && tagline(bookNpc({ character: 'wolverine-mlba1' }).snapshot).startsWith('MLBA1 Mutating Mutants, Adventure p.32;')
+      && mlba1.every((c) => choices.filter((x) => x.character === c.id).length === 1),
+      `${JSON.stringify(bookB?.ranges)} ${tagline(bookNpc({ character: 'black-king-mlba1' }).snapshot)} ${mlba1.map((c) => `${c.id}:${choices.filter((x) => x.character === c.id).length}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsB = ['black-king', 'beetle', 'mauler', 'sentinel-mark-iv', 'goliath', 'boom-boom', 'rusty-collins', 'wolverine'].map((s) => playedB(`${s}-mlba1`)).join();
+    check('MLBA1: cards play their printed Health and Karma (the Black King 100/70, the Beetle 70/56, Mauler 140/36, the Sentinel 165 and none, Goliath 145/14, Boom-Boom 34/16, Rusty Collins 28/22, Wolverine 110/121)',
+      playsB === '100/70,70/56,140/36,165/null,145/14,34/16,28/22,110/121', playsB);
+    // The text verdicts, the quote marks and where an entry ends move only the
+    // book's text, which is msh_book_text's: read the generated .sql in the
+    // cache, by keys, counts and the overrides' own fragments, never a
+    // sentence of the book in this file.
+    const sqlB = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mlba1', 'book-text.sql');
+    if (!existsSync(sqlB)) {
+      check(`MLBA1: skipped the text checks: no ${rel(sqlB) || sqlB}`, true);
+    } else {
+      const rowsB = [...readFileSync(sqlB, 'utf8').matchAll(/VALUES \('([^']+)', 'mlba1', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entB = new Set(rowsB.map((r) => r.key.split(':')[1]));
+      const nB = (re) => rowsB.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      const oddB = rowsB.filter((r) => (r.body.match(/"/g) || []).length % 2);
+      // Rocco's height prints as feet and inches, so his prose holds the one
+      // double mark that pairs with nothing; every other mark row 15b read on a
+      // 300 dpi crop: three double-quoted pairs and the apostrophes.
+      check('MLBA1 text: 90 rows over all 23 entries, the one row with an odd count of double quotes Rocco\'s prose (his 6\'4" height), and the marks row 15b read on the page: 16 rows hold 24, seven double and 17 single',
+        rowsB.length === 90 && entB.size === 23 && mlba1.every((c) => entB.has(c.id))
+        && oddB.map((r) => r.key).join() === 'mlba1:rocco-mlba1:prose' && (oddB[0]?.body.match(/"/g) || []).length === 1 && oddB[0]?.body.includes('6\'4"')
+        && rowsB.filter((r) => /["']/.test(r.body)).length === 16 && nB(/"/g) === 7 && nB(/'/g) === 17,
+        `${rowsB.length} ${entB.size} ${oddB.map((r) => r.key)} ${rowsB.filter((r) => /["']/.test(r.body)).length} ${nB(/"/g)} ${nB(/'/g)}`);
+      const countB = (row, s) => (rowsB.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MLBA1 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textB.length === 7 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
+        textB.map((o) => `${o.match.row} ${countB(o.match.row, o.printed)}/${countB(o.match.row, o.read)}`).join(' | '));
+      // A bar, a backslash or an l for a capital I, and the scan's underscore
+      // speck: each one the OCR left was read on the page and is a text
+      // verdict now, so a new one moves this list.
+      const noiseB = rowsB.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mlba1:/, ''));
+      check('MLBA1 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
+        noiseB.length === 0, noiseB.join());
+      // Where an entry's text ends, each measured with its registry field off
+      // (books.json mlba1 notes): the lengths the field gives, so a reader
+      // change that moves one moves this check.
+      const lenB = (prefix) => rowsB.filter((r) => r.key === `mlba1:${prefix}` || r.key.startsWith(`mlba1:${prefix}:`)).reduce((n, r) => n + r.body.length, 0);
+      const flightB = rowsB.find((r) => r.key === 'mlba1:mauler-mlba1:power:4');
+      const lensB = ['rocco-mlba1:prose', 'black-king-mlba1:power:1', 'sabretooth-mlba1:talents', 'ramhorn-mlba1:power', 'cannonball-mlba1:talents',
+        'boom-boom-mlba1:talents', 'rusty-collins-mlba1:power', 'wolverine-mlba1:talents', 'richtor-mlba1:power'].map((p) => `${p}=${lenB(p)}`).join();
+      check('MLBA1 text: each entry ends where its page does (entry_ends, art_boxes, page_bottoms, banner_bands), and Mauler\'s Flight is named Flight and holds none of the map\'s lettering (art_boxes)',
+        lensB === 'rocco-mlba1:prose=99,black-king-mlba1:power:1=1092,sabretooth-mlba1:talents=41,ramhorn-mlba1:power=567,cannonball-mlba1:talents=6,'
+          + 'boom-boom-mlba1:talents=43,rusty-collins-mlba1:power=456,wolverine-mlba1:talents=148,richtor-mlba1:power=711'
+        && flightB?.name === 'Flight' && !/[=[\]]/.test(flightB?.body || '='),
+        `${lensB} ${flightB?.name} ${flightB?.body.length}`);
+      check('MLBA1 text: every card\'s power rows match its powers',
+        mlba1.every((c) => rowsB.filter((r) => r.key.startsWith(`mlba1:${c.id}:power:`)).length === c.versions[0].powers.length),
+        mlba1.map((c) => `${c.id}:${rowsB.filter((r) => r.key.startsWith(`mlba1:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; }).join());
     }
   }
 
