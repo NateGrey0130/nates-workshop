@@ -1,0 +1,33 @@
+{
+  "about": [
+    "Hand decisions about MSL1 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl1.md, Stat blocks; decisions 6, 7 and 10); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the page is unambiguous and is kept as printed; the note says why",
+    "            text        match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them, 'printed' as the page prints them",
+    "  also      further values of the same block: one override matches one block",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 27, "header": "Cyclops (Clone)"}, "verdict": "misprint", "field": "F",
+     "printed": {"number": 6, "code": "Ex"}, "corrected": {"number": 6, "code": "Ty"}, "checked": "2026-11-02",
+     "note": "Printed F EX over 6 (printed 27): 6 is Typical's number, outside Excellent's range, and Health 42 = 6 + 10 + 6 + 20 holds on the 6, so the code is the misprint. Survey decision 6."},
+    {"match": {"page": 27, "header": "Iceman (Clone)"}, "verdict": "misprint", "field": "health",
+     "printed": 56, "corrected": 42, "checked": "2026-11-02",
+     "also": [{"verdict": "misprint", "field": "karma", "printed": 20, "corrected": 16}],
+     "note": "Printed Health: 56 and Karma: 20 (printed 27): F + A + S + E = 6 + 10 + 6 + 20 = 42 and R + I + P = 6 + 4 + 6 = 16, and every number agrees with its code, so both totals are misprints (56 and 20 are the Player Character Iceman's, printed 32). Survey decision 6."},
+    {"match": {"page": 30, "header": "X-Terminator Robots"}, "verdict": "misprint", "field": "F",
+     "printed": {"number": 50, "code": "In"}, "corrected": {"number": 50, "code": "Am"}, "checked": "2026-11-02",
+     "note": "Printed F IN over 50 (printed 30): 50 is Amazing's number, outside Incredible's range, and Health 255 = 50 + 30 + 75 + 100 holds on the 50, so the code is the misprint. Survey decision 6."},
+    {"match": {"page": 30, "header": "Dominus"}, "verdict": "as_printed", "field": "S",
+     "printed": "N/A", "checked": "2026-11-02",
+     "note": "Printed S N/A over a dash (printed 30): read as 0 for the check, which Health 1020 = 10 + 10 + 0 + 1000 bears out. No rank is derived and no number is shown as printed, as MA1's robots' Karma -. Survey decision 7."},
+    {"match": {"row": "msl1:cyclops-clone-msl1:background"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\"Slim'Summers", "printed": "\"Slim\"Summers",
+     "note": "Cyclops (Clone)'s Real Name, printed 27, column 1: the page prints the nickname between two double quotes, with no space before Summers; the chain made the closing mark a single, which left the row with an odd count of double quotes (120 dpi render of PDF 28). Survey decision 10's class."},
+    {"match": {"row": "msl1:iceman-clone-msl1:background"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "'Bobby' Drake", "printed": "\"Bobby\"Drake",
+     "note": "Iceman (Clone)'s Real Name, printed 27, column 2: the page prints the nickname between two double quotes, with no space before Drake; the chain paired the two marks as singles, and the book prints no single quotes of its own (120 dpi render of PDF 28). Survey decision 10's class."}
+  ]
+}
