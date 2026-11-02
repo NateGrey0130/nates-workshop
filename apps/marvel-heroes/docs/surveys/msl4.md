@@ -1,10 +1,5 @@
 # Survey: MSL4 Stygian Knight (TSR6904)
 
-> **DRAFT** until the Marvel smoke suite has run over it (plan row 31d).
-> Every section is written, *Which reader fits* from the trial parse (plan
-> rows 31c and 31c1). No `layout` is set, and nothing of the book is
-> imported yet.
-
 Marvel Super Heroes adventure, product code 6904 on the cover (PDF 1). By
 Anthony Herring (the title page), 1991, MSL2's author. Registry entry:
 `scripts/msh/books.json` -> `msl4`. Measured 2026-11-02.
