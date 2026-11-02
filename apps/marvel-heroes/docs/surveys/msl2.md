@@ -4,8 +4,8 @@ Marvel Super Heroes adventure, product code 6901 on the cover (PDF 1) and on
 the title page. By Anthony Herring, 1991 (the title page). Registry entry:
 `scripts/msh/books.json` -> `msl2`. Measured 2026-11-02.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production: nothing is
-imported yet, and the data row sets this line from production.
+**Rows citing this book:** 41 `msh_book_text` rows over 8 character entries
+in production (`DB_MARVEL`, read back 2026-11-02).
 
 Everything here was measured and read on the page images by plan row 25a
 (renders at 20-200 dpi, PyMuPDF), and recorded in the registry entry.

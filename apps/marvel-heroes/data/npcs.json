@@ -143,6 +143,11 @@
    "book": "MSL1 X-Terminate",
    "code": "TSR6899",
    "pages": "Adventure 4-12, 26-32"
+  },
+  {
+   "book": "MSL2 Warlord of Baluur",
+   "code": "TSR6901",
+   "pages": "Adventure 4-5, 19-19, 28-32"
   }
  ],
  "books": [
@@ -677,6 +682,34 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "msl2",
+   "short": "MSL2",
+   "title": "MSL2 Warlord of Baluur",
+   "pages": [
+    4,
+    5
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       4,
+       5
+      ],
+      [
+       19,
+       19
+      ],
+      [
+       28,
+       32
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -764,7 +797,8 @@
   "MLA2 Night Moves",
   "Night Life Heroes",
   "MLA3 Night Life",
-  "MSL1 X-Terminate"
+  "MSL1 X-Terminate",
+  "MSL2 Warlord of Baluur"
  ],
  "characters": [
   {
@@ -98076,6 +98110,807 @@
    ],
    "appearances": [],
    "book": "msl1"
+  },
+  {
+   "id": "power-man-msl2",
+   "name": "Power Man",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "power-man-msl2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Luke Cage"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "PR (4)",
+       "popularity": "18",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "she-hulk-msl2",
+   "name": "She-Hulk",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "she-hulk-msl2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Jennifer Walters"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "175",
+       "karma": "36",
+       "resources": "EX (20)",
+       "popularity": "30",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Resistances"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "debris-creature-msl2",
+   "name": "Debris Creature",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "debris-creature-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      19
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "80",
+       "karma": "10",
+       "resources": "0",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Tentacles"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "blastaar-msl2",
+   "name": "Blastaar",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "blastaar-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Blastaar of Baluur"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "form": true,
+       "health": "180",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "2",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Cosmic Control Rod"
+      },
+      {
+       "name": "Energy Blast"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Suspended Animation",
+       "upb": "P13"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "nick-fury-msl2",
+   "name": "Nick Fury",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "nick-fury-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Nicholas Joseph Fury"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "100",
+       "karma": "50",
+       "resources": "AM (50)",
+       "popularity": "50",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Weapons"
+      },
+      {
+       "name": "Reduced Aging"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "negalisk-msl2",
+   "name": "Negalisk",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "negalisk-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      30
+     ],
+     "identity": [
+      "Crotakeetok"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "220",
+       "karma": "14",
+       "resources": "0",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Giant Size"
+      },
+      {
+       "name": "Gravity Manipulation",
+       "upb": "EC11"
+      },
+      {
+       "name": "Nullifying Field"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "stygorr-msl2",
+   "name": "Stygorr",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "stygorr-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      31,
+      32
+     ],
+     "identity": [
+      "Stygorr/Lew Shiner"
+     ],
+     "blocks": [
+      {
+       "label": "Stygorr",
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "110",
+       "karma": "100",
+       "resources": "AM (50)",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "P",
+        "printed": {
+         "number": null,
+         "code": "Rm"
+        },
+        "corrected": {
+         "number": 30,
+         "code": "Rm"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "E",
+          "printed": {
+           "number": 40,
+           "code": "Ex"
+          },
+          "corrected": {
+           "number": 20,
+           "code": "Ex"
+          }
+         },
+         {
+          "verdict": "misprint",
+          "field": "R",
+          "printed": {
+           "number": 30,
+           "code": "In"
+          },
+          "corrected": {
+           "number": 40,
+           "code": "In"
+          }
+         }
+        ]
+       },
+       "kind": "line"
+      },
+      {
+       "label": "Lew Shiner",
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "28",
+       "karma": "100",
+       "resources": "AM (50)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Cosmic Control Rod"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Matter Fluctuation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
+  },
+  {
+   "id": "typical-shield-operative-msl2",
+   "name": "Typical SHIELD Operative",
+   "team": "MSL2 Warlord of Baluur",
+   "versions": [
+    {
+     "id": "typical-shield-operative-msl2",
+     "label": null,
+     "team": "MSL2 Warlord of Baluur",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "form": true,
+       "health": "46",
+       "karma": "22",
+       "resources": "EX (20)",
+       "popularity": "10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl2"
   }
  ]
 }

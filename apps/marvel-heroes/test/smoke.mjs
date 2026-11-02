@@ -2938,6 +2938,127 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MSL2 is read by scripts/msh/gridbooks.py (msl2-overrides.json), with the
+  // survey's decisions applied as it recommends (msl2.md; Nate 2026-10-31).
+  // Every card is in the Adventure Book: the two Player Characters (printed 4
+  // and 5), the Debris Creature inside Chapter 4 (19) and the roster's five
+  // (28-32). The registry fields whose absence roster.py would not stop on
+  // (codes_over_numbers, line_grid_resources, title_case_labels,
+  // indented_power_heads, entry_ends, line_identity) are each pinned here by
+  // what they change.
+  if (data.npcs.characters.some((c) => c.book === 'msl2')) {
+    const msl2 = data.npcs.characters.filter((c) => c.book === 'msl2');
+    const blocksW = msl2.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const blkW = (id, i = 0) => msl2.find((c) => c.id === id)?.versions[0].blocks[i];
+    const teamW = (t) => msl2.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    const powersW = (id) => msl2.find((c) => c.id === id)?.versions[0].powers.map((p) => p.name).join() || '';
+    const playedW = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MSL2: 8 characters, each id ending -msl2 with one version, Power Man and She-Hulk as Fantastic Four, six under the book\'s title, and no name starting The',
+      msl2.length === 8 && msl2.every((c) => c.id.endsWith('-msl2') && c.versions.length === 1)
+      && teamW('Fantastic Four') === 'Power Man,She-Hulk'
+      && msl2.filter((c) => c.team === 'MSL2 Warlord of Baluur').length === 6
+      && !msl2.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${msl2.length} ${[...new Set(msl2.map((c) => c.team))]}`);
+    check('MSL2: the cards sort by the Adventure page each starts on, the two Player Characters (4, 5) and the Debris Creature (19) before the roster (28 to 32), with Nick Fury and Typical SHIELD Operative named as decision 5 gives',
+      msl2.map((c) => c.id).join() === ['power-man', 'she-hulk', 'debris-creature', 'blastaar', 'nick-fury', 'negalisk', 'stygorr',
+        'typical-shield-operative'].map((id) => `${id}-msl2`).join()
+      && msl2.map((c) => c.versions[0].blocks[0].page).join() === '4,5,19,28,29,30,31,32'
+      && msl2.find((c) => c.id === 'nick-fury-msl2')?.name === 'Nick Fury'
+      && msl2.find((c) => c.id === 'typical-shield-operative-msl2')?.name === 'Typical SHIELD Operative',
+      msl2.map((c) => `${c.id}:${c.name}:${c.versions[0].blocks[0].page}`).join());
+    check('MSL2: 9 one-line grids, Stygorr\'s two labelled (Stygorr, Lew Shiner), none ranks only (codes_over_numbers) and none with a derived total',
+      blocksW.length === 9 && blocksW.every(({ b }) => b.kind === 'line' && !b.rank_only && !b.karma_derived && !b.health_derived)
+      && blocksW.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === 'stygorr-msl2:Stygorr,stygorr-msl2:Lew Shiner',
+      blocksW.map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}`).join());
+    check('MSL2: each grid keeps its own Resources and Popularity (line_grid_resources), Lew Shiner\'s his own (form_resources)',
+      blocksW.map(({ b }) => `${b.resources}/${b.popularity}`).join() === 'PR (4)/18,EX (20)/30,0/0,EX(20)/2,AM (50)/50,0/0,AM (50)/0,AM (50)/0,EX (20)/10',
+      blocksW.map(({ b }) => `${b.resources}/${b.popularity}`).join());
+    const styW = blkW('stygorr-msl2')?.override;
+    const vW = (x) => (x && typeof x === 'object' ? `${x.number} ${x.code}` : x);
+    const fixW = `${styW?.verdict} ${styW?.field} ${vW(styW?.printed)}>${vW(styW?.corrected)}${(styW?.also || []).map((a) => ` ${a.field} ${vW(a.printed)}>${vW(a.corrected)}`).join('')} plays ${playedW('stygorr-msl2')}`;
+    const styFormsW = (bookNpc({ character: 'stygorr-msl2' }).snapshot?.forms || []).map((f) => `${f.name} ${f.health}/${f.karma}`).join();
+    check('MSL2: Stygorr\'s misprint keeps the printed row (six numbers under seven codes, P blank) and carries the corrected E 20, R 40 and P 30, so he plays 110/100, one NPC whose second form, Lew Shiner, plays 28/100',
+      fixW === 'misprint P null Rm>30 Rm E 40 Ex>20 Ex R 30 In>40 In plays 110/100'
+      && bookNpc({ character: 'stygorr-msl2' }).snapshot?.abilities.endurance.number === 20
+      && bookNpc({ character: 'stygorr-msl2' }).snapshot?.abilities.reason.rank === 'incredible'
+      && styFormsW === 'Stygorr 110/100,Lew Shiner 28/100',
+      `${fixW} | ${styFormsW}`);
+    const ovW = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl2-overrides.json'), 'utf8')).overrides;
+    const textW = ovW.filter((o) => o.verdict === 'text');
+    check('MSL2: nine overrides: one misprint and eight text verdicts (row 26a\'s Howling Commandos quote and row 27a\'s seven), and only Stygorr\'s block carries one',
+      ovW.length === 9 && ovW.filter((o) => o.verdict === 'misprint').length === 1
+      && textW.map((o) => o.match.row.replace(/^msl2:/, '')).join() === ['nick-fury-msl2:notes', 'nick-fury-msl2:power:3', 'stygorr-msl2:power:5',
+        'stygorr-msl2:power:5', 'typical-shield-operative-msl2:power:2', 'typical-shield-operative-msl2:power:2', 'typical-shield-operative-msl2:power:2',
+        'typical-shield-operative-msl2:power:2'].join()
+      && blocksW.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`).join() === 'stygorr-msl2:0',
+      JSON.stringify(ovW.map((o) => [o.verdict, o.match])));
+    const powW = msl2.flatMap((c) => c.versions[0].powers);
+    check('MSL2: 27 powers across all 8 cards, 15 of them linked to the UPB; She-Hulk\'s labels are not powers (title_case_labels), the Debris Creature keeps Tentacles (indented_power_heads) and the four KNOWN POWERS lines open on their first power (subhead_line_powers)',
+      powW.length === 27 && powW.filter((p) => p.upb).length === 15 && msl2.every((c) => c.versions[0].powers.length)
+      && powersW('she-hulk-msl2') === 'Body Armor,Leaping,Resistances'
+      && powersW('debris-creature-msl2') === 'Body Armor,Tentacles'
+      && powersW('nick-fury-msl2') === 'Body Armor,Weapons,Reduced Aging'
+      && powersW('stygorr-msl2') === 'Alter Ego,Body Armor,Cosmic Control Rod,Flight,Matter Fluctuation'
+      && powersW('typical-shield-operative-msl2') === 'Body Armor,Weapons',
+      `${powW.length} ${powW.filter((p) => p.upb).length} ${['she-hulk', 'debris-creature', 'nick-fury', 'stygorr', 'typical-shield-operative'].map((id) => powersW(`${id}-msl2`)).join(' | ')}`);
+    const idW = msl2.map((c) => c.versions[0].identity.join('/')).join();
+    check('MSL2: the six real-name lines are identities (line_identity), and the Debris Creature and the operative print none',
+      idW === 'Luke Cage,Jennifer Walters,,Blastaar of Baluur,Nicholas Joseph Fury,Crotakeetok,Stygorr/Lew Shiner,', idW);
+    const bookW = data.npcs.books.find((b) => b.slug === 'msl2');
+    const choicesW = msl2.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MSL2: the book reads Adventure 4-5, 19 and 28-32, a card cites its Adventure page, and every card is one GM choice, Stygorr\'s two forms included',
+      JSON.stringify(bookW?.ranges) === '[{"part":"Adventure","pages":[[4,5],[19,19],[28,32]]}]'
+      && tagline(bookNpc({ character: 'power-man-msl2' }).snapshot).startsWith('MSL2 Warlord of Baluur, Adventure p.4;')
+      && tagline(bookNpc({ character: 'typical-shield-operative-msl2' }).snapshot).startsWith('MSL2 Warlord of Baluur, Adventure p.32;')
+      && choicesW.every((n) => n === 1),
+      `${JSON.stringify(bookW?.ranges)} ${tagline(bookNpc({ character: 'power-man-msl2' }).snapshot)} ${msl2.map((c, i) => `${c.id}:${choicesW[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsW = ['power-man-msl2', 'she-hulk-msl2', 'debris-creature-msl2', 'blastaar-msl2', 'nick-fury-msl2', 'negalisk-msl2',
+      'typical-shield-operative-msl2'].map((id) => playedW(id)).join();
+    check('MSL2: cards play their printed Health and Karma (Power Man 130/36, She-Hulk 175/36, Debris Creature 80/10, Blastaar 180/40, Nick Fury 100/50, Negalisk 220/14, Typical SHIELD Operative 46/22)',
+      playsW === '130/36,175/36,80/10,180/40,100/50,220/14,46/22', playsW);
+    // The text verdicts and entry_ends move only the book's text, which is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by a
+    // few words, never a sentence of the book in this file.
+    const sqlW = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'msl2', 'book-text.sql');
+    if (!existsSync(sqlW)) {
+      check(`MSL2: skipped the text checks: no ${rel(sqlW) || sqlW}`, true);
+    } else {
+      const rowsW = [...readFileSync(sqlW, 'utf8').matchAll(/VALUES \('([^']+)', 'msl2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entW = new Set(rowsW.map((r) => r.key.split(':')[1]));
+      const bodyW = (row) => rowsW.find((r) => r.key === row)?.body || '';
+      // Row 27b read every quote mark on the page and found none wrong; the
+      // doubles are five pairs, each printed and built as a pair.
+      const markedW = rowsW.filter((r) => /["']/.test(r.body));
+      const marksW = (re) => markedW.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MSL2 text: 41 rows over all 8 entries, no row with an odd count of double quotes, and the 16 rows holding 27 quote marks (10 double, 17 single)',
+        rowsW.length === 41 && entW.size === 8 && msl2.every((c) => entW.has(c.id))
+        && !rowsW.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedW.length === 16 && marksW(/"/g) === 10 && marksW(/'/g) === 17,
+        `${rowsW.length} ${entW.size} ${rowsW.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedW.length} ${marksW(/"/g)} ${marksW(/'/g)}`);
+      const countW = (row, s) => (rowsW.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MSL2 text: each text verdict is applied, its printed fragment in its row and the misread gone',
+        textW.length === 8 && textW.every((o) => countW(o.match.row, o.printed) === 1 && countW(o.match.row, o.read) === 0),
+        textW.map((o) => `${o.match.row} ${countW(o.match.row, o.printed)}/${countW(o.match.row, o.read)}`).join(' | '));
+      const noiseW = rowsW.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl2:/, ''));
+      check('MSL2 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
+        noiseW.length === 0, noiseW.join());
+      check('MSL2 text: every card\'s power rows match its powers, and only the Debris Creature carries no notes',
+        msl2.every((c) => rowsW.filter((r) => r.key.startsWith(`msl2:${c.id}:power:`)).length === c.versions[0].powers.length)
+        && msl2.filter((c) => !rowsW.some((r) => r.key === `msl2:${c.id}:notes`)).map((c) => c.id).join() === 'debris-creature-msl2',
+        msl2.map((c) => `${c.id}:${rowsW.filter((r) => r.key.startsWith(`msl2:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).join());
+      // What each registry fix changes in the text, read on the page (rows
+      // 26a and 26b): Tentacles ends before Chapter 4's An Alien's Wrath
+      // (entry_ends), no grid's Resources or Popularity line is left in a
+      // row (line_grid_resources), and Nick Fury's Body Armor reads right
+      // (speck_lines).
+      check('MSL2 text: Tentacles ends before An Alien\'s Wrath, no Resources or Popularity line is left in the text, and no row reads Booy',
+        bodyW('msl2:debris-creature-msl2:power:2').length > 0 && !/Alien|Wrath/.test(bodyW('msl2:debris-creature-msl2:power:2'))
+        && !rowsW.some((r) => /Popularity|Resources\s*:/i.test(r.body)) && !rowsW.some((r) => /Booy/.test(r.body)),
+        `Tentacles ${bodyW('msl2:debris-creature-msl2:power:2').length} ${rowsW.filter((r) => /Popularity|Resources\s*:|Booy/i.test(r.body)).map((r) => r.key)}`);
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
