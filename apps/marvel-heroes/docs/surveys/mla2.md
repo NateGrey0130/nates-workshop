@@ -1,15 +1,12 @@
 # Survey: MLA2 Night Moves (TSR6895)
 
-> **DRAFT.** Every stat block of the book is measured (plan rows 16a and
-> 16b), with *Names the Codex already has*, *Quote marks* and *Decisions*,
-> and *Which reader fits* measured by a trial (plan rows 16c-16c3).
-
 Marvel Super Heroes Official Advanced Game Adventure, Anthony Herring,
 1990, the second module of the Gang Wars trilogy (the MLA series, after MLA1
 After Midnight). Registry entry: `scripts/msh/books.json` -> `mla2`.
 Measured 2026-11-01.
 
-**Rows citing this book:** none yet (no data is built).
+**Rows citing this book:** 0 `msh_book_text` rows in production
+(`DB_MARVEL`, read back 2026-11-01); no data is built yet.
 
 Everything here was measured and read on the page images.
 
@@ -301,7 +298,7 @@ top of printed 64, column 1, where the book's text ends.
 | 61 (62) | Shang-Chi (Shang-Chi) | AM 50, RM 30, EX 20, RM 30, GD 10, RM 30, IN 40 | 130 | 80 | TY (6) | 20 |
 | 61 (62) | Silver Samurai (Kenuichio Harada) | RM 30, RM 30, EX 20, RM 30, GD 10, RM 30, RM 30 | 110 | 70 | EX (20) | -10 |
 | 62 (63) | Starfox (Eros) | GD 10, EX 20, IN 40, AM 50, EX 20, TY 6, RM 30 | 120 | 56 | EX (20) | 75 |
-| 62 (63) | Thor (Thor; Dr. Donald Blake; Sigurd Jarlson; Eric Masterson) | UN 100, EX 20, MN 75, MN 75, GD 10, GD 10, RM 30 | **200** | 50 | EX (20) | 50 |
+| 62 (63) | Thor (Thor; also Dr. Donald Blake, Sigurd Jarlson and Eric Masterson) | UN 100, EX 20, MN 75, MN 75, GD 10, GD 10, RM 30 | **200** | 50 | EX (20) | 50 |
 | 62 (63) | Eric Masterson (grid inside Thor's card) | TY 6, TY 6, TY 6, GD 10, GD 10, TY 6, RM 30 | 28 | 46 | RM (30) | 0 |
 | 63 (64) | Vision (Vision) | RM 30, EX 20, AM 50, IN 40, EX 20, GD 10, RM 30 | 140 | 60 | PR (4) | 30 |
 | 63 (64) | White Dragon (Unrevealed) | EX 20, EX 20, GD 10, EX 20, GD 10, GD 10, GD 10 | 70 | 30 | GD (10) | -10 |
