@@ -520,6 +520,20 @@ def read_line_grid(stream, i, sentence=False, mends=()):
     `mends` is the registry's one-line grid mends set for the book (MT3)."""
     same = lambda j: j < len(stream) and stream[j]['pdf'] == stream[i]['pdf'] and stream[j]['col'] == stream[i]['col']
     h = next((j for j in range(i + 1, i + 6) if same(j) and HEALTH_LINE.match(stream[j]['text'].strip())), None)
+    th = {d[3] for d in mends if isinstance(d, tuple) and d[0] == 'text_health'
+          and (d[1], d[2]) == (stream[i]['part'], stream[i]['printed'])} if h is None else set()
+    words = re.compile(r'^Heal?th:\s*(.+)$')
+    t = next((j for j in range(i + 1, i + 6) if same(j) and words.match(stream[j]['text'].strip())
+              and words.match(stream[j]['text'].strip()).group(1) in th), None) if th else None
+    if t is not None:
+        # MSL3 (registry text_health [part, printed page, words]): a Health
+        # printed in words ("Health = See text", the Robotic Dragon, printed
+        # 30) under a grid with no Karma line is kept as printed, which
+        # roster.check skips; the grid is read as if its Health were a number
+        health = words.match(stream[t]['text'].strip()).group(1)
+        fake = stream[:t] + [dict(stream[t], text='Health: 0')] + stream[t + 1:]
+        got = read_line_grid(fake, i, sentence, {m for m in mends if not (isinstance(m, tuple) and m[0] == 'text_health')})
+        return (got[0], health, None, got[3]) if got else None
     if h is None:
         # MT2 (registry health_sentence): a form's Health and Karma printed in
         # a sentence under its grid, not on lines of their own (Hamilton
@@ -621,6 +635,15 @@ def line_grids(book, stream, keyed, labelled, derived=None):
     mends = {k for k in ('class_i_digit', 'code_marks', 'derived_totals', 'codes_over_numbers') if book.get(k)}
     # MSL2: short_number_rows, read in read_line_grid
     mends |= {('short', d[0], d[1], d[2]) for d in book.get('short_number_rows', [])}
+    # MSL3: text_health, read in read_line_grid
+    mends |= {('text_health', d[0], d[1], d[2]) for d in book.get('text_health', [])}
+    if book.get('equals_labels'):
+        # MSL3 (registry equals_labels): a grid's labels set with an equals
+        # sign, "Health = 22 Karma = 10" (every grid, printed 5-30), are read
+        # as the roster's "Health: 22 Karma: 10"
+        for k in range(len(stream)):
+            if (stream[k]['part'], stream[k]['printed']) in want and re.match(r'^Heal?th\s*=', stream[k]['text'].strip()):
+                stream[k] = dict(stream[k], text=re.sub(r'\b(Heal?th|Karma)\s*=\s*', r'\1: ', stream[k]['text'].strip()))
     if book.get('resources_beside_health'):
         # MSL1 (registry resources_beside_health): a chapter grid prints
         # "Health: 70 Resources: GD (10)" over "Karma: 26 Popularity: 0"
@@ -730,7 +753,15 @@ def line_grids(book, stream, keyed, labelled, derived=None):
                 raise SystemExit('one_line_grids: subhead %r is on %d lines of %s p.%d, not 1' % (g['subhead'], len(at), l['part'], l['printed']))
             out[at[0]] = dict(out[at[0]], text=g['name'], big=True, subhead=True)
             rows[0]['rest'] = 'Health: %s Karma: %s' % (health, karma) + extra
-            out.append(dict(stream[grid_end - 1], text=rows[0]['rest'], line_grid=rows, headed=True))
+            if karma is None and book.get('no_karma_line'):
+                # MSL3 (registry no_karma_line): a grid that prints Health and
+                # no Karma line (the Flying Robotic Snake, printed 6; the
+                # Robotic Dragon, 30) keeps no Karma, not the string 'None'
+                rows[0]['rest'] = 'Health: %s' % health + extra
+            # MSL3 (registry text_health): a Health printed in words anchors
+            # its block all the same (roster.read_entries)
+            th = {'text_health': True} if book.get('text_health') and not re.search(r'\d', health or '') else {}
+            out.append(dict(stream[grid_end - 1], text=rows[0]['rest'], line_grid=rows, headed=True, **th))
             keyed[(l['pdf'], l['col'], health)] = rank_only
         elif g.get('name'):
             out.append(dict(l, text=g['name'], big=True, conf=100, y1=l['y0'] - 8))

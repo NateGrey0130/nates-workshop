@@ -1,0 +1,30 @@
+{
+  "about": [
+    "Hand decisions about MSL3 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and two text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl3.md, Stat blocks; decision 8); none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the book prints it that way on purpose",
+    "            text        match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them after folding to ASCII, 'printed' as the page prints them. It must occur once in the row, or npcs.py stops.",
+    "  also      further values of the same block: one override matches one block",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 22, "header": "Flying Stallion (Ashta)"}, "verdict": "misprint", "field": "A",
+     "printed": {"number": 10, "code": "Ex"}, "corrected": {"number": 20, "code": "Ex"}, "checked": "2026-11-02",
+     "note": "Printed 22: A prints code EX over 10, outside EX's 16-25; with A at EX's 20, Health 90 = 10 + 20 + 30 + 30, as printed. Survey decision 8."},
+    {"match": {"page": 6, "header": "Flying Robotic Snake"}, "verdict": "as_printed", "field": "karma",
+     "printed": null, "checked": "2026-11-02",
+     "note": "Printed 6: the grid prints Health = 80 and no Karma line; a machine. Survey decision 8: no Karma derived."},
+    {"match": {"page": 30, "header": "Robotic Dragon"}, "verdict": "as_printed", "field": "health",
+     "printed": "See text", "checked": "2026-11-02",
+     "also": [{"verdict": "as_printed", "field": "karma", "printed": null}],
+     "note": "Printed 30: Health = See text and no Karma line; its text gives its Health after Annihilus' attacks, and its F A S E sum to the full Health. Survey decision 8: kept as printed, no Karma derived."},
+    {"match": {"row": "msl3:ice-bat-msl3:power:2"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\\t can", "printed": "It can",
+     "note": "Flight, printed 13: the OCR read the capital I of It as a backslash; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream, as the survey's speck fixes were, not on a render."},
+    {"match": {"row": "msl3:ice-bat-msl3:power:3"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "|t sprays", "printed": "It sprays",
+     "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream, as the survey's speck fixes were, not on a render."}
+  ]
+}
