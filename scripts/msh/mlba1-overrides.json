@@ -58,6 +58,9 @@
      "note": "Earth Tremors, printed 32: the page prints If his power; the OCR read the capital I as a backslash (300 dpi crop of PDF 33)."},
     {"match": {"row": "mlba1:sunspot-mlba1:notes"}, "verdict": "text", "checked": "2026-11-01",
      "read": "|n unlit", "printed": "In unlit",
-     "note": "Weakness, printed 32: the page prints In unlit places; the OCR read the capital I as a vertical bar (300 dpi crop of PDF 33)."}
+     "note": "Weakness, printed 32: the page prints In unlit places; the OCR read the capital I as a vertical bar (300 dpi crop of PDF 33)."},
+    {"match": {"row": "mlba1:armadillo-mlba1:power:1"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "Claws; Armadillo", "printed": "Claws: Armadillo",
+     "note": "Claws, inside Body Armor, printed 25, column 2: the page prints the italic run-in Claws with a colon, as every power head; the OCR read it as a semicolon (300 dpi crop of PDF 26). Found while reading the row's two apostrophes for quote marks."}
   ]
 }
