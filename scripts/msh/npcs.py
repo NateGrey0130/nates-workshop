@@ -571,8 +571,15 @@ def main(slug_arg):
                     # a cover-panels book's grid that prints a dash for R, I
                     # and P (MH7's Fire Creatures, a `rows` override in
                     # mh7-overrides.json) is partial as a roster book's is; no
-                    # earlier cover-panels book has a `rows` override
-                    **({'kind': 'partial' if (rbook or panels) and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
+                    # earlier cover-panels book has a `rows` override. MLA1's
+                    # Bartholomew Jacobs (registry karma_grids, a `rows` override
+                    # in mla1-overrides.json) prints R, I and P only and is
+                    # partial too; a grid-booklets block carries no kind, and
+                    # ME1's Oolafat, a `rows` override played as Shift 0, stays
+                    # without one, so the gate is the registry field
+                    **({'kind': 'partial'} if grid and book.get('karma_grids')
+                       and (b.get('override') or {}).get('verdict') == 'rows' else
+                       {'kind': 'partial' if (rbook or panels) and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),
                 })
                 # an as_printed override names the value as the page prints it:

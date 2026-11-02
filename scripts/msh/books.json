@@ -3522,8 +3522,12 @@
       "trailing_marks_note": "MX3's: a mark after a total, set off by a space, is stripped (Mister Fear's Karma, read 40 -, printed 59). Off, his Karma is not a number and roster.py exits 1 (measured 2026-11-01).",
       "body_top": 0.09,
       "body_top_note": "The share of the page height above which gridbooks.stream_of drops words, 0.10 for every other book: a column's first line sets at 9.6-10% here (Gypsy Moth's header, printed 57; Mentallo's, 58), and no word of a booklet page lies between 7% and 9.6% (survey mla1.md, Which reader fits item 1). Off (0.10), roster.py exits 1: Gypsy Moth and Mentallo are on no entry and their Real Name lines head entries of their own (measured 2026-11-01, row 11b).",
-      "speck_lines": [["Adventure Book", 5, "lron Fist", "Iron Fist"]],
-      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of: Iron Fist's header reads with a lower-case L (printed 5; survey mla1.md, Which reader fits item 3). Off, his entry is named by his identity line, the checklist finds no Iron Fist and roster.py exits 1 (measured 2026-11-01).",
+      "speck_lines": [
+        ["Adventure Book", 5, "lron Fist", "Iron Fist"],
+        ["Adventure Book", 54, "Real Name: Mark Scarlotti .", "Real Name: Mark Scarlotti"],
+        ["Adventure Book", 56, "Real Name: \u201cAdam", "Real Name: \u201cAdam\u201d"]
+      ],
+      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of: Iron Fist's header reads with a lower-case L (printed 5; survey mla1.md, Which reader fits item 3). Off, his entry is named by his identity line, the checklist finds no Iron Fist and roster.py exits 1 (measured 2026-11-01). Two identity lines added by row 12a, each read on a 250 dpi crop of the page 2026-11-01: Blacklash's (printed 54) prints a speck after Scarlotti that the OCR reads as a full stop; Frankenstein's Monster's (printed 56) prints Adam in double quotes and the OCR lost the closing one. Off, roster.py exits 0 and the two cards carry the stop and the lone quote (the second is an odd double quote in an identity line, which npcs.unpaired does not read).",
       "derived_karma": true,
       "derived_karma_note": "A vertical grid that prints no Karma (Rat, pack of 10 and Mosquito Swarm, chapter 32, printed 42) derives it as R+I+P and lists it in the block's derived, as MT3's derived_totals does a one-line grid's (survey mla1.md decision 7; Which reader fits item 5). Off, roster.py exits 1: the Alligator's, the rats' and the Mosquito Swarm's Karma is not a number (measured 2026-11-01, row 11b).",
       "override_values": true,
@@ -3557,7 +3561,13 @@
       "inner_grids": true,
       "inner_grids_note": "The text after a second grid set inside a card's section stays in that section rather than falling to the entry's prose (the Black Talon's Necromancy, printed 53; the Werewolf's Claws after his human statistics, 62), by roster.read_entries (survey mla1.md, Which reader fits item 9). SILENT off: roster.py exits 0 with the parse wrong, the Werewolf keeping 1 power of 7 and the text after both inner grid sets falling to the entry's prose (powers 97 for 103); ungated, it moves MA1's roster.json (measured 2026-11-01, row 11b).",
       "label_powers": [["Adventure Book", 63, "Weaponry"]],
-      "label_powers_note": "[part, printed page, label]: the Whirlwind's Weaponry: (printed 63) is a power under KNOWN POWERS:, left in title case by gridbooks.stream_of rather than raised by title_case_labels to open a section; it must be found once or the build stops (survey mla1.md, Which reader fits item 10). SILENT off: roster.py exits 0 with the parse wrong, the Whirlwind's Weaponry left in a section and not a power (powers 102 for 103) (measured 2026-11-01, row 11b)."
+      "label_powers_note": "[part, printed page, label]: the Whirlwind's Weaponry: (printed 63) is a power under KNOWN POWERS:, left in title case by gridbooks.stream_of rather than raised by title_case_labels to open a section; it must be found once or the build stops (survey mla1.md, Which reader fits item 10). SILENT off: roster.py exits 0 with the parse wrong, the Whirlwind's Weaponry left in a section and not a power (powers 102 for 103) (measured 2026-11-01, row 11b).",
+      "identity_lines": 2,
+      "identity_lines_note": "MX4's: a card's identity is one Real Name: or Alias: line, and three are wrapped over two lines by the narrow column (Black Widow and Daredevil, printed 4; the Brothers Grimm, 54), so npcs.py joins a card's identity lines into one, as MX4's. Two is the most any MLA1 card prints, so the reader keeps the lines it kept with three and gridbooks.mark_headers looks the same three lines up (survey mla1.md, Columns, labels and ranks). Off, the Codex shows Natalia Alianova. Romanova (row 12a, 2026-11-01).",
+      "card_names": {"Swf Operatives": "SWF Operatives", "Frankenstein\u2019s Monster": "Frankenstein's Monster"},
+      "card_names_note": "SWF Operatives (printed 32) prints SWF in capitals, which npcs.py's title case gives as Swf, as MH8's SWAT Team Member; Frankenstein's Monster's header (printed 56) reads a curly apostrophe that every other book's card name prints straight. Each card's name as printed; the id is the same either way (swf-operatives-mla1, frankenstein-s-monster-mla1). Row 12a, 2026-11-01.",
+      "derived_totals": true,
+      "derived_totals_note": "MT3's card flag: a total the block lists under derived (derived_karma above: the Alligator, Rat, pack of 10 and Mosquito Swarm, printed 42, print no Karma) is flagged karma_derived on the card, as MT3's Snakes and Scorpions (survey mla1.md decision 7). MLA1 prints no one-line grid, so gridbooks.line_grids, its other reader, reads nothing here and roster.json is the same with it on or off. Off, the three cards play Karma 6 with nothing saying the book prints none (row 12a, 2026-11-01)."
     }
   }
 }
