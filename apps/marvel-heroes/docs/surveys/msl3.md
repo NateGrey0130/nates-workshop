@@ -1,9 +1,5 @@
 # Survey: MSL3 Spore of Arthros (TSR6902)
 
-> **DRAFT.** Written up to *Which reader fits*, which is not finished: the
-> trial parse (plan row 28c) runs a reader over this book and writes it. No
-> `layout` is set, and nothing of the book is imported yet.
-
 Marvel Super Heroes adventure, product code 6902 on the cover (PDF 1) and
 6902XXX1401 on the back cover (PDF 34). By Rick Swan, 1991 (the title page).
 Registry entry: `scripts/msh/books.json` -> `msl3`. Measured 2026-11-02.
