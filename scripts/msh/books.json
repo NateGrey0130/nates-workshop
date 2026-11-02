@@ -4318,6 +4318,54 @@
         {"part": "Adventure Book", "page": 31, "name": "Stygorr", "lines": ["Stygorr/Lew Shiner"]}
       ],
       "line_identity_note": "[{part, page, name, lines}], MX2's (npcs.py): the title-case real-name line under each of six capitals headers (Power Man, printed 4; She-Hulk, 5; Blastaar, 28; Nick Fury, 29; the Negalisk, 30; Stygorr, 31) is the card's identity (Which reader fits item 9). The Debris Creature and the operative print none. Off, each line is the card's prose and its identity is empty, since a subhead header prints no identity line."
+    },
+    "msl3": {
+      "title": "MSL3 Spore of Arthros",
+      "short": "MSL3",
+      "code": "TSR6902",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6902 MSL3 Spore of Arthros Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "59eabb99239a9a5fb1feb34367652967cda5ff6dd6500b56a831686af619c5c6",
+      "pdf_pages": 34,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [2, 33], "offset": 1},
+        {"name": "Back cover", "cite": null, "pdf": [34, 34], "offset": null}
+      ],
+      "offset_evidence": "2026-11-02, scripts/msh/survey.py tsv_folio: 2 pages vote printed = PDF - 1 (PDF 26 and 30) and one vote is not a folio: PDF 2's 756 (k = -754) is the P.O. Box number in TSR's address at the foot of the title page. Tesseract reads few folios because each body page sets its folio small and centred under a strip of comic panels. Read on a strip of every booklet page's foot at 100 dpi (PDF 2-33): 28 pages print their folio, every one PDF - 1, from 2 (PDF 3) to 32 (PDF 33), with no outlier; four print none: the title page (printed 1, PDF 2, the Contents and credits) and the three whole-page maps (printed 4, 14 and 15; PDF 5, 15 and 16), each at the page the Contents gives it. The covers (PDF 1 and 34, 600 x 772 pt; the cover prints MSL3, ADVENTURE and 6902, the back cover 6902XXX1401) are parts of their own with offset null; the booklet is PDF 2-33, 594 x 767 pt. The scan holds no inside cover and no map sheet. Survey msl3.md, The scan and Offset.",
+      "stat_labels": ["Health", "Karma"],
+      "stat_labels_note": "Every grid in the book (8, read on the page images 2026-11-02) is three stacked rows across one column, the letters F A S E R I P, the rank codes in capitals, then the numbers, each code above its number with no brackets (MSL1's and MSL2's shape), and one line under them: Health = at the left and Karma = at the right, each with a space either side of the =. The Flying Robotic Snake (printed 6) and the Robotic Dragon (30) print Health = and no Karma line; the Dragon's Health = See text. No grid prints Resources or Popularity, and the OCR holds neither word anywhere in the book.",
+      "section_labels": ["KNOWN POWERS"],
+      "section_labels_note": "Read on the page images 2026-11-02. KNOWN POWERS in bold capitals with no colon heads the powers of four grids: run into the first power on its line on the Ice Bat (printed 13) and the Vapor Wasp (18), on a line of its own on the Bubble Beast (21) and Ashta (22). Each power is an italic run-in with a colon (Body Armor:, Flight:). The other four grids, the Nop Yaan Peasant (5), the Flying Robotic Snake (6), Torr (18) and the Robotic Dragon (30), print no label: their abilities are in indented prose paragraphs after the grid. No TALENTS, CONTACTS, IN BRIEF, Real Name, Background or Weakness anywhere.",
+      "rank_aliases": {"FE": "feeble", "PR": "poor", "TY": "typical", "GD": "good", "EX": "excellent", "RM": "remarkable", "IN": "incredible", "MN": "monstrous"},
+      "rank_aliases_note": "The codes the eight grids print, in capitals, read on the page images 2026-11-02: FE, PR, TY, GD, EX, RM, IN and MN (the Robotic Dragon's F, printed 30, the only Monstrous). No FB, AM, UN, Class or Shift code, and no title-case code on a grid.",
+      "sections": [
+        ["Chapter One: Mysterious Island", null, 2, "Adventure Book"],
+        ["Chapter Two: Ominous Realm", null, 10, "Adventure Book"],
+        ["Chapter Three: Dangerous Corridors", null, 25, "Adventure Book"],
+        ["Chapter Four: Hideous Visitor", null, 30, "Adventure Book"],
+        ["Map 1: Nop Yaan", null, 4, "Adventure Book"],
+        ["Map 2: Negative Zone (Region 1)", null, 14, "Adventure Book"],
+        ["Map 3: Negative Zone (Region 2)", null, 15, "Adventure Book"]
+      ],
+      "contents_note": "The printed Contents (printed 1, PDF 2, two columns headed Table of Contents: the four chapters at the left, Maps at the right), transcribed from a render at 160 dpi, then each entry checked against its page, 2026-11-02, in the Contents' order. Every page agrees, so there are no contents_errata. Each chapter banner is bold capitals and prints the Contents' title: Chapter One (printed 2), Two (10) and Three (25) open mid-page under half a page of art, Chapter Four (30) at the top under the masthead with no art. Tesseract reads all four banners. Each map fills its page and prints its title (Map 1 printed 4, Map 2 printed 14, Map 3 printed 15). The book prints no index, and the Contents names no character.",
+      "columns": 2,
+      "columns_note": "Two columns on every body page (printed 2-32 on a 30 dpi sheet, and the grid pages, printed 5, 6, 13, 18, 21, 22 and 30, at 100-110 dpi), a grid spanning one column; the title page and the three maps are not set in columns. No grid breaks across a column, but Torr's grid ends column 2 of printed 18 and his text goes on at the top of column 1 of printed 19. Read on the page images 2026-11-02.",
+      "panels": [],
+      "panels_note": "No page outside the booklet prints a stat block: the OCR of PDF 1 and 34 holds no Health, Karma or rank row, and their images show the cover and the back cover's blurb. The booklet sends the reader to an inner cover panel (printed 12, 19 and 27) and an appendix (printed 3, 23 and 28) for statistics, and neither is in this scan (survey msl3.md, Cover-panel cards and appendix).",
+      "character_ranges": [],
+      "character_ranges_note": "No card pages: the book prints no roster and no full card, and every grid is inside a chapter's encounter text (opponents). Empty, as MH6's.",
+      "opponents": [
+        {"part": "Adventure Book", "page": 5, "names": ["Nop Yaan Peasant"]},
+        {"part": "Adventure Book", "page": 6, "names": ["Flying Robotic Snake"]},
+        {"part": "Adventure Book", "page": 13, "names": ["Ice Bat"]},
+        {"part": "Adventure Book", "page": 18, "names": ["Vapor Wasp", "Alien Trader (Torr)"]},
+        {"part": "Adventure Book", "page": 21, "names": ["Bubble Beast"]},
+        {"part": "Adventure Book", "page": 22, "names": ["Flying Stallion (Ashta)"]},
+        {"part": "Adventure Book", "page": 30, "names": ["Robotic Dragon"]}
+      ],
+      "opponents_note": "Every grid in the book, found by the OCR's rank-code rows and Health = lines and on a 30 dpi sheet of every page, and read on crops of the page images at 110 dpi 2026-11-02: eight, each under a title-case header as printed, MSL1's form. Nop Yaan Peasant (printed 5, column 2, under the subhead Mind-Controlled Peasants), Chapter One; Flying Robotic Snake (6, column 1, inside encounter 3, Phony Tree), Chapter One; Ice Bat (13, column 1, encounter 4, Crystal Mist), Chapter Two; Vapor Wasp (18, column 1, encounter 12, Derelict Craft) and Alien Trader (Torr) (18, column 2, at its foot, encounter 13, Radiant Web), Chapter Two; Bubble Beast (21, column 2, encounter 17, Portal Guardian), Chapter Two; Flying Stallion (Ashta) (22, column 2, encounter 21, Winged Visitor), Chapter Two; Robotic Dragon (30, column 2, before the subhead Events), Chapter Four. The headers box at 44-46 px at 300 dpi, the size of the chapters' own subheads (Encounter Key-Map 1, Mind-Controlled Peasants: 45), and the Robotic Dragon's at 56 beside the Events subhead's 57; the Vapor Wasp's is set in body type (39). So no size separates a header from a subhead: the grid under it does. Survey msl3.md, Stat blocks."
     }
   }
 }
