@@ -5,6 +5,7 @@
     "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text        match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read"
   ],
@@ -39,6 +40,27 @@
      "note": "Printed A TY 6 on his card (printed 32): Health 54 = 10 + 4 + 10 + 30 holds with Poor 4, and MA1 and MHSP2 print his A Pr 4 and Health 54, every other row as here (MX1's Nimrod shape). Survey decision 4."},
     {"match": {"page": 32, "header": "Sunspot"}, "verdict": "as_printed", "field": "health",
      "printed": "52(76)", "checked": "2026-11-01",
-     "note": "Printed Health: 52(76) on his card (printed 32): 52 = F+A+S+E, and 76 with his S at RM 30 while his power, Strength, is active, as MA1's Sunspot keeps 52 (76). Survey decision 6."}
+     "note": "Printed Health: 52(76) on his card (printed 32): 52 = F+A+S+E, and 76 with his S at RM 30 while his power, Strength, is active, as MA1's Sunspot keeps 52 (76). Survey decision 6."},
+    {"match": {"row": "mlba1:black-king-mlba1:power:1"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "lf Shaw", "printed": "If Shaw",
+     "note": "Kinetic Absorption, printed 3, column 3: the page prints If Shaw must take; the OCR read the capital I as a lower-case l (300 dpi crop of PDF 4)."},
+    {"match": {"row": "mlba1:beetle-mlba1:background"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "Evil tll.", "printed": "Evil III.",
+     "note": "Beetle's Background, printed 8, column 3: the page prints Master of Evil III. (three capital I); the OCR read them as tll (300 dpi crop of PDF 9)."},
+    {"match": {"row": "mlba1:beetle-mlba1:power:5"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "programmed _ with", "printed": "programmed with",
+     "note": "Battle Computer, printed 9, column 1, first line: the page prints no mark between programmed and with; the underscore is a speck of the scan (PDF 10 at 60 and 300 dpi)."},
+    {"match": {"row": "mlba1:chicken-mlba1:power:3"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "\\ts feathers", "printed": "Its feathers",
+     "note": "Body Armor, printed 31: the page prints Its feathers; the OCR read the capital I as a backslash (300 dpi crop of PDF 32)."},
+    {"match": {"row": "mlba1:richtor-mlba1:power:3"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "\\f his power", "printed": "If his power",
+     "note": "Earth Tremors, printed 32: the page prints If his power; the OCR read the capital I as a backslash (300 dpi crop of PDF 33)."},
+    {"match": {"row": "mlba1:sunspot-mlba1:notes"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "|n unlit", "printed": "In unlit",
+     "note": "Weakness, printed 32: the page prints In unlit places; the OCR read the capital I as a vertical bar (300 dpi crop of PDF 33)."},
+    {"match": {"row": "mlba1:armadillo-mlba1:power:1"}, "verdict": "text", "checked": "2026-11-01",
+     "read": "Claws; Armadillo", "printed": "Claws: Armadillo",
+     "note": "Claws, inside Body Armor, printed 25, column 2: the page prints the italic run-in Claws with a colon, as every power head; the OCR read it as a semicolon (300 dpi crop of PDF 26). Found while reading the row's two apostrophes for quote marks."}
   ]
 }

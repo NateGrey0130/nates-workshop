@@ -5,7 +5,8 @@ title page), Bruce Nesmith, 1990; the first MLBA module (the cover prints
 MLBA1 over 6893).
 Registry entry: `scripts/msh/books.json` -> `mlba1`. Measured 2026-11-01.
 
-**Rows citing this book:** 0 `msh_book_text` rows (no data row has run).
+**Rows citing this book:** 90 `msh_book_text` rows over 23 character entries
+in production (`DB_MARVEL`, read back 2026-11-01).
 
 Everything here was measured and read on the page images.
 

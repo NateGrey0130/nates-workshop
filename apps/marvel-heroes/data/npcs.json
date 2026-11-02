@@ -123,6 +123,11 @@
    "book": "MLA1 After Midnight",
    "code": "TSR6892",
    "pages": "Adventure 4-8, 18-42, 51-63"
+  },
+  {
+   "book": "MLBA1 Mutating Mutants",
+   "code": "TSR6893",
+   "pages": "Adventure 3-31, 32-32"
   }
  ],
  "books": [
@@ -553,6 +558,30 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "mlba1",
+   "short": "MLBA1",
+   "title": "MLBA1 Mutating Mutants",
+   "pages": [
+    3,
+    31
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       3,
+       31
+      ],
+      [
+       32,
+       32
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -633,7 +662,9 @@
   "MX3 Reap the Whirlwind",
   "MX4 Flames of Doom",
   "After Midnight Heroes",
-  "MLA1 After Midnight"
+  "MLA1 After Midnight",
+  "MLBA1 Mutating Mutants",
+  "Mutating Mutants Heroes"
  ],
  "characters": [
   {
@@ -86098,6 +86129,2013 @@
    ],
    "appearances": [],
    "book": "mla1"
+  },
+  {
+   "id": "black-king-mlba1",
+   "name": "Black King",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "black-king-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "100",
+       "karma": "70",
+       "resources": "IN (40)",
+       "popularity": "15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Kinetic Absorption"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "ee-ha-mlba1",
+   "name": "Ee-ha",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "ee-ha-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "46",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "R",
+        "printed": {
+         "number": 6,
+         "code": "Pr"
+        },
+        "corrected": {
+         "number": 4,
+         "code": "Pr"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "6",
+          "corrected": "14"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "generic-punk-mlba1",
+   "name": "Generic Punk",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "generic-punk-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "4",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "4",
+        "corrected": "14"
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "rocco-mlba1",
+   "name": "Rocco",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "rocco-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "44",
+       "karma": "4",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "4",
+        "corrected": "14"
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "schiz-mlba1",
+   "name": "Schiz",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "schiz-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "36",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "R",
+        "printed": {
+         "number": 6,
+         "code": "Pr"
+        },
+        "corrected": {
+         "number": 4,
+         "code": "Pr"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "I",
+          "printed": {
+           "number": 4,
+           "code": "Ty"
+          },
+          "corrected": {
+           "number": 6,
+           "code": "Ty"
+          }
+         },
+         {
+          "verdict": "misprint",
+          "field": "karma",
+          "printed": "6",
+          "corrected": "14"
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "generic-goon-mlba1",
+   "name": "Generic Goon",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "generic-goon-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": "10",
+        "corrected": "14"
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "beetle-mlba1",
+   "name": "Beetle",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "beetle-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      8,
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "70",
+       "karma": "56",
+       "resources": "EX (20)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Electro-bite"
+      },
+      {
+       "name": "Battle Computer"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "mauler-mlba1",
+   "name": "Mauler",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "mauler-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "140",
+       "karma": "36",
+       "resources": "GD (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Laser Cannon"
+      },
+      {
+       "name": "Electric Touch"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "mad-dog-mlba1",
+   "name": "Mad-Dog",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "mad-dog-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "140",
+       "karma": "36",
+       "resources": "TY (6)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws and Bite"
+      },
+      {
+       "name": "Resistant to Psychic Attacks"
+      },
+      {
+       "name": "Berserker",
+       "upb": "F1"
+      },
+      {
+       "name": "Tracking Scent"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "sabretooth-mlba1",
+   "name": "Sabretooth",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "sabretooth-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      12,
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "130",
+       "karma": "46",
+       "resources": "TY (6)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Claws and Bite"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Heightened Senses"
+      },
+      {
+       "name": "Berserker",
+       "upb": "F1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "sentinel-mark-iv-mlba1",
+   "name": "Sentinel, Mark IV",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "sentinel-mark-iv-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "165",
+       "karma": "NA",
+       "resources": "NA",
+       "popularity": "NA",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "NA"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Construction"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Learning Program"
+      },
+      {
+       "name": "Gas Jets"
+      },
+      {
+       "name": "Catch-web Cables"
+      },
+      {
+       "name": "Searchlights"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "armadillo-mlba1",
+   "name": "Armadillo",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "armadillo-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "100",
+       "karma": "18",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Tunneling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "goliath-mlba1",
+   "name": "Goliath",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "goliath-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      25,
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "145",
+       "karma": "14",
+       "resources": "GD (10)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Growth",
+       "upb": "S16"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "ramhorn-mlba1",
+   "name": "Ramhorn",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "ramhorn-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "120",
+       "karma": "14",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistance to Cold"
+      },
+      {
+       "name": "Horns"
+      },
+      {
+       "name": "Charge"
+      },
+      {
+       "name": "Climbing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "chicken-mlba1",
+   "name": "Chicken",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "chicken-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "38",
+       "karma": "6",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "karma_derived": true
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Beak and Tail"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "chimpanzee-mlba1",
+   "name": "Chimpanzee",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "chimpanzee-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "72",
+       "karma": "12",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "karma_derived": true
+      }
+     ],
+     "powers": [
+      {
+       "name": "Light manipulation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "giant-dalmatian-mlba1",
+   "name": "Giant Dalmatian",
+   "team": "MLBA1 Mutating Mutants",
+   "versions": [
+    {
+     "id": "giant-dalmatian-mlba1",
+     "label": null,
+     "team": "MLBA1 Mutating Mutants",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "46",
+       "karma": "14",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "karma_derived": true
+      }
+     ],
+     "powers": [
+      {
+       "name": "Resistant to Fire"
+      },
+      {
+       "name": "Six Legs"
+      },
+      {
+       "name": "Claws and Teeth"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "boom-boom-mlba1",
+   "name": "Boom-Boom",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "boom-boom-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Tabitha (last name unrevealed)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "34",
+       "karma": "16",
+       "resources": "PR (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Bombs"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "cannonball-mlba1",
+   "name": "Cannonball",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "cannonball-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Sam Guthrie"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "54",
+       "karma": "22",
+       "resources": "PR (4)",
+       "popularity": "4",
+       "override": {
+        "verdict": "misprint",
+        "field": "A",
+        "printed": {
+         "number": 6,
+         "code": "Ty"
+        },
+        "corrected": {
+         "number": 4,
+         "code": "Pr"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Strength"
+      },
+      {
+       "name": "Charge"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "richtor-mlba1",
+   "name": "Richtor",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "richtor-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "(Unrevealed)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "38",
+       "karma": "26",
+       "resources": "FE (2)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Vibration touch"
+      },
+      {
+       "name": "Vibration Ray"
+      },
+      {
+       "name": "Earth Tremors"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "rusty-collins-mlba1",
+   "name": "Rusty Collins",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "rusty-collins-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Russell Collins"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "22",
+       "resources": "FE (2)",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Pyrotechnics"
+      },
+      {
+       "name": "Heat Resistance"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "sunspot-mlba1",
+   "name": "Sunspot",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "sunspot-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Roberto Da Costa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "52(76)",
+       "karma": "20",
+       "resources": "EX (20)",
+       "popularity": "3",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": "52(76)"
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Strength"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
+  },
+  {
+   "id": "wolverine-mlba1",
+   "name": "Wolverine",
+   "team": "Mutating Mutants Heroes",
+   "versions": [
+    {
+     "id": "wolverine-mlba1",
+     "label": null,
+     "team": "Mutating Mutants Heroes",
+     "part": "Adventure",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Logan (last name unrevealed)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "110",
+       "karma": "121",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Resistance"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Adamantium Skeleton"
+      },
+      {
+       "name": "Tracking",
+       "upb": "DT19"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mlba1"
   }
  ]
 }
