@@ -72,6 +72,15 @@
      "note": "Printed 42 (PDF 43): the first word of Body Armor, its capital I read as a backslash. Found by the same check."},
     {"match": {"row": "mla2:thor-mla2:power:6"}, "verdict": "text", "checked": "2026-11-02",
      "read": "\\t increases", "printed": "It increases",
-     "note": "Printed 63 (PDF 64), where his card (printed 62) runs on: the first word of the power, its capital I read as a backslash. Found by the same check."}
+     "note": "Printed 63 (PDF 64), where his card (printed 62) runs on: the first word of the power, its capital I read as a backslash. Found by the same check."},
+    {"match": {"row": "mla2:shang-chi-mla2:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "building. Shang- Chi escaped", "printed": "building. Shang-Chi escaped",
+     "note": "Shang-Chi's background, printed 61 (PDF 62): the page breaks his name at a line end after its own hyphen, with the second half capitalised, and prints it whole, with the hyphen, mid-line two lines below, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 62 (marvel-11 leftovers row 10n, Nate 2026-11-03)."},
+    {"match": {"row": "mla2:shang-chi-mla2:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Fan. Shang- Chi, disguised", "printed": "Fan. Shang-Chi, disguised",
+     "note": "Shang-Chi's background, printed 61 (PDF 62), its second line-end break of the name, after the same hyphen: the hyphen stays and only the space goes (300 dpi crop of PDF 62, marvel-11 leftovers row 10n, Nate 2026-11-03)."},
+    {"match": {"row": "mla2:starfox-mla2:power:2"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "possesses Shift- X resistance", "printed": "possesses Shift-X resistance",
+     "note": "Starfox's Invulnerability, printed 62 (PDF 63): the page breaks the rank Shift-X at a line end after its own hyphen, with the second half capitalised, and the book's character text prints the rank whole, with the hyphen, mid-line once elsewhere, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 63 (marvel-11 leftovers row 10n, Nate 2026-11-03)."}
   ]
 }
