@@ -2866,9 +2866,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${blkS('dominus-msl1')?.abilities[2]} ${JSON.stringify(domS?.abilities.strength)} ${playedS('dominus-msl1')}`);
     const ovS = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl1-overrides.json'), 'utf8')).overrides;
     const textS = ovS.filter((o) => o.verdict === 'text');
-    check('MSL1: six overrides: three misprints, one as printed and two text verdicts (the clones\' Slim and Bobby quotes), and only those four blocks carry one',
-      ovS.length === 6 && ovS.filter((o) => o.verdict === 'misprint').length === 3 && ovS.filter((o) => o.verdict === 'as_printed').length === 1
-      && textS.map((o) => o.match.row.replace(/^msl1:/, '')).join() === 'cyclops-clone-msl1:background,iceman-clone-msl1:background'
+    check('MSL1: 22 overrides: three misprints, one as printed and 18 text verdicts (the clones\' Slim and Bobby quotes, then 16 printed bullets read as a letter e over eight power rows), and only those four blocks carry one',
+      ovS.length === 22 && ovS.filter((o) => o.verdict === 'misprint').length === 3 && ovS.filter((o) => o.verdict === 'as_printed').length === 1
+      && textS.map((o) => o.match.row.replace(/^msl1:/, '')).join() === ['cyclops-clone-msl1:background', 'iceman-clone-msl1:background',
+        'apocalypse-msl1:power:1', 'cyclops-msl1:power:1', 'cyclops-msl1:power:1', 'cyclops-msl1:power:1',
+        'iceman-clone-msl1:power:1', 'iceman-clone-msl1:power:1', 'iceman-msl1:power:1', 'iceman-msl1:power:1', 'iceman-msl1:power:1',
+        'marvel-girl-clone-msl1:power:1', 'marvel-girl-msl1:power:1',
+        'mister-sinister-msl1:power:1', 'mister-sinister-msl1:power:1', 'mister-sinister-msl1:power:1', 'mister-sinister-msl1:power:1',
+        'sunstroke-msl1:power:1'].join()
       && blocksS.filter(({ b }) => b.override).map(({ id }) => id).join() === 'cyclops-clone-msl1,iceman-clone-msl1,dominus-msl1,x-terminator-robots-msl1',
       JSON.stringify(ovS.map((o) => [o.verdict, o.match])));
     const powS = msl1.flatMap((c) => c.versions[0].powers);
@@ -2914,7 +2919,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsS.length} ${entS.size} ${rowsS.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedS.length} ${marksS(/"/g)} ${marksS(/'/g)}`);
       const countS = (row, s) => (rowsS.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MSL1 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textS.length === 2 && textS.every((o) => countS(o.match.row, o.printed) === 1 && countS(o.match.row, o.read) === 0),
+        textS.length === 18 && textS.every((o) => countS(o.match.row, o.printed) === 1 && countS(o.match.row, o.read) === 0),
         textS.map((o) => `${o.match.row} ${countS(o.match.row, o.printed)}/${countS(o.match.row, o.read)}`).join(' | '));
       const noiseS = rowsS.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl1:/, ''));
       check('MSL1 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
