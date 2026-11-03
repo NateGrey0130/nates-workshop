@@ -29,6 +29,12 @@
      "note": "Printed 9, Chapter 5 Battle 1, the line under the improved synthetic Hulks' grid: a number pencilled in the scan's right margin beside Incredible (40, in a hand, not the book's type) is read as *: (seen on the page image)."},
     {"match": {"row": "mh5:northstar-mh5:background"}, "verdict": "text", "checked": "2026-10-23",
      "read": "egotistical, | Northstar", "printed": "egotistical, Northstar",
-     "note": "Printed 16, Northstar's Background: a faint speck in the margin at the end of the line that ends egotistical, is read as a bar before the next line's first word. The page prints nothing there (seen on a 200 dpi crop of PDF 17)."}
+     "note": "Printed 16, Northstar's Background: a faint speck in the margin at the end of the line that ends egotistical, is read as a bar before the next line's first word. The page prints nothing there (seen on a 200 dpi crop of PDF 17)."},
+    {"match": {"row": "mh5:leader-mh5:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Drain- Cannon", "printed": "Drain-Cannon",
+     "note": "Printed 12, column 2, the Leader's third power: the page breaks Hammer's Drain-Cannon at a line end after its hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes (Nate, 2026-11-03). Read on a 300 dpi crop of PDF 13 (marvel-11 leftovers row 10f, 2026-11-03)."},
+    {"match": {"row": "mh5:justin-hammer-mh5:powers-intro"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Man- Killer", "printed": "Man-Killer",
+     "note": "Printed 13, column 2, Justin Hammer's powers: the page breaks the name Man-Killer (in italics) at a line end after its own hyphen, a real compound, so the hyphen stays and only the space goes (Nate, 2026-11-03). Read on a 300 dpi crop of PDF 14 (marvel-11 leftovers row 10f, 2026-11-03)."}
   ]
 }
