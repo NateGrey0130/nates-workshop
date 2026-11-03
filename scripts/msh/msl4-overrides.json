@@ -1,0 +1,18 @@
+{
+  "about": [
+    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and one text verdict npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
+    "Every one of the book's 11 grids adds up (Health = F+A+S+E, Karma = R+I+P) and prints each code's standard number, so no block needs a misprint or an as_printed verdict (survey decision 7, plan row 32b, 2026-11-02).",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
+    "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed  the book prints it that way on purpose",
+    "            text        match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them after folding to ASCII, 'printed' as the page prints them. It must occur once in the row, or npcs.py stops.",
+    "  also      further values of the same block: one override matches one block",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"row": "msl4:phase-bot-msl4:power:3"}, "verdict": "text", "checked": "2026-11-02",
+     "read": "\\t can", "printed": "It can",
+     "note": "Flight, printed 18 (PDF 20): the OCR read the capital I of It as a backslash; the trial's speck line for it is ten words, which the Marvel smoke suite's leak check refuses, so row 32a dropped it and the mark is mended in the row instead, as MSL3's Ice Bat's (row 32b). Read on a 400 dpi crop of PDF 20 (row 32b)."}
+  ]
+}
