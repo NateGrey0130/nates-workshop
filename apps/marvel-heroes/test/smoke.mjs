@@ -1572,10 +1572,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       robotsX.map(playedX).join());
     const ovX = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx1-overrides.json'), 'utf8')).overrides;
     const textX = ovX.filter((o) => o.verdict === 'text');
-    check('MX1: thirteen overrides: four misprints, five as printed and four text verdicts (the Mark VI\'s Gas Jets and Customization, the Mark V\'s Cold Beams, the Mantinels\' Automatic Escape), and only the nine overridden blocks carry one',
-      ovX.length === 13 && ovX.filter((o) => o.verdict === 'misprint').length === 4 && ovX.filter((o) => o.verdict === 'as_printed').length === 5
+    check('MX1: sixteen overrides: four misprints, five as printed and seven text verdicts (the Mark VI\'s Gas Jets and Customization, the Mark V\'s Cold Beams, the Mantinels\' Automatic Escape, Nimrod\'s three repair bullets), and only the nine overridden blocks carry one',
+      ovX.length === 16 && ovX.filter((o) => o.verdict === 'misprint').length === 4 && ovX.filter((o) => o.verdict === 'as_printed').length === 5
       && textX.map((o) => o.match.row).join() === ['mark-vi-sentinel-mx1:power:6', 'mark-vi-sentinel-mx1:power:7', 'mark-v-sentinel-mx1:power:7',
-        'mantinels-mx1:power:5'].map((k) => `mx1:${k}`).join()
+        'mantinels-mx1:power:5', 'nimrod-mx1:power:5', 'nimrod-mx1:power:5', 'nimrod-mx1:power:5'].map((k) => `mx1:${k}`).join()
       && blocksX.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === [...robotsX, 'nimrod-mx1', 'timbre-morava-mx1', 'big-foot-mx1', 'typical-rogue-mx1'].sort().join(),
       JSON.stringify(ovX.map((o) => [o.verdict, o.match])));
     check('MX1: SWAT:AM keeps its printed capitals (card_names) and Blue\'s identity line reads Blumal, not the OCR\'s Biumal (speck_lines)',
@@ -1610,8 +1610,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsX.length} ${new Set(rowsX.map((r) => r.key.split(':')[1])).size}`);
       const countX = (row, s) => (rowsX.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsX = textX.map((o) => `${o.match.row} ${countX(o.match.row, o.printed)}/${countX(o.match.row, o.read)}`);
-      check('MX1 text: each of the four text verdicts is applied, its printed fragment once in its row and the misread gone',
-        textX.length === 4 && verdictsX.every((v) => v.endsWith(' 1/0')), verdictsX.join(' | '));
+      check('MX1 text: each of the seven text verdicts is applied, its printed fragment once in its row and the misread gone',
+        textX.length === 7 && verdictsX.every((v) => v.endsWith(' 1/0')), verdictsX.join(' | '));
       const talentsX = ['typical-policeman-mx1', 'swat-am-mx1'].map((id) => rowsX.find((r) => r.key === `mx1:${id}:talents`)?.body);
       check('MX1 text: the Typical Policeman\'s and SWAT:AM\'s talents rows are their TALENT: lines alone, what follows them is prose (talents_end)',
         talentsX.join(' | ') === 'Law Enforcement | Law Enforcement, Marksmanship'
