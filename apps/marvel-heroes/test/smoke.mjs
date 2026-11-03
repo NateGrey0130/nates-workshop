@@ -3446,6 +3446,30 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     check('ME2: Death\'s "Health: 20,000" is 20000, his "Karma: Unlimited" is unset, and the Fenris Wolf\'s Popularity, read as a hyphen and a dash, is -5',
       death?.health === 20000 && death.karma === null && bookNpc({ character: 'fenris-wolf-me2' }).snapshot?.abilities.popularity.number === -5,
       `${death?.health} ${death?.karma}`);
+    // ME2's text verdicts: one word the page breaks at a line end after its
+    // hyphen (marvel-11 leftovers row 10c, Nate 2026-11-03). The text is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by the
+    // overrides' own fragments, never a word of the book in this file.
+    const ovM = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'me2-overrides.json'), 'utf8')).overrides;
+    const textM = ovM.filter((o) => o.verdict === 'text');
+    check('ME2: four overrides: one as printed, one misprint, one chart misprint and one text verdict, a line-end hyphen break whose printed fragment no longer reads the shape',
+      ovM.length === 4 && ['as_printed', 'misprint', 'summary_misprint', 'text'].every((v) => ovM.filter((o) => o.verdict === v).length === 1)
+      && textM.every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed)),
+      JSON.stringify(ovM.map((o) => o.verdict)));
+    const sqlM = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'me2', 'book-text.sql');
+    if (!existsSync(sqlM)) {
+      check(`ME2: skipped the text checks: no ${rel(sqlM) || sqlM}`, true);
+    } else {
+      const rowsM = [...readFileSync(sqlM, 'utf8').matchAll(/VALUES \('([^']+)', 'me2', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const countM = (row, s) => (rowsM.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsM = textM.map((o) => `${o.match.row} ${countM(o.match.row, o.printed)}/${countM(o.match.row, o.read)}`);
+      check('ME2 text: the text verdict is applied, its printed fragment once in its row and the misread gone',
+        rowsM.length === 273 && verdictsM.length === 1 && verdictsM.every((v) => v.endsWith(' 1/0')), verdictsM.filter((v) => !v.endsWith(' 1/0')).join(' | ') || `${rowsM.length} rows`);
+      const shapeM = rowsM.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('ME2 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        shapeM.length === 0, shapeM.join(' '));
+    }
   }
 
   // ME3 is laid out as ME1 and ME2 are (scripts/msh/gridbooks.py,

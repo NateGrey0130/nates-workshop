@@ -7,6 +7,7 @@
     "  verdict   misprint          the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
     "            summary_misprint  the chart prints a value its own ranks contradict and the character's block does not; 'printed' is the chart's, 'corrected' the block's",
+    "            text              match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them after folding to ASCII, 'printed' as the page prints them. It must occur once in the row, or npcs.py stops.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "A number inside its rank's range but not its standard (25 Ex, 250 Shift Y, 750 Shift Z, 2000 Cl 1000; ranks.json min and max) needs no override: the registry's rank_ranges (scripts/msh/books.json, the me2 entry) has the check take the range for this book alone (Nate, 2026-10-21; survey decision 3, apps/marvel-heroes/docs/surveys/me2.md). The Health or Karma beside such a number adds up with it, so the book means it."
@@ -21,6 +22,9 @@
      "note": "Printed A 100 Shift X and E 100 Shift X: 100 is Unearthly, and Shift X is 126-175. Health 950 = 500 + 100 + 250 + 100 agrees with the numbers, so the codes are the misprint."},
     {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
      "printed": 90, "corrected": 110, "checked": "2026-10-21",
-     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110. ME1's chart has the same misprint."}
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110. ME1's chart has the same misprint."},
+    {"match": {"row": "me2:geirrodur-me2:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Asgar- Geirrodur", "printed": "Asgardian god of mischief, Geirrodur",
+     "note": "the background, printed 12 (PDF 46): the page breaks the word Asgardian at a line end after Asgar-, and it is closed up whole (Nate, 2026-11-03). The reader also lost the four words that open the next line before Geirrodur, which the cached TSV holds at confidence 90 and over; the printed fragment is the page's line as it stands. Read on a 300 dpi crop of PDF 46 (marvel-11 leftovers row 10c, 2026-11-03)."}
   ]
 }
