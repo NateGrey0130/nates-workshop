@@ -2944,11 +2944,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${robotsN.map((id) => `${id}:${blkN(id)?.override?.verdict}:${blkN(id)?.karma}:${playedN(id)}`).join()} ${playedN('dreadnoughts-mla2')}`);
     const ovN = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla2-overrides.json'), 'utf8')).overrides;
     const textN = ovN.filter((o) => o.verdict === 'text');
-    check('MLA2: 24 overrides: four misprints, two labels, ten as printed and eight text verdicts (the Si-Fan Assassin\'s lost last line, and seven word misreads: the Beetle\'s R I P, Iron Man\'s name, Min Lee\'s born, and four capital I), and only those 14 blocks carry a misprint or as-printed one',
-      ovN.length === 24 && ovN.filter((o) => o.verdict === 'misprint').length === 4 && ovN.filter((o) => o.verdict === 'label').length === 2
+    check('MLA2: 27 overrides: four misprints, two labels, ten as printed and 11 text verdicts (the Si-Fan Assassin\'s lost last line, seven word misreads: the Beetle\'s R I P, Iron Man\'s name, Min Lee\'s born, and four capital I, and three line-end compound hyphens, Shang-Chi twice and Shift-X, whose printed fragment keeps the hyphen and drops the space), and only those 14 blocks carry a misprint or as-printed one',
+      ovN.length === 27 && ovN.filter((o) => o.verdict === 'misprint').length === 4 && ovN.filter((o) => o.verdict === 'label').length === 2
       && ovN.filter((o) => o.verdict === 'as_printed').length === 10
       && textN.map((o) => o.match.row.replace(/^mla2:/, '')).join() === ['typical-si-fan-assassin-mla2:talents', 'beetle-mla2:power:1', 'iron-man-mla2:power:4',
-        'min-lee-mla2:background', 'spider-man-mla2:power:2', 'guardsmen-mla2:power:2', 'dragons-control-device-mla2:power:1', 'thor-mla2:power:6'].join()
+        'min-lee-mla2:background', 'spider-man-mla2:power:2', 'guardsmen-mla2:power:2', 'dragons-control-device-mla2:power:1', 'thor-mla2:power:6',
+        'shang-chi-mla2:background', 'shang-chi-mla2:background', 'starfox-mla2:power:2'].join()
+      && textN.slice(8).every((o) => o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2'))
       && blocksN.filter(({ b }) => b.override).map(({ id }) => id).join() === ['iron-fist', 'guardsmen', 'mechanical-monster', 'werewolf-robot', 'clown-robot',
         'robot-children', 'vampire-robot', 'mechanical-mummy', 'mechanical-skeletons', 'dragon-robots', 'dragons-control-device', 'skeletal-ghosts',
         'dreadnoughts', 'thor'].map((s) => `${s}-mla2`).join(),
@@ -2994,9 +2996,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       // The Si-Fan Assassin's read is the start of what is printed; every other
       // read is gone from its row.
       check('MLA2 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textN.length === 8 && textN.every((o) => countN(o.match.row, o.printed) >= 1
+        textN.length === 11 && textN.every((o) => countN(o.match.row, o.printed) >= 1
           && countN(o.match.row, o.read) === (o.printed.includes(o.read) ? countN(o.match.row, o.printed) : 0)),
         textN.map((o) => `${o.match.row} ${countN(o.match.row, o.printed)}/${countN(o.match.row, o.read)}`).join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10n, Nate
+      // 2026-11-03): MLA2's three are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeN = rowsN.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mla2:/, ''))).sort();
+      check('MLA2 text: no row reads a letter, a hyphen and a space before a word',
+        rowsN.length > 0 && shapeN.length === 0, shapeN.join(' '));
       const noiseN = rowsN.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mla2:/, ''));
       check('MLA2 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
         noiseN.length === 0, noiseN.join());
