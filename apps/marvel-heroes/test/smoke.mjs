@@ -4315,6 +4315,16 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const blocks = n.characters.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ c, v, b }))));
   check(`there are characters, versions and blocks (${n.characters.length}, ${blocks.length} blocks)`,
     n.characters.length > 100 && blocks.length >= n.characters.length);
+  // The sources line prints a one-page span as its page and two spans that
+  // touch as one (npcs.py span_text): MLBA1 once read "3-31, 32-32" and MX1
+  // "28-28". Read per part (between semicolons), number spans only.
+  const badSpans = n.sources.filter((s) => s.pages.split(';').some((part) => {
+    const spans = [...part.matchAll(/(\d+)(?:-(\d+))?/g)].map((m) => [Number(m[1]), Number(m[2] ?? m[1])]);
+    return [...part.matchAll(/(\d+)-(\d+)/g)].some((m) => m[1] === m[2])
+      || spans.some((x, i) => i > 0 && x[0] <= spans[i - 1][1] + 1);
+  }));
+  check(`no book's sources line prints an N-N span or two spans that touch (${n.sources.length} books)`,
+    n.sources.length > 0 && badSpans.length === 0, badSpans.map((s) => `${s.book}: ${s.pages}`).join(' | '));
   // A partial grid prints no rank at all for the rows its override names
   // (MA4's New Men: their physical ranks are the animal's, p.90). Those rows
   // are null, and no other row anywhere may be.

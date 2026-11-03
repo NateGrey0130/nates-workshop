@@ -995,6 +995,19 @@ def main(slug_arg):
                 cites.append(part_cite(r, p))
         return {'pages': [min(spans), max(spans)], 'part': part_cite(r, first), 'panels': cites}
 
+    def span_text(spans):
+        # The sources line only: spans that touch or overlap print as one
+        # (MLBA1's 3-31 and its opponents' 32, "3-32"), and a one-page span as
+        # its page (MX1's "28", not "28-28"). ranges() keeps every span as
+        # read, for the Codex's book listing.
+        merged = []
+        for a, b in sorted(spans):
+            if merged and a <= merged[-1][1] + 1:
+                merged[-1][1] = max(merged[-1][1], b)
+            else:
+                merged.append([a, b])
+        return ', '.join('%d' % a if a == b else '%d-%d' % (a, b) for a, b in merged)
+
     def source_pages(r):
         if r.get('layout') == 'cover-panels':
             x = panel_listing(r)
@@ -1003,8 +1016,8 @@ def main(slug_arg):
         # (character_ranges empty) lists its opponents' span; every book with
         # character_pages reads them as before
         if r.get('character_ranges') or (r.get('opponents') and 'character_pages' not in r):
-            return '; '.join('%s %s' % (g['part'], ', '.join('%d-%d' % tuple(p) for p in g['pages'])) for g in ranges(r))
-        return '%d-%d' % tuple(r['character_pages'])
+            return '; '.join('%s %s' % (g['part'], span_text(g['pages'])) for g in ranges(r))
+        return span_text([r['character_pages']])
 
     def book_listing(r):
         if r.get('layout') == 'cover-panels':
