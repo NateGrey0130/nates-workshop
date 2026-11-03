@@ -537,6 +537,20 @@
     ]
    ],
    "total": 8
+  },
+  {
+   "slug": "msl4",
+   "title": "MSL4 Stygian Knight",
+   "code": "TSR6904",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     10
+    ]
+   ],
+   "total": 10
   }
  ]
 }

@@ -153,6 +153,11 @@
    "book": "MSL3 Spore of Arthros",
    "code": "TSR6902",
    "pages": "Adventure 5-30"
+  },
+  {
+   "book": "MSL4 Stygian Knight",
+   "code": "TSR6904",
+   "pages": "Adventure 14-17, 27-31"
   }
  ],
  "books": [
@@ -735,6 +740,30 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "msl4",
+   "short": "MSL4",
+   "title": "MSL4 Stygian Knight",
+   "pages": [
+    14,
+    17
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       14,
+       17
+      ],
+      [
+       27,
+       31
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -824,7 +853,8 @@
   "MLA3 Night Life",
   "MSL1 X-Terminate",
   "MSL2 Warlord of Baluur",
-  "MSL3 Spore of Arthros"
+  "MSL3 Spore of Arthros",
+  "MSL4 Stygian Knight"
  ],
  "characters": [
   {
@@ -99612,6 +99642,959 @@
    ],
    "appearances": [],
    "book": "msl3"
+  },
+  {
+   "id": "spy-eye-msl4",
+   "name": "Spy-Eye",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "spy-eye-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "form": true,
+       "health": "48",
+       "karma": "18",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "phase-bot-msl4",
+   "name": "Phase-Bot",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "phase-bot-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      17,
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "80",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elongation (Tentacles)"
+      },
+      {
+       "name": "Enhanced Senses (Hearing, Smell)"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Image Generation"
+      },
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "spray-bots-msl4",
+   "name": "Spray-Bots",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "spray-bots-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      17
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "form": true,
+       "health": "58",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extinguisher Spray"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "annihilus-msl4",
+   "name": "Annihilus",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "annihilus-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      27,
+      28
+     ],
+     "identity": [
+      "Real Name: Annihilus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "205",
+       "karma": "70",
+       "resources": "MN (75)",
+       "popularity": "-30",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Cosmic Control Rod"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "mark-i-cyborg-msl4",
+   "name": "Mark I Cyborg",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "mark-i-cyborg-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Real Name: Irrelevant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "110",
+       "karma": "18",
+       "resources": "FB (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cybernetic Body"
+      },
+      {
+       "name": "ECMs"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field, Personal"
+      },
+      {
+       "name": "Plasma Beam"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "Stun Beam"
+      },
+      {
+       "name": "Targeting System"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "mark-ii-cyborg-msl4",
+   "name": "Mark II Cyborg",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "mark-ii-cyborg-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      28,
+      29
+     ],
+     "identity": [
+      "Real Name: Irrelevant"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "90",
+       "karma": "18",
+       "resources": "FB (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cybernetic Body"
+      },
+      {
+       "name": "ECMs"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field, Personal"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "Stun Beam"
+      },
+      {
+       "name": "Tractor Beams"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "fiona-dunbar-msl4",
+   "name": "Fiona Dunbar",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "fiona-dunbar-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      29,
+      30
+     ],
+     "identity": [
+      "Real Name: Fiona Dunbar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "36",
+       "karma": "18",
+       "resources": "FB (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "notes",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "mark-iii-cyborg-msl4",
+   "name": "Mark III Cyborg",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "mark-iii-cyborg-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Real Name: Mayor Timothy Cummins,",
+      "Warden Bennett \"Big Ben\" Stanford"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "130",
+       "karma": "18",
+       "resources": "FB (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cybernetic Body"
+      },
+      {
+       "name": "ECMs"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field, Personal"
+      },
+      {
+       "name": "Growth",
+       "upb": "S16"
+      },
+      {
+       "name": "Plasma Beam"
+      },
+      {
+       "name": "Sensors"
+      },
+      {
+       "name": "Stun Beam"
+      },
+      {
+       "name": "Targeting System"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "rigger-msl4",
+   "name": "Rigger",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "rigger-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      30,
+      31
+     ],
+     "identity": [
+      "Real Name: Ramone Webber"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fb"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fb"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "form": true,
+       "health": "14",
+       "karma": "52",
+       "resources": "FB (2)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cybernetic Implants"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
+  },
+  {
+   "id": "stygorr-msl4",
+   "name": "Stygorr",
+   "team": "MSL4 Stygian Knight",
+   "versions": [
+    {
+     "id": "stygorr-msl4",
+     "label": null,
+     "team": "MSL4 Stygian Knight",
+     "part": "Adventure",
+     "pages": [
+      31
+     ],
+     "identity": [
+      "Real Name: Stygorr/Lew Shiner"
+     ],
+     "blocks": [
+      {
+       "label": "Stygorr",
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "110",
+       "karma": "100",
+       "resources": "AM (50)",
+       "popularity": "0",
+       "kind": "line"
+      },
+      {
+       "label": "Lew Shiner",
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "28",
+       "karma": "100",
+       "resources": "AM (50)",
+       "popularity": "0",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Matter Fluctuation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "msl4"
   }
  ]
 }
