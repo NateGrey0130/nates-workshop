@@ -1380,10 +1380,30 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       mh6[0].id === 'thor-mh6' && mh6[1].id === 'crystal-lion-mh6' && mh6.slice(24).map((c) => c.id).join() === panelIds.slice(1).join(),
       mh6.map((c) => c.id).join());
     const ov6 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh6-overrides.json'), 'utf8')).overrides;
-    check('MH6: no block carries a misprint override, and the one override is a text verdict (the Executioner\'s Magical Axe speck)',
-      blocks6.every(({ b }) => !b.override) && ov6.length === 1
-      && ov6[0].verdict === 'text' && ov6[0].match.row === 'mh6:executioner-mh6:power:4',
+    check('MH6: no block carries a misprint override, and the two overrides are text verdicts (the Executioner\'s Magical Axe speck, and Loki\'s line-end break of All-Father, whose printed fragment no longer reads the shape)',
+      blocks6.every(({ b }) => !b.override) && ov6.length === 2 && ov6.every((o) => o.verdict === 'text')
+      && ov6.map((o) => o.match.row).join() === 'mh6:executioner-mh6:power:4,mh6:loki-mh6:background'
+      && /[a-z]- [A-Za-z]/.test(ov6[1].read) && !/[a-z]- [A-Za-z]/.test(ov6[1].printed),
       JSON.stringify(ov6.map((o) => [o.verdict, o.match])));
+    // read the generated .sql in the cache, by keys and by the overrides' own
+    // fragments, never a sentence of the book in this file.
+    const sql6 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh6', 'book-text.sql');
+    if (!existsSync(sql6)) {
+      check(`MH6: skipped the text checks: no ${rel(sql6) || sql6}`, true);
+    } else {
+      const rows6 = [...readFileSync(sql6, 'utf8').matchAll(/VALUES \('([^']+)', 'mh6', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, , body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const count6 = (row, s) => (rows6.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts6 = ov6.map((o) => `${o.match.row} ${count6(o.match.row, o.printed)}/${count6(o.match.row, o.read)}`);
+      check('MH6 text: each of the two text verdicts is applied, its printed fragment once in its row and the misread gone',
+        rows6.length > 0 && ov6.length === 2 && verdicts6.every((v) => v.endsWith(' 1/0')), `${rows6.length} rows; ${verdicts6.join(' | ')}`);
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10g, Nate
+      // 2026-11-03): MH6's one is closed up by Loki's text verdict above
+      const shape6 = rows6.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('MH6 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        rows6.length > 0 && shape6.length === 0, shape6.join(' '));
+    }
     const carried = blocks6.filter(({ b }) => b.carried);
     check('MH6: 22 of the 23 one-line grids are carried in the registry, Flame Wing\'s read off the page, and no panel is carried',
       carried.length === 22 && carried.every(({ b }) => b.kind === 'line')
