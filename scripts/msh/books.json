@@ -4485,11 +4485,112 @@
       "character_ranges_note": "The card pages, read on the page images 2026-11-02: the NON-PLAYER CHARACTER ROSTER, from its banner mid-page on printed 27 (Chapter 8 ends above it) to the end of printed 31. Seven cards: ANNIHILUS (27, column 1; his IN BRIEF ends at the top of column 1 of printed 28), CYBORG, MARK I (HUNTER-WORKER) (28, column 1), CYBORG, MARK II (GATHERER) (28, column 2; to column 1 of printed 29), CYBORG, MARK III (MAYOR AND WARDEN) (29, column 1, the header over two lines), DUNBAR, FIONA (CITY SCOUT) (29, column 2; to column 1 of printed 30), RIGGER (CITY SCOUT) (30, column 2; to column 1 of printed 31) and STYGORR (31, column 1, to the foot of column 2). Each card is a capitals header, a Real Name: line in a title-case subhead face, a grid, KNOWN POWERS and the run-ins of section_labels. Seven grids, and Stygorr's second (one_line_grids). In MT3's, MSL1's and MSL2's form (each range with its part); which reader takes them is survey msl4.md, Which reader fits.",
       "opponents": [
         {"part": "Adventure Book", "page": 14, "names": ["Spy-Eye"]},
-        {"part": "Adventure Book", "page": 17, "names": ["Spray-Bots", "Phase-Bot (Shugnaggorak)"]}
+        {"part": "Adventure Book", "page": 17, "names": ["Spray-Bots", "Phase-Bot (Shugnaggorak)"], "continues": [18]}
       ],
-      "opponents_note": "Every grid inside the chapters (printed 2-26), found by the OCR's rank-code rows and Health: lines and on a 24-30 dpi sheet of every page, and read on crops of the page images at 120 dpi 2026-11-02: three, each under a header in bold body type, title case, the roster's grid shape with Health: and Karma: only, KNOWN POWERS on a line of its own, and no other label. Spy-Eye (printed 14, column 2, after the ENCOUNTER: run-in), Chapter 4; Spray-Bots (17, column 1, trap 1) and Phase-Bot (Shugnaggorak) (17, foot of column 2, trap 3, its powers on printed 18), Chapter 5. After its powers each runs on into the chapter's play: the Spy-Eye's to the run-in subhead A Talk with the Nightlord. (printed 14), the Spray-Bots' to trap 2 (column 2 of printed 17), the Phase-Bot's on printed 18. No other chapter page prints a rank row; the Fantastic Four, the police and the civilians are sent to the Basic and Advanced books (printed 2 and 12).",
-      "one_line_grids": [{"part": "Adventure Book", "page": 31, "entry": "Stygorr", "label": "Lew Shiner"}],
-      "one_line_grids_note": "Stygorr's human form (printed 31, column 1): a second full grid with no header of its own, the letters, a codes row, a numbers row and Health: and Karma: over Resources: and Popularity:, printed inside his KNOWN POWERS after the Alter Ego power's text, before Body Armor (column 2). In MSL2's form for the same form of the same being (entry and label): a block of Stygorr's card labelled with the name his text gives the form, not a card of its own (survey msl4.md decision 4). MSL1's and MSL2's reader rows later listed every grid here in MX1's form; whether this book needs that is Which reader fits. Read on the page image 2026-11-02."
+      "opponents_note": "Every grid inside the chapters (printed 2-26), found by the OCR's rank-code rows and Health: lines and on a 24-30 dpi sheet of every page, and read on crops of the page images at 120 dpi 2026-11-02: three, each under a header in bold body type, title case, the roster's grid shape with Health: and Karma: only, KNOWN POWERS on a line of its own, and no other label. Spy-Eye (printed 14, column 2, after the ENCOUNTER: run-in), Chapter 4; Spray-Bots (17, column 1, trap 1) and Phase-Bot (Shugnaggorak) (17, foot of column 2, trap 3, its powers on printed 18), Chapter 5. After its powers each runs on into the chapter's play: the Spy-Eye's to the run-in subhead A Talk with the Nightlord. (printed 14), the Spray-Bots' to trap 2 (column 2 of printed 17), the Phase-Bot's on printed 18. No other chapter page prints a rank row; the Fantastic Four, the police and the civilians are sent to the Basic and Advanced books (printed 2 and 12). continues (the Phase-Bot's KNOWN POWERS go on at the top of column 1 of printed 18) set by row 32a from the trial (survey msl4.md, Which reader fits item 17): without it 460 stream lines and 35 powers across 8 entries, the Phase-Bot losing its printed-18 powers (ablation, plan row 31c1, 2026-11-02).",
+      "one_line_grids": [
+        {"part": "Adventure Book", "page": 14, "name": "Spy-Eye", "subhead": "Spy-Eye"},
+        {"part": "Adventure Book", "page": 17, "name": "Spray-Bots", "subhead": "Spray-Bots"},
+        {"part": "Adventure Book", "page": 17, "name": "Phase-Bot (Shugnaggorak)", "subhead": "Phase-Bot (Shugnaggorak)"},
+        {"part": "Adventure Book", "page": 27, "name": "ANNIHILUS", "subhead": "ANNIHILUS"},
+        {"part": "Adventure Book", "page": 28, "name": "CYBORG, MARK I (HUNTER-WORKER)", "subhead": "CYBORG, MARK I (HUNTER-WORKER)"},
+        {"part": "Adventure Book", "page": 28, "name": "CYBORG, MARK II (GATHERER)", "subhead": "CYBORG, MARK II (GATHERER)"},
+        {"part": "Adventure Book", "page": 29, "name": "CYBORG, MARK III (MAYOR AND WARDEN)", "subhead": "CYBORG, MARK III (MAYOR AND WARDEN)"},
+        {"part": "Adventure Book", "page": 29, "name": "DUNBAR, FIONA (CITY SCOUT)", "subhead": "DUNBAR, FIONA (CITY SCOUT)"},
+        {"part": "Adventure Book", "page": 30, "name": "RIGGER (CITY SCOUT)", "subhead": "RIGGER (CITY SCOUT)"},
+        {"part": "Adventure Book", "page": 31, "name": "STYGORR", "subhead": "STYGORR"},
+        {"part": "Adventure Book", "page": 31, "entry": "Stygorr", "label": "Lew Shiner"}
+      ],
+      "one_line_grids_note": "[{part, page, name, subhead}], MX1's form, for the 10 headed grids (printed 14, 17 twice, 27, 28 twice, 29 twice, 30 and 31), each named for the header over it as read: the letters, a codes row, a numbers row, then Health: and Karma: (survey msl4.md, Stat blocks). Then Stygorr's human form (printed 31, column 1), a second full grid with no header of its own printed inside his KNOWN POWERS after the Alter Ego power's text, in MSL2's form for the same form of the same being (entry and label): a block of Stygorr's card labelled Lew Shiner, not a card of its own (survey msl4.md decision 4). Read on the page images 2026-11-02. Off, the headed grids: roster.py exits 1, opponent_indented_paragraphs finds 0 Spray-Bots entries. Off, Stygorr's form alone: roster.py exits 1, 549 stream lines, 10 blocks passing and 1 failing, 37 powers (ablation, plan row 31c1, 2026-11-02).",
+      "layout": "grid-booklets",
+      "layout_note": "ME1's, ME2's, ME3's, MT2's, MT3's, MSL1's, MSL2's and MSL3's reader, scripts/msh/gridbooks.py (survey msl4.md, Which reader fits, verdict grid-booklets; measured by plan rows 31c and 31c1's trial 2026-11-02, set by row 32a). It reads parts, character_ranges (printed 27-31) and opponents (printed 14 and 17) as row 31a wrote them; code-grids reads no parts entry. Two reader changes, each behind a field of its own: repeated_power_heads (gridbooks.py) and role_brackets (npcs.py). Off, roster.py stops: KeyError 'offset' (MA1's reader on a parts book) (ablation, plan row 31c1, 2026-11-02).",
+      "codes_over_numbers": true,
+      "codes_over_numbers_note": "MSL1's: every grid prints its codes row above its numbers row, read by gridbooks.read_line_grid as each code over its number. Off, roster.py exits 0 but all 11 blocks read rank_only, wrong since the book prints the numbers (ablation, plan row 31c1, 2026-11-02).",
+      "line_grid_resources": true,
+      "line_grid_resources_note": "MSL1's: a roster card's Resources and Popularity line under its Health and Karma line is the grid's, not its text (gridbooks.line_grids; Which reader fits item 3). Off, 552 stream lines, not 544, those lines left in the text, and npcs.py stops at line_identity for Annihilus (ablation, plan row 31c1, 2026-11-02).",
+      "line_popularity_minus": true,
+      "line_popularity_minus_note": "MSL1's (gridbooks.line_grids; Which reader fits item 4): Annihilus's Popularity (printed 27) is read as -30. Off, it is kept as dash text, not -30, and nothing else moves (ablation, plan row 31c1, 2026-11-02).",
+      "form_resources": true,
+      "form_resources_note": "MSL2's (gridbooks.line_grids; Which reader fits item 5): Stygorr's human form, Lew Shiner (printed 31), prints its own Resources and Popularity lines and keeps them on its block. Off, roster.py exits 1 at line_grid_resources on printed 31 (ablation, plan row 31c1, 2026-11-02).",
+      "subhead_labels": ["KNOWN POWERS"],
+      "subhead_labels_note": "MT3's, MSL1's, MSL2's and MSL3's: KNOWN POWERS in bold capitals with no colon heads every grid's powers, and gridbooks.stream_of gives it its colon (Which reader fits item 6). Off, 0 powers, and npcs.py stops at line_identity (ablation, plan row 31c1, 2026-11-02).",
+      "title_case_labels": true,
+      "title_case_labels_note": "Fiona Dunbar's title-case Equipment: run-ins (printed 29-30) are read as labels, not powers (Which reader fits item 7). Off, roster.py exits 0 but Equipment and her three items become 4 powers of hers (44 powers, 59 rows); she prints none (ablation, plan row 31c1, 2026-11-02).",
+      "bracketed_card_names": true,
+      "bracketed_card_names_note": "MLA2's: the six headers with a parenthesis (printed 17-30) are matched whole to the checklist by gridbooks.coverage (Which reader fits item 8). It reaches the checklist only; npcs.py's names are role_brackets. Off, roster.py exits 1, checklist not all found (ablation, plan row 31c1, 2026-11-02).",
+      "cards": [
+        ["Adventure Book", 14, "Spy-Eye"],
+        ["Adventure Book", 17, "Spray-Bots"],
+        ["Adventure Book", 17, "Phase-Bot (Shugnaggorak)"],
+        ["Adventure Book", 27, "ANNIHILUS"],
+        ["Adventure Book", 28, "CYBORG, MARK I (HUNTER-WORKER)"],
+        ["Adventure Book", 28, "CYBORG, MARK II (GATHERER)"],
+        ["Adventure Book", 29, "CYBORG, MARK III (MAYOR AND WARDEN)"],
+        ["Adventure Book", 29, "DUNBAR, FIONA (CITY SCOUT)"],
+        ["Adventure Book", 30, "RIGGER (CITY SCOUT)"],
+        ["Adventure Book", 31, "STYGORR"]
+      ],
+      "cards_note": "The 10 cards as read, by booklet and printed page (survey msl4.md decision 3: every grid a card): the three chapter robots (printed 14 and 17) and the seven roster cards (27-31), since the book prints no index and its Contents names no character. Off, roster.py exits 1, checklist not all found (ablation, plan row 31c1, 2026-11-02).",
+      "teams": [["Adventure Book", 14, "MSL4 Stygian Knight"]],
+      "teams_note": "[part, printed page, team] (gridbooks.team_of). Survey msl4.md decision 1 (recommended, applied unanswered; Nate 2026-10-31): every card under the book's title, Annihilus and Stygorr included; no team of City Scouts or of Cyborgs, which the book names as groups only in prose. Off, npcs.py exits 1, KeyError 'side' (ablation, plan row 31c1, 2026-11-02).",
+      "letters_marks": true,
+      "letters_marks_note": "MX1's and MSL1's: a grid's letters line may carry a mark beside a letter (gridbooks.LETTERS_MARKS); Annihilus's (printed 27) and the Mark II's (28) read their S with a mark (Which reader fits item 13). Off, roster.py exits 1, one_line_grids not found: ANNIHILUS, CYBORG, MARK II (GATHERER) (ablation, plan row 31c1, 2026-11-02).",
+      "two_line_headers": [
+        ["Adventure Book", 29, "CYBORG, MARK III (MAYOR AND", "WARDEN)"]
+      ],
+      "two_line_headers_note": "[part, printed page, first line, second line], ME3's: the Mark III's header (printed 29) is set on two lines, joined to one by gridbooks.stream_of (Which reader fits item 15). Off, roster.py exits 1, its subhead not found on printed 29 (ablation, plan row 31c1, 2026-11-02).",
+      "speck_lines": [
+        ["Adventure Book", 28, "CYBORG, MARK | (HUNTER-WORKER)", "CYBORG, MARK I (HUNTER-WORKER)"],
+        ["Adventure Book", 14, "Flight: |t can fly at Excellent rank and airspeed (10 areas", "Flight: It can fly at Excellent rank and airspeed (10 areas"],
+        ["Adventure Book", 29, "KNOWN POWERS None.", "KNOWN POWERS: None."],
+        ["Adventure Book", 28, "ROLE-PLAYING NOTES (for all Cyborgs): The majority", "ROLE-PLAYING NOTES: (for all Cyborgs) The majority"],
+        ["Adventure Book", 28, "Cybernetic Body: A Mark | looks like a very muscular", "Cybernetic Body: A Mark I looks like a very muscular"],
+        ["Adventure Book", 28, "Force Field, Personal: The Mark | is protected by an Ex-", "Force Field, Personal: The Mark I is protected by an Ex-"],
+        ["Adventure Book", 29, "Sensors: The Mark Il\u2019s various radar, sonar, and electron-", "Sensors: The Mark II\u2019s various radar, sonar, and electron-"],
+        ["Adventure Book", 29, "Like other Cyborgs, a Mark Ill is covered with molded", "Like other Cyborgs, a Mark III is covered with molded"],
+        ["Adventure Book", 29, "Plasma Beam: The Mark IIl\u2019s right cybernetic arm is", "Plasma Beam: The Mark III\u2019s right cybernetic arm is"],
+        ["Adventure Book", 29, "Sensors: The Mark Ill\u2019s various radar, sonar, and elec-", "Sensors: The Mark III\u2019s various radar, sonar, and elec-"],
+        ["Adventure Book", 29, "Force Field, Personal: The Mark Ills are protected by", "Force Field, Personal: The Mark IIIs are protected by"]
+      ],
+      "speck_lines_note": "[part, printed page, as read, as printed], gridbooks.stream_of, each matched once whole and replaced (Which reader fits items 14, 21, 22, 24, 25 and 28): the Mark I's header read with a bar for I (printed 28; off, roster.py exits 1); It read as a bar and t (the Spy-Eye's Flight, printed 14; off, one misread left in its text); KNOWN POWERS None. with no colon (Fiona Dunbar, 29; off, npcs.py stops at line_identity); ROLE-PLAYING NOTES with its colon after the book's bracket (the Mark I, 28; the book prints it so, and the colon is moved so the run-in is read; off, 54 rows); and Mark I, II and III misread with a bar, Il, IIl or Ill in the cyborgs' text (28 and 29; off, the misreads stay in the text). Renders 2026-11-02 show the header, the bracket and the seven Marks as the last field reads; the It line was read off the stream. The trial's other It line, the Phase-Bot's Flight read with a backslash (printed 18, item 22), is left out: the whole line as read and as printed is ten words of the book, which the Marvel smoke suite's leak check refuses (measured by row 32a); a text verdict in msl4-overrides.json is the data row's, as MSL3's. (ablation, plan row 31c1, 2026-11-02).",
+      "opponent_indented_paragraphs": [
+        ["Adventure Book", 17, "Spray-Bots"],
+        ["Adventure Book", 17, "Phase-Bot (Shugnaggorak)"]
+      ],
+      "opponent_indented_paragraphs_note": "[part, printed page, header], MT2's: an indented paragraph inside the Spray-Bots' and the Phase-Bot's powers (printed 17) does not end the entry; entry_ends does (Which reader fits item 18). The Spy-Eye's entry (printed 14) is not listed and ends at its indented paragraph. Off, 35 powers and 50 rows: the Spray-Bots lose Flight and the Phase-Bot keeps only Elongation (ablation, plan row 31c1, 2026-11-02).",
+      "entry_ends": [
+        ["Adventure Book", 17, "2. Jungle Gym. This trap is best used against Mister"],
+        ["Adventure Book", 18, "4. Play Ball! This trap is designed for the Thing. From"]
+      ],
+      "entry_ends_note": "[part, printed page, the whole line as read], MT3's: where the chapter resumes under a robot's text, at trap 2 (printed 17, after the Spray-Bots) and trap 4 (printed 18, after the Phase-Bot's powers) (Which reader fits items 19 and 20). Read off the stream by plan row 31c, not on a render. Off, trap 2's text joins the Spray-Bots' prose and npcs.py stops on an unpaired double quote; trap 4's joins the Phase-Bot's, book-text.sql 25136 bytes to 27632 (ablation, plan row 31c1, 2026-11-02).",
+      "power_heads": [
+        ["Adventure Book", 18, "Enhanced Senses (Hearing, Smell)", "Enhanced Senses (Hearing, Smell):"],
+        ["Adventure Book", 28, "Force Field, Personal", "Force Field, Personal:"]
+      ],
+      "power_heads_note": "[part, printed page, power name, the line's start as read], ME3's with MLBA1's fourth field: Enhanced Senses (Hearing, Smell) (the Phase-Bot, printed 18), a parenthesis roster.POWER_HEAD cannot read, and Force Field, Personal (the Mark I, printed 28), a comma it cannot read (Which reader fits items 23 and 26). Off, each: 39 powers, not 40 (ablation, plan row 31c1, 2026-11-02).",
+      "repeated_power_heads": [
+        ["Adventure Book", 29, "Force Field, Personal", 2]
+      ],
+      "repeated_power_heads_note": "[part, printed page, power name, how many], MSL4's (gridbooks.py; survey msl4.md, Which reader fits item 27): Force Field, Personal on two cards of printed 29 (the Mark II's and the Mark III's), which power_heads, one per page, cannot name. Every line of the page that starts with the name and a colon is a head, its name kept as printed, and there must be exactly that many or roster.py stops. Off, 38 powers and 53 rows (ablation, plan row 31c1, 2026-11-02).",
+      "role_brackets": [
+        ["Adventure Book", 17, "Phase-Bot (Shugnaggorak)", "Phase-Bot"],
+        ["Adventure Book", 28, "CYBORG, MARK I (HUNTER-WORKER)", "Mark I Cyborg"],
+        ["Adventure Book", 28, "CYBORG, MARK II (GATHERER)", "Mark II Cyborg"],
+        ["Adventure Book", 29, "CYBORG, MARK III (MAYOR AND WARDEN)", "Mark III Cyborg"],
+        ["Adventure Book", 29, "DUNBAR, FIONA (CITY SCOUT)", "Fiona Dunbar"],
+        ["Adventure Book", 30, "RIGGER (CITY SCOUT)", "Rigger"]
+      ],
+      "role_brackets_note": "[part, printed page, header, card name], MSL4's (npcs.py; Which reader fits item 29; survey msl4.md decision 6, recommended, applied unanswered): each parenthesis is a role or a kind, not a name or a version (Hunter-Worker, Gatherer, Mayor and Warden, City Scout twice, and Shugnaggorak, the monster the Phase-Bot's illusion shows), so it is dropped, the card is named by the registry, and its version has no label. Each must find exactly one entry with a parenthesis and no name of its own, or npcs.py stops. Off, npcs.py stops at line_identity (no card of that name) (ablation, plan row 31c1, 2026-11-02).",
+      "line_identity": [
+        {"part": "Adventure Book", "page": 27, "name": "Annihilus", "lines": ["Real Name: Annihilus"]},
+        {"part": "Adventure Book", "page": 28, "name": "Mark I Cyborg", "lines": ["Real Name: Irrelevant"]},
+        {"part": "Adventure Book", "page": 28, "name": "Mark II Cyborg", "lines": ["Real Name: Irrelevant"]},
+        {"part": "Adventure Book", "page": 29, "name": "Mark III Cyborg", "lines": ["Real Name: Mayor Timothy Cummins,", "Warden Bennett \"Big Ben\" Stanford"]},
+        {"part": "Adventure Book", "page": 29, "name": "Fiona Dunbar", "lines": ["Real Name: Fiona Dunbar"]},
+        {"part": "Adventure Book", "page": 30, "name": "Rigger", "lines": ["Real Name: Ramone Webber"]},
+        {"part": "Adventure Book", "page": 31, "name": "Stygorr", "lines": ["Real Name: Stygorr/Lew Shiner"]}
+      ],
+      "line_identity_note": "[{part, page, name, lines}], MX2's (npcs.py; Which reader fits item 30; survey msl4.md decisions 5 and 8): the seven Real Name: lines as printed, label kept, as the cards' identities, Real Name: Irrelevant kept for the Mark I and Mark II and the Mark III's two people as its line prints them. Off, 0 identities and 62 rows, the lines left in the prose (ablation, plan row 31c1, 2026-11-02)."
     }
   }
 }

@@ -475,6 +475,20 @@ def main(slug_arg):
         if len(hits) != 1 or not variant(c[2]):
             raise SystemExit('%s: count_headers %r finds %d entries, not 1 with a parenthesis' % (slug_arg, c[2], len(hits)))
         counted.add(id(hits[0]))
+    # MSL4 (registry role_brackets [part, printed page, header, card name]): a
+    # header whose parenthesis is a role or a kind, not a name or a version
+    # (CYBORG, MARK I (HUNTER-WORKER), printed 28; RIGGER (CITY SCOUT), 30;
+    # Phase-Bot (Shugnaggorak), 17; survey msl4.md decision 6): the
+    # parenthesis is dropped, the card is named by the registry, and the
+    # version has no label. Each must find exactly one entry with a
+    # parenthesis and no name of its own.
+    for c in (book.get('role_brackets', []) if grid else []):
+        hits = [e for e in statted if e['part'] == c[0] and c[1] in e['pages'] and e.get('header') == c[2]]
+        if len(hits) != 1 or not variant(c[2]) or hits[0].get('name'):
+            raise SystemExit('%s: role_brackets %r finds %d entries, not 1 with a parenthesis and no name of its own'
+                             % (slug_arg, c[2], len(hits)))
+        hits[0]['name'] = c[3]
+        counted.add(id(hits[0]))
     # A card header whose parenthesis is the character's given name, on a card
     # that prints no real-name line (MLBA1's Rusty (Russell) Collins, printed
     # 32; registry bracket_identity [part, printed page, header, identity],

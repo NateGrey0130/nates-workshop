@@ -3688,10 +3688,19 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     check(`the sourcebooks' parsed text is there to compare against too (${rosters.length} book${rosters.length === 1 ? '' : 's'})`,
       rosters.length > 0);
     for (const f of rosters) {
+      // A registry line_identity entry (MX2's, MSL4's) is a card whose Real
+      // Name: lines gridbooks.py hands over as the entry's prose, and npcs.py
+      // stops unless that prose is those words and nothing more: so a prose
+      // equal to one of them is the identity lines too, carried by books.json
+      // and npcs.json like any other (MSL4's Mark III's two people, printed 29,
+      // are ten words). Any other prose of the entry still counts.
+      const book = registry[relative(booksDir, dirname(f))] || {};
+      const lineIdentity = new Set((book.line_identity || []).map((x) => words(x.lines.join(' ')).join(' ')));
       for (const e of JSON.parse(readFileSync(f, 'utf8')).entries) {
         // Not the identity lines: a name and a status line are what npcs.json is
         // meant to carry, and the Notable NPCs section holds them to two lines.
-        [...Object.values(e.sections), e.prose, ...e.powers.map((p) => p.text), ...e.members.map((m) => m.text)]
+        const body = lineIdentity.has(words(e.prose || '').join(' ')) ? '' : e.prose;
+        [...Object.values(e.sections), body,...e.powers.map((p) => p.text), ...e.members.map((m) => m.text)]
           .forEach((t) => addText(t || ''));
       }
     }
