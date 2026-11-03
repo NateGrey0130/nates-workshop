@@ -1463,11 +1463,12 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixes9.join(' | '));
     const ov9 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh9-overrides.json'), 'utf8')).overrides;
     const text9 = ov9.filter((o) => o.verdict === 'text');
-    check('MH9: ten overrides: three misprints, one as printed, the A.I.M. Scientists\' rows and five text verdicts (the A.I.M. Technicians\' prose one, Captain America (Jeffrey Mace)\'s background two, the Thing (Divergent Earth)\'s background one, Hawkeye\'s equipment one), and only those five blocks carry one',
-      ov9.length === 10 && ov9.filter((o) => o.verdict === 'misprint').length === 3 && ov9.filter((o) => o.verdict === 'as_printed').length === 1
+    check('MH9: fourteen overrides: three misprints, one as printed, the A.I.M. Scientists\' rows and nine text verdicts (the A.I.M. Technicians\' prose one, Captain America (Jeffrey Mace)\'s background two, the Thing (Divergent Earth)\'s background one, Hawkeye\'s equipment one, Flare\'s four Sound/light Conversion bullets), and only those five blocks carry one',
+      ov9.length === 14 && ov9.filter((o) => o.verdict === 'misprint').length === 3 && ov9.filter((o) => o.verdict === 'as_printed').length === 1
       && ov9.filter((o) => o.verdict === 'rows').length === 1
       && text9.map((o) => o.match.row).join() === ['a-i-m-technicians-mh9:prose', 'captain-america-jeffrey-mace-mh9:background',
-        'captain-america-jeffrey-mace-mh9:background', 'thing-divergent-earth-mh9:background', 'hawkeye-mh9:equipment'].map((k) => `mh9:${k}`).join()
+        'captain-america-jeffrey-mace-mh9:background', 'thing-divergent-earth-mh9:background', 'hawkeye-mh9:equipment',
+        'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1'].map((k) => `mh9:${k}`).join()
       && blocks9.filter(({ b }) => b.override).map(({ id }) => id).sort().join()
         === 'a-i-m-scientists-mh9,captain-america-jeffrey-mace-mh9,henry-pym-mh9,super-adaptoid-mh9,valor-mh9',
       JSON.stringify(ov9.map((o) => [o.verdict, o.match])));
@@ -1521,8 +1522,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rows9.length} ${new Set(rows9.map((r) => r.key.split(':')[1])).size} ${odd9.join()}`);
       const count9 = (row, s) => (rows9.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdicts9 = text9.map((o) => `${o.match.row} ${count9(o.match.row, o.printed)}/${count9(o.match.row, o.read)}`);
-      check('MH9 text: each of the five text verdicts is applied, its printed fragment once in its row and the misread gone',
-        text9.length === 5 && verdicts9.every((v) => v.endsWith(' 1/0')), verdicts9.join(' | '));
+      check('MH9 text: each of the nine text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text9.length === 9 && verdicts9.every((v) => v.endsWith(' 1/0')), verdicts9.join(' | '));
     }
   }
 
