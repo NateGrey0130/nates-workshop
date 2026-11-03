@@ -2617,13 +2617,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixesL.join(' | '));
     const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla1-overrides.json'), 'utf8')).overrides;
     const textL = ovL.filter((o) => o.verdict === 'text');
-    check('MLA1: 21 overrides: three misprints, three as printed, the Werewolf\'s human label, Bartholomew Jacobs\'s rows and 13 text verdicts (the Flashing Blade\'s Talents and twelve letter misreads read on the page), and only seven blocks carry one',
-      ovL.length === 21 && ovL.filter((o) => o.verdict === 'misprint').length === 3 && ovL.filter((o) => o.verdict === 'as_printed').length === 3
+    check('MLA1: 23 overrides: three misprints, three as printed, the Werewolf\'s human label, Bartholomew Jacobs\'s rows and 15 text verdicts (the Flashing Blade\'s Talents, twelve letter misreads read on the page, and two line-end compound hyphens, Spider-Sense and Shift-Zero, whose printed fragment keeps the hyphen and drops the space), and only seven blocks carry one',
+      ovL.length === 23 && ovL.filter((o) => o.verdict === 'misprint').length === 3 && ovL.filter((o) => o.verdict === 'as_printed').length === 3
       && ovL.filter((o) => o.verdict === 'label').length === 1 && ovL.filter((o) => o.verdict === 'rows').length === 1
       && textL.map((o) => o.match.row.replace(/^mla1:/, '')).join() === ['typical-flashing-blade-mla1:talents', 'iron-fist-mla1:power:1',
         'iron-fist-mla1:background', 'power-man-mla1:power:1', 'power-man-mla1:background', 'power-man-mla1:background',
         'bifrost-felicia-mla1:power:1', 'blacklash-mla1:power:2', 'blacklash-mla1:background', 'sentinels-mark-iv-mla1:power:1',
-        'werewolf-mla1:power:7', 'werewolf-mla1:power:7', 'whirlwind-mla1:power:2'].join()
+        'werewolf-mla1:power:7', 'werewolf-mla1:power:7', 'whirlwind-mla1:power:2', 'spider-man-mla1:power:4', 'black-talon-mla1:power:1'].join()
+      && textL.slice(13).every((o) => o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2'))
       && blocksL.filter(({ b }) => b.override).map(({ id }) => id).join()
         === ['typical-buzz-cut', 'typical-flashing-blade', 'bartholomew-jacobs', 'black-talon-s-zombie', 'eel', 'sentinels-mark-iv', 'tatterdemalion'].map((s) => `${s}-mla1`).join(),
       `${JSON.stringify(ovL.map((o) => [o.verdict, o.match]))} ${blocksL.filter(({ b }) => b.override).map(({ id }) => id)}`);
@@ -2693,9 +2694,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         && rowsL.filter((r) => /["']/.test(r.body)).length === 50 && nL(/"/g) === 24 && nL(/'/g) === 91,
         `${rowsL.length} ${entL.size} ${rowsL.filter((r) => /["']/.test(r.body)).length} ${nL(/"/g)} ${nL(/'/g)} ${rowsL.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
       const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
-      check('MLA1 text: the 13 text verdicts are applied, each printed fragment in its row and the misread gone',
-        textL.length === 13 && textL.every((o) => countL(o.match.row, o.printed) >= 1 && countL(o.match.row, o.read) === 0),
+      check('MLA1 text: the 15 text verdicts are applied, each printed fragment in its row and the misread gone',
+        textL.length === 15 && textL.every((o) => countL(o.match.row, o.printed) >= 1 && countL(o.match.row, o.read) === 0),
         textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join());
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10m, Nate
+      // 2026-11-03): MLA1's two are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeL = rowsL.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mla1:/, ''))).sort();
+      check('MLA1 text: no row reads a letter, a hyphen and a space before a word',
+        rowsL.length > 0 && shapeL.length === 0, shapeL.join(' '));
       // OCR noise row 12b saw on the page (a bar or a backslash for a capital
       // I, a stray tilde, lron for Iron, a capital Kill the page prints lower
       // case), each now a text verdict read on the page. None is left, and
