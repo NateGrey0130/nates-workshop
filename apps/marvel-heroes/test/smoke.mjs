@@ -1053,6 +1053,32 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'mantis-me1' }).snapshot).startsWith('ME1 Cosmos Cubed, Adventure p.3;')
       && tagline(bookNpc({ character: 'nova-me1' }).snapshot).startsWith('ME1 Cosmos Cubed, Pregenerated Heroes Summary;'),
       tagline(bookNpc({ character: 'nova-me1' }).snapshot));
+    // ME1's text verdicts: five bullets read as a letter e (#2076), and one
+    // compound the page breaks at a line end after the hyphen (marvel-11
+    // leftovers row 10b, Nate 2026-11-03). The text is msh_book_text's: read
+    // the generated .sql in the cache, by keys and by the overrides' own
+    // fragments, never a word of the book in this file.
+    const ovE = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'me1-overrides.json'), 'utf8')).overrides;
+    const textE = ovE.filter((o) => o.verdict === 'text');
+    const hyphE = textE.filter((o) => /[a-z]- [A-Za-z]/.test(o.read));
+    check('ME1: ten overrides: one rows, one misprint, one as printed, one chart misprint and six text verdicts, one of them a line-end compound hyphen whose printed fragment keeps the hyphen and drops the space',
+      ovE.length === 10 && ['rows', 'misprint', 'as_printed', 'summary_misprint'].every((v) => ovE.filter((o) => o.verdict === v).length === 1)
+      && textE.length === 6 && hyphE.length === 1 && hyphE.every((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2')),
+      JSON.stringify(ovE.map((o) => o.verdict)));
+    const sqlE = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'me1', 'book-text.sql');
+    if (!existsSync(sqlE)) {
+      check(`ME1: skipped the text checks: no ${rel(sqlE) || sqlE}`, true);
+    } else {
+      const rowsE = [...readFileSync(sqlE, 'utf8').matchAll(/VALUES \('([^']+)', 'me1', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const countE = (row, s) => (rowsE.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsE = textE.map((o) => `${o.match.row} ${countE(o.match.row, o.printed)}/${countE(o.match.row, o.read)}`);
+      check('ME1 text: each of the six text verdicts is applied, its printed fragment once in its row and the misread gone',
+        rowsE.length === 198 && verdictsE.length === 6 && verdictsE.every((v) => v.endsWith(' 1/0')), verdictsE.filter((v) => !v.endsWith(' 1/0')).join(' | ') || `${rowsE.length} rows`);
+      const shapeE = rowsE.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('ME1 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        shapeE.length === 0, shapeE.join(' '));
+    }
   }
 
   // MHSP2 is MHSP1's kind of module set another way, its Roster Book in team
