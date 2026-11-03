@@ -4,8 +4,8 @@ Marvel Super Heroes adventure, product code 6904 on the cover (PDF 1). By
 Anthony Herring (the title page), 1991, MSL2's author. Registry entry:
 `scripts/msh/books.json` -> `msl4`. Measured 2026-11-02.
 
-**Rows citing this book:** 0 `msh_book_text` rows in production: nothing is
-imported yet, and the data row sets this line from production.
+**Rows citing this book:** 55 `msh_book_text` rows over 10 character entries
+in production (`DB_MARVEL`, read back 2026-11-02).
 
 Everything here was measured and read on the page images by plan row 31a
 (renders at 24-150 dpi, PyMuPDF), and recorded in the registry entry.

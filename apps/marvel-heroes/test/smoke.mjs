@@ -3159,6 +3159,117 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     }
   }
 
+  // MSL4 is read by scripts/msh/gridbooks.py (msl4-overrides.json), with the
+  // survey's decisions applied as it recommends (msl4.md; Nate 2026-10-31).
+  // Every card is in the Adventure Book: the three chapter robots (printed 14
+  // and 17) and the roster's seven (27-31), one one-line grid each and
+  // Stygorr's human form a second, all filed under the book's title. The two
+  // reader fields MSL4 taught (repeated_power_heads in gridbooks.py,
+  // role_brackets in npcs.py) and the registry fields roster.py would not stop
+  // on are each pinned here by what they change. No grid prints a derived
+  // Karma, so no MSL4 block joins MH2's karma_derived list.
+  if (data.npcs.characters.some((c) => c.book === 'msl4')) {
+    const msl4 = data.npcs.characters.filter((c) => c.book === 'msl4');
+    const blocksB = msl4.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b, i) => ({ id: c.id, i, b }))));
+    const powersB = (id) => msl4.find((c) => c.id === id)?.versions[0].powers.map((p) => p.name).join() || '';
+    const playedB = (id, block) => { const s = bookNpc({ character: id, block }).snapshot; return `${s?.health}/${s?.karma}`; };
+    check('MSL4: 10 characters, each id ending -msl4 with one unlabelled version, all under the book\'s title, and no name starting The',
+      msl4.length === 10 && msl4.every((c) => c.id.endsWith('-msl4') && c.versions.length === 1 && !c.versions[0].label)
+      && msl4.every((c) => c.team === 'MSL4 Stygian Knight')
+      && !msl4.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${msl4.length} ${[...new Set(msl4.map((c) => c.team))]} ${msl4.filter((c) => c.versions[0].label).map((c) => `${c.id}:${c.versions[0].label}`)}`);
+    check('MSL4: the cards sort by the Adventure page each starts on, 14 to 31, named as decision 6 gives, each bracket dropped (role_brackets)',
+      msl4.map((c) => c.id).join() === ['spy-eye', 'phase-bot', 'spray-bots', 'annihilus', 'mark-i-cyborg', 'mark-ii-cyborg', 'fiona-dunbar',
+        'mark-iii-cyborg', 'rigger', 'stygorr'].map((id) => `${id}-msl4`).join()
+      && msl4.map((c) => c.versions[0].blocks[0].page).join() === '14,17,17,27,28,28,29,29,30,31'
+      && msl4.map((c) => c.name).join() === 'Spy-Eye,Phase-Bot,Spray-Bots,Annihilus,Mark I Cyborg,Mark II Cyborg,Fiona Dunbar,Mark III Cyborg,Rigger,Stygorr',
+      msl4.map((c) => `${c.id}:${c.name}:${c.versions[0].blocks[0].page}`).join());
+    check('MSL4: 11 one-line grids, Stygorr\'s two labelled (Stygorr, Lew Shiner), none ranks only (codes_over_numbers) and none with a derived total',
+      blocksB.length === 11 && blocksB.every(({ b }) => b.kind === 'line' && !b.rank_only && !b.karma_derived && !b.health_derived)
+      && blocksB.filter(({ b }) => b.label).map(({ id, b }) => `${id}:${b.label}`).join() === 'stygorr-msl4:Stygorr,stygorr-msl4:Lew Shiner',
+      blocksB.map(({ id, b }) => `${id}:${b.kind}:${b.label}:${b.rank_only}:${b.karma_derived}:${b.health_derived}`).join());
+    check('MSL4: the three chapter robots print no Resources or Popularity; each roster grid keeps its own (line_grid_resources), Annihilus\'s Popularity -30 (line_popularity_minus) and Lew Shiner\'s his own (form_resources)',
+      blocksB.map(({ b }) => `${b.resources}/${b.popularity}`).join()
+        === 'null/null,null/null,null/null,MN (75)/-30,FB (2)/0,FB (2)/0,FB (2)/0,FB (2)/0,FB (2)/0,AM (50)/0,AM (50)/0',
+      blocksB.map(({ b }) => `${b.resources}/${b.popularity}`).join());
+    const ovB = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl4-overrides.json'), 'utf8')).overrides;
+    const textB = ovB.filter((o) => o.verdict === 'text');
+    check('MSL4: one override, the Phase-Bot\'s Flight text verdict, and no block carries one (decision 7: every grid adds up)',
+      ovB.length === 1 && textB.map((o) => o.match.row).join() === 'msl4:phase-bot-msl4:power:3'
+      && !blocksB.some(({ b }) => b.override),
+      `${JSON.stringify(ovB.map((o) => [o.verdict, o.match]))} ${blocksB.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`)}`);
+    const powB = msl4.flatMap((c) => c.versions[0].powers);
+    check('MSL4: 40 powers across nine cards, 13 linked to the UPB; Force Field, Personal on all three Marks (power_heads, repeated_power_heads), the robots\' powers past their indented paragraphs and the next page (opponent_indented_paragraphs, continues), and Fiona Dunbar\'s Equipment not powers (title_case_labels)',
+      powB.length === 40 && powB.filter((p) => p.upb).length === 13 && msl4.filter((c) => c.versions[0].powers.length).length === 9
+      && powersB('mark-i-cyborg-msl4') === 'Cybernetic Body,ECMs,Flight,Force Field, Personal,Plasma Beam,Sensors,Stun Beam,Targeting System'
+      && powersB('mark-ii-cyborg-msl4') === 'Cybernetic Body,ECMs,Flight,Force Field, Personal,Sensors,Stun Beam,Tractor Beams'
+      && powersB('mark-iii-cyborg-msl4') === 'Cybernetic Body,ECMs,Flight,Force Field, Personal,Growth,Plasma Beam,Sensors,Stun Beam,Targeting System'
+      && powersB('phase-bot-msl4') === 'Elongation (Tentacles),Enhanced Senses (Hearing, Smell),Flight,Image Generation,Phasing'
+      && powersB('spray-bots-msl4') === 'Extinguisher Spray,Flight'
+      && powersB('stygorr-msl4') === 'Alter Ego,Body Armor,Flight,Matter Fluctuation'
+      && powersB('fiona-dunbar-msl4') === '',
+      `${powB.length} ${powB.filter((p) => p.upb).length} ${msl4.map((c) => `${c.id}:${powersB(c.id)}`).join(' | ')}`);
+    const idB = msl4.map((c) => c.versions[0].identity.map((l) => l.replace(/^Real Name: /, '')).join('/')).join();
+    const mark3B = msl4.find((c) => c.id === 'mark-iii-cyborg-msl4')?.versions[0].identity || [];
+    check('MSL4: seven identities, each the card\'s Real Name: line (line_identity), the Marks I and II Irrelevant as printed (decision 8) and the Mark III\'s two people on two lines (decision 5); the robots print none',
+      msl4.filter((c) => c.versions[0].identity.length).length === 7
+      && msl4.every((c) => c.versions[0].identity.every((l, i) => i > 0 || l.startsWith('Real Name: ')))
+      && idB.startsWith(',,,Annihilus,Irrelevant,Irrelevant,Fiona Dunbar,') && idB.endsWith(',Ramone Webber,Stygorr/Lew Shiner')
+      && mark3B.length === 2 && mark3B[1].includes('"Big Ben"'),
+      idB);
+    const bookB = data.npcs.books.find((b) => b.slug === 'msl4');
+    const choicesB = msl4.map((c) => choices.filter((x) => x.character === c.id).length);
+    check('MSL4: the book reads Adventure 14-17 and 27-31, a card cites its Adventure page, and every card is one GM choice',
+      JSON.stringify(bookB?.ranges) === '[{"part":"Adventure","pages":[[14,17],[27,31]]}]'
+      && tagline(bookNpc({ character: 'spy-eye-msl4' }).snapshot).startsWith('MSL4 Stygian Knight, Adventure p.14;')
+      && tagline(bookNpc({ character: 'stygorr-msl4' }).snapshot).startsWith('MSL4 Stygian Knight, Adventure p.31;')
+      && choicesB.every((n) => n === 1),
+      `${JSON.stringify(bookB?.ranges)} ${tagline(bookNpc({ character: 'spy-eye-msl4' }).snapshot)} ${msl4.map((c, i) => `${c.id}:${choicesB[i]}`).filter((s) => !s.endsWith(':1'))}`);
+    const playsB = msl4.map((c) => playedB(c.id)).join();
+    const styFormsB = (bookNpc({ character: 'stygorr-msl4' }).snapshot?.forms || []).map((f) => `${f.name} ${f.health}/${f.karma}`).join();
+    check('MSL4: cards play their printed Health and Karma, and Stygorr is one NPC whose second form, Lew Shiner, plays 28/100 (decision 4)',
+      playsB === '48/18,80/10,58/10,205/70,110/18,90/18,36/18,130/18,14/52,110/100'
+      && styFormsB === 'Stygorr 110/100,Lew Shiner 28/100',
+      `${playsB} | ${styFormsB}`);
+    // The text verdict moves only the book's text, which is msh_book_text's:
+    // read the generated .sql in the cache, by keys and by a few words, never
+    // a sentence of the book in this file.
+    const sqlB = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'msl4', 'book-text.sql');
+    if (!existsSync(sqlB)) {
+      check(`MSL4: skipped the text checks: no ${rel(sqlB) || sqlB}`, true);
+    } else {
+      const rowsB = [...readFileSync(sqlB, 'utf8').matchAll(/VALUES \('([^']+)', 'msl4', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
+      const entB = new Set(rowsB.map((r) => r.key.split(':')[1]));
+      // Row 33b read every quote mark on the page images and found none
+      // wrong: 27 apostrophes, the three feet marks after 10 and four pairs
+      // of doubles, Stygorr's closing double among them.
+      const markedB = rowsB.filter((r) => /["']/.test(r.body));
+      const marksB = (re) => markedB.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
+      check('MSL4 text: 55 rows over all 10 entries, no row with an odd count of double quotes, and the 21 rows holding 38 quote marks (8 double, 30 single, 3 of them feet marks after a digit)',
+        rowsB.length === 55 && entB.size === 10 && msl4.every((c) => entB.has(c.id))
+        && !rowsB.some((r) => (r.body.match(/"/g) || []).length % 2)
+        && markedB.length === 21 && marksB(/"/g) === 8 && marksB(/'/g) === 30 && marksB(/\d'/g) === 3,
+        `${rowsB.length} ${entB.size} ${rowsB.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedB.length} ${marksB(/"/g)} ${marksB(/'/g)} ${marksB(/\d'/g)}`);
+      const countB = (row, s) => (rowsB.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      check('MSL4 text: the text verdict is applied, its printed fragment in its row and the misread gone',
+        textB.length === 1 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
+        textB.map((o) => `${o.match.row} ${countB(o.match.row, o.printed)}/${countB(o.match.row, o.read)}`).join(' | '));
+      const noiseB = rowsB.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|IIl|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl4:/, ''));
+      check('MSL4 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I (speck_lines mends the seven Marks)',
+        noiseB.length === 0, noiseB.join());
+      const roster = msl4.filter((c) => c.versions[0].blocks[0].page >= 27);
+      check('MSL4 text: every card\'s power rows match its powers, the seven roster cards each a talents and a notes row, Fiona Dunbar\'s None a powers-intro row, and no prose row',
+        msl4.every((c) => rowsB.filter((r) => r.key.startsWith(`msl4:${c.id}:power:`)).length === c.versions[0].powers.length)
+        && roster.length === 7
+        && roster.every((c) => ['talents', 'notes'].every((k) => rowsB.filter((r) => r.key === `msl4:${c.id}:${k}`).length === 1))
+        && rowsB.filter((r) => r.key.endsWith(':talents') || r.key.endsWith(':notes')).length === 14
+        && rowsB.filter((r) => r.key.endsWith(':powers-intro')).map((r) => r.key).join() === 'msl4:fiona-dunbar-msl4:powers-intro'
+        && !rowsB.some((r) => r.key.endsWith(':prose')),
+        msl4.map((c) => `${c.id}:${rowsB.filter((r) => r.key.startsWith(`msl4:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).join());
+    }
+  }
+
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
   // with one-line grids in its chapters and Nate's rulings of 2026-10-21
   // (survey me2.md decisions 1 and 5).
