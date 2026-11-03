@@ -1144,6 +1144,38 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && /stat blocks/.test(bookNpc({ character: 'thundersword-mhsp2' }).error || ''));
     check('MHSP2: an entry of tiers alone opens with prose, not an identity (Kingpin\'s Organization)',
       m2.find((c) => c.id === 'kingpin-s-organization-mhsp2')?.versions[0].identity.length === 0);
+    // MHSP2's text verdicts: Mephisto's doubled quote mark, then six line-end
+    // hyphen breaks (marvel-11 leftovers row 10l, Nate 2026-11-03). The text is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by the
+    // overrides' own fragments, never a word of the book in this file.
+    const ovS2 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mhsp2-overrides.json'), 'utf8')).overrides;
+    const textS2 = ovS2.filter((o) => o.verdict === 'text');
+    const hyphS2 = textS2.slice(1);
+    check('MHSP2: 33 overrides: ten misprints, two as printed, nine labels, one chart misprint, three rows, one powers intro and seven text verdicts (Mephisto\'s doubled quote mark, She-Hulk\'s running note closing up one word broken at a line end, and five line-end compound hyphens, Air-Walker once and Hate-Monger four times, whose printed fragment keeps the hyphen and drops the space)',
+      ovS2.length === 33 && ovS2.filter((o) => o.verdict === 'misprint').length === 10 && ovS2.filter((o) => o.verdict === 'as_printed').length === 2
+      && ovS2.filter((o) => o.verdict === 'label').length === 9 && ovS2.filter((o) => o.verdict === 'summary_misprint').length === 1
+      && ovS2.filter((o) => o.verdict === 'rows').length === 3 && ovS2.filter((o) => o.verdict === 'powers_intro').length === 1
+      && textS2.map((o) => o.match.row.slice(6)).join() === 'mephisto-mhsp2:power:3,she-hulk-mhsp2:running,firelord-mhsp2:running,hate-monger-mhsp2:power:1,hate-monger-mhsp2:power:2,hate-monger-mhsp2:power:2,psycho-man-mhsp2:power:2'
+      && hyphS2[0].printed === hyphS2[0].read.replace(/([a-z])- [A-Z]([a-z])/, (s, a, b) => a + s[3].toLowerCase() + b)
+      && hyphS2.slice(1).every((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2')),
+      JSON.stringify(ovS2.map((o) => [o.verdict, o.match])));
+    const sqlS2 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mhsp2', 'book-text.sql');
+    if (!existsSync(sqlS2)) {
+      check(`MHSP2: skipped the text checks: no ${rel(sqlS2) || sqlS2}`, true);
+    } else {
+      const rowsS2 = [...readFileSync(sqlS2, 'utf8').matchAll(/VALUES \('([^']+)', 'mhsp2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, , body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const countS2 = (row, s) => (rowsS2.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsS2 = hyphS2.map((o) => `${o.match.row} ${countS2(o.match.row, o.printed)}/${countS2(o.match.row, o.read)}`);
+      check('MHSP2 text: each of the six line-end hyphen verdicts is applied, its printed fragment once in its row and the misread gone',
+        rowsS2.length > 0 && hyphS2.length === 6 && verdictsS2.every((v) => v.endsWith(' 1/0')), `${rowsS2.length} rows; ${verdictsS2.join(' | ')}`);
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>": MHSP2's six are closed up by the
+      // text verdicts above, and none is kept on purpose.
+      const shapeS2 = rowsS2.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.slice(6))).sort();
+      check('MHSP2 text: no row reads a letter, a hyphen and a space before a word',
+        rowsS2.length > 0 && shapeS2.length === 0, shapeS2.join(' '));
+    }
   }
 
   // MH1 prints MHSP1's rank words on two loose cover panels and in one-line

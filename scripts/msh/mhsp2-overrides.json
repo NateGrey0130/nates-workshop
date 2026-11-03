@@ -9,6 +9,7 @@
     "            label             the grid has no printed name above it; 'label' names it from its entry's own text",
     "            summary_misprint  the chart prints a value the Roster Book's block does not, and neither is a sum to check; 'printed' is the chart's, 'corrected' the block's as parsed, which is what is played",
     "            powers_intro      {page, header} of an entry, and 'powers': the names its first run-ins under Known Powers parse as. They head the entry's account of its powers and name none, so their text becomes the entry's powers intro (D1 part powers-intro), each after its subheading, and the card lists no power for them",
+    "            text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -92,6 +93,24 @@
      "read": "\"\"super-powers\"", "printed": "\"super-powers\"", "note": "Roster 3, Other Powers. One opening double mark is printed; the OCR read two."},
     {"match": {"page": 2, "header": "THE BEYONDER"}, "verdict": "powers_intro", "powers": ["Ability Scores", "Powers"],
      "checked": "2026-10-21",
-     "note": "Roster 2. Under Known Powers the entry prints two run-ins, ABILITY SCORES (what his Beyond ranks mean in play) and POWERS (what he can do, in general), and no named power. Both are the entry's powers intro, each after its subheading."}
+     "note": "Roster 2. Under Known Powers the entry prints two run-ins, ABILITY SCORES (what his Beyond ranks mean in play) and POWERS (what he can do, in general), and no named power. Both are the entry's powers intro, each after its subheading."},
+    {"match": {"row": "mhsp2:she-hulk-mhsp2:running"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "was criti- Cally injured", "printed": "was critically injured",
+     "note": "Running She-Hulk, Roster p.12 (PDF 45): the page breaks the one word critically at a line end with a hyphen, and prints its second half in lower case (the OCR read a capital C), so it is closed up whole. Read on a 300 dpi crop of PDF 45 (marvel-11 leftovers row 10l, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp2:firelord-mhsp2:running"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Air- Walker.", "printed": "the Air-Walker.",
+     "note": "Running Firelord, Roster p.22 (PDF 55): the page breaks the name Air-Walker at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 55 (marvel-11 leftovers row 10l, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp2:hate-monger-mhsp2:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Hate- Monger himself", "printed": "the Hate-Monger himself",
+     "note": "Hate-Monger's Emotion Control, Roster p.27 (PDF 60): the page breaks the name Hate-Monger at a line end after its own hyphen (two lines above, it prints the name whole, with the hyphen, mid-line), so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 60 (marvel-11 leftovers row 10l, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp2:hate-monger-mhsp2:power:2"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "name. Hate- Monger is", "printed": "name. Hate-Monger is",
+     "note": "Hate-Monger's Shape-Changing row, Roster p.27 (PDF 60), which carries the running note on Psycho-Man and Hate-Monger, the first of two: the page breaks the name Hate-Monger at a line end after its own hyphen, a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 60 (marvel-11 leftovers row 10l, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp2:hate-monger-mhsp2:power:2"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Hate. Hate- Monger will", "printed": "Hate. Hate-Monger will",
+     "note": "Hate-Monger's Shape-Changing row, Roster p.27 (PDF 60), the second of two: the same compound broken at a line end after its hyphen; the hyphen stays and only the space goes (300 dpi crop of PDF 60, marvel-11 leftovers row 10l, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp2:psycho-man-mhsp2:power:2"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "under Hate- Monger.", "printed": "under Hate-Monger.",
+     "note": "Psycho-Man's Emotion-Control Box, Roster p.27 (PDF 60): the page breaks the name Hate-Monger at a line end after its own hyphen, a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 60 (marvel-11 leftovers row 10l, Nate 2026-11-03)."}
   ]
 }
