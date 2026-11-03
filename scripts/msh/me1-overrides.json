@@ -42,6 +42,9 @@
      "note": "Storm Breaker, printed 6 (PDF 9): the fourth of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."},
     {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
      "read": "less. e Alter Ego", "printed": "less. Alter Ego",
-     "note": "Storm Breaker, printed 6 (PDF 9): the fifth of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."}
+     "note": "Storm Breaker, printed 6 (PDF 9): the fifth of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "me1:trader-me1:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Soul- Gems.", "printed": "Soul-Gems.",
+     "note": "the background, printed 16 (PDF 50): the page breaks the compound Soul-Gems at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03), as the book prints Soul-Gem mid-line on pages 3, 12, 13 and 14 of the Resource Book. Read on a 300 dpi crop of PDF 50 (marvel-11 leftovers row 10b, 2026-11-03)."}
   ]
 }
