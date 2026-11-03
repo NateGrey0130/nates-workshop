@@ -4572,6 +4572,10 @@
         ["Adventure Book", 29, "Force Field, Personal", 2]
       ],
       "repeated_power_heads_note": "[part, printed page, power name, how many], MSL4's (gridbooks.py; survey msl4.md, Which reader fits item 27): Force Field, Personal on two cards of printed 29 (the Mark II's and the Mark III's), which power_heads, one per page, cannot name. Every line of the page that starts with the name and a colon is a head, its name kept as printed, and there must be exactly that many or roster.py stops. Off, 38 powers and 53 rows (ablation, plan row 31c1, 2026-11-02).",
+      "heads_in_text": [
+        ["Adventure Book", 30, "Force Field, Personal", 1]
+      ],
+      "heads_in_text_note": "[part, printed page, power name, how many], MSL4's (gridbooks.py, plan marvel-11-books close-out 2026-11-03): a name power_heads or repeated_power_heads teaches the reader, printed at a line's start with its colon where it is text and stays text. Rigger's bulleted implant list (printed 30) prints Force Field, Personal: as one of its lines, and the survey (Seen and left) keeps the list in his text. Every other line of the part that starts with such a name and is not a named head stops the build; with repeated_power_heads off that was 38 powers at exit 0 (survey item 27). Exactly this many must be found, or the build stops.",
       "role_brackets": [
         ["Adventure Book", 17, "Phase-Bot (Shugnaggorak)", "Phase-Bot"],
         ["Adventure Book", 28, "CYBORG, MARK I (HUNTER-WORKER)", "Mark I Cyborg"],

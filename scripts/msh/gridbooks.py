@@ -281,6 +281,29 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: indented_power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
         hits[0]['indented_head'] = True
+    # MSL4 (plan marvel-11-books close-out, 2026-11-03): a power head the
+    # registry names (power_heads, repeated_power_heads) because roster.POWER_HEAD
+    # cannot read it is a head wherever it starts a line with its colon, named
+    # or not. With repeated_power_heads off, the Mark II's and the Mark III's
+    # Force Field, Personal (printed 29) folded into the power above them: 38
+    # powers, exit 0, and nothing said so (survey msl4.md item 27). A line that
+    # starts with such a name and is not marked stops the build, unless the
+    # registry's heads_in_text [part, page, power name, how many] records it as
+    # text left where it is (Rigger's bulleted implant list, printed 30), and
+    # then exactly that many must be there.
+    named = {d[2] for key in ('power_heads', 'repeated_power_heads') for d in book.get(key, [])}
+    for head in sorted(named):
+        if roster.POWER_HEAD.match(head + ':'):
+            continue
+        loose = [l for l in stream if l['text'].startswith(head + ':') and not l.get('power_head')]
+        for p, page, name, n in [d for d in book.get('heads_in_text', []) if d[0] == part and first <= d[1] <= last and d[2] == head]:
+            kept = [l for l in loose if l['printed'] == page]
+            if len(kept) != n:
+                raise SystemExit('%s: heads_in_text finds %r %d times on %s p.%d, not %d' % (slug, head, len(kept), part, page, n))
+            loose = [l for l in loose if l['printed'] != page]
+        if loose:
+            raise SystemExit('%s: %r heads %d unnamed line(s) on %s p.%s; name each in power_heads, repeated_power_heads or heads_in_text'
+                             % (slug, head, len(loose), part, ','.join(str(l['printed']) for l in loose)))
     # MT3 (registry entry_ends [part, page, the whole line as read]): a
     # sidebar or box set in an entry's column that the page does not open
     # with a header (Attuma's KANG'S SCRIPT, printed 16; the SPIRE box under
