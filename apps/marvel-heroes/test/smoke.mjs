@@ -138,6 +138,68 @@ for (const [scheme, t] of [['light', light], ['dark', dark]]) {
 }
 
 // ---------------------------------------------------------------------------
+section('The sheet\'s four boxes hold every rank name at every sheet width');
+
+// Until 2026-11-03 the boxes went to two columns only below a 440px sheet, so
+// the GM page's 440px sheet at 1280x900 gave each box 83px of content and
+// "Amazing" (99px) ran 16px out of the Resources box. A rank name cannot be
+// measured here, so its width is pinned: every word of every name in
+// data/ranks.json at 700 24px Saira, read off getBoundingClientRect in Chrome
+// on 2026-11-03. A width scales with the font size (17px and 18px measured
+// within 0.02px of the ratio). A rank this table lacks fails below: measure it
+// and add it. What is checked is the stylesheet's own arithmetic, every
+// integer sheet width from 200px to 1200px: the columns and the font the
+// @container sheet rules leave, against the widest word.
+{
+  const WORD_PX_24 = {
+    Shift: 55.73, 0: 15.92, X: 16.5, Y: 15.3, Z: 14.75, Feeble: 74.31, Poor: 52.78, Typical: 80.27,
+    Good: 57.56, Excellent: 102.61, Remarkable: 135.42, Incredible: 111.17, Amazing: 98.75,
+    Monstrous: 120.84, Unearthly: 112.55, Class: 58.14, 1000: 57.22, 3000: 62.33, 5000: 62.75, Beyond: 85.61,
+  };
+  const rankNames = JSON.parse(readFileSync(join(appDir, 'data', 'ranks.json'), 'utf8')).ranks.map((r) => r.name);
+  const words = [...new Set(rankNames.flatMap((n) => n.split(/\s+/)))];
+  const unmeasured = words.filter((w) => !(w in WORD_PX_24));
+  check(`every word of the ${rankNames.length} rank names has a measured width`, rankNames.length > 15 && unmeasured.length === 0,
+    `measure: ${unmeasured.join(', ')}`);
+  const widest = Math.max(...words.map((w) => WORD_PX_24[w] ?? Infinity));
+
+  const px = (re) => { const m = css.match(re); return m ? Number(m[1]) : NaN; };
+  const gap = px(/^\.sh-boxes\s*\{[^}]*\bgap:\s*(\d+)px/m);
+  const pad = px(/^\.sh-box\s*\{[^}]*\bpadding:\s*(\d+)px/m);
+  const border = px(/^\.sh-box\s*\{[^}]*\bborder:\s*(\d+)px/m);
+  const baseCols = px(/^\.sh-boxes\s*\{[^}]*grid-template-columns:\s*repeat\((\d+)/m);
+  const baseFont = px(/^\.sh-box strong\s*\{[^}]*font-size:\s*(\d+)px/m);
+  check('the box rules read back (gap, padding, border, columns, font)',
+    [gap, pad, border, baseCols, baseFont].every(Number.isFinite), JSON.stringify({ gap, pad, border, baseCols, baseFont }));
+
+  // Every `@container sheet (width < Npx) { ... }`, in source order, and what
+  // it sets on the boxes. A brace scan, because the block holds rules.
+  const rules = [];
+  for (const m of css.matchAll(/@container\s+sheet\s*\(\s*width\s*<\s*(\d+)px\s*\)\s*\{/g)) {
+    let depth = 1; let i = m.index + m[0].length;
+    for (; i < css.length && depth; i++) depth += css[i] === '{' ? 1 : css[i] === '}' ? -1 : 0;
+    const body = css.slice(m.index + m[0].length, i - 1);
+    const cols = body.match(/\.sh-boxes\s*\{[^}]*grid-template-columns:\s*([^;}]+)/);
+    const font = body.match(/\.sh-box strong\s*\{[^}]*font-size:\s*(\d+)px/);
+    rules.push({ below: Number(m[1]),
+      cols: cols ? (/repeat\((\d+)/.exec(cols[1])?.[1] ?? cols[1].trim().split(/\s+(?![^(]*\))/).length) : null,
+      font: font ? Number(font[1]) : null });
+  }
+  check('the sheet has @container rules for its boxes', rules.some((r) => r.cols !== null), JSON.stringify(rules));
+  const tight = [];
+  for (let w = 200; w <= 1200; w++) {
+    let cols = baseCols; let font = baseFont;
+    for (const r of rules) if (w < r.below) { if (r.cols !== null) cols = Number(r.cols); if (r.font !== null) font = r.font; }
+    const content = (w - (cols - 1) * gap) / cols - 2 * pad - 2 * border;
+    const need = widest * font / 24;
+    if (content < need) tight.push(`${w}px: ${cols} across at ${font}px leaves ${content.toFixed(1)}px for ${need.toFixed(1)}px`);
+  }
+  const widestWord = words.find((w) => WORD_PX_24[w] === widest);
+  check(`at every sheet width from 200px to 1200px each box holds "${widestWord}" (${widest}px at 24px)`,
+    Number.isFinite(widest) && tight.length === 0, `${tight.length} widths too tight, first ${tight[0]}, last ${tight.at(-1)}`);
+}
+
+// ---------------------------------------------------------------------------
 section('The app is on the hub');
 
 // Nate's decision, 2026-09-23: no manifest entry until the generator worked.

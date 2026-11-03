@@ -421,7 +421,6 @@ button:focus-visible, [role="tab"]:focus-visible { outline: 3px solid var(--yell
 .sh-line { display: grid; grid-template-columns: 9.5em 1fr; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
 .sh-line input { width: 100%; }
 .sh-boxes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
-@media (max-width: 520px) { .sh-boxes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sh-box { display: flex; flex-direction: column; gap: 4px; border: 2px solid var(--rule); padding: 8px; background: var(--panel); }
 .sh-box strong { font-family: var(--font-display); font-size: 24px; }
 .sh-box input { width: 100%; font-size: 18px; }
@@ -431,12 +430,22 @@ button:focus-visible, [role="tab"]:focus-visible { outline: 3px solid var(--yell
 /* The GM page puts the sheet in a 2fr column, so a viewport query cannot
    see how narrow it is: at 1024px the column is about 340px and the FASERIP
    table runs under the identity lines. Below 440px (every desktop column is
-   wider) the sheet asks its own width and stacks. */
+   wider) the sheet asks its own width and stacks.
+   The four boxes ask it with their own numbers. The widest word a box can be
+   given is a rank name, "Remarkable": 135.42px at 700 24px Saira, measured
+   2026-11-03. A box's content is the column less 2 x 8px padding and
+   2 x 2px border, so four across need a sheet of 660px ((660 - 3 x 10) / 4 - 20
+   = 137.5), two across at 24px need 330px, two at 17px (95.93px) need 250px,
+   and below that they stack. A longer name ("Remarkable (30)") wraps at its
+   space. test/smoke.mjs reads these rules back against the measured widths;
+   print keeps four across at 18px (.sheet .sh-boxes below outranks these). */
 .sheet { container: sheet / inline-size; }
 @container sheet (width < 440px) {
   .sh-top, .sh-bottom { grid-template-columns: 1fr; }
-  .sh-boxes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@container sheet (width < 660px) { .sh-boxes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container sheet (width < 330px) { .sh-box strong { font-size: 17px; } }
+@container sheet (width < 250px) { .sh-boxes { grid-template-columns: minmax(0, 1fr); } }
 .sh-list { margin: 0; padding-left: 20px; }
 .sh-list li { padding: 3px 0; }
 .sh-long { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
