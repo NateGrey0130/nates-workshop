@@ -3103,9 +3103,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${fixA} | ${JSON.stringify(bookNpc({ character: 'ashta-msl3' }).snapshot?.abilities.agility)}`);
     const ovA = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl3-overrides.json'), 'utf8')).overrides;
     const textA = ovA.filter((o) => o.verdict === 'text');
-    check('MSL3: six overrides: one misprint, two as printed and three text verdicts (the Ice Bat\'s two, the Snake\'s If), and only those three blocks carry one',
-      ovA.length === 6 && ovA.filter((o) => o.verdict === 'misprint').length === 1 && ovA.filter((o) => o.verdict === 'as_printed').length === 2
-      && textA.map((o) => o.match.row.replace(/^msl3:/, '')).join() === 'ice-bat-msl3:power:2,ice-bat-msl3:power:3,flying-robotic-snake-msl3:prose'
+    check('MSL3: seven overrides: one misprint, two as printed and four text verdicts (the Ice Bat\'s two, the Snake\'s If, Torr\'s one prose bullet), and only those three blocks carry one',
+      ovA.length === 7 && ovA.filter((o) => o.verdict === 'misprint').length === 1 && ovA.filter((o) => o.verdict === 'as_printed').length === 2
+      && textA.map((o) => o.match.row.replace(/^msl3:/, '')).join() === 'ice-bat-msl3:power:2,ice-bat-msl3:power:3,flying-robotic-snake-msl3:prose,torr-msl3:prose'
       && blocksA.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`).join() === 'flying-robotic-snake-msl3:0,ashta-msl3:0,robotic-dragon-msl3:0',
       JSON.stringify(ovA.map((o) => [o.verdict, o.match])));
     const powA = msl3.flatMap((c) => c.versions[0].powers);
@@ -3152,7 +3152,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsA.length} ${entA.size} ${rowsA.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedA.length} ${marksA(/"/g)} ${marksA(/'/g)}`);
       const countA = (row, s) => (rowsA.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MSL3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textA.length === 3 && textA.every((o) => countA(o.match.row, o.printed) === 1 && countA(o.match.row, o.read) === 0),
+        textA.length === 4 && textA.every((o) => countA(o.match.row, o.printed) === 1 && countA(o.match.row, o.read) === 0),
         textA.map((o) => `${o.match.row} ${countA(o.match.row, o.printed)}/${countA(o.match.row, o.read)}`).join(' | '));
       const noiseA = rowsA.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl3:/, ''));
       check('MSL3 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
