@@ -417,7 +417,7 @@
    "title": "MLA1 After Midnight",
    "code": "TSR6892",
    "status": "imported",
-   "date": "2026-11-01",
+   "date": "2026-11-03",
    "added": [
     [
      "Characters",
@@ -425,7 +425,7 @@
     ],
     [
      "Rows of the book's text",
-     190
+     189
     ]
    ],
    "total": 47
