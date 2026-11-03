@@ -1667,12 +1667,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixes9.join(' | '));
     const ov9 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh9-overrides.json'), 'utf8')).overrides;
     const text9 = ov9.filter((o) => o.verdict === 'text');
-    check('MH9: fourteen overrides: three misprints, one as printed, the A.I.M. Scientists\' rows and nine text verdicts (the A.I.M. Technicians\' prose one, Captain America (Jeffrey Mace)\'s background two, the Thing (Divergent Earth)\'s background one, Hawkeye\'s equipment one, Flare\'s four Sound/light Conversion bullets), and only those five blocks carry one',
-      ov9.length === 14 && ov9.filter((o) => o.verdict === 'misprint').length === 3 && ov9.filter((o) => o.verdict === 'as_printed').length === 1
+    check('MH9: twenty-six overrides: three misprints, one as printed, the A.I.M. Scientists\' rows and twenty-one text verdicts (the A.I.M. Technicians\' prose one, Captain America (Jeffrey Mace)\'s background two, the Thing (Divergent Earth)\'s background one, Hawkeye\'s equipment one, Flare\'s four Sound/light Conversion bullets, and twelve line-end hyphen breaks: the Super-Adaptoid\'s Adaptation two and background three, Attuma\'s, Henry Pym\'s, Daredevil\'s Heightened Senses, the Human Torch (Jim Hammond)\'s, Nomad\'s two and She-Hulk\'s), and only those five blocks carry one',
+      ov9.length === 26 && ov9.filter((o) => o.verdict === 'misprint').length === 3 && ov9.filter((o) => o.verdict === 'as_printed').length === 1
       && ov9.filter((o) => o.verdict === 'rows').length === 1
       && text9.map((o) => o.match.row).join() === ['a-i-m-technicians-mh9:prose', 'captain-america-jeffrey-mace-mh9:background',
         'captain-america-jeffrey-mace-mh9:background', 'thing-divergent-earth-mh9:background', 'hawkeye-mh9:equipment',
-        'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1'].map((k) => `mh9:${k}`).join()
+        'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1', 'flare-mh9:power:1',
+        'super-adaptoid-mh9:power:1', 'super-adaptoid-mh9:power:1', 'super-adaptoid-mh9:background', 'super-adaptoid-mh9:background',
+        'super-adaptoid-mh9:background', 'attuma-mh9:background', 'henry-pym-mh9:background', 'daredevil-mh9:power:1',
+        'human-torch-jim-hammond-mh9:background', 'nomad-mh9:background', 'nomad-mh9:background', 'she-hulk-mh9:background'].map((k) => `mh9:${k}`).join()
+      && text9.slice(9).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocks9.filter(({ b }) => b.override).map(({ id }) => id).sort().join()
         === 'a-i-m-scientists-mh9,captain-america-jeffrey-mace-mh9,henry-pym-mh9,super-adaptoid-mh9,valor-mh9',
       JSON.stringify(ov9.map((o) => [o.verdict, o.match])));
@@ -1726,8 +1730,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rows9.length} ${new Set(rows9.map((r) => r.key.split(':')[1])).size} ${odd9.join()}`);
       const count9 = (row, s) => (rows9.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdicts9 = text9.map((o) => `${o.match.row} ${count9(o.match.row, o.printed)}/${count9(o.match.row, o.read)}`);
-      check('MH9 text: each of the nine text verdicts is applied, its printed fragment once in its row and the misread gone',
-        text9.length === 9 && verdicts9.every((v) => v.endsWith(' 1/0')), verdicts9.join(' | '));
+      check('MH9 text: each of the twenty-one text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text9.length === 21 && verdicts9.every((v) => v.endsWith(' 1/0')), verdicts9.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10j, Nate
+      // 2026-11-03): MH9's twelve are closed up by the text verdicts above.
+      // The one left is Daredevil's Heightened Senses, a suspended hyphen the
+      // page prints mid-line with its space ("hearing- and scent-related").
+      const shape9 = rows9.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.slice(4))).sort();
+      check('MH9 text: no row reads a letter, a hyphen and a space before a word but the one kept on purpose (Daredevil\'s suspended hyphen)',
+        rows9.length > 0 && shape9.join() === 'daredevil-mh9:power:1', shape9.join(' '));
     }
   }
 
