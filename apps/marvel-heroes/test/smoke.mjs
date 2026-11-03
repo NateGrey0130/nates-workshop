@@ -4187,6 +4187,29 @@ section('The codex: every section loads, searches, filters and keeps its address
         && npcs.stats(dragon).some(([k, v]) => k === 'Health / Karma' && v === 'See text / -'),
         `${notes(snake)} || ${notes(dragon)}`);
     }
+    // A string or number kept as printed names the sum by its field: F+A+S+E
+    // for Health, R+I+P for Karma, none for an ability (Nate, 2026-11-03); a
+    // printed rank with no number reads as its code alone
+    const notesOf = (id) => {
+      const r = npcs.byKey.get(id);
+      return r && npcs.stats(r).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`).join(' | ');
+    };
+    const wording = {
+      'dominus-msl1': 'As printed: Strength is printed N/A; read as 0',
+      'super-adaptoid-mh9': 'As printed: Health is printed 150, which F+A+S+E does not give',
+      'black-talon-s-zombie-mla1': 'As printed: Health is printed 80, which F+A+S+E does not give',
+      'sunspot-mlba1': 'As printed: Health is printed 52(76), which F+A+S+E does not give',
+      'dormammu-me3': 'As printed: Health is printed 1275*, which F+A+S+E does not give',
+      'mark-iv-sentinel-mx1': 'As printed: Karma is printed 0, which R+I+P does not give',
+      'stygorr-msl2': 'Misprint: Psyche is printed Rm; the book\'s own ranks give 30 Rm | Misprint: Endurance is printed 40 Ex; the book\'s own ranks give 20 Ex | Misprint: Reason is printed 30 In; the book\'s own ranks give 40 In',
+    };
+    const off = Object.entries(wording).filter(([id, want]) => npcs.byKey.has(id) && notesOf(id) !== want);
+    check('Notable NPCs: an As printed line names the sum by its field and a numberless printed rank is its code (MSL1\'s Dominus, MSL2\'s Stygorr, MH9\'s Super-Adaptoid, MX1\'s Sentinel)',
+      off.length === 0, off.map(([id]) => `${id}: ${notesOf(id)}`).join(' || '));
+    const wrong = [...npcs.byKey.keys()].map((id) => [id, notesOf(id)])
+      .filter(([, n]) => /Health is printed [^|]*R\+I\+P|Karma is printed [^|]*F\+A\+S\+E|printed null|(Fighting|Agility|Strength|Endurance|Reason|Intuition|Psyche) is printed [^|;]*, which/.test(n || ''));
+    check('Notable NPCs: no card names the wrong sum for its field, or prints null for a rank\'s number',
+      wrong.length === 0, wrong.map(([id, n]) => `${id}: ${n}`).join(' || '));
   }
 
   // A new section is one entry: a descriptor added to the list is a section,
