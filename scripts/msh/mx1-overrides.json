@@ -54,6 +54,15 @@
      "note": "Printed 9, column 3, Cold Beams: the capital I of its first word read as a vertical bar (seen on a 300 dpi crop of PDF 11)."},
     {"match": {"row": "mx1:mantinels-mx1:power:5"}, "verdict": "text", "checked": "2026-10-30",
      "read": "\\f the operator", "printed": "If the operator",
-     "note": "Printed 13, column 3, Automatic Escape: the capital I of its first word read as a backslash (seen on a 300 dpi crop of PDF 15)."}
+     "note": "Printed 13, column 3, Automatic Escape: the capital I of its first word read as a backslash (seen on a 300 dpi crop of PDF 15)."},
+    {"match": {"row": "mx1:nimrod-mx1:power:5"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "conditions: e He has", "printed": "conditions: He has",
+     "note": "Auto-Repair, printed 11 (PDF 13): the first of 3 bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 13 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "mx1:nimrod-mx1:power:5"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "remaining; e For every", "printed": "remaining; For every",
+     "note": "Auto-Repair, printed 11 (PDF 13): the second of 3 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 13, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "mx1:nimrod-mx1:power:5"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Excellent); e Repairing 15", "printed": "Excellent); Repairing 15",
+     "note": "Auto-Repair, printed 11 (PDF 13): the third of 3 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 13, marvel-11 stray bullets, 2026-11-03)."}
   ]
 }
