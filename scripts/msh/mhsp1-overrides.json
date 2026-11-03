@@ -8,6 +8,7 @@
     "            label             the block has no printed name above it; 'label' names it from its entry's own text",
     "            summary_misprint  the chart prints a value its own ranks contradict and the Roster Booklet's block does not; 'printed' is the chart's, 'corrected' the block's",
     "            summary_blank     the chart prints a dash where the Roster Booklet prints a value",
+    "            text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -31,6 +32,12 @@
      "note": "R 10 + I 4 + P 75 = 89, as the Roster Booklet prints (p.14)."},
     {"match": {"summary": "Lockheed"}, "verdict": "summary_blank", "field": "karma",
      "printed": null, "corrected": 40, "checked": "2026-09-28",
-     "note": "The chart prints a dash; the Roster Booklet prints 40 (p.9)."}
+     "note": "The chart prints a dash; the Roster Booklet prints 40 (p.9)."},
+    {"match": {"row": "mhsp1:she-hulk-mhsp1:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the She- Hulk. Jennifer", "printed": "the She-Hulk. Jennifer",
+     "note": "She-Hulk's background, Roster p.6 (PDF 23): the page breaks the name She-Hulk at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 23 (marvel-11 leftovers row 10k, Nate 2026-11-03)."},
+    {"match": {"row": "mhsp1:spider-woman-mhsp1:power:2"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "area Spider- Woman is", "printed": "area Spider-Woman is",
+     "note": "Psychic Web, Roster p.7 (PDF 24): the page breaks the name Spider-Woman at a line end after its own hyphen (two lines above, it prints the name whole, with the hyphen, mid-line), with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 24 (marvel-11 leftovers row 10k, Nate 2026-11-03)."}
   ]
 }
