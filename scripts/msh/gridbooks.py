@@ -248,6 +248,19 @@ def stream_of(book, slug, part, first, last):
         if len(hits) != 1:
             raise SystemExit('%s: power_heads finds %r %d times on %s p.%d, not once' % (slug, head, len(hits), part, page))
         hits[0]['power_head'] = True
+    # MSL4 (registry repeated_power_heads [part, page, power name, how many]):
+    # a power head roster.POWER_HEAD cannot read (the comma in Force Field,
+    # Personal) printed on more than one card of a page (the Mark II's and the
+    # Mark III's, printed 29), which power_heads, one per page, cannot name.
+    # Every line of the page that starts with the name and a colon is a head,
+    # its name kept as printed, and there must be exactly that many.
+    for p, page, head, n in [d for d in book.get('repeated_power_heads', []) if d[0] == part and first <= d[1] <= last]:
+        hits = [l for l in stream if l['printed'] == page and l['text'].startswith(head + ':')]
+        if len(hits) != n:
+            raise SystemExit('%s: repeated_power_heads finds %r %d times on %s p.%d, not %d' % (slug, head, len(hits), part, page, n))
+        for l in hits:
+            l['power_head'] = True
+            l['power_name'] = head
     # MLBA1 (registry powers_open [part, page, the first power's name]): a
     # codes-only grid's powers set as run-ins under it with no Known Powers
     # label (the three animals, printed 31) open a powers section at the
