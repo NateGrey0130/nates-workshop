@@ -76,6 +76,12 @@
      "note": "Printed 62 (PDF 63): the quoted word at the end of Silver Vulnerability is printed lower case, the k read as a capital. The book's other Kills in the character text (the Black Talon's, the Rat Pack's and the Mosquito Swarm's) are printed capital, read on printed 53 and 42."},
     {"match": {"row": "mla1:whirlwind-mla1:power:2"}, "verdict": "text", "checked": "2026-11-03",
      "read": "shurikenlike~", "printed": "shurikenlike",
-     "note": "Printed 63 (PDF 64): the line ends on shurikenlike; the tilde is a stroke of the illustration beside the column."}
+     "note": "Printed 63 (PDF 64): the line ends on shurikenlike; the tilde is a stroke of the illustration beside the column."},
+    {"match": {"row": "mla1:spider-man-mla1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "his Spider- Sense.", "printed": "his Spider-Sense.",
+     "note": "Spider-Man's Spider-Tracer, printed 6 (PDF 7): the page breaks Spider-Sense at a line end after its own hyphen, with the second half capitalised, and prints the name whole, with the hyphen, mid-line twice elsewhere in the book's character text, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 7 (marvel-11 leftovers row 10m, Nate 2026-11-03)."},
+    {"match": {"row": "mla1:black-talon-mla1:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "are Shift- Zero.", "printed": "are Shift-Zero.",
+     "note": "The Black Talon's first power, printed 53 (PDF 54): the page breaks the rank Shift-Zero at a line end after its own hyphen, with the second half capitalised, and prints it whole, with the hyphen, mid-line once elsewhere in the book's character text, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 54 (marvel-11 leftovers row 10m, Nate 2026-11-03)."}
   ]
 }
