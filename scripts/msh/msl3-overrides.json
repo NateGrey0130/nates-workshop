@@ -28,6 +28,9 @@
      "note": "Ice Entrapment, printed 13: the OCR read the capital I of It as a bar; the trial's speck line for it (plan row 28c) is a whole line of ten words, which the Marvel smoke suite's leak check refuses, so the mark is mended in the row instead (row 29a). Read off the OCR stream (row 29a) and confirmed on a 150 dpi render of printed 13 (row 29b)."},
     {"match": {"row": "msl3:flying-robotic-snake-msl3:prose"}, "verdict": "text", "checked": "2026-11-02",
      "read": "lf the heroes discover", "printed": "If the heroes discover",
-     "note": "Printed 6, the paragraph after the Into the Portal section's: the OCR read the capital I of If as a small l, which the Marvel smoke suite's l-for-I scan found (row 30c). Read on a 400 dpi crop of printed 6 (row 30c)."}
+     "note": "Printed 6, the paragraph after the Into the Portal section's: the OCR read the capital I of If as a small l, which the Marvel smoke suite's l-for-I scan found (row 30c). Read on a 400 dpi crop of printed 6 (row 30c)."},
+    {"match": {"row": "msl3:torr-msl3:prose"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "transmitters. e Annihilus has", "printed": "transmitters. Annihilus has",
+     "note": "the prose, printed 18 (PDF 20): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 20 (marvel-11 stray bullets, 2026-11-03)."}
   ]
 }
