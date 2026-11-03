@@ -1022,6 +1022,36 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'colossus-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Roster p.2;')
       && tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Reference Summary;'),
       tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot));
+    // MHSP1's text verdicts: two compounds the page breaks at a line end after
+    // the hyphen (marvel-11 leftovers row 10k, Nate 2026-11-03). The text is
+    // msh_book_text's: read the generated .sql in the cache, by keys and by the
+    // overrides' own fragments, never a word of the book in this file.
+    const ovP = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mhsp1-overrides.json'), 'utf8')).overrides;
+    const textP = ovP.filter((o) => o.verdict === 'text');
+    check('MHSP1: ten overrides: one as printed, three labels, three chart misprints, one chart blank and two text verdicts (She-Hulk\'s background and Spider-Woman\'s Psychic Web), each a line-end compound hyphen whose printed fragment keeps the hyphen and drops the space',
+      ovP.length === 10 && ovP.filter((o) => o.verdict === 'as_printed').length === 1 && ovP.filter((o) => o.verdict === 'label').length === 3
+      && ovP.filter((o) => o.verdict === 'summary_misprint').length === 3 && ovP.filter((o) => o.verdict === 'summary_blank').length === 1
+      && textP.map((o) => o.match.row).join() === 'mhsp1:she-hulk-mhsp1:background,mhsp1:spider-woman-mhsp1:power:2'
+      && textP.every((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2')),
+      JSON.stringify(ovP.map((o) => [o.verdict, o.match])));
+    const sqlP = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mhsp1', 'book-text.sql');
+    if (!existsSync(sqlP)) {
+      check(`MHSP1: skipped the text checks: no ${rel(sqlP) || sqlP}`, true);
+    } else {
+      const rowsP = [...readFileSync(sqlP, 'utf8').matchAll(/VALUES \('([^']+)', 'mhsp1', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, , body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const countP = (row, s) => (rowsP.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdictsP = textP.map((o) => `${o.match.row} ${countP(o.match.row, o.printed)}/${countP(o.match.row, o.read)}`);
+      check('MHSP1 text: each of the two text verdicts is applied, its printed fragment once in its row and the misread gone',
+        rowsP.length > 0 && textP.length === 2 && verdictsP.every((v) => v.endsWith(' 1/0')), `${rowsP.length} rows; ${verdictsP.join(' | ')}`);
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>": MHSP1's two are closed up by the
+      // text verdicts above. The one left is the Lizard's Alter Ego, which the
+      // page prints mid-line with its space ("alter- ego"), so it stays as read.
+      const shapeP = rowsP.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.slice(6))).sort();
+      check('MHSP1 text: no row reads a letter, a hyphen and a space before a word but the one kept on purpose (the Lizard\'s Alter Ego, printed so mid-line)',
+        rowsP.length > 0 && shapeP.join() === 'lizard-mhsp1:power:6', shapeP.join(' '));
+    }
   }
 
   // ME1 prints MA1's numbered grids in two booklets numbered alike, with a
