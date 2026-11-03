@@ -2393,10 +2393,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixesL.join(' | '));
     const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla1-overrides.json'), 'utf8')).overrides;
     const textL = ovL.filter((o) => o.verdict === 'text');
-    check('MLA1: nine overrides: three misprints, three as printed, the Werewolf\'s human label, Bartholomew Jacobs\'s rows and one text verdict (the Flashing Blade\'s Talents), and only seven blocks carry one',
-      ovL.length === 9 && ovL.filter((o) => o.verdict === 'misprint').length === 3 && ovL.filter((o) => o.verdict === 'as_printed').length === 3
+    check('MLA1: 21 overrides: three misprints, three as printed, the Werewolf\'s human label, Bartholomew Jacobs\'s rows and 13 text verdicts (the Flashing Blade\'s Talents and twelve letter misreads read on the page), and only seven blocks carry one',
+      ovL.length === 21 && ovL.filter((o) => o.verdict === 'misprint').length === 3 && ovL.filter((o) => o.verdict === 'as_printed').length === 3
       && ovL.filter((o) => o.verdict === 'label').length === 1 && ovL.filter((o) => o.verdict === 'rows').length === 1
-      && textL.map((o) => o.match.row).join() === 'mla1:typical-flashing-blade-mla1:talents'
+      && textL.map((o) => o.match.row.replace(/^mla1:/, '')).join() === ['typical-flashing-blade-mla1:talents', 'iron-fist-mla1:power:1',
+        'iron-fist-mla1:background', 'power-man-mla1:power:1', 'power-man-mla1:background', 'power-man-mla1:background',
+        'bifrost-felicia-mla1:power:1', 'blacklash-mla1:power:2', 'blacklash-mla1:background', 'sentinels-mark-iv-mla1:power:1',
+        'werewolf-mla1:power:7', 'werewolf-mla1:power:7', 'whirlwind-mla1:power:2'].join()
       && blocksL.filter(({ b }) => b.override).map(({ id }) => id).join()
         === ['typical-buzz-cut', 'typical-flashing-blade', 'bartholomew-jacobs', 'black-talon-s-zombie', 'eel', 'sentinels-mark-iv', 'tatterdemalion'].map((s) => `${s}-mla1`).join(),
       `${JSON.stringify(ovL.map((o) => [o.verdict, o.match]))} ${blocksL.filter(({ b }) => b.override).map(({ id }) => id)}`);
@@ -2466,19 +2469,20 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         && rowsL.filter((r) => /["']/.test(r.body)).length === 50 && nL(/"/g) === 24 && nL(/'/g) === 91,
         `${rowsL.length} ${entL.size} ${rowsL.filter((r) => /["']/.test(r.body)).length} ${nL(/"/g)} ${nL(/'/g)} ${rowsL.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
       const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
-      check('MLA1 text: the text verdict is applied, its printed fragment in its row and the misread gone',
-        textL.length === 1 && textL.every((o) => countL(o.match.row, o.printed) >= 1 && countL(o.match.row, o.read) === 0),
+      check('MLA1 text: the 13 text verdicts are applied, each printed fragment in its row and the misread gone',
+        textL.length === 13 && textL.every((o) => countL(o.match.row, o.printed) >= 1 && countL(o.match.row, o.read) === 0),
         textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join());
-      // OCR noise row 12b saw on the page and left for a reader change (the
-      // PR's What this left): a bar or a backslash for a capital I, a stray
-      // tilde, and lron for Iron. Pinned so a new one moves these lists.
+      // OCR noise row 12b saw on the page (a bar or a backslash for a capital
+      // I, a stray tilde, lron for Iron, a capital Kill the page prints lower
+      // case), each now a text verdict read on the page. None is left, and
+      // the three Kills that remain are printed capital (printed 42 and 53).
       const noiseL = rowsL.filter((r) => /[|\\~]/.test(r.body)).map((r) => r.key.replace(/^mla1:/, ''));
       const lronL = rowsL.filter((r) => /\blron\b/.test(r.body)).map((r) => r.key.replace(/^mla1:/, ''));
-      check('MLA1 text: the known OCR noise is in seven rows (a bar, a backslash or a tilde) and lron in four, and nowhere else',
-        noiseL.join() === ['power-man-mla1:power:1', 'power-man-mla1:background', 'bifrost-felicia-mla1:power:1', 'blacklash-mla1:power:2',
-          'sentinels-mark-iv-mla1:power:1', 'werewolf-mla1:power:7', 'whirlwind-mla1:power:2'].join()
-        && lronL.join() === 'iron-fist-mla1:power:1,iron-fist-mla1:background,power-man-mla1:background,blacklash-mla1:background',
-        `${noiseL.join()} | ${lronL.join()}`);
+      const killL = rowsL.filter((r) => /Kill/.test(r.body)).map((r) => r.key.replace(/^mla1:/, ''));
+      check('MLA1 text: no bar, backslash, tilde or lron is left in any row, and Kill only where the page prints it capital',
+        !noiseL.length && !lronL.length
+        && killL.join() === 'black-talon-mla1:power:1,rat-pack-of-10-mla1:prose,mosquito-swarm-mla1:prose',
+        `${noiseL.join()} | ${lronL.join()} | ${killL.join()}`);
       // Where an entry's sections are, each read on the page (survey mla1.md):
       // Abilities: and Weaponry: open a chapter opponent's notes, the faction
       // subheads end each Typical grid's notes, and each card's power rows are
