@@ -297,7 +297,16 @@ export const SECTIONS = [
           if (b.karma_derived) out.push(['Karma', 'Not printed; R+I+P of the ranks\' standard numbers gives it']);
           const o = b.override;
           const field = o && (FIELD[o.field] || o.field);
-          const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
+          // a printed rank with no number (MSL2's Stygorr, P Rm) is its code alone
+          const show = (x) => (typeof x === 'object' ? (x.number === null ? x.code : `${x.number} ${x.code}`) : x);
+          // a printed Health or Karma names the sum it is not; an ability is no
+          // sum, and says what the check read it as (MSL1's Dominus, S N/A)
+          const unsummed = (k, label, printed) => {
+            const sum = { health: 'F+A+S+E', karma: 'R+I+P' }[k];
+            if (sum) return `${label} is printed ${printed}, which ${sum} does not give`;
+            const n = (b.abilities.find(([l]) => l === k) || [])[1];
+            return `${label} is printed ${printed}${typeof n === 'number' ? `; read as ${n}` : ''}`;
+          };
           if (o && o.verdict === 'as_printed' && o.corrected && (b.karma === null || b.karma === undefined)) {
             // no rank printed and no Karma to count it (MH1's Lockheed, the False
             // robots' dashes): played as the ruling on MHSP1's "?" says
@@ -320,7 +329,7 @@ export const SECTIONS = [
             // a rank's number inside its range, not its standard one (ME1's Superkree)
             out.push(['As printed', `${field} is printed ${show(o.printed)}, inside the rank's range`]);
           } else if (o && o.verdict === 'as_printed') {
-            out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
+            out.push(['As printed', unsummed(o.field, field, o.printed)]);
           }
           for (const x of (o && o.also) || []) {
             const xf = FIELD[x.field] || x.field;
@@ -334,7 +343,7 @@ export const SECTIONS = [
             } else if (typeof x.printed === 'object') {
               out.push(['As printed', `${xf} is printed ${show(x.printed)}, inside the rank's range`]);
             } else {
-              out.push(['As printed', `${xf} ${x.printed}, which R+I+P does not give`]);
+              out.push(['As printed', unsummed(x.field, xf, x.printed)]);
             }
           }
           // A team member the book gives no block of its own: its team's tier,
