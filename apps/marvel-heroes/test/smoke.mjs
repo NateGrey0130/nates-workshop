@@ -3530,10 +3530,12 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixes3.join(' | '));
     const ov3 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'me3-overrides.json'), 'utf8')).overrides;
     const text3 = ov3.filter((o) => o.verdict === 'text');
-    check('ME3: eight overrides: three as printed, Dormammu\'s second grid\'s label, the Summary\'s Firelord Karma 90 as 110, and three text verdicts (Captain Marvel\'s Nega-Bands, Galactus\'s Serial Immortality, the end of Seth\'s background), and only the three as-printed blocks carry one',
-      ov3.length === 8 && ov3.filter((o) => o.verdict === 'as_printed').length === 3 && ov3.filter((o) => o.verdict === 'label').length === 1
+    check('ME3: ten overrides: three as printed, Dormammu\'s second grid\'s label, the Summary\'s Firelord Karma 90 as 110, and five text verdicts (Captain Marvel\'s Nega-Bands twice, Galactus\'s Serial Immortality, the end of Seth\'s background, Beta Ray Bill\'s sensor), the last two line-end hyphen breaks whose printed fragment no longer reads the shape, and only the three as-printed blocks carry one',
+      ov3.length === 10 && ov3.filter((o) => o.verdict === 'as_printed').length === 3 && ov3.filter((o) => o.verdict === 'label').length === 1
       && JSON.stringify(ov3.filter((o) => o.verdict === 'summary_misprint').map((o) => [o.match.summary, o.field, o.printed, o.corrected])) === '[["Firelord","karma",90,110]]'
-      && text3.map((o) => o.match.row).join() === ['captain-marvel-mar-vell-me3:power:1', 'galactus-me3:power:9', 'seth-me3:background'].map((k) => `me3:${k}`).join()
+      && text3.map((o) => o.match.row).join() === ['captain-marvel-mar-vell-me3:power:1', 'galactus-me3:power:9', 'seth-me3:background',
+        'beta-ray-bill-me3:power:6', 'captain-marvel-mar-vell-me3:power:1'].map((k) => `me3:${k}`).join()
+      && text3.slice(3).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocks3.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === 'death-me3,dormammu-me3,eternity-me3',
       JSON.stringify(ov3.map((o) => [o.verdict, o.match])));
     check('ME3: Firelord plays his block\'s Karma 110, not the Summary\'s misprinted 90, and Pluto\'s Endurance 250, inside Shift Y\'s range, plays as printed (rank_ranges)',
@@ -3588,8 +3590,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rows3.length} ${ents3.size} ${me3.filter((c) => !ents3.has(c.id)).map((c) => c.id)}`);
       const count3 = (row, s) => (rows3.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdicts3 = text3.map((o) => `${o.match.row} ${count3(o.match.row, o.printed)}/${count3(o.match.row, o.read)}`);
-      check('ME3 text: each of the three text verdicts is applied, its printed fragment once in its row and the misread gone',
-        text3.length === 3 && verdicts3.every((v) => v.endsWith(' 1/0')), verdicts3.join(' | '));
+      check('ME3 text: each of the five text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text3.length === 5 && verdicts3.every((v) => v.endsWith(' 1/0')), verdicts3.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10d, Nate
+      // 2026-11-03): ME3's two are closed up by the text verdicts above
+      const shape3 = rows3.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('ME3 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        shape3.length === 0, shape3.join(' '));
     }
   }
 

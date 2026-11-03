@@ -36,6 +36,12 @@
      "note": "Resource p.4, column 1, Galactus's Serial Immortality: the word If is read as a backslash and an f (seen on a 220 dpi crop of PDF 38)."},
     {"match": {"row": "me3:seth-me3:background"}, "verdict": "text", "checked": "2026-10-30",
      "read": "resurrected him. =\\e", "printed": "resurrected him.",
-     "note": "Resource p.10, the end of Seth's background: the art in column 3 (his belt) is read as =\\e and joined to the paragraph's last line. The page prints no text there (seen on a 150 dpi crop of PDF 44)."}
+     "note": "Resource p.10, the end of Seth's background: the art in column 3 (his belt) is read as =\\e and joined to the paragraph's last line. The page prints no text there (seen on a 150 dpi crop of PDF 44)."},
+    {"match": {"row": "me3:beta-ray-bill-me3:power:6"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "inter- A stellar", "printed": "interstellar",
+     "note": "Adventure p.5, Beta Ray Bill's sensor: the page breaks the word interstellar at a line end after inter-, and it is closed up whole (Nate, 2026-11-03). The A between the halves is the art beside the line's end (his figure), read as a letter; the page prints no text there. Read on a 300 dpi crop of PDF 7 (marvel-11 leftovers row 10d, 2026-11-03)."},
+    {"match": {"row": "me3:captain-marvel-mar-vell-me3:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Mar- Vell", "printed": "Mar-Vell",
+     "note": "Resource p.15, column 2, Captain Marvel's Nega-Bands: the page breaks his name Mar-Vell at a line end after its own hyphen, a real compound, so the hyphen stays and only the space goes (Nate, 2026-11-03). Read on a 300 dpi crop of PDF 49 (marvel-11 leftovers row 10d, 2026-11-03)."}
   ]
 }
