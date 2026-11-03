@@ -8,6 +8,7 @@
     "            as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
     "            rows              the grid prints fewer than seven rows; 'abilities' are its rows as the page gives them, a row it does not print as null, and 'corrected' is how that row is played; health, karma, resources and popularity as printed, because a grid the parser cannot read leaves them welded to its rows",
     "            summary_misprint  the chart prints a value its own ranks contradict and the character's block does not; 'printed' is the chart's, 'corrected' the block's",
+"            text              match {row}: an msh_book_text row key; 'read' a few words as the OCR gives them after folding to ASCII, 'printed' as the page prints them. It must occur once in the row, or npcs.py stops.",
     "  also      further values of the same block, each {verdict, field, printed}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read"
   ],
@@ -26,6 +27,21 @@
      "note": "275 is inside Shift Y's range (176-350, ranks.json), not its standard 200. Health 575 = 275 + 100 + 100 + 100 uses the 275."},
     {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
      "printed": 90, "corrected": 110, "checked": "2026-09-29",
-     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110."}
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110."},
+    {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "ways: e Returning -", "printed": "ways: Returning -",
+     "note": "Storm Breaker, printed 6 (PDF 9): the first of 5 bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 9 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "areas. e Weather Control", "printed": "areas. Weather Control",
+     "note": "Storm Breaker, printed 6 (PDF 9): the second of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "space. e Flight -", "printed": "space. Flight -",
+     "note": "Storm Breaker, printed 6 (PDF 9): the third of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "strength. e Shield -", "printed": "strength. Shield -",
+     "note": "Storm Breaker, printed 6 (PDF 9): the fourth of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "me1:beta-ray-bill-me1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "less. e Alter Ego", "printed": "less. Alter Ego",
+     "note": "Storm Breaker, printed 6 (PDF 9): the fifth of 5 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 9, marvel-11 stray bullets, 2026-11-03)."}
   ]
 }
