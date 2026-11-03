@@ -3070,12 +3070,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       JSON.stringify(mla3.find((c) => c.id === 'colossal-deathlok-mla3')?.versions[0].identity));
     const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla3-overrides.json'), 'utf8')).overrides;
     const textL = ovL.filter((o) => o.verdict === 'text');
-    check('MLA3: 18 overrides: two misprints, four labels, three as printed and nine text verdicts (Daredevil\'s Foggy in doubles, and eight bars, backslashes or an underscore for a capital I or nothing), and only those five blocks carry a misprint or as-printed one',
-      ovL.length === 18 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
+    check('MLA3: 23 overrides: two misprints, four labels, three as printed and 14 text verdicts (Daredevil\'s Foggy in doubles, eight bars, backslashes or an underscore for a capital I or nothing, and five line-end hyphens: three compounds, Shang-Chi, Mad-Dog and Kree-Skrull, whose printed fragment keeps the hyphen and drops the space, and two broken words closed up whole), and only those five blocks carry a misprint or as-printed one',
+      ovL.length === 23 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
       && ovL.filter((o) => o.verdict === 'as_printed').length === 3
       && textL.map((o) => o.match.row.replace(/^mla3:/, '')).join() === ['daredevil-mla3:background', 'hawkeye-mla3:power:3', 'hawkeye-mla3:power:5',
         'hawkeye-mla3:power:5', 'spider-man-mla3:background', 'guardsmen-mla3:power:2', 'iron-man-mla3:power:4', 'iron-man-mla3:power:14',
-        'mandroid-mla3:power:2'].join()
+        'mandroid-mla3:power:2', 'shang-chi-mla3:background', 'captain-america-mla3:talents', 'mad-dog-mla3:power:3', 'mandroid-mla3:background',
+        'rhino-mla3:background'].join()
+      && textL.slice(9).map((o) => (o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2') ? 'compound'
+        : o.printed === o.read.replace(/([a-z])- ([A-Z])/, (m, a, b) => a + b.toLowerCase()) ? 'closed' : 'other')).join()
+        === 'compound,closed,compound,compound,closed'
       && blocksL.filter(({ b }) => b.override).map(({ id }) => id).join() === ['hammerhead-robot', 'security-robots', 'cameron-s-machine', 'guardsmen',
         'thor'].map((s) => `${s}-mla3`).join(),
       `${ovL.length} ${JSON.stringify(ovL.map((o) => [o.verdict, o.match.row || o.match.header]))}`);
@@ -3118,9 +3122,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsL.length} ${entL.size} ${mla3.filter((c) => !entL.has(c.id)).map((c) => c.id)} ${oddL.map((r) => r.key)} ${quotedL.length}`);
       const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MLA3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textL.length === 9 && textL.every((o) => countL(o.match.row, o.printed) >= 1
+        textL.length === 14 && textL.every((o) => countL(o.match.row, o.printed) >= 1
           && countL(o.match.row, o.read) === (o.printed.includes(o.read) ? countL(o.match.row, o.printed) : 0)),
         textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10o, Nate
+      // 2026-11-03): MLA3's five are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeL = rowsL.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mla3:/, ''))).sort();
+      check('MLA3 text: no row reads a letter, a hyphen and a space before a word',
+        rowsL.length > 0 && shapeL.length === 0, shapeL.join(' '));
       const noiseL = rowsL.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mla3:/, ''));
       check('MLA3 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
         noiseL.length === 0, noiseL.join());

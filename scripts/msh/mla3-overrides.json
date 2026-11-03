@@ -58,6 +58,21 @@
      "note": "Printed 55, Iron Man's Pulse: the capital I of Iron read as a bar. Seen on a 400 dpi crop of PDF 56."},
     {"match": {"row": "mla3:mandroid-mla3:power:2"}, "verdict": "text", "checked": "2026-11-02",
      "read": "Punch-Blasters: \\nflict", "printed": "Punch-Blasters: Inflict",
-     "note": "Printed 57, the Mandroid's Punch-Blasters: the capital I of Inflict read as a backslash. Seen on a 400 dpi crop of PDF 58."}
+     "note": "Printed 57, the Mandroid's Punch-Blasters: the capital I of Inflict read as a backslash. Seen on a 400 dpi crop of PDF 58."},
+    {"match": {"row": "mla3:shang-chi-mla3:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "vitality. Shang- Chi wrested", "printed": "vitality. Shang-Chi wrested",
+     "note": "Shang-Chi's background, printed 5 (PDF 6): the page breaks his name at a line end after its own hyphen, with the second half capitalised, and prints it whole, with the hyphen, mid-line ten times on the same page, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 6 (marvel-11 leftovers row 10o, Nate 2026-11-03)."},
+    {"match": {"row": "mla3:captain-america-mla3:talents"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Weapons Spe- Cialist with", "printed": "Weapons Specialist with",
+     "note": "Captain America's Talents, printed 50 (PDF 51): the page breaks one word at a line end and prints its second half in lower case (the reader gave it a capital), and the book prints Weapons Specialist whole mid-line elsewhere, so the word is closed up whole. Read on a 300 dpi crop of PDF 51 (marvel-11 leftovers row 10o, Nate 2026-11-03)."},
+    {"match": {"row": "mla3:mad-dog-mla3:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Mad- Dog has", "printed": "Mad-Dog has",
+     "note": "Mad-Dog's Resistance to Psychic Attacks, printed 56 (PDF 57), where his card (printed 55) runs on: the page breaks his name at a line end after its own hyphen, with the second half capitalised, and prints it whole, with the hyphen, mid-line on PDF 21 and 22 and three times on PDF 57, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 57 (marvel-11 leftovers row 10o, Nate 2026-11-03)."},
+    {"match": {"row": "mla3:mandroid-mla3:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Kree- Skrull war", "printed": "the Kree-Skrull war",
+     "note": "The Mandroid's background, printed 57 (PDF 58): the page breaks the name of the war at a line end after its own hyphen, with the second half capitalised. This book prints it nowhere else; MA4's and ME3's text carry it whole, with the hyphen, so it is a compound: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 58 (marvel-11 leftovers row 10o, Nate 2026-11-03)."},
+    {"match": {"row": "mla3:rhino-mla3:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "of spe- Cialists had", "printed": "of specialists had",
+     "note": "The Rhino's background, printed 59 (PDF 60): the page breaks one word at a line end and prints its second half in lower case (the reader gave it a capital), so the word is closed up whole. Read on a 300 dpi crop of PDF 60 (marvel-11 leftovers row 10o, Nate 2026-11-03)."}
   ]
 }
