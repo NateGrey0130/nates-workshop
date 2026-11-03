@@ -2462,9 +2462,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         .map(([, key, name, body]) => ({ key, name: name === 'NULL' ? '' : name.slice(1, -1).replace(/''/g, '\''), body: body.replace(/''/g, '\'') }));
       const entL = new Set(rowsL.map((r) => r.key.split(':')[1]));
       const nL = (re) => rowsL.reduce((n, r) => n + (r.body.match(re) || []).length, 0);
-      check('MLA1 text: 190 rows over 44 entries (Bartholomew Jacobs prints none, the zombie\'s and skeleton\'s is the Black Talon\'s), no row with an odd count of double quotes, and the marks row 12b read on the page: 50 rows hold 115, twelve double-quoted pairs and 91 apostrophes',
-        rowsL.length === 190 && entL.size === 44
-        && mla1.filter((c) => !entL.has(c.id)).map((c) => c.id).join() === 'bartholomew-jacobs-mla1,black-talon-s-skeleton-mla1,black-talon-s-zombie-mla1'
+      check('MLA1 text: 189 rows over 43 entries (Bartholomew Jacobs and the Alligator print none, the zombie\'s and skeleton\'s is the Black Talon\'s), no row with an odd count of double quotes, and the marks row 12b read on the page: 50 rows hold 115, twelve double-quoted pairs and 91 apostrophes',
+        rowsL.length === 189 && entL.size === 43
+        && mla1.filter((c) => !entL.has(c.id)).map((c) => c.id).join() === 'bartholomew-jacobs-mla1,alligator-mla1,black-talon-s-skeleton-mla1,black-talon-s-zombie-mla1'
         && !rowsL.some((r) => (r.body.match(/"/g) || []).length % 2)
         && rowsL.filter((r) => /["']/.test(r.body)).length === 50 && nL(/"/g) === 24 && nL(/'/g) === 91,
         `${rowsL.length} ${entL.size} ${rowsL.filter((r) => /["']/.test(r.body)).length} ${nL(/"/g)} ${nL(/'/g)} ${rowsL.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)}`);
@@ -2483,6 +2483,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         !noiseL.length && !lronL.length
         && killL.join() === 'black-talon-mla1:power:1,rat-pack-of-10-mla1:prose,mosquito-swarm-mla1:prose',
         `${noiseL.join()} | ${lronL.join()} | ${killL.join()}`);
+      // Printed 42 (plan marvel-11-leftovers row 4, read on a render): the
+      // chapter's numbered encounter 2 resumes straight under the Alligator's
+      // grid, so the Alligator has no text of its own, and with no entry_ends
+      // the encounter's first paragraph was its prose (138 characters). The
+      // rats' and the Mosquito Swarm's own prose rows stay.
+      const encL = rowsL.filter((r) => /^\d+\. [A-Z]/.test(r.body)).map((r) => r.key.replace(/^mla1:/, ''));
+      check('MLA1 text: the Alligator has no prose row and no row opens with a chapter\'s numbered encounter (entry_ends, printed 42), while the Rat, pack of 10 and the Mosquito Swarm keep theirs',
+        !rowsL.some((r) => r.key.startsWith('mla1:alligator-mla1:')) && !encL.length
+        && ['rat-pack-of-10', 'mosquito-swarm'].every((s) => rowsL.some((r) => r.key === `mla1:${s}-mla1:prose`)),
+        `${rowsL.filter((r) => r.key.startsWith('mla1:alligator-mla1:')).map((r) => r.key)} | ${encL.join()}`);
       // Where an entry's sections are, each read on the page (survey mla1.md):
       // Abilities: and Weaponry: open a chapter opponent's notes, the faction
       // subheads end each Typical grid's notes, and each card's power rows are

@@ -4,8 +4,8 @@ Marvel Super Heroes Official Game Adventure, Anthony Herring, 1990, the
 first module of the Gang Wars trilogy (the MLA series). Registry entry:
 `scripts/msh/books.json` -> `mla1`. Measured 2026-11-01.
 
-**Rows citing this book:** 190 `msh_book_text` rows over 44 character entries
-in production (`DB_MARVEL`, read back 2026-11-01).
+**Rows citing this book:** 189 `msh_book_text` rows over 43 character entries
+in production (`DB_MARVEL`, read back 2026-11-03).
 
 Everything here was measured and read on the page images.
 
