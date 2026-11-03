@@ -1181,6 +1181,32 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const zero = ['spirits-mh2', 'omegatrons-mh2', 'centipedes-mh2', 'energy-spiders-mh2'];
     check('MH2: the four machine and spirit grids keep their printed Karma 0',
       zero.every((id) => bookNpc({ character: id }).snapshot?.karma === 0), zero.map((id) => bookNpc({ character: id }).snapshot?.karma).join());
+    const ov2 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh2-overrides.json'), 'utf8')).overrides;
+    const text2 = ov2.filter((o) => o.verdict === 'text');
+    check('MH2: six overrides: the three as-printed Karma 0 grids, the Energy Spiders\' misprint, and two text verdicts (Super-Skrull\'s Shape-Shifting and Generate and Control Fire), each a line-end hyphen break whose printed fragment no longer reads the shape',
+      ov2.length === 6 && ov2.filter((o) => o.verdict === 'as_printed').length === 3 && ov2.filter((o) => o.verdict === 'misprint').length === 1
+      && text2.map((o) => o.match.row).join() === ['super-skrull-mh2:power:1', 'super-skrull-mh2:power:4'].map((k) => `mh2:${k}`).join()
+      && text2.every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed)),
+      JSON.stringify(ov2.map((o) => [o.verdict, o.match])));
+    // read the generated .sql in the cache, by keys and by the overrides' own
+    // fragments, never a sentence of the book in this file.
+    const sql2 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh2', 'book-text.sql');
+    if (!existsSync(sql2)) {
+      check(`MH2: skipped the text checks: no ${rel(sql2) || sql2}`, true);
+    } else {
+      const rows2 = [...readFileSync(sql2, 'utf8').matchAll(/VALUES \('([^']+)', 'mh2', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, , body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const count2 = (row, s) => (rows2.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts2 = text2.map((o) => `${o.match.row} ${count2(o.match.row, o.printed)}/${count2(o.match.row, o.read)}`);
+      check('MH2 text: each of the two text verdicts is applied, its printed fragment once in its row and the misread gone',
+        rows2.length > 0 && text2.length === 2 && verdicts2.every((v) => v.endsWith(' 1/0')), `${rows2.length} rows; ${verdicts2.join(' | ')}`);
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10e, Nate
+      // 2026-11-03): MH2's two are closed up by the text verdicts above
+      const shape2 = rows2.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('MH2 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        rows2.length > 0 && shape2.length === 0, shape2.join(' '));
+    }
   }
 
   // MH3 is laid out as MH1 and MH2 are (scripts/msh/coverpanels.py,
