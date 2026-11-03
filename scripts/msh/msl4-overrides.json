@@ -1,6 +1,6 @@
 {
   "about": [
-    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and one text verdict npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
+    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and three text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
     "Every one of the book's 11 grids adds up (Health = F+A+S+E, Karma = R+I+P) and prints each code's standard number, so no block needs a misprint or an as_printed verdict (survey decision 7, plan row 32b, 2026-11-02).",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
@@ -13,6 +13,12 @@
   "overrides": [
     {"match": {"row": "msl4:phase-bot-msl4:power:3"}, "verdict": "text", "checked": "2026-11-02",
      "read": "\\t can", "printed": "It can",
-     "note": "Flight, printed 18 (PDF 20): the OCR read the capital I of It as a backslash; the trial's speck line for it is ten words, which the Marvel smoke suite's leak check refuses, so row 32a dropped it and the mark is mended in the row instead, as MSL3's Ice Bat's (row 32b). Read on a 400 dpi crop of PDF 20 (row 32b)."}
+     "note": "Flight, printed 18 (PDF 20): the OCR read the capital I of It as a backslash; the trial's speck line for it is ten words, which the Marvel smoke suite's leak check refuses, so row 32a dropped it and the mark is mended in the row instead, as MSL3's Ice Bat's (row 32b). Read on a 400 dpi crop of PDF 20 (row 32b)."},
+    {"match": {"row": "msl4:stygorr-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "ways: e By", "printed": "ways: By",
+     "note": "Matter Fluctuation, printed 31 (PDF 33), column 1: the first of two bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). The same text in MSL2 (Stygorr, printed 31) carries the same two verdicts in msl2-overrides.json. Read on a 400 dpi crop of PDF 33 (plan marvel-11-books close-out, item b)."},
+    {"match": {"row": "msl4:stygorr-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "(11 areas). e He", "printed": "(11 areas). He",
+     "note": "Matter Fluctuation, printed 31 (PDF 33), column 1: the second bulleted line; the bullet read as a letter e before He (400 dpi crop of PDF 33, plan marvel-11-books close-out, item b)."}
   ]
 }
