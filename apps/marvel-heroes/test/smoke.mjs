@@ -1452,8 +1452,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       mh7.map((c) => c.id).join());
     const ov7 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh7-overrides.json'), 'utf8')).overrides;
     const fire = blk7('fire-creatures-mh7');
-    check('MH7: no misprint and no text verdict; the one override is the Fire Creatures\' rows (a dash under R, I and P), and theirs is the only block that carries one',
-      ov7.length === 1 && ov7[0].verdict === 'rows' && !ov7.some((o) => o.verdict === 'misprint' || o.verdict === 'text')
+    check('MH7: no misprint; the two overrides are the Fire Creatures\' rows (a dash under R, I and P), theirs the only block that carries one, and Rick Jones\' line-end break of Mar-Vell, a text verdict whose printed fragment no longer reads the shape',
+      ov7.length === 2 && ov7[0].verdict === 'rows' && !ov7.some((o) => o.verdict === 'misprint')
+      && ov7[1].verdict === 'text' && ov7[1].match.row === 'mh7:rick-jones-mh7:background'
+      && /[a-z]- [A-Za-z]/.test(ov7[1].read) && !/[a-z]- [A-Za-z]/.test(ov7[1].printed)
       && fire?.override?.verdict === 'rows' && fire.override.field === 'RIP'
       && blocks7.filter(({ b }) => b.override).map(({ id }) => id).join() === 'fire-creatures-mh7',
       JSON.stringify(ov7.map((o) => [o.verdict, o.match])));
@@ -1511,6 +1513,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const specks = rows7.filter((r) => /['"]/.test(r.name) || /_|\.\s+\.|[a-z]- [a-z]/.test(r.body)).map((r) => r.key);
       check('MH7 text: no speck read as a mark (speck_lines): no underscore, no doubled full stop, no word split at a hyphen, no quote in a power or gear name',
         specks.length === 0, specks.join());
+      const count7 = (row, s) => (rows7.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts7 = ov7.filter((o) => o.verdict === 'text').map((o) => `${o.match.row} ${count7(o.match.row, o.printed)}/${count7(o.match.row, o.read)}`);
+      check('MH7 text: the one text verdict is applied, its printed fragment once in its row and the misread gone',
+        verdicts7.length === 1 && verdicts7.every((v) => v.endsWith(' 1/0')), verdicts7.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10h, Nate
+      // 2026-11-03): MH7's one is closed up by Rick Jones' text verdict above
+      const shape7 = rows7.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('MH7 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        rows7.length > 0 && shape7.length === 0, shape7.join(' '));
     }
   }
 
