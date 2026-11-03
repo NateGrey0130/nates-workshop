@@ -2265,9 +2265,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && blkQ('mystique-mx4').override.field === 'karma' && playedQ('mystique-mx4') === '90/150',
       `${blkQ('mystique-mx4')?.karma} ${playedQ('mystique-mx4')}`);
     const ovQ = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx4-overrides.json'), 'utf8')).overrides;
-    check('MX4: thirteen overrides, eight misprints and five as printed, no text verdict (row 9b read every quote mark on the page), and every block carries one',
-      ovQ.length === 13 && ovQ.filter((o) => o.verdict === 'misprint').length === 8 && ovQ.filter((o) => o.verdict === 'as_printed').length === 5
-      && !ovQ.some((o) => o.verdict === 'text') && blocksQ.every(({ b }) => b.override),
+    check('MX4: fifteen overrides, eight misprints, five as printed and two text verdicts, both on Magma\'s fourth power (its two minuses, read on PDF 29), and every block carries one',
+      ovQ.length === 15 && ovQ.filter((o) => o.verdict === 'misprint').length === 8 && ovQ.filter((o) => o.verdict === 'as_printed').length === 5
+      && ovQ.filter((o) => o.verdict === 'text').map((o) => o.match.row).join() === 'mx4:magma-mx4:power:4,mx4:magma-mx4:power:4'
+      && blocksQ.every(({ b }) => b.override),
       JSON.stringify(ovQ.map((o) => [o.verdict, o.match])));
     // rank_ranges: five numbers inside their rank's range and off its
     // standard, kept and played as printed (survey decision 6)
@@ -2322,6 +2323,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsQ.length} ${new Set(rowsQ.map((r) => r.key.split(':')[1])).size} ${markedQ.length} ${nQ(/"/g)} ${nQ(/'/g)}`);
       const barsQ = rowsQ.filter((r) => /[|\\]/.test(r.body)).map((r) => r.key.replace(/^mx4:/, ''));
       check('MX4 text: no row carries a vertical bar or a backslash', barsQ.length === 0, barsQ.join());
+      // Magma's fourth power prints two minuses set against their digits
+      // (printed 28, PDF 29); the OCR left each a double space and a spaced
+      // dash, and two text verdicts close them up.
+      const magmaQ = rowsQ.find((r) => r.key === 'mx4:magma-mx4:power:4')?.body || '';
+      check('MX4 text: Magma\'s fourth power holds no double space, and its two minuses sit against their digits (-1 CS, -3 CS)',
+        magmaQ !== '' && !magmaQ.includes('  ') && (magmaQ.match(/ -[13] CS/g) || []).join() === ' -1 CS, -3 CS',
+        `${magmaQ.indexOf('  ')} ${(magmaQ.match(/ -?\s*-?\s*[13] CS/g) || []).join('|')}`);
       // Where an entry's text ends, each read on the page (survey mx4.md):
       // The Hardware of Hell (extra_titles) ends Sunspot's on printed 31, the
       // sentinels print Known Powers only, Mirage's Equipment is her notes and

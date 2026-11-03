@@ -1,10 +1,11 @@
 {
   "about": [
-    "Hand decisions about MX4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every value was read off the page image by the survey (apps/marvel-heroes/docs/surveys/mx4.md, Stat blocks: each value on a crop of the page image, 2026-11-01; decisions 4 and 7); none is a guess from OCR.",
+    "Hand decisions about MX4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and two text verdicts scripts/msh/npcs.py applies. Every value was read off the page image by the survey (apps/marvel-heroes/docs/surveys/mx4.md, Stat blocks: each value on a crop of the page image, 2026-11-01; decisions 4 and 7); none is a guess from OCR.",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed  the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text        match {row}: an msh_book_text row key, applied by scripts/msh/npcs.py. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Applied in this file's order, each to the row as the one before left it.",
     "  also      further values of the same block, each {verdict, field, printed, and corrected for a misprint}: one override matches one block, and a block can print more than one thing to explain",
     "  checked   the date the page image was read",
     "Each corrected Health or Karma is the sum of the printed numbers, the numbers kept, as MX1, MX3 and MT3 corrected theirs (survey decision 4). The five numbers inside their rank's range and not its standard (Magma's F, Marco Pene's F, E and I, Sunspot's R) are passed by the registry's rank_ranges, not here (decision 6)."
@@ -53,6 +54,12 @@
      "note": "Printed Health = 35 and Karma = 60 (printed 30): F+A+S+E = 16+20+10+15 = 61 and R+I+P = 10+16+20 = 46. MX3 prints the same seven numbers and its override corrects him to 61 and 46. Survey decision 4."},
     {"match": {"page": 30, "header": "Sunspot"}, "verdict": "misprint", "field": "karma",
      "printed": "30", "corrected": "46", "checked": "2026-11-01",
-     "note": "Printed Karma = 30 (printed 30): R+I+P = 16+10+20 = 46. His Health 76 holds on the S before the bracket (6, alternate 40 In). Survey decision 4."}
+     "note": "Printed Karma = 30 (printed 30): R+I+P = 16+10+20 = 46. His Health 76 holds on the S before the bracket (6, alternate 40 In). Survey decision 4."},
+    {"match": {"row": "mx4:magma-mx4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "suffers  - 1 CS", "printed": "suffers -1 CS",
+     "note": "Magma's fourth power, printed 28 (PDF 29), column 2: the page prints a minus set against its digit; the OCR read it as U+FFFD and the row carried it as a double space and a spaced dash (400 dpi crop of PDF 29). The book's other minuses are stored as an ASCII hyphen against the digit, as this one now is."},
+    {"match": {"row": "mx4:magma-mx4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "maximum of  - 3 CS", "printed": "maximum of -3 CS",
+     "note": "The same power's next line, same crop: the page prints a minus against the 3, read and folded as the one before it."}
   ]
 }
