@@ -1333,6 +1333,33 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && tagline(bookNpc({ character: 'gary-cody-mh5' }).snapshot).startsWith('MH5 Cat\'s Paw, Inside back cover;')
       && tagline(bookNpc({ character: 'leader-mh5' }).snapshot).startsWith('MH5 Cat\'s Paw, Adventure p.12;'),
       tagline(bookNpc({ character: 'leader-mh5' }).snapshot));
+    const ov5 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh5-overrides.json'), 'utf8')).overrides;
+    const text5 = ov5.filter((o) => o.verdict === 'text');
+    const breaks5 = ['leader-mh5:power:3', 'justin-hammer-mh5:powers-intro'].map((k) => `mh5:${k}`);
+    check('MH5: nine overrides: the five misprints and four text verdicts (the improved synthetic Hulks\' margin pencil, Northstar\'s speck, and two line-end hyphen breaks, the Leader\'s Drain-Cannon and Justin Hammer\'s Man-Killer, whose printed fragment no longer reads the shape)',
+      ov5.length === 9 && ov5.filter((o) => o.verdict === 'misprint').length === 5 && text5.length === 4
+      && text5.slice(2).map((o) => o.match.row).join() === breaks5.join()
+      && text5.slice(2).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed)),
+      JSON.stringify(ov5.map((o) => [o.verdict, o.match])));
+    // read the generated .sql in the cache, by keys and by the overrides' own
+    // fragments, never a sentence of the book in this file.
+    const sql5 = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'mh5', 'book-text.sql');
+    if (!existsSync(sql5)) {
+      check(`MH5: skipped the text checks: no ${rel(sql5) || sql5}`, true);
+    } else {
+      const rows5 = [...readFileSync(sql5, 'utf8').matchAll(/VALUES \('([^']+)', 'mh5', '[^']+', '[^']+', (NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+        .map(([, key, , body]) => ({ key, body: body.replace(/''/g, '\'') }));
+      const count5 = (row, s) => (rows5.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+      const verdicts5 = text5.map((o) => `${o.match.row} ${count5(o.match.row, o.printed)}/${count5(o.match.row, o.read)}`);
+      check('MH5 text: each of the four text verdicts is applied, its printed fragment once in its row and the misread gone',
+        rows5.length > 0 && text5.length === 4 && verdicts5.every((v) => v.endsWith(' 1/0')), `${rows5.length} rows; ${verdicts5.join(' | ')}`);
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10f, Nate
+      // 2026-11-03): MH5's two are closed up by the text verdicts above
+      const shape5 = rows5.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
+      check('MH5 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
+        rows5.length > 0 && shape5.length === 0, shape5.join(' '));
+    }
   }
 
   // MH6 is laid out as MH1-MH5 are (scripts/msh/coverpanels.py,
