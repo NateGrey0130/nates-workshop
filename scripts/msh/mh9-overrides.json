@@ -42,6 +42,18 @@
      "note": "Printed 30, the Thing's background, his battle cry: the page prints an elision apostrophe after CLOBBERIN and the closing double quote after TIME!; the chain made the apostrophe the closing quote and the real closing quote was lost (seen on a 300 dpi crop of PDF 31)."},
     {"match": {"row": "mh9:hawkeye-mh9:equipment"}, "verdict": "text", "checked": "2026-10-30",
      "read": "to '/2\" height", "printed": "to 1/2\" height",
-     "note": "Printed 33, Hawkeye's equipment: the page prints the fraction one half and an inch mark, the fraction read as a single quote, a slash and a 2, as MH8's Wasp's (seen on a 300 dpi crop of PDF 34)."}
+     "note": "Printed 33, Hawkeye's equipment: the page prints the fraction one half and an inch mark, the fraction read as a single quote, a slash and a 2, as MH8's Wasp's (seen on a 300 dpi crop of PDF 34)."},
+    {"match": {"row": "mh9:flare-mh9:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "list: e Laser beam,", "printed": "list: Laser beam,",
+     "note": "Sound/light Conversion, printed 34 (PDF 35): the first of 4 bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 35 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "mh9:flare-mh9:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "eyes; e Flash, causing", "printed": "eyes; Flash, causing",
+     "note": "Sound/light Conversion, printed 34 (PDF 35): the second of 4 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 35, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "mh9:flare-mh9:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "hit); e Dazzle, causing", "printed": "hit); Dazzle, causing",
+     "note": "Sound/light Conversion, printed 34 (PDF 35): the third of 4 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 35, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "mh9:flare-mh9:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "surroundings; e Image generation,", "printed": "surroundings; Image generation,",
+     "note": "Sound/light Conversion, printed 34 (PDF 35): the fourth of 4 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 35, marvel-11 stray bullets, 2026-11-03)."}
   ]
 }
