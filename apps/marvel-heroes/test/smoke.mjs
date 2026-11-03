@@ -955,6 +955,37 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     destroyer?.karma === 100 && destroyer.abilities.reason.number === 0 && destroyer.abilities.intuition.number === 0);
   check('MA4\'s New Men are a card but not a GM choice: they print no physical ranks (p.90)',
     data.npcs.characters.some((c) => c.id === 'new-men-ma4') && !choices.some((c) => c.character === 'new-men-ma4'));
+  // MA4's text verdicts: three quote marks, 17 bullets read as a letter e
+  // (#2075), and 18 compounds the page breaks at a line end after the hyphen
+  // (marvel-11 leftovers row 10a, Nate 2026-11-03). The text is
+  // msh_book_text's: read the generated .sql in the cache, by keys and by the
+  // overrides' own fragments, never a word of the book in this file.
+  const ovA = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'ma4-overrides.json'), 'utf8')).overrides;
+  const textA = ovA.filter((o) => o.verdict === 'text');
+  const hyphA = textA.filter((o) => /[a-z]- [A-Za-z]/.test(o.read));
+  check('MA4: 48 overrides: seven misprints, three rows verdicts and 38 text verdicts, 18 of them a line-end compound hyphen whose printed fragment keeps the hyphen and drops the space',
+    ovA.length === 48 && ovA.filter((o) => o.verdict === 'misprint').length === 7 && ovA.filter((o) => o.verdict === 'rows').length === 3
+    && textA.length === 38 && hyphA.length === 18 && hyphA.every((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2')),
+    JSON.stringify(ovA.map((o) => o.verdict)));
+  const sqlA = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'ma4', 'book-text.sql');
+  if (!existsSync(sqlA)) {
+    check(`MA4: skipped the text checks: no ${rel(sqlA) || sqlA}`, true);
+  } else {
+    const rowsA = [...readFileSync(sqlA, 'utf8').matchAll(/VALUES \('([^']+)', 'ma4', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
+      .map(([, key, body]) => ({ key, body: body.replace(/''/g, '\'') }));
+    const countA = (row, s) => (rowsA.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
+    const verdictsA = textA.map((o) => `${o.match.row} ${countA(o.match.row, o.printed)}/${countA(o.match.row, o.read)}`);
+    check('MA4 text: each of the 38 text verdicts is applied, its printed fragment once in its row and the misread gone',
+      rowsA.length > 900 && verdictsA.length === 38 && verdictsA.every((v) => v.endsWith(' 1/0')), verdictsA.filter((v) => !v.endsWith(' 1/0')).join(' | '));
+    // Kept on purpose (read on the page, 2026-11-03): a suspended hyphen
+    // (Human Torch II, the Thing, Doom II's first), or a hyphen the page
+    // prints mid-line with the space (Air-Walker's two, the Skrulls', the
+    // Skrull-X's, Doom II's second).
+    const shapeA = rowsA.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => `${r.key.slice(4)}(${r.body.match(/[a-z]- [A-Za-z]/g).length})`).sort();
+    check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them',
+      shapeA.join() === ['air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
+        'skrull-x-ma4:background(1)', 'thing-ma4:talents(1)', 'victor-von-doom-ii-ma4:running(2)'].join(), shapeA.join(' '));
+  }
 
   const html = renderSheet({ name: nc.name, snapshot: nc.snapshot, sheet: {} });
   check('the sheet draws a book NPC: its tagline, its Powers without a rank, and a link to its Codex card',
