@@ -19,6 +19,18 @@
      "note": "Matter Fluctuation, printed 31 (PDF 33), column 1: the first of two bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). The same text in MSL2 (Stygorr, printed 31) carries the same two verdicts in msl2-overrides.json. Read on a 400 dpi crop of PDF 33 (plan marvel-11-books close-out, item b)."},
     {"match": {"row": "msl4:stygorr-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
      "read": "(11 areas). e He", "printed": "(11 areas). He",
-     "note": "Matter Fluctuation, printed 31 (PDF 33), column 1: the second bulleted line; the bullet read as a letter e before He (400 dpi crop of PDF 33, plan marvel-11-books close-out, item b)."}
+     "note": "Matter Fluctuation, printed 31 (PDF 33), column 1: the second bulleted line; the bullet read as a letter e before He (400 dpi crop of PDF 33, plan marvel-11-books close-out, item b)."},
+    {"match": {"row": "msl4:annihilus-msl4:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "cold. e Annihilus may", "printed": "cold. Annihilus may",
+     "note": "Cosmic Control Rod, printed 27 (PDF 29): the first of 3 bulleted lines; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 29 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "msl4:annihilus-msl4:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "rank. e He can", "printed": "rank. He can",
+     "note": "Cosmic Control Rod, printed 27 (PDF 29): the second of 3 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 29, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "msl4:annihilus-msl4:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "rank. e Annihilus can", "printed": "rank. Annihilus can",
+     "note": "Cosmic Control Rod, printed 27 (PDF 29): the third of 3 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 29, marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "msl4:rigger-msl4:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "powers: e ECMs: Rigger", "printed": "powers: ECMs: Rigger",
+     "note": "Cybernetic Implants, printed 30 (PDF 32): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 32 (marvel-11 stray bullets, 2026-11-03)."}
   ]
 }
