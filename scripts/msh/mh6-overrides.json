@@ -8,6 +8,9 @@
   "overrides": [
     {"match": {"row": "mh6:executioner-mh6:power:4"}, "verdict": "text", "checked": "2026-10-23",
      "read": "weapon, \"made of", "printed": "weapon, made of",
-     "note": "Inside cover 4 (PDF 21), the Executioner's MAGICAL AXE., the line at the top of column 2: a grey speck of the scan in the margin before made is read as a double quote. The page prints no quote there and none closes later in the power (seen on a 300 dpi crop of PDF 21)."}
+     "note": "Inside cover 4 (PDF 21), the Executioner's MAGICAL AXE., the line at the top of column 2: a grey speck of the scan in the margin before made is read as a double quote. The page prints no quote there and none closes later in the power (seen on a 300 dpi crop of PDF 21)."},
+    {"match": {"row": "mh6:loki-mh6:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "All- Father", "printed": "All-Father",
+     "note": "Inside cover 3 (PDF 20), Loki's Background: the page breaks the All-Father at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes (Nate, 2026-11-03). Read on a 300 dpi crop of PDF 20 (marvel-11 leftovers row 10g, 2026-11-03)."}
   ]
 }
