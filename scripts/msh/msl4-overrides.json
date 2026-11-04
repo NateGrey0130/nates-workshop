@@ -1,6 +1,6 @@
 {
   "about": [
-    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and three text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
+    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and ten text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
     "Every one of the book's 11 grids adds up (Health = F+A+S+E, Karma = R+I+P) and prints each code's standard number, so no block needs a misprint or an as_printed verdict (survey decision 7, plan row 32b, 2026-11-02).",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
@@ -31,6 +31,15 @@
      "note": "Cosmic Control Rod, printed 27 (PDF 29): the third of 3 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 29, marvel-11 stray bullets, 2026-11-03)."},
     {"match": {"row": "msl4:rigger-msl4:power:1"}, "verdict": "text", "checked": "2026-11-03",
      "read": "powers: e ECMs: Rigger", "printed": "powers: ECMs: Rigger",
-     "note": "Cybernetic Implants, printed 30 (PDF 32): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 32 (marvel-11 stray bullets, 2026-11-03)."}
+     "note": "Cybernetic Implants, printed 30 (PDF 32): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 32 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "msl4:annihilus-msl4:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "radia- CHARACTER ROSTER tion,", "printed": "radiation,",
+     "note": "Cosmic Control Rod, printed 27 (PDF 29): the page breaks the word with a hyphen at the foot of column 1 and ends it at the top of column 2, under the page's CHARACTER ROSTER banner, which the reader set between the two halves; closed up whole, which drops the banner from the row too (no other MSL4 row carries it). Read on a 200 dpi crop of PDF 29 (marvel-11 leftovers row 10q, Nate 2026-11-03)."},
+    {"match": {"row": "msl4:phase-bot-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "a Spy- Eye,", "printed": "a Spy-Eye,",
+     "note": "Image Generation, printed 18 (PDF 20): the first of two line-end compound hyphens; the page breaks Spy-Eye, the card's own name, after its hyphen at a line end, so the hyphen stays and only the space goes. Read on a 200 dpi crop of PDF 20 (marvel-11 leftovers row 10q, Nate 2026-11-03)."},
+    {"match": {"row": "msl4:phase-bot-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Phase- Bot for", "printed": "the Phase-Bot for",
+     "note": "Image Generation, printed 18 (PDF 20): the second of two line-end compound hyphens; Phase-Bot, the card's own name, broken after its hyphen at a line end (200 dpi crop of PDF 20, marvel-11 leftovers row 10q, Nate 2026-11-03)."}
   ]
 }

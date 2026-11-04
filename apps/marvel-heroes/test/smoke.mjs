@@ -3528,9 +3528,11 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       blocksB.map(({ b }) => `${b.resources}/${b.popularity}`).join());
     const ovB = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl4-overrides.json'), 'utf8')).overrides;
     const textB = ovB.filter((o) => o.verdict === 'text');
-    check('MSL4: seven text verdicts, the Phase-Bot\'s Flight, Stygorr\'s two Matter Fluctuation bullets, Annihilus\'s three Cosmic Control Rod bullets and Rigger\'s Cybernetic Implants one, and no block carries one (decision 7: every grid adds up)',
-      ovB.length === 7 && textB.map((o) => o.match.row).join() === ['phase-bot-msl4:power:3', 'stygorr-msl4:power:4', 'stygorr-msl4:power:4',
-        'annihilus-msl4:power:3', 'annihilus-msl4:power:3', 'annihilus-msl4:power:3', 'rigger-msl4:power:1'].map((k) => `msl4:${k}`).join()
+    check('MSL4: ten text verdicts, the Phase-Bot\'s Flight, Stygorr\'s two Matter Fluctuation bullets, Annihilus\'s three Cosmic Control Rod bullets, Rigger\'s Cybernetic Implants one, and three line-end hyphen breaks (Annihilus\'s Cosmic Control Rod, the Phase-Bot\'s two in Image Generation) whose printed fragment no longer reads the shape, and no block carries one (decision 7: every grid adds up)',
+      ovB.length === 10 && textB.map((o) => o.match.row).join() === ['phase-bot-msl4:power:3', 'stygorr-msl4:power:4', 'stygorr-msl4:power:4',
+        'annihilus-msl4:power:3', 'annihilus-msl4:power:3', 'annihilus-msl4:power:3', 'rigger-msl4:power:1',
+        'annihilus-msl4:power:3', 'phase-bot-msl4:power:4', 'phase-bot-msl4:power:4'].map((k) => `msl4:${k}`).join()
+      && textB.slice(7).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && !blocksB.some(({ b }) => b.override),
       `${JSON.stringify(ovB.map((o) => [o.verdict, o.match]))} ${blocksB.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`)}`);
     const powB = msl4.flatMap((c) => c.versions[0].powers);
@@ -3587,12 +3589,19 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         && markedB.length === 21 && marksB(/"/g) === 8 && marksB(/'/g) === 30 && marksB(/\d'/g) === 3,
         `${rowsB.length} ${entB.size} ${rowsB.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedB.length} ${marksB(/"/g)} ${marksB(/'/g)} ${marksB(/\d'/g)}`);
       const countB = (row, s) => (rowsB.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
-      check('MSL4 text: the three text verdicts are applied, each printed fragment in its row and the misread gone',
-        textB.length === 7 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
+      check('MSL4 text: the ten text verdicts are applied, each printed fragment in its row and the misread gone',
+        textB.length === 10 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
         textB.map((o) => `${o.match.row} ${countB(o.match.row, o.printed)}/${countB(o.match.row, o.read)}`).join(' | '));
       const noiseB = rowsB.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|IIl|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl4:/, ''));
       check('MSL4 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I (speck_lines mends the seven Marks)',
         noiseB.length === 0, noiseB.join());
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10q, Nate
+      // 2026-11-03): MSL4's three are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeB = rowsB.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^msl4:/, ''))).sort();
+      check('MSL4 text: no row reads a letter, a hyphen and a space before a word',
+        rowsB.length > 0 && shapeB.length === 0, shapeB.join(' '));
       const roster = msl4.filter((c) => c.versions[0].blocks[0].page >= 27);
       check('MSL4 text: every card\'s power rows match its powers, the seven roster cards each a talents and a notes row, Fiona Dunbar\'s None a powers-intro row, and no prose row',
         msl4.every((c) => rowsB.filter((r) => r.key.startsWith(`msl4:${c.id}:power:`)).length === c.versions[0].powers.length)
