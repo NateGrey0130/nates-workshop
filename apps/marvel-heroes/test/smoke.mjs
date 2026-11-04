@@ -2240,10 +2240,11 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       robotsZ.map(playedZ).join());
     const ovZ = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx2-overrides.json'), 'utf8')).overrides;
     const textZ = ovZ.filter((o) => o.verdict === 'text');
-    check('MX2: twenty-one overrides: eleven misprints, five as printed and five text verdicts (the Mark IV\'s Customization, the alpha\'s and omega\'s Body Armor, two in William Shiver\'s background), and only the sixteen overridden blocks carry one',
-      ovZ.length === 21 && ovZ.filter((o) => o.verdict === 'misprint').length === 11 && ovZ.filter((o) => o.verdict === 'as_printed').length === 5
+    check('MX2: 22 overrides: eleven misprints, five as printed and six text verdicts (the Mark IV\'s Customization, the alpha\'s and omega\'s Body Armor, two in William Shiver\'s background, and one line-end hyphen break in McGrafton\'s background whose printed fragment no longer reads the shape), and only the sixteen overridden blocks carry one',
+      ovZ.length === 22 && ovZ.filter((o) => o.verdict === 'misprint').length === 11 && ovZ.filter((o) => o.verdict === 'as_printed').length === 5
       && textZ.map((o) => o.match.row).join() === ['mark-iv-sentinel-mx2:power:8', 'alpha-sentinel-mx2:power:4', 'omega-sentinel-mx2:power:4',
-        'william-shiver-mx2:background', 'william-shiver-mx2:background'].map((k) => `mx2:${k}`).join()
+        'william-shiver-mx2:background', 'william-shiver-mx2:background', 'senator-joseph-mcgrafton-mx2:background'].map((k) => `mx2:${k}`).join()
+      && textZ.slice(5).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocksZ.filter(({ b }) => b.override).map(({ id }) => id).sort().join() === [...robotsZ, ...fixesZ.map((f) => f.split(' ')[0])].sort().join(),
       JSON.stringify(ovZ.map((o) => [o.verdict, o.match])));
     check('MX2: cards play their printed Health and Karma (McGrafton 57/128, Lorelei 94/70, SWAT:AM 46/22, the Typical Policeman 36/18, the Soldiers 46/16, the Secret Service teams 50/30, Fuchido 20/46, Shiver 28/50)',
@@ -2299,9 +2300,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       check('MX2 text: no row carries a vertical bar (three were specks, each read right by a text verdict)', barsZ.length === 0, barsZ.join());
       const countZ = (row, s) => (rowsZ.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsZ = textZ.map((o) => `${o.match.row} ${countZ(o.match.row, o.printed)}/${countZ(o.match.row, o.read)}`);
-      check('MX2 text: each of the five text verdicts is applied, its printed fragment in its row and the misread gone',
-        textZ.length === 5 && textZ.every((o) => countZ(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countZ(o.match.row, o.read) === 0)),
+      check('MX2 text: each of the six text verdicts is applied, its printed fragment in its row and the misread gone',
+        textZ.length === 6 && textZ.every((o) => countZ(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countZ(o.match.row, o.read) === 0)),
         verdictsZ.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10t, Nate
+      // 2026-11-03): MX2's one is closed up by the text verdict above, and
+      // none is kept on purpose.
+      const shapeZ = rowsZ.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mx2:/, ''))).sort();
+      check('MX2 text: no row reads a letter, a hyphen and a space before a word',
+        rowsZ.length > 0 && shapeZ.length === 0, shapeZ.join(' '));
       // line_identity takes a codes-only grid's identity lines out of its
       // prose: those seven cards have no prose row of their own, and the
       // committee's five each have one, their run-in paragraphs.

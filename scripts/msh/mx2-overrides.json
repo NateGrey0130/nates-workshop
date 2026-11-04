@@ -81,6 +81,9 @@
      "note": "Printed 16, column 3, William Shiver's background: a margin mark is read as a lone i after the dash; the page prints the dash and then including (seen on a 250 dpi crop of PDF 17)."},
     {"match": {"row": "mx2:william-shiver-mx2:background"}, "verdict": "text", "checked": "2026-10-31",
      "read": "necessary. j", "printed": "necessary.",
-     "note": "Printed 16, the same background: a margin mark after its last word is read as a trailing j; the paragraph ends at the full stop (same crop)."}
+     "note": "Printed 16, the same background: a margin mark after its last word is read as a trailing j; the paragraph ends at the full stop (same crop)."},
+    {"match": {"row": "mx2:senator-joseph-mcgrafton-mx2:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "on Mutant- Communist Subversion", "printed": "on Mutant-Communist Subversion",
+     "note": "Printed 10, Senator McGrafton's background: the page breaks the committee's name Mutant-Communist after its hyphen at the end of a line (Mutant- / Communist), and prints the compound whole mid-line on PDF 23 and the newspaper handouts (PDF 35), so it keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 11. A line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10t, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."}
   ]
 }
