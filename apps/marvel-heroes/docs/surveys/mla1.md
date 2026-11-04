@@ -293,9 +293,9 @@ of printed 59, under the end of Mentallo's text.
 | 32 (33) | SWF Operatives (Chapter 22) | EX 20, GD 10, GD 10, TY 6, TY 6, TY 6, GD 10 | 46 | 22 | GD (10) | 4 |
 | 36 (37) | Security Officers (Chapter 27) | GD 10, GD 10, TY 6, GD 10, TY 6, TY 6, TY 6 | 36 | 18 | - | - |
 | 40 (41) | Bartholomew Jacobs (Chapter 30; no header) | -, -, -, -, RM 30, GD 10, MN 75 | - | 115 | - | - |
-| 42 (43) | Alligator (Chapter 32) | PR 4, GD 10, RM 30, EX 20, FE 2, FE 2, FE 2 | 64 | - | - | - |
-| 42 (43) | Rat, pack of 10 (Chapter 32) | EX 20, TY 6, FE 2, EX 20, FE 2, FE 2, FE 2 | 48 | - | - | - |
-| 42 (43) | Mosquito Swarm (Chapter 32) | EX 20, FE 2, FE 2, EX 20, FE 2, FE 2, FE 2 | 44 | - | - | - |
+| 42 (43) | Alligator (Chapter 31) | PR 4, GD 10, RM 30, EX 20, FE 2, FE 2, FE 2 | 64 | - | - | - |
+| 42 (43) | Rat, pack of 10 (Chapter 31) | EX 20, TY 6, FE 2, EX 20, FE 2, FE 2, FE 2 | 48 | - | - | - |
+| 42 (43) | Mosquito Swarm (Chapter 31) | EX 20, FE 2, FE 2, EX 20, FE 2, FE 2, FE 2 | 44 | - | - | - |
 
 A `-` is a label the grid does not print. **Entry kinds** beyond the first
 half's:
@@ -308,7 +308,7 @@ half's:
   header over the grid in a chapter's column, no identity line, the chapter
   resuming under it. Jack the Bartender and Security Officers print
   `Abilities:` and `Weaponry:` under the grid, SWF Operatives `Talents:`
-  and `Weaponry:`, the chapter 32 three nothing.
+  and `Weaponry:`, the chapter 31 three nothing.
 - **Bartholomew Jacobs** (printed 40): three rows, R, I and P, with
   `Karma:` beside R, under a line of prose naming him and with no header.
   The chapter gives him the physical abilities of the hero he possesses,
@@ -322,7 +322,7 @@ faction grids, 3 grids inside cards and 7 chapter grids):
 | measure | count |
 |---|---|
 | Health = F+A+S+E | **46 of 47** that print one; the zombie's as printed (above). Bartholomew Jacobs prints none |
-| Karma = R+I+P | **41 of 44** that print a number; the Typical Buzz Cut's, Eel's and Tatterdemalion's (12, printed 8). The Sentinels, Mark IV print `NA`; the chapter 32 three print no Karma |
+| Karma = R+I+P | **41 of 44** that print a number; the Typical Buzz Cut's, Eel's and Tatterdemalion's (12, printed 8). The Sentinels, Mark IV print `NA`; the chapter 31 three print no Karma |
 | every ability number within its rank code's range | **48 of 48** |
 | every Resources number within its code's range | **39 of 39** that print one |
 | a number inside its range but not the rank's standard | still **two**, the Typical Flashing Blade's (printed 8) |
@@ -487,7 +487,7 @@ four not:
    entry and two no rows. The trial crops seven row pitches down and reads
    the rows with `codegrids`' row; a crop at 6.9 pitches cut the Mosquito
    Swarm's P `(2)`, read as `(9)`.
-5. **Karma derived for a vertical grid** (the chapter 32 three, decision
+5. **Karma derived for a vertical grid** (the chapter 31 three, decision
    7). `derived_totals` derives only a one-line grid's; the trial gives the
    same `derived` flag to a block that prints no Karma.
 6. **An extra title in its printed case.** The factions' list on printed 7
