@@ -980,10 +980,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     // Kept on purpose (read on the page, 2026-11-03): a suspended hyphen
     // (Human Torch II, the Thing, Doom II's first), or a hyphen the page
     // prints mid-line with the space (Air-Walker's two, the Skrulls', the
-    // Skrull-X's, Doom II's second).
+    // Skrull-X's, Doom II's second). Not kept, and left for a text verdict:
+    // the Air-Walker Automaton's second power, printed 46 (PDF 47), breaks
+    // one word at a line end with a speck after its hyphen; the speck folded
+    // to nothing and hid the shape behind a double space until
+    // npcs.body_spacing closed it up (2026-11-04).
     const shapeA = rowsA.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => `${r.key.slice(4)}(${r.body.match(/[a-z]- [A-Za-z]/g).length})`).sort();
-    check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them',
-      shapeA.join() === ['air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
+    check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them and the Automaton\'s line-end break',
+      shapeA.join() === ['air-walker-automaton-ma4:power:2(1)', 'air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
         'skrull-x-ma4:background(1)', 'thing-ma4:talents(1)', 'victor-von-doom-ii-ma4:running(2)'].join(), shapeA.join(' '));
   }
 
@@ -2530,10 +2534,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && blkQ('mystique-mx4').override.field === 'karma' && playedQ('mystique-mx4') === '90/150',
       `${blkQ('mystique-mx4')?.karma} ${playedQ('mystique-mx4')}`);
     const ovQ = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mx4-overrides.json'), 'utf8')).overrides;
-    check('MX4: seventeen overrides, eight misprints, five as printed and four text verdicts (two on Magma\'s fourth power, its two minuses read on PDF 29, and two proofread misreads, Mirage\'s first power and Marco Pene\'s background), and every block carries one',
-      ovQ.length === 17 && ovQ.filter((o) => o.verdict === 'misprint').length === 8 && ovQ.filter((o) => o.verdict === 'as_printed').length === 5
+    check('MX4: fifteen overrides, eight misprints, five as printed and two text verdicts (two proofread misreads, Mirage\'s first power and Marco Pene\'s background; Magma\'s two minuses, read on PDF 29, are npcs.body_spacing\'s now), and every block carries one',
+      ovQ.length === 15 && ovQ.filter((o) => o.verdict === 'misprint').length === 8 && ovQ.filter((o) => o.verdict === 'as_printed').length === 5
       && ovQ.filter((o) => o.verdict === 'text').map((o) => o.match.row).join()
-        === ['magma-mx4:power:4', 'magma-mx4:power:4', 'mirage-mx4:power:1', 'marco-pene-mx4:background'].map((k) => `mx4:${k}`).join()
+        === ['mirage-mx4:power:1', 'marco-pene-mx4:background'].map((k) => `mx4:${k}`).join()
       && blocksQ.every(({ b }) => b.override),
       JSON.stringify(ovQ.map((o) => [o.verdict, o.match])));
     // rank_ranges: five numbers inside their rank's range and off its
@@ -2591,7 +2595,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       check('MX4 text: no row carries a vertical bar or a backslash', barsQ.length === 0, barsQ.join());
       // Magma's fourth power prints two minuses set against their digits
       // (printed 28, PDF 29); the OCR left each a double space and a spaced
-      // dash, and two text verdicts close them up.
+      // dash, and npcs.body_spacing closes them up (two text verdicts did, to
+      // 2026-11-04).
       const magmaQ = rowsQ.find((r) => r.key === 'mx4:magma-mx4:power:4')?.body || '';
       check('MX4 text: Magma\'s fourth power holds no double space, and its two minuses sit against their digits (-1 CS, -3 CS)',
         magmaQ !== '' && !magmaQ.includes('  ') && (magmaQ.match(/ -[13] CS/g) || []).join() === ' -1 CS, -3 CS',
@@ -3451,10 +3456,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${fixW} | ${styFormsW}`);
     const ovW = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'msl2-overrides.json'), 'utf8')).overrides;
     const textW = ovW.filter((o) => o.verdict === 'text');
-    check('MSL2: nine overrides: one misprint and eight text verdicts (row 26a\'s Howling Commandos quote and row 27a\'s seven), and only Stygorr\'s block carries one',
-      ovW.length === 9 && ovW.filter((o) => o.verdict === 'misprint').length === 1
+    check('MSL2: eight overrides: one misprint and seven text verdicts (row 26a\'s Howling Commandos quote and row 27a\'s six; its seventh, a double space before Gas:, is npcs.body_spacing\'s now), and only Stygorr\'s block carries one',
+      ovW.length === 8 && ovW.filter((o) => o.verdict === 'misprint').length === 1
       && textW.map((o) => o.match.row.replace(/^msl2:/, '')).join() === ['nick-fury-msl2:notes', 'nick-fury-msl2:power:3', 'stygorr-msl2:power:5',
-        'stygorr-msl2:power:5', 'typical-shield-operative-msl2:power:2', 'typical-shield-operative-msl2:power:2', 'typical-shield-operative-msl2:power:2',
+        'stygorr-msl2:power:5', 'typical-shield-operative-msl2:power:2', 'typical-shield-operative-msl2:power:2',
         'typical-shield-operative-msl2:power:2'].join()
       && blocksW.filter(({ b }) => b.override).map(({ id, i }) => `${id}:${i}`).join() === 'stygorr-msl2:0',
       JSON.stringify(ovW.map((o) => [o.verdict, o.match])));
@@ -3504,7 +3509,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsW.length} ${entW.size} ${rowsW.filter((r) => (r.body.match(/"/g) || []).length % 2).map((r) => r.key)} ${markedW.length} ${marksW(/"/g)} ${marksW(/'/g)}`);
       const countW = (row, s) => (rowsW.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MSL2 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textW.length === 8 && textW.every((o) => countW(o.match.row, o.printed) === 1 && countW(o.match.row, o.read) === 0),
+        textW.length === 7 && textW.every((o) => countW(o.match.row, o.printed) === 1 && countW(o.match.row, o.read) === 0),
         textW.map((o) => `${o.match.row} ${countW(o.match.row, o.printed)}/${countW(o.match.row, o.read)}`).join(' | '));
       const noiseW = rowsW.filter((r) => /[|\\~_\u2019]/.test(r.body) || /\b(Il|Ill|lf|ln|lt)\b/.test(r.body)).map((r) => r.key.replace(/^msl2:/, ''));
       check('MSL2 text: no row carries a bar, a backslash, a tilde, an underscore, a curly mark or an l for a capital I',
@@ -4341,6 +4346,31 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     const withExtras = rosters.filter((f) => Object.entries(registry)
       .some(([slug, b]) => f.startsWith(join(booksDir, slug)) && (b.item_pages || b.adventure)));
     check(`and each parsed book's items and adventure too (${extras.length})`, extras.length === withExtras.length);
+    // npcs.body_spacing (scripts/msh/npcs.py): no body of any book's generated
+    // text keeps a double space, and no minus after a word stands apart from
+    // its digit (the OCR's em dash glued to a digit folded to ' - 1'; every
+    // one read on the page prints set against it, 2026-11-04). A spaced dash
+    // after a digit is a range and one after punctuation a list dash, and
+    // neither is a minus. Keys and counts only: the bodies are the book's.
+    // One row is not this shape and is left for a text verdict: Mysterio's
+    // Gas Nozzles (MT2 printed 7, PDF 9) breaks a minus at a line end, a
+    // plain hyphen and then its digit on the next line, with one space.
+    const minusLeft = new Set(['mt2:mysterio-mt2:power:2']);
+    const sqlFiles = existsSync(booksDir) ? readdirSync(booksDir)
+      .flatMap((b) => ['book-text.sql', 'extras-text.sql'].map((n) => join(booksDir, b, n))).filter(existsSync) : [];
+    const spaced = [];
+    let bodies = 0, inserts = 0;
+    for (const f of sqlFiles) {
+      const sql = readFileSync(f, 'utf8');
+      inserts += (sql.match(/^INSERT INTO msh_book_text /gm) || []).length;
+      for (const [, key, body] of sql.matchAll(/VALUES \('([^']+)', '[^']+', '[^']+', (?:NULL|'[^']*'), (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)) {
+        bodies++;
+        if (body.includes('  ') || (/[A-Za-z] - \d/.test(body) && !minusLeft.has(key))) spaced.push(key);
+      }
+    }
+    check(`no body of the ${sqlFiles.length} generated text files holds a double space or a minus set apart from its digit (${bodies} rows read of ${inserts})`,
+      sqlFiles.length > 0 && bodies === inserts && spaced.length === 0,
+      `${spaced.length}: ${spaced.slice(0, 8).join(' ')}`);
     // And every page no parser covers, as Tesseract read it
     // (scripts/msh/ocr-book.py): a contents page, an introduction, a booklet no
     // parser reads yet, a whole book still being surveyed. The parsed text

@@ -118,6 +118,26 @@ def ascii_fold(s):
     return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
 
 
+def body_spacing(s):
+    """A text row's body after ascii_fold, with no double space left in it.
+    FOLD spells an em dash ' - ', so the OCR's one token for a minus glued to
+    its digit (MX4 printed 29 'suffers -1 CS', read as an em dash then 1)
+    came out 'suffers  - 1 CS'. Two steps, in order:
+    (a) after a letter, two or more spaces, a dash, and only spaces (or a
+        hyphen beside the dash) before a digit is a minus: '  - 1 CS',
+        '  -  1 CS' and '  - -2 CS' all read ' -1 CS'. Every minus read on the
+        page images prints set against its digit (15 books, 2026-11-04). A dash
+        after a digit is a range (MA4 printed 78 '9 - 12', spaced on the page)
+        and one after punctuation is a list dash (MT2 and MT3's '-10 scarab
+        darts' after 'thrower);'), so neither is touched here.
+    (b) then every run of two or more spaces becomes one: a spaced dash the
+        page prints as a dash ('life support - in short'), a list bullet read
+        as a dash after a colon, a dropped line break after a full stop.
+    Line breaks are kept. Names are not passed through this."""
+    s = re.sub(r'(?<=[A-Za-z]) {2,}- *(?:- *)?(?=\d)', ' -', s)
+    return re.sub(' {2,}', ' ', s)
+
+
 def unpaired(rows, slug):
     """Stop before writing if a row's name or body has an odd number of
     double quotes: pair_quotes() placed every mark it could, so an odd count
@@ -551,7 +571,7 @@ def main(slug_arg):
     chars, rows, card_part = [], [], {}
 
     def text_row(entry_slug, part, n, name, page, body):
-        body = ascii_fold(body).strip()
+        body = body_spacing(ascii_fold(body)).strip()
         if not body:
             return
         key = '%s:%s:%s%s' % (slug_arg, entry_slug, part, '' if n is None else ':%d' % n)
