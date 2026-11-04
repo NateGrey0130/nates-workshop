@@ -1213,11 +1213,18 @@ section('A choice-group option with its own bonus');
   }
 
   // The NPC generator, run. One option, so the pick is not left to the shuffle.
+  // A FIXED I.Q., so the pick is not left to the dice either: generateNpc rolls
+  // attributes through dice.js's own Math.random (its `random` option feeds only
+  // the shuffle), and withIqBonus caps at SKILL_PCT_CAP AFTER adding the I.Q.
+  // bonus, so on an I.Q. of 28 the 85% here became 98 - 14 = 84 (seen once,
+  // 2026-11-04). A fixed value is never rolled and earns no exceptional die, and
+  // the chart gives nothing below 16, so the bonus is exactly zero.
   {
     const { generateNpc } = await import('../../js/npc-generate.js');
     const catalog = [{ name: TANK, category: 'Pilot', base: 36, per_level: 4 },
       { name: HOVER, category: 'Pilot', base: 70, per_level: 3 }];
     const cls = (group) => ({ id: 'f135', name: 'F135', category: 'occ', system: 'rifts',
+      attribute_dice: { IQ: '10' },
       skills: { occ_skills: [group], secondary_skills: { count: 0 },
         occ_related_skills: { count: 0, categories: [] } } });
     const skillsOf = (group) => generateNpc({ cls: cls(group), level: 1, catalog, derive, system: 'rifts' })
