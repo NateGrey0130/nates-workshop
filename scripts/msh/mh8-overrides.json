@@ -37,6 +37,9 @@
      "note": "Printed 16, column 3, the weapon table, members 3 to 5: the letters OMDONOALWNM are the number column read as one line."},
     {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
      "read": "Shotgun Rifle Sub-Machine Gun Rifle LAW", "printed": "Shotgun 6 Rifle 7 Sub-Machine Gun 8 Rifle 9 LAW",
-     "note": "Printed 16, column 3, the weapon table, members 6 to 9; the tenth row, Gunner, is read as printed."}
+     "note": "Printed 16, column 3, the weapon table, members 6 to 9; the tenth row, Gunner, is read as printed."},
+    {"match": {"row": "mh8:police-mh8:notes"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "is on the lodse and", "printed": "is on the loose and",
+     "note": "The Police notes, printed 16 (PDF 17), column 2: the page prints loose; a speck over the second o was read as a d. Read on a 400 dpi crop of PDF 17 (marvel-11 leftovers, the row 10i hand-off; Nate 2026-11-04, recommendations taken)."}
   ]
 }

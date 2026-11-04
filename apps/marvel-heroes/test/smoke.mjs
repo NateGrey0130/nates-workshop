@@ -1627,10 +1627,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixes8.join(' | '));
     const ov8 = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mh8-overrides.json'), 'utf8')).overrides;
     const text8 = ov8.filter((o) => o.verdict === 'text');
-    check('MH8: six text verdicts, the Juggernaut\'s notes one, the Wasp\'s Flight two and the SWAT Team Member\'s notes three, and no other verdict but the four misprints',
+    check('MH8: seven text verdicts, the Juggernaut\'s notes one, the Wasp\'s Flight two, the SWAT Team Member\'s notes three and the Police notes one, and no other verdict but the four misprints',
       text8.map((o) => o.match.row).join() === ['juggernaut-mh8:notes', 'wasp-mh8:power:2', 'wasp-mh8:power:2',
-        'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes'].map((k) => `mh8:${k}`).join()
-      && ov8.length === 10 && ov8.filter((o) => o.verdict === 'misprint').length === 4,
+        'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes', 'swat-team-member-mh8:notes', 'police-mh8:notes'].map((k) => `mh8:${k}`).join()
+      && ov8.length === 11 && ov8.filter((o) => o.verdict === 'misprint').length === 4,
       JSON.stringify(ov8.map((o) => [o.verdict, o.match])));
     check('MH8: the Police and the SWAT Team Member print no Karma and play none, and the Hoods\' Popularity, printed as a rank word, plays no number',
       played8('police-mh8') === '36/null' && played8('swat-team-member-mh8') === '50/null'
@@ -1674,8 +1674,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rows8.length} ${new Set(rows8.map((r) => r.key.split(':')[1])).size}`);
       const count8 = (row, s) => (rows8.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdicts8 = text8.map((o) => `${o.match.row} ${count8(o.match.row, o.printed)}/${count8(o.match.row, o.read)}`);
-      check('MH8 text: each of the six text verdicts is applied, its printed fragment once in its row and the misread gone',
-        text8.length === 6 && verdicts8.every((v) => v.endsWith(' 1/0')), verdicts8.join(' | '));
+      check('MH8 text: each of the seven text verdicts is applied, its printed fragment once in its row and the misread gone',
+        text8.length === 7 && verdicts8.every((v) => v.endsWith(' 1/0')), verdicts8.join(' | '));
+      // A speck over an o read as a d in the Police notes (printed 16), found
+      // by the marvel-11 leftovers' row 10i and read on the page 2026-11-04:
+      // the misread word is gone from every MH8 row.
+      const lodse8 = rows8.filter((r) => /lodse/.test(r.body)).map((r) => r.key.slice(4));
+      check('MH8 text: no row reads the Police notes\' misread of loose (corrected by its text verdict)',
+        rows8.length > 0 && lodse8.length === 0, lodse8.join(' '));
     }
   }
 
