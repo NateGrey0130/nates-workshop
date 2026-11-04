@@ -1951,9 +1951,11 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixesT.join(' | '));
     const ovT = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt2-overrides.json'), 'utf8')).overrides;
     const textT = ovT.filter((o) => o.verdict === 'text');
-    check('MT2: five overrides: two misprints and three text verdicts (the Scarlet Witch\'s first power, the Black Knight\'s second, Ghost Rider IV\'s notes), and only the two misprinted blocks carry one',
-      ovT.length === 5 && ovT.filter((o) => o.verdict === 'misprint').length === 2
-      && textT.map((o) => o.match.row).join() === ['scarlet-witch-mt2:power:1', 'black-knight-nathan-garrett-mt2:power:2', 'ghost-rider-iv-mt2:notes'].map((k) => `mt2:${k}`).join()
+    check('MT2: eleven overrides: two misprints and nine text verdicts (the Scarlet Witch\'s first power, the Black Knight\'s second, Ghost Rider IV\'s notes, and six line-end hyphen breaks: Kid Colt\'s contacts, Krozzar\'s background, Two-Gun Kid\'s first power, talents and two in his notes) whose printed fragment no longer reads the shape, and only the two misprinted blocks carry one',
+      ovT.length === 11 && ovT.filter((o) => o.verdict === 'misprint').length === 2
+      && textT.map((o) => o.match.row).join() === ['scarlet-witch-mt2:power:1', 'black-knight-nathan-garrett-mt2:power:2', 'ghost-rider-iv-mt2:notes',
+        'kid-colt-mt2:contacts', 'krozzar-mt2:background', 'two-gun-kid-mt2:power:1', 'two-gun-kid-mt2:talents', 'two-gun-kid-mt2:notes', 'two-gun-kid-mt2:notes'].map((k) => `mt2:${k}`).join()
+      && textT.slice(3).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocksT.filter(({ b }) => b.override).map(({ id }) => id).join() === 'genghis-khan-mt2,khan-s-champion-mt2',
       JSON.stringify(ovT.map((o) => [o.verdict, o.match])));
     const offStd = (id) => blkT(id)?.abilities.filter(([, n, code]) => {
@@ -2006,8 +2008,15 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsT.length} ${entT.size} ${rowsT.filter((r) => (r.body.match(/"/g) || []).length % 2 || r.body.includes('|')).map((r) => r.key)}`);
       const countT = (row, s) => (rowsT.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsT = textT.map((o) => `${o.match.row} ${countT(o.match.row, o.printed)}/${countT(o.match.row, o.read)}`);
-      check('MT2 text: each of the three text verdicts is applied, its printed fragment once in its row and the misread gone',
-        textT.length === 3 && verdictsT.every((v) => v.endsWith(' 1/0')), verdictsT.join(' | '));
+      check('MT2 text: each of the nine text verdicts is applied, its printed fragment once in its row and the misread gone',
+        textT.length === 9 && verdictsT.every((v) => v.endsWith(' 1/0')), verdictsT.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10r, Nate
+      // 2026-11-03): MT2's six are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeT = rowsT.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mt2:/, ''))).sort();
+      check('MT2 text: no row reads a letter, a hyphen and a space before a word',
+        rowsT.length > 0 && shapeT.length === 0, shapeT.join(' '));
       const twainT = rowsT.filter((r) => r.key.startsWith('mt2:twain-android-mt2:')).map((r) => r.key.split(':')[2]).sort().join();
       check('MT2 text: the Twain Android\'s Talents. and Contacts. open sections of their own beside its two powers (stop_labels)',
         twainT === 'contacts,power,power,talents', twainT);
