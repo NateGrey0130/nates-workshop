@@ -3145,14 +3145,18 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       JSON.stringify(mla3.find((c) => c.id === 'colossal-deathlok-mla3')?.versions[0].identity));
     const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla3-overrides.json'), 'utf8')).overrides;
     const textL = ovL.filter((o) => o.verdict === 'text');
-    check('MLA3: 23 overrides: two misprints, four labels, three as printed and 14 text verdicts (Daredevil\'s Foggy in doubles, eight bars, backslashes or an underscore for a capital I or nothing, and five line-end hyphens: three compounds, Shang-Chi, Mad-Dog and Kree-Skrull, whose printed fragment keeps the hyphen and drops the space, and two broken words closed up whole), and only those five blocks carry a misprint or as-printed one',
-      ovL.length === 23 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
+    check('MLA3: 44 overrides: two misprints, four labels, three as printed and 35 text verdicts (Daredevil\'s Foggy in doubles, eight bars, backslashes or an underscore for a capital I or nothing, five line-end hyphens: three compounds, Shang-Chi, Mad-Dog and Kree-Skrull, whose printed fragment keeps the hyphen and drops the space, and two broken words closed up whole; then row 11e\'s 21 proofread misreads: seven l for the I of Iron, Deathlok, four Mjolnir, a lost space, seven line-end compounds whose hyphen the reader dropped and a number range that kept its space), and only those five blocks carry a misprint or as-printed one',
+      ovL.length === 44 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
       && ovL.filter((o) => o.verdict === 'as_printed').length === 3
       && textL.map((o) => o.match.row.replace(/^mla3:/, '')).join() === ['daredevil-mla3:background', 'hawkeye-mla3:power:3', 'hawkeye-mla3:power:5',
         'hawkeye-mla3:power:5', 'spider-man-mla3:background', 'guardsmen-mla3:power:2', 'iron-man-mla3:power:4', 'iron-man-mla3:power:14',
         'mandroid-mla3:power:2', 'shang-chi-mla3:background', 'captain-america-mla3:talents', 'mad-dog-mla3:power:3', 'mandroid-mla3:background',
-        'rhino-mla3:background'].join()
-      && textL.slice(9).map((o) => (o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2') ? 'compound'
+        'rhino-mla3:background', 'iron-man-mla3:background', 'iron-man-mla3:background', 'iron-man-mla3:background', 'iron-man-mla3:power:7',
+        'iron-man-mla3:power:8', 'iron-man-mla3:power:9', 'iron-man-mla3:power:12', 'colossal-deathlok-mla3:background',
+        'colossal-deathlok-mla3:background', 'thor-mla3:power:3', 'thor-mla3:power:3', 'thor-mla3:power:3', 'thor-mla3:power:3',
+        'spider-man-mla3:background', 'mandroid-mla3:power:3', 'guardsmen-mla3:power:1', 'goliath-mla3:background', 'mad-dog-mla3:background',
+        'mockingbird-mla3:background', 'fly-mla3:background', 'kingpin-mla3:power:3'].join()
+      && textL.slice(9, 14).map((o) => (o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2') ? 'compound'
         : o.printed === o.read.replace(/([a-z])- ([A-Z])/, (m, a, b) => a + b.toLowerCase()) ? 'closed' : 'other')).join()
         === 'compound,closed,compound,compound,closed'
       && blocksL.filter(({ b }) => b.override).map(({ id }) => id).join() === ['hammerhead-robot', 'security-robots', 'cameron-s-machine', 'guardsmen',
@@ -3197,7 +3201,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsL.length} ${entL.size} ${mla3.filter((c) => !entL.has(c.id)).map((c) => c.id)} ${oddL.map((r) => r.key)} ${quotedL.length}`);
       const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MLA3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textL.length === 14 && textL.every((o) => countL(o.match.row, o.printed) >= 1
+        textL.length === 35 && textL.every((o) => countL(o.match.row, o.printed) >= 1
           && countL(o.match.row, o.read) === (o.printed.includes(o.read) ? countL(o.match.row, o.printed) : 0)),
         textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join(' | '));
       // a word the page breaks at a line end after its hyphen, kept by the
@@ -3207,6 +3211,20 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const shapeL = rowsL.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mla3:/, ''))).sort();
       check('MLA3 text: no row reads a letter, a hyphen and a space before a word',
         rowsL.length > 0 && shapeL.length === 0, shapeL.join(' '));
+      // Row 11e's proofread misreads (marvel-11 leftovers, 2026-11-03), each
+      // read on the page: no misread word is left anywhere in its row. Kept as
+      // printed on purpose, with no verdict: Thor's bloodson (MLA2 prints it
+      // whole mid-line), the Mongoose's cellsmograph (the page prints it whole
+      // as the power's name) and the Gator's 6(FM).
+      const fixedL = [['iron-man-mla3:background', 'lron'], ['iron-man-mla3:power:7', 'lron'], ['iron-man-mla3:power:8', 'lron'],
+        ['iron-man-mla3:power:9', 'lron'], ['iron-man-mla3:power:12', 'lron'], ['colossal-deathlok-mla3:background', 'Deathliok'],
+        ['colossal-deathlok-mla3:background', 'supersoldier'], ['thor-mla3:power:3', 'Miolnir'], ['thor-mla3:power:3', 'Mijolnir'],
+        ['spider-man-mla3:background', 'andfound'], ['mandroid-mla3:power:3', '3area'], ['guardsmen-mla3:power:1', '1hour'],
+        ['goliath-mla3:background', 'forhire'], ['mad-dog-mla3:background', 'civilianowned'], ['mockingbird-mla3:background', 'governmentsponsored'],
+        ['fly-mla3:background', 'flylike'], ['kingpin-mla3:power:3', '1- 10']];
+      const leftL = fixedL.filter(([row, s]) => !rowsL.some((r) => r.key === `mla3:${row}`) || countL(`mla3:${row}`, s) > 0);
+      check('MLA3 text: none of row 11e\'s 17 misread words (lron, Deathliok, Miolnir, a lost space, joined compounds, a spaced range) is left in its row',
+        rowsL.length > 0 && leftL.length === 0, leftL.map(([row, s]) => `${row} ${s} x${countL(`mla3:${row}`, s)}`).join(' | '));
       const noiseL = rowsL.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mla3:/, ''));
       check('MLA3 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
         noiseL.length === 0, noiseL.join());
