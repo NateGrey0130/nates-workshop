@@ -105,6 +105,14 @@ export function buildMarvel(root = repoRoot) {
 export const BUILD = { palladium: buildPalladium, marvel: buildMarvel };
 export const render = (list) => JSON.stringify(list, null, 1) + '\n';
 
+// The line ending the file on disk already has: CRLF on this autocrlf=true
+// checkout, LF in CI and in the index. Written LF here, every run left both
+// lists "modified" in git status with an empty diff, and workers reverted them.
+function eolOf(path) {
+  if (!existsSync(path)) return '\n';
+  return readFileSync(path, 'utf8').includes('\r\n') ? '\r\n' : '\n';
+}
+
 // The committed list against a fresh build: null when they agree, else why not.
 export function stale(system, root = repoRoot) {
   const path = join(root, OUT[system]);
@@ -122,7 +130,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   for (const [system, p] of Object.entries(OUT)) {
     const list = BUILD[system]();
-    writeFileSync(join(repoRoot, p), render(list));
+    const path = join(repoRoot, p);
+    writeFileSync(path, render(list).replace(/\n/g, eolOf(path)));
     console.log(`${p}: ${list.books.length} books`);
   }
 }
