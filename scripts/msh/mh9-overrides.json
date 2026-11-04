@@ -90,6 +90,9 @@
      "note": "Nomad's background, printed 35 (PDF 36): the page breaks Super-Soldier inside its quote marks at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 36 (marvel-11 leftovers row 10j, Nate 2026-11-03)."},
     {"match": {"row": "mh9:she-hulk-mh9:background"}, "verdict": "text", "checked": "2026-11-03",
      "read": "grudge. She- Hulk likes", "printed": "grudge. She-Hulk likes",
-     "note": "She-Hulk's background, which the row cites at printed 36, on printed 37 (PDF 38): the page breaks the name She-Hulk at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 38 (marvel-11 leftovers row 10j, Nate 2026-11-03)."}
+     "note": "She-Hulk's background, which the row cites at printed 36, on printed 37 (PDF 38): the page breaks the name She-Hulk at a line end after its own hyphen, with the second half capitalised, so it is a compound and not one word broken: the hyphen stays and only the space goes. Read on a 300 dpi crop of PDF 38 (marvel-11 leftovers row 10j, Nate 2026-11-03)."},
+    {"match": {"row": "mh9:super-adaptoid-mh9:power:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "becomes an: exact duplicate", "printed": "becomes an exact duplicate",
+     "note": "The Super-Adaptoid's Adaptation, printed 21 (PDF 22), column 2: the page prints no colon after an; the OCR read a speck as one. Read on a 400 dpi crop of PDF 22 (marvel-11 leftovers, the row 10j hand-off; Nate 2026-11-04, recommendations taken)."}
   ]
 }
