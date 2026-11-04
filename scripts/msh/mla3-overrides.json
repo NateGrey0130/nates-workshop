@@ -136,6 +136,9 @@
      "note": "the Fly's background, printed 52 (PDF 53): a compound the page breaks at a line end after its own hyphen, which the reader dropped when it joined the halves; his Circular Vision on the same page prints fly-like with the hyphen mid-line. Read on a 300 dpi crop of PDF 53 (marvel-11 leftovers row 11e, 2026-11-03)."},
     {"match": {"row": "mla3:kingpin-mla3:power:3"}, "verdict": "text", "checked": "2026-11-03",
      "read": "for 1- 10 hours", "printed": "for 1-10 hours",
-     "note": "Kingpin's Weaponry, printed 55 (PDF 56): a range of two numbers the page breaks at a line end after its hyphen; the reader kept the space, and row 10's shape needs a letter before the hyphen. Read on a 300 dpi crop of PDF 56 (marvel-11 leftovers row 11e, 2026-11-03)."}
+     "note": "Kingpin's Weaponry, printed 55 (PDF 56): a range of two numbers the page breaks at a line end after its hyphen; the reader kept the space, and row 10's shape needs a letter before the hyphen. Read on a 300 dpi crop of PDF 56 (marvel-11 leftovers row 11e, 2026-11-03)."},
+    {"match": {"row": "mla3:security-robots-mla3:power:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "die roll, but are", "printed": "die roll, but are at +1 CS.",
+     "note": "the Security Robots' Tentacles, run on from printed 28 to printed 29 (PDF 30; registry continues): the second line of printed 29 reads at confidence 32 (two of its three words at 0), under gridbooks.stream_of's line floor of 45, so it left the stream and the power ended mid-sentence. Read on a crop of PDF 30 (marvel-11 residue row 3, 2026-11-04)."}
   ]
 }
