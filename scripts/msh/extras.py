@@ -123,6 +123,14 @@ def merged(path, key, slug, mine, order):
 def main(slug):
     registry = json.load(io.open(roster.REGISTRY, encoding='utf-8'))['books']
     book = registry[slug]
+    if not book.get('item_pages') and not book.get('adventure'):
+        # nothing to read (every cover-panels and grid-booklets book): return before the
+        # items.json write, which would replace this book's rows, and the cache writes
+        print('%s: no item_pages and no adventure in the registry; nothing to read, nothing written' % slug)
+        return
+    cache = os.path.join(roster.CACHE, 'books', slug)
+    if not os.path.isdir(cache):
+        sys.exit('%s: no cache directory at %s (run python scripts/msh/ocr-book.py %s first); nothing written' % (slug, cache, slug))
     order = list(registry)
     # as npcs.py: the registry's first book keeps plain ids, a later one's end in -<slug>
     sfx = '' if order[0] == slug else '-' + slug
@@ -213,7 +221,6 @@ def main(slug):
     io.open(os.path.join(DATA, 'items.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'about': about('Items and locations'), 'sources': src, 'books': books, 'items': all_items},
         indent=1, ensure_ascii=True) + '\n')
-    cache = os.path.join(roster.CACHE, 'books', slug)
     io.open(os.path.join(cache, 'extras.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'items': its, 'adventure': adv or {'title': None, 'pages': None, 'sections': []}}, indent=1, ensure_ascii=False) + '\n')
 

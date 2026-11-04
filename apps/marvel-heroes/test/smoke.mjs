@@ -5030,6 +5030,28 @@ section('Items and locations: facts only, one id each, every id one the endpoint
       && (!i.vehicle || Object.keys(i.vehicle).join() === 'Control,Speed,Body')));
 }
 
+{
+  // extras.py rewrites items.json for EVERY run, replacing the slug's rows,
+  // and only then writes the book's extras.json into its cache directory.
+  // Until 2026-11-04 a book with nothing to read (no item_pages, no
+  // adventure: every cover-panels and grid-booklets book) still rewrote
+  // items.json and then died with FileNotFoundError at the extras.json write
+  // when its cache directory was missing. CI has no Python, so this pins the
+  // ORDER of main()'s source: both guards (skip a book with nothing to read;
+  // stop on a missing cache directory, naming it) sit before the one
+  // items.json write. Read the source, not a regex over the whole file: the
+  // module docstring names items.json too.
+  const src = readFileSync(join(repoRoot, 'scripts', 'msh', 'extras.py'), 'utf8').replace(/\r\n/g, '\n');
+  const main = src.slice(src.indexOf('\ndef main('));
+  const WRITE = /io\.open\(os\.path\.join\(DATA, 'items\.json'\), 'w'/g;
+  const write = main.search(WRITE);
+  const skip = main.search(/if not book\.get\('item_pages'\) and not book\.get\('adventure'\):\n(?:.*\n){0,3}?\s+return\b/);
+  const stop = main.search(/if not os\.path\.isdir\(cache\):\n\s+sys\.exit\([^\n]*\bcache\b/);
+  check('extras.py writes items.json exactly once, in main()', (main.match(WRITE) || []).length === 1);
+  check('a book with no item_pages and no adventure returns before the items.json write', skip > -1 && skip < write, `skip at ${skip}, write at ${write}`);
+  check('a missing cache directory stops, naming it, before the items.json write', stop > -1 && stop < write, `stop at ${stop}, write at ${write}`);
+}
+
 section('A missing power text degrades to the summary, never an error');
 
 {
