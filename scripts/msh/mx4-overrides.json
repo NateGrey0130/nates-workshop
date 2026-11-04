@@ -1,6 +1,6 @@
 {
   "about": [
-    "Hand decisions about MX4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and two text verdicts scripts/msh/npcs.py applies. Every value was read off the page image by the survey (apps/marvel-heroes/docs/surveys/mx4.md, Stat blocks: each value on a crop of the page image, 2026-11-01; decisions 4 and 7); none is a guess from OCR.",
+    "Hand decisions about MX4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and four text verdicts scripts/msh/npcs.py applies. Every value was read off the page image by the survey (apps/marvel-heroes/docs/surveys/mx4.md, Stat blocks: each value on a crop of the page image, 2026-11-01; decisions 4 and 7); none is a guess from OCR.",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the start of the entry's header",
     "  verdict   misprint    the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
@@ -60,6 +60,12 @@
      "note": "Magma's fourth power, printed 28 (PDF 29), column 2: the page prints a minus set against its digit; the OCR read it as U+FFFD and the row carried it as a double space and a spaced dash (400 dpi crop of PDF 29). The book's other minuses are stored as an ASCII hyphen against the digit, as this one now is."},
     {"match": {"row": "mx4:magma-mx4:power:4"}, "verdict": "text", "checked": "2026-11-03",
      "read": "maximum of  - 3 CS", "printed": "maximum of -3 CS",
-     "note": "The same power's next line, same crop: the page prints a minus against the 3, read and folded as the one before it."}
+     "note": "The same power's next line, same crop: the page prints a minus against the 3, read and folded as the one before it."},
+    {"match": {"row": "mx4:mirage-mx4:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "direct visionenhancing system", "printed": "direct vision-enhancing system",
+     "note": "Printed 28, Mirage's first power: the page breaks vision-enhancing after its hyphen at the end of a line (vision- / enhancing), and the reader joined it with the hyphen lost. A real compound: the line's books print the same shape mid-line (mind-enhancing in MHSP1, ability-enhancing in MHSP2, computer-enhanced in MA1 and MA4), so it keeps its hyphen (read on a 300 dpi crop of PDF 29; marvel-11 leftovers row 11b, under row 10's ruling, Nate 2026-11-03)."},
+    {"match": {"row": "mx4:marco-pene-mx4:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the SWA- T:AM men", "printed": "the SWAT:AM men",
+     "note": "Printed 30, Marco Pene's background: the page breaks SWAT:AM after its A at the end of a line (SWA- / T:AM), a break inside the name that the reader kept as a hyphen and a space. The name is printed whole mid-line on PDF 9, 14 and 20 of this book and on MX2's card, so it is closed up whole (read on a 300 dpi crop of PDF 31; marvel-11 leftovers row 11b, under row 10's ruling, Nate 2026-11-03)."}
   ]
 }
