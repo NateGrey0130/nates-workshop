@@ -27,9 +27,6 @@
      "read": "turns. e Fragmentation:", "printed": "turns. Fragmentation:",
      "note": "Weapons, printed 32, column 2: the second bulleted grenade; the bullet read as a letter e (200 dpi crop of PDF 34, plan row 27a)."},
     {"match": {"row": "msl2:typical-shield-operative-msl2:power:2"}, "verdict": "text", "checked": "2026-11-02",
-     "read": "explosion.  Gas:", "printed": "explosion. Gas:",
-     "note": "Weapons, printed 32, column 2: the third bulleted grenade; the bullet read as a sign the ASCII fold drops, leaving a double space (200 dpi crop of PDF 34, plan row 27a)."},
-    {"match": {"row": "msl2:typical-shield-operative-msl2:power:2"}, "verdict": "text", "checked": "2026-11-02",
      "read": "turns. e Smoke:", "printed": "turns. Smoke:",
      "note": "Weapons, printed 32, column 2: the fourth bulleted grenade; the bullet read as a letter e (200 dpi crop of PDF 34, plan row 27a)."}
   ]

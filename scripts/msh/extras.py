@@ -166,7 +166,7 @@ def main(slug):
     def text_rows(entry, pieces, page):
         n = 0
         for part, name, body in pieces:
-            body = npcs.ascii_fold(roster.join_text(body)).strip()
+            body = npcs.body_spacing(npcs.ascii_fold(roster.join_text(body))).strip()
             if not body:
                 continue
             n += 1

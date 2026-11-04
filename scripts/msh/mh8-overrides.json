@@ -30,7 +30,7 @@
      "read": "about '/2 ounce", "printed": "about 1/2 ounce",
      "note": "Printed 16, column 1, the Wasp's FLIGHT.: the second fraction one half in the same power, read the same way."},
     {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
-     "read": "Member Weapon Number Type  -  Rifle Rifle", "printed": "Member Number, Weapon Type: 1 Rifle 2 Rifle",
+     "read": "Member Weapon Number Type - Rifle Rifle", "printed": "Member Number, Weapon Type: 1 Rifle 2 Rifle",
      "note": "Printed 16, column 3, the SWAT Team Member's weapon table: a Member Number column (1 to 9, then Gunner) beside a Weapon Type column, each headed over two lines. The OCR reads the two heads across as one line, the numbers 1 to 9 as a dash and later as one string of letters, and the weapons in their printed order (seen on a 150 dpi crop of PDF 17). This and the next two verdicts put each number back before its weapon."},
     {"match": {"row": "mh8:swat-team-member-mh8:notes"}, "verdict": "text", "checked": "2026-10-30",
      "read": "Rifle Sub-Machine Gun Sub-Machine Gun OMDONOALWNM Shotgun", "printed": "Rifle 3 Sub-Machine Gun 4 Sub-Machine Gun 5 Shotgun",
