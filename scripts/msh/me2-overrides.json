@@ -22,9 +22,6 @@
      "note": "Printed A 100 Shift X and E 100 Shift X: 100 is Unearthly, and Shift X is 126-175. Health 950 = 500 + 100 + 250 + 100 agrees with the numbers, so the codes are the misprint."},
     {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
      "printed": 90, "corrected": 110, "checked": "2026-10-21",
-     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110. ME1's chart has the same misprint."},
-    {"match": {"row": "me2:geirrodur-me2:background"}, "verdict": "text", "checked": "2026-11-03",
-     "read": "Asgar- Geirrodur", "printed": "Asgardian god of mischief, Geirrodur",
-     "note": "the background, printed 12 (PDF 46): the page breaks the word Asgardian at a line end after Asgar-, and it is closed up whole (Nate, 2026-11-03). The reader also lost the four words that open the next line before Geirrodur, which the cached TSV holds at confidence 90 and over; the printed fragment is the page's line as it stands. Read on a 300 dpi crop of PDF 46 (marvel-11 leftovers row 10c, 2026-11-03)."}
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110. ME1's chart has the same misprint."}
   ]
 }
