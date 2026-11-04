@@ -76,6 +76,15 @@
      "note": "Telepathy, printed 29 (PDF 30): the fourth of 4 bulleted lines; the bullet read as a letter e (300 dpi crop of PDF 30, marvel-11 stray bullets, 2026-11-03)."},
     {"match": {"row": "msl1:sunstroke-msl1:power:1"}, "verdict": "text", "checked": "2026-11-03",
      "read": "rank. e Light: Visible", "printed": "rank. Light: Visible",
-     "note": "Energy Conversion, printed 12 (PDF 13): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 13 (marvel-11 stray bullets, 2026-11-03)."}
+     "note": "Energy Conversion, printed 12 (PDF 13): a bulleted line; the page prints a round bullet, which the OCR read as a letter e before a capital, and no reader rule strips it (MX1 bullet_marks needs a lower-case word after the mark). Read on a 300 dpi crop of PDF 13 (marvel-11 stray bullets, 2026-11-03)."},
+    {"match": {"row": "msl1:cyclops-msl1:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "now with X- Factor", "printed": "now with X-Factor",
+     "note": "Cyclops's Groups, printed 31 (PDF 33): the page breaks X-Factor across a line after the hyphen of a compound it prints hyphenated, and the reader kept the hyphen and a space (outside row 10's line-end GLOB, a break after a capital); the compound keeps its hyphen and loses only the space (Nate, 2026-11-03, row 10). Read on a 300 dpi crop of PDF 33 (marvel-11 leftovers row 11g, 2026-11-03)."},
+    {"match": {"row": "msl1:dominus-msl1:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Robots, X- Terminator", "printed": "Robots, X-Terminator",
+     "note": "Dominus's Groups, printed 30 (PDF 31): the page breaks X-Terminator across a line after the hyphen of a compound it prints hyphenated, and the reader kept the hyphen and a space (outside row 10's line-end GLOB, a break after a capital); the compound keeps its hyphen and loses only the space (Nate, 2026-11-03, row 10). Read on a 300 dpi crop of PDF 31 (marvel-11 leftovers row 11g, 2026-11-03)."},
+    {"match": {"row": "msl1:x-terminator-robots-msl1:power:3"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the X- Terminator", "printed": "the X-Terminator",
+     "note": "Body Armor, printed 30 (PDF 31): the page breaks X-Terminator across a line after the hyphen of a compound it prints hyphenated, and the reader kept the hyphen and a space (outside row 10's line-end GLOB, a break after a capital); the compound keeps its hyphen and loses only the space (Nate, 2026-11-03, row 10). Read on a 300 dpi crop of PDF 31 (marvel-11 leftovers row 11g, 2026-11-03)."}
   ]
 }
