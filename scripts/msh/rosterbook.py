@@ -340,6 +340,19 @@ def parse(book, slug):
     ranks = booklet.ladder(book)
     first, last = book['character_pages']
     stream = booklet.stream_of(book, slug, book['character_part'], first, last, split_at_rules=False)
+    # MHSP2 (registry split_heads [part, printed page, first line's end, second
+    # line's start], as read): a run-in head broken over two lines after a
+    # hyphen of its own ("RUNNING PSYCHO-MAN AND HATE-" / "MONGER: ...", Roster
+    # p.27) is one head, so the two lines are joined with the hyphen kept.
+    # Each must be found exactly once, or the build stops.
+    for p, page, a_end, b_start in [d for d in book.get('split_heads', []) if d[0] == book['character_part']]:
+        at = [k for k in range(len(stream) - 1) if stream[k]['printed'] == page
+              and stream[k]['text'].rstrip().endswith(a_end) and stream[k + 1]['text'].lstrip().startswith(b_start)]
+        if len(at) != 1:
+            raise SystemExit('%s: split_heads finds %r / %r %d times on %s p.%d, not once' % (slug, a_end, b_start, len(at), p, page))
+        k = at[0]
+        stream[k] = dict(stream[k], text=stream[k]['text'].rstrip() + stream[k + 1]['text'].lstrip())
+        del stream[k + 1]
     reader = roster.GridReader(book, slug)
     teams = {roster.norm(t) for _p, _h, t in book.get('teams', [])}
     credits = book.get('credits')
@@ -401,7 +414,10 @@ def parse(book, slug):
         key = None
         if m and not (m.group(1) == 'Powers' and cur['_sec'] == 'powers'):
             key, rest = {'known powers': 'powers'}.get(m.group(1).lower(), m.group(1).lower()), m.group(2)
-        elif label and (label.startswith('RUNNING') or label in ('TALENTS', 'TALENT', 'CONTACTS', 'CONTACT')):
+        # a NOTE run-in opens the notes, also after a running note (MHSP2's one,
+        # Hate-Monger's, Roster p.27, read as a power named Note until
+        # split_heads gave the running note above it its head)
+        elif label and (label.startswith('RUNNING') or label in ('TALENTS', 'TALENT', 'CONTACTS', 'CONTACT', 'NOTE')):
             key, rest = roster.section_of(label), r.group(2)
         elif label and cur['_sec'] != 'powers' and roster.section_of(label) in ('powers', 'talents', 'contacts'):
             key, rest = roster.section_of(label), r.group(2)
