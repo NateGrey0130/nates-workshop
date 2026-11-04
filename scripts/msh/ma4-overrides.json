@@ -6,7 +6,7 @@
     "  match     {page, header}: the printed page and the start of the entry's header",
     "  verdict   misprint   the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            rows       a grid that prints no number for a row (N/A): its rows as the page gives them, a row it does not print as null",
-    "            text       match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. For a quote mark only the page image settles.",
+    "            text       match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or the script that writes the row stops: extras.py for an item- row, npcs.py for every other. For a quote mark only the page image settles.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -159,6 +159,27 @@
      "note": "the talents, printed 48 (PDF 49): the page breaks the compound Astro-Navigation at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 200 dpi crop of PDF 49 (marvel-11 leftovers row 10a, 2026-11-03)."},
     {"match": {"row": "ma4:wyatt-wingfoot-ma4:background"}, "verdict": "text", "checked": "2026-11-03",
      "read": "with She- Hulk", "printed": "with She-Hulk",
-     "note": "the background, printed 12 (PDF 13): the page breaks the compound She-Hulk at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 200 dpi crop of PDF 13 (marvel-11 leftovers row 10a, 2026-11-03)."}
+     "note": "the background, printed 12 (PDF 13): the page breaks the compound She-Hulk at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 200 dpi crop of PDF 13 (marvel-11 leftovers row 10a, 2026-11-03)."},
+    {"match": {"row": "ma4:item-four-freedoms-plaza-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "and She- Hulk", "printed": "and She-Hulk",
+     "note": "Four Freedoms Plaza, printed 79 (PDF 80): the page breaks the compound She-Hulk at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 80 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-counter-earth-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "Counter- Earth shared", "printed": "Counter-Earth shared",
+     "note": "Counter-Earth, printed 83 (PDF 84): the page breaks the compound Counter-Earth at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 84 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-king-s-crossing-ny-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "into Pseudo- Skrulls", "printed": "into Pseudo-Skrulls",
+     "note": "King's Crossing, NY, printed 85 (PDF 86): the page breaks the compound Pseudo-Skrulls at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 86 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-negative-zone-ma4:part:5"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "periodi- Cally", "printed": "periodically",
+     "note": "the Negative Zone, printed 87 (PDF 88): the page breaks the plain word periodically at a line end, and the reader kept the line break as a space and read the c as a capital; the word closes up whole (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 88 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-xandar-ma4:part:2"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "Former Nova Prime- Centurion", "printed": "Former Nova Prime-Centurion",
+     "note": "Xandar, printed 91 (PDF 92): the page breaks the compound Prime-Centurion at a line end after its hyphen (the same part prints it whole twice more), and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 92 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-pogo-plane-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "current Pogo- Plane", "printed": "current Pogo-Plane",
+     "note": "the Pogo Plane, printed 94 (PDF 95): the page breaks the compound Pogo-Plane at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 95 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:item-skrull-starship-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "No Astro- Navigational", "printed": "No Astro-Navigational",
+     "note": "the Skrull starship, printed 95 (PDF 96): the page breaks the compound Astro-Navigational at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 96 (marvel-11 residue row 2, 2026-11-04)."}
   ]
 }

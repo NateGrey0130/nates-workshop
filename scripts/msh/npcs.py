@@ -151,15 +151,27 @@ def unpaired(rows, slug):
                          % (slug, len(odd), t[max(0, t.find('"') - 30):t.find('"') + 30]))
 
 
-def text_fixes(rows, slug):
+def extras_row(key, book, sfx):
+    """True for a msh_book_text key scripts/msh/extras.py writes: an item or
+    location (entry item-<id>) or an adventure section (<adventure>-<section>).
+    Every other key is a character's, written here."""
+    entry = key.split(':')[1] if key.count(':') >= 1 else ''
+    adv = book.get('adventure')
+    return entry.startswith('item-') or bool(adv) and entry.startswith(slug(adv['title']) + sfx + '-')
+
+
+def text_fixes(rows, slug, mine=lambda key: True):
     """Apply the 'text' verdicts of scripts/msh/<slug>-overrides.json: a mark
     only the page image can settle (MA1 prints real single quotes, so a lost
     closing mark looks like any other). Each names its row and a fragment of
     a few words; it must be found exactly once, or the build stops, because a
-    fix that no longer finds its text must not pass quietly."""
+    fix that no longer finds its text must not pass quietly. One file holds
+    both scripts' verdicts: `mine` picks the rows the calling script writes
+    (extras_row), so neither stops on the other's, and a verdict whose row
+    neither writes still stops this one."""
     path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % slug)
     fixes = [o for o in (json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
-             if o['verdict'] == 'text']
+             if o['verdict'] == 'text' and mine(o['match']['row'])]
     at = {r[0]: i for i, r in enumerate(rows)}
     missed = []
     for o in fixes:
@@ -982,7 +994,7 @@ def main(slug_arg):
                               else booklet_rank.get(c['versions'][0].get('part'), 0),
                               min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
-    text_fixes(rows, slug_arg)
+    text_fixes(rows, slug_arg, lambda key: not extras_row(key, book, sfx))
     unpaired(rows, slug_arg)
     # EVERY book's characters live in this one file. Rebuilding one book
     # replaces that book's characters and leaves the others as they are.
