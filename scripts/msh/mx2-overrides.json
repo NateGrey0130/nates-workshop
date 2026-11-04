@@ -84,6 +84,12 @@
      "note": "Printed 16, the same background: a margin mark after its last word is read as a trailing j; the paragraph ends at the full stop (same crop)."},
     {"match": {"row": "mx2:senator-joseph-mcgrafton-mx2:background"}, "verdict": "text", "checked": "2026-11-03",
      "read": "on Mutant- Communist Subversion", "printed": "on Mutant-Communist Subversion",
-     "note": "Printed 10, Senator McGrafton's background: the page breaks the committee's name Mutant-Communist after its hyphen at the end of a line (Mutant- / Communist), and prints the compound whole mid-line on PDF 23 and the newspaper handouts (PDF 35), so it keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 11. A line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10t, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."}
+     "note": "Printed 10, Senator McGrafton's background: the page breaks the committee's name Mutant-Communist after its hyphen at the end of a line (Mutant- / Communist), and prints the compound whole mid-line on PDF 23 and the newspaper handouts (PDF 35), so it keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 11. A line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10t, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
+    {"match": {"row": "mx2:nimrod-mx2:power:9"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "roll. lf he", "printed": "roll. If he",
+     "note": "Printed 12, Nimrod's Teleportation: the capital I of If is read as a lower-case l; the page prints If (read on a 300 dpi crop of PDF 13). A proofread misread (marvel-11 leftovers row 11a)."},
+    {"match": {"row": "mx2:swat-am-mx2:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "in 10man squads", "printed": "in 10-man squads",
+     "note": "SWAT:AM's notes (the line is on PDF 15): the page breaks 10-man after its hyphen at the end of a line (10- / man), and the reader joined it with the hyphen lost. A real compound: the same paragraph prints four-man and two-man mid-line and MX3 prints 10-man mid-line, so it keeps its hyphen (read on a 300 dpi crop of PDF 15; marvel-11 leftovers row 11a, under row 10's ruling, Nate 2026-11-03)."}
   ]
 }
