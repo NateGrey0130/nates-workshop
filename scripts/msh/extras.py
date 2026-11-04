@@ -209,6 +209,9 @@ def main(slug):
         'Every row carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book\'s end in -<slug>.',
     ]
 
+    # the book's text verdicts on these rows (<slug>-overrides.json, shared with
+    # npcs.py, which applies the rest): a fragment not found once stops here
+    npcs.text_fixes(rows, slug, lambda key: npcs.extras_row(key, book, sfx))
     npcs.unpaired(rows, slug)
 
     def listing(rows_, pages_of):
