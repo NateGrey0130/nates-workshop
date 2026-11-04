@@ -93442,7 +93442,8 @@
      "team": "MLA3 Night Life",
      "part": "Adventure",
      "pages": [
-      28
+      28,
+      29
      ],
      "identity": [],
      "blocks": [
@@ -93500,6 +93501,9 @@
      "powers": [
       {
        "name": "Tentacles"
+      },
+      {
+       "name": "Knockout Gas"
       }
      ],
      "members": [],

@@ -3194,8 +3194,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       JSON.stringify(mla3.find((c) => c.id === 'colossal-deathlok-mla3')?.versions[0].identity));
     const ovL = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mla3-overrides.json'), 'utf8')).overrides;
     const textL = ovL.filter((o) => o.verdict === 'text');
-    check('MLA3: 44 overrides: two misprints, four labels, three as printed and 35 text verdicts (Daredevil\'s Foggy in doubles, eight bars, backslashes or an underscore for a capital I or nothing, five line-end hyphens: three compounds, Shang-Chi, Mad-Dog and Kree-Skrull, whose printed fragment keeps the hyphen and drops the space, and two broken words closed up whole; then row 11e\'s 21 proofread misreads: seven l for the I of Iron, Deathlok, four Mjolnir, a lost space, seven line-end compounds whose hyphen the reader dropped and a number range that kept its space), and only those five blocks carry a misprint or as-printed one',
-      ovL.length === 44 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
+    check('MLA3: 45 overrides: two misprints, four labels, three as printed and 36 text verdicts (Daredevil\'s Foggy in doubles, eight bars, backslashes or an underscore for a capital I or nothing, five line-end hyphens: three compounds, Shang-Chi, Mad-Dog and Kree-Skrull, whose printed fragment keeps the hyphen and drops the space, and two broken words closed up whole; then row 11e\'s 21 proofread misreads: seven l for the I of Iron, Deathlok, four Mjolnir, a lost space, seven line-end compounds whose hyphen the reader dropped and a number range that kept its space; then the Security Robots\' line under the confidence floor, residue row 3), and only those five blocks carry a misprint or as-printed one',
+      ovL.length === 45 && ovL.filter((o) => o.verdict === 'misprint').length === 2 && ovL.filter((o) => o.verdict === 'label').length === 4
       && ovL.filter((o) => o.verdict === 'as_printed').length === 3
       && textL.map((o) => o.match.row.replace(/^mla3:/, '')).join() === ['daredevil-mla3:background', 'hawkeye-mla3:power:3', 'hawkeye-mla3:power:5',
         'hawkeye-mla3:power:5', 'spider-man-mla3:background', 'guardsmen-mla3:power:2', 'iron-man-mla3:power:4', 'iron-man-mla3:power:14',
@@ -3204,7 +3204,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         'iron-man-mla3:power:8', 'iron-man-mla3:power:9', 'iron-man-mla3:power:12', 'colossal-deathlok-mla3:background',
         'colossal-deathlok-mla3:background', 'thor-mla3:power:3', 'thor-mla3:power:3', 'thor-mla3:power:3', 'thor-mla3:power:3',
         'spider-man-mla3:background', 'mandroid-mla3:power:3', 'guardsmen-mla3:power:1', 'goliath-mla3:background', 'mad-dog-mla3:background',
-        'mockingbird-mla3:background', 'fly-mla3:background', 'kingpin-mla3:power:3'].join()
+        'mockingbird-mla3:background', 'fly-mla3:background', 'kingpin-mla3:power:3', 'security-robots-mla3:power:1'].join()
       && textL.slice(9, 14).map((o) => (o.printed === o.read.replace(/([a-z])- ([A-Z])/, '$1-$2') ? 'compound'
         : o.printed === o.read.replace(/([a-z])- ([A-Z])/, (m, a, b) => a + b.toLowerCase()) ? 'closed' : 'other')).join()
         === 'compound,closed,compound,compound,closed'
@@ -3212,8 +3212,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         'thor'].map((s) => `${s}-mla3`).join(),
       `${ovL.length} ${JSON.stringify(ovL.map((o) => [o.verdict, o.match.row || o.match.header]))}`);
     const powL = mla3.flatMap((c) => c.versions[0].powers);
-    check('MLA3: 133 powers across 34 cards, 33 of them linked to the UPB',
-      powL.length === 133 && powL.filter((p) => p.upb).length === 33 && mla3.filter((c) => c.versions[0].powers.length).length === 34,
+    check('MLA3: 134 powers across 34 cards, 33 of them linked to the UPB',
+      powL.length === 134 && powL.filter((p) => p.upb).length === 33 && mla3.filter((c) => c.versions[0].powers.length).length === 34,
       `${powL.length} ${powL.filter((p) => p.upb).length} ${mla3.filter((c) => c.versions[0].powers.length).length}`);
     const bookL = data.npcs.books.find((b) => b.slug === 'mla3');
     const twoL = ['iron-man-mla3', 'mandroid-mla3', 'thor-mla3', 'typhoid-mary-mla3'];
@@ -3243,14 +3243,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       // Row 21b read every double quote on the page: 17 rows, 38 marks, each
       // printed as read once Daredevil's Foggy was restored.
       const quotedL = rowsL.filter((r) => /"/.test(r.body));
-      check('MLA3 text: 213 rows over 41 entries (Cameron\'s Machine, Bertha the Gorilla, the Alligators and Hound Dog print none), no row with an odd count of double quotes, and the 17 rows holding 38 double quotes that row 21b read on the page',
-        rowsL.length === 213 && entL.size === 41
+      check('MLA3 text: 214 rows over 41 entries (Cameron\'s Machine, Bertha the Gorilla, the Alligators and Hound Dog print none), no row with an odd count of double quotes, and the 17 rows holding 38 double quotes that row 21b read on the page',
+        rowsL.length === 214 && entL.size === 41
         && mla3.filter((c) => !entL.has(c.id)).map((c) => c.id).join() === 'cameron-s-machine-mla3,bertha-the-gorilla-mla3,alligators-mla3,hound-dog-mla3'
         && oddL.length === 0 && quotedL.length === 17 && quotedL.reduce((n, r) => n + r.body.split('"').length - 1, 0) === 38,
         `${rowsL.length} ${entL.size} ${mla3.filter((c) => !entL.has(c.id)).map((c) => c.id)} ${oddL.map((r) => r.key)} ${quotedL.length}`);
       const countL = (row, s) => (rowsL.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MLA3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textL.length === 35 && textL.every((o) => countL(o.match.row, o.printed) >= 1
+        textL.length === 36 && textL.every((o) => countL(o.match.row, o.printed) >= 1
           && countL(o.match.row, o.read) === (o.printed.includes(o.read) ? countL(o.match.row, o.printed) : 0)),
         textL.map((o) => `${o.match.row} ${countL(o.match.row, o.printed)}/${countL(o.match.row, o.read)}`).join(' | '));
       // a word the page breaks at a line end after its hyphen, kept by the
@@ -3280,6 +3280,15 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       check('MLA3 text: every card\'s power rows match its powers',
         mla3.every((c) => rowsL.filter((r) => r.key.startsWith(`mla3:${c.id}:power:`)).length === c.versions[0].powers.length),
         mla3.map((c) => `${c.id}:${rowsL.filter((r) => r.key.startsWith(`mla3:${c.id}:power:`)).length}/${c.versions[0].powers.length}`).filter((s) => { const [a, b] = s.split(':')[1].split('/'); return a !== b; }).join());
+      // marvel-11 residue row 3 (2026-11-04): the Security Robots' column ends
+      // mid-sentence on printed 28 and runs on to printed 29 (registry
+      // continues), where a second power follows before the chapter resumes
+      const robotsL = rowsL.filter((r) => r.key.startsWith('mla3:security-robots-mla3:power:'));
+      check('MLA3 text: the Security Robots read on to printed 29: two power rows, Tentacles ending at its sentence\'s close and Knockout Gas, as the card\'s two powers',
+        robotsL.map((r) => `${r.key.replace(/^mla3:security-robots-mla3:/, '')}=${r.name}`).join() === 'power:1=Tentacles,power:2=Knockout Gas'
+        && robotsL[0].body.endsWith('at +1 CS.') && /^The robots contain\b/.test(robotsL[1].body)
+        && mla3.find((c) => c.id === 'security-robots-mla3')?.versions[0].powers.map((p) => p.name).join() === 'Tentacles,Knockout Gas',
+        `${robotsL.map((r) => `${r.key} ${r.name} ...${r.body.slice(-20)}`).join(' | ')}`);
     }
   }
 
