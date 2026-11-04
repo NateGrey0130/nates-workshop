@@ -26,6 +26,24 @@
      "note": "Printed 8, the Black Knight's Flying Horse: the horse's ability letters print I between R and P, read as a vertical bar (seen on a 300 dpi crop of PDF 10)."},
     {"match": {"row": "mt2:ghost-rider-iv-mt2:notes"}, "verdict": "text", "checked": "2026-10-30",
      "read": "Ghost Rider | and II", "printed": "Ghost Rider I and II",
-     "note": "Printed 53, Ghost Rider IV's notes: the page prints the roman numeral I, read as a vertical bar (seen on a 300 dpi crop of PDF 55)."}
+     "note": "Printed 53, Ghost Rider IV's notes: the page prints the roman numeral I, read as a vertical bar (seen on a 300 dpi crop of PDF 55)."},
+    {"match": {"row": "mt2:kid-colt-mt2:contacts"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Two- Gun Kid,", "printed": "the Two-Gun Kid,",
+     "note": "Printed 54, Kid Colt's contacts: the page breaks the name Two-Gun Kid after its hyphen at the end of a line (Two- / Gun), and prints the same name whole mid-line on the same page, so the compound keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 56. a line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
+    {"match": {"row": "mt2:krozzar-mt2:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "of Kroz- Zar were", "printed": "of Krozzar were",
+     "note": "Printed 8, Krozzar's background: the page breaks the word Krozzar across a line end (Kroz- / zar, the z lower case, which the OCR read as a capital), and the book spells it Krozzar throughout, so the word is closed up whole; read on a 300 dpi crop of PDF 10. A line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a word the page breaks across a line is closed up whole)."},
+    {"match": {"row": "mt2:two-gun-kid-mt2:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Two- Gun Kid can", "printed": "Two-Gun Kid can",
+     "note": "Printed 63, Two-Gun Kid's first power: the page breaks the name Two-Gun Kid after its hyphen at the end of a line (Two- / Gun), and prints the same name whole mid-line on the same page, so the compound keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 65. a line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
+    {"match": {"row": "mt2:two-gun-kid-mt2:talents"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "turn. Two- Gun Kid is", "printed": "turn. Two-Gun Kid is",
+     "note": "Printed 63, Two-Gun Kid's talents: the page breaks the name Two-Gun Kid after its hyphen at the end of a line (Two- / Gun), and prints the same name whole mid-line on the same page, so the compound keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 65. a line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
+    {"match": {"row": "mt2:two-gun-kid-mt2:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Conqueror. The Two- Gun Kid", "printed": "Conqueror. The Two-Gun Kid",
+     "note": "Printed 63, Two-Gun Kid's notes, the first of two such breaks: the page breaks the name Two-Gun Kid after its hyphen at the end of a line (Two- / Gun), and prints the same name whole mid-line on the same page, so the compound keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 66. a line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
+    {"match": {"row": "mt2:two-gun-kid-mt2:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "the Two- Gun Kid encountered", "printed": "the Two-Gun Kid encountered",
+     "note": "Printed 63, Two-Gun Kid's notes, the second of two such breaks: the Two- / Gun line-end break again (300 dpi crop of PDF 66, marvel-11 leftovers row 10r, 2026-11-03)."}
   ]
 }
