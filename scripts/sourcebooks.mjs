@@ -108,7 +108,7 @@ export const render = (list) => JSON.stringify(list, null, 1) + '\n';
 // The line ending the file on disk already has: CRLF on this autocrlf=true
 // checkout, LF in CI and in the index. Written LF here, every run left both
 // lists "modified" in git status with an empty diff, and workers reverted them.
-export function eolOf(path) {
+function eolOf(path) {
   if (!existsSync(path)) return '\n';
   return readFileSync(path, 'utf8').includes('\r\n') ? '\r\n' : '\n';
 }
