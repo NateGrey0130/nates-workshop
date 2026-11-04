@@ -4971,6 +4971,18 @@ section('Every book in one file: each row names a book the registry has, and onl
   check(`npcs: every book whose survey counts rows in production has characters (${imported.length})`,
     imported.length > 0 && vanished.length === 0, vanished.join());
 
+  // The registry's about list is where a reader is sent for what a field
+  // means, so every field a book entry sets (its _note aside) is named there:
+  // 64 were not, from MH5's to MT3's, before row 6 of the 2026-11-04 residue
+  // plan. A substring test, as #2088's survey of MLA1 to MSL4 was.
+  const registryFile = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'books.json'), 'utf8'));
+  const aboutText = registryFile.about.join('\n');
+  const fields = [...new Set(Object.values(registryFile.books).flatMap((e) => Object.keys(e)))]
+    .filter((k) => !k.endsWith('_note'));
+  const unexplained = fields.filter((k) => !aboutText.includes(k));
+  check(`registry: every field a book sets is named in about (${fields.length})`,
+    fields.length > 0 && unexplained.length === 0, unexplained.join());
+
   // What a second book does to the code that reads these files, before one
   // exists: a copy of MA1's Nightcrawler as another book's.
   const { makeCodex, dataFiles } = await import(new URL('../js/codex.js', import.meta.url));
