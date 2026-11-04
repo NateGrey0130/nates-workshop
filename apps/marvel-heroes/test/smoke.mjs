@@ -1175,7 +1175,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       ovS2.length === 33 && ovS2.filter((o) => o.verdict === 'misprint').length === 10 && ovS2.filter((o) => o.verdict === 'as_printed').length === 2
       && ovS2.filter((o) => o.verdict === 'label').length === 9 && ovS2.filter((o) => o.verdict === 'summary_misprint').length === 1
       && ovS2.filter((o) => o.verdict === 'rows').length === 3 && ovS2.filter((o) => o.verdict === 'powers_intro').length === 1
-      && textS2.map((o) => o.match.row.slice(6)).join() === 'mephisto-mhsp2:power:3,she-hulk-mhsp2:running,firelord-mhsp2:running,hate-monger-mhsp2:power:1,hate-monger-mhsp2:power:2,hate-monger-mhsp2:power:2,psycho-man-mhsp2:power:2'
+      && textS2.map((o) => o.match.row.slice(6)).join() === 'mephisto-mhsp2:power:3,she-hulk-mhsp2:running,firelord-mhsp2:running,hate-monger-mhsp2:power:1,hate-monger-mhsp2:running,hate-monger-mhsp2:running,psycho-man-mhsp2:power:2'
       && hyphS2[0].printed === hyphS2[0].read.replace(/([a-z])- [A-Z]([a-z])/, (s, a, b) => a + s[3].toLowerCase() + b)
       && hyphS2.slice(1).every((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2')),
       JSON.stringify(ovS2.map((o) => [o.verdict, o.match])));
@@ -1195,6 +1195,15 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const shapeS2 = rowsS2.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.slice(6))).sort();
       check('MHSP2 text: no row reads a letter, a hyphen and a space before a word',
         rowsS2.length > 0 && shapeS2.length === 0, shapeS2.join(' '));
+      // Hate-Monger's running note is headed over two lines on Roster p.27
+      // (PDF 60), RUNNING PSYCHO-MAN AND HATE- / MONGER:, which the registry's
+      // split_heads joins; unjoined, the note ran on as the tail of his second
+      // power (marvel-11 residue row 4).
+      const hmRun = rowsS2.find((r) => r.key === 'mhsp2:hate-monger-mhsp2:running')?.body || '';
+      const hmPow2 = rowsS2.find((r) => r.key === 'mhsp2:hate-monger-mhsp2:power:2')?.body || '';
+      check('MHSP2 text: Hate-Monger\'s running note is a running row of its own, and his second power ends where the book ends it',
+        hmRun.startsWith('This Hate-monger') && hmPow2.endsWith('(no loss of Karma).') && !/RUNNING/.test(hmPow2),
+        `running ${hmRun.length} chars; power:2 ends ${JSON.stringify(hmPow2.slice(-20))}`);
     }
   }
 
