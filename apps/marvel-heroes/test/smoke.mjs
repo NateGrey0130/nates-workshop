@@ -2090,11 +2090,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${blkK('kang-mt3')?.karma} ${playedK('kang-mt3')} ${blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join()}`);
     const ovK = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt3-overrides.json'), 'utf8')).overrides;
     const textK = ovK.filter((o) => o.verdict === 'text');
-    check('MT3: nineteen overrides: five misprints, one as printed and 13 text verdicts (Kang\'s background quote, 11 capital I misread as a bar or an l, the Thugs\' last word), and only those six blocks carry one',
-      ovK.length === 19 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
+    check('MT3: 22 overrides: five misprints, one as printed and 16 text verdicts (Kang\'s background quote, 11 capital I misread as a bar or an l, the Thugs\' last word, and three line-end hyphen breaks: Daredevil\'s and Spider-Man\'s backgrounds, the Super-Skrull\'s second power) whose printed fragment no longer reads the shape, and only those six blocks carry one',
+      ovK.length === 22 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
       && textK.map((o) => o.match.row.replace(/^mt3:/, '')).join() === ['kang-mt3:background', 'scarlet-witch-mt3:power:1', 'iceman-mt3:power:1',
         'iceman-mt3:power:2', 'professor-x-mt3:notes', 'human-torch-mt3:background', 'daredevil-mt3:power:2', 'iron-man-mt3:power:1',
-        'iron-man-mt3:power:4', 'o-malley-mt3:prose', 'kang-mt3:background', 'kang-mt3:background', 'thugs-mt3:prose'].join()
+        'iron-man-mt3:power:4', 'o-malley-mt3:prose', 'kang-mt3:background', 'kang-mt3:background', 'thugs-mt3:prose',
+        'daredevil-mt3:background', 'spider-man-mt3:background', 'super-skrull-mt3:power:2'].join()
+      && textK.slice(13).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocksK.filter(({ b }) => b.override).map(({ id }) => id).join()
         === 'moon-knight-mt3,kang-mt3,mandarin-mt3,kang-duplicate-s-battle-robots-mt3,mike-franklin-mt3,tom-tyler-mt3',
       JSON.stringify(ovK.map((o) => [o.verdict, o.match])));
@@ -2153,8 +2155,15 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const verdictsK = textK.map((o) => `${o.match.row} ${countK(o.match.row, o.printed)}/${countK(o.match.row, o.read)}`);
       check('MT3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
         // the Thugs' verdict only adds a word, so its read fragment stays inside its printed one
-        textK.length === 13 && textK.every((o) => countK(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countK(o.match.row, o.read) === 0)),
+        textK.length === 16 && textK.every((o) => countK(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countK(o.match.row, o.read) === 0)),
         verdictsK.join(' | '));
+      // a word the page breaks at a line end after its hyphen, kept by the
+      // reader as "<letters>- <letters>" (marvel-11 leftovers row 10s, Nate
+      // 2026-11-03): MT3's three are closed up by the text verdicts above, and
+      // none is kept on purpose.
+      const shapeK = rowsK.flatMap((r) => [...r.body.matchAll(/[a-z]- [A-Za-z]/g)].map(() => r.key.replace(/^mt3:/, ''))).sort();
+      check('MT3 text: no row reads a letter, a hyphen and a space before a word',
+        rowsK.length > 0 && shapeK.length === 0, shapeK.join(' '));
       // Where an entry's text ends, each read on the page (survey mt3.md): the
       // Scarlet Witch's background runs on into printed 6, Attuma's and the
       // alligators' stop before the sidebar and the box that share their
