@@ -1,6 +1,6 @@
 {
   "about": [
-    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and ten text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
+    "Hand decisions about MSL4 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book), and eleven text verdicts npcs.py applies. Every one was read off the page image (survey apps/marvel-heroes/docs/surveys/msl4.md, Stat blocks; decisions 7 and 9); none is a guess from OCR.",
     "Every one of the book's 11 grids adds up (Health = F+A+S+E, Karma = R+I+P) and prints each code's standard number, so no block needs a misprint or an as_printed verdict (survey decision 7, plan row 32b, 2026-11-02).",
     "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: the printed page in the Adventure Book and the whole header as the card prints it",
@@ -40,6 +40,9 @@
      "note": "Image Generation, printed 18 (PDF 20): the first of two line-end compound hyphens; the page breaks Spy-Eye, the card's own name, after its hyphen at a line end, so the hyphen stays and only the space goes. Read on a 200 dpi crop of PDF 20 (marvel-11 leftovers row 10q, Nate 2026-11-03)."},
     {"match": {"row": "msl4:phase-bot-msl4:power:4"}, "verdict": "text", "checked": "2026-11-03",
      "read": "the Phase- Bot for", "printed": "the Phase-Bot for",
-     "note": "Image Generation, printed 18 (PDF 20): the second of two line-end compound hyphens; Phase-Bot, the card's own name, broken after its hyphen at a line end (200 dpi crop of PDF 20, marvel-11 leftovers row 10q, Nate 2026-11-03)."}
+     "note": "Image Generation, printed 18 (PDF 20): the second of two line-end compound hyphens; Phase-Bot, the card's own name, broken after its hyphen at a line end (200 dpi crop of PDF 20, marvel-11 leftovers row 10q, Nate 2026-11-03)."},
+    {"match": {"row": "msl4:annihilus-msl4:notes"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "a knowledgetransference helmet", "printed": "a knowledge-transference helmet",
+     "note": "Annihilus's notes, printed 28 (PDF 30), column 1: the page breaks the compound knowledge-transference after its hyphen at a line end, and the reader joined the halves and dropped the hyphen; a real compound printed with a hyphen keeps it (row 10's ruling, Nate 2026-11-03). Read on a 400 dpi crop of PDF 30 (marvel-11 leftovers row 11h)."}
   ]
 }
