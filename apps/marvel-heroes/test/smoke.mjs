@@ -2858,10 +2858,11 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${playedB('sentinel-mark-iv-mlba1')} ${playedB('sunspot-mlba1')}`);
     const ovB = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mlba1-overrides.json'), 'utf8')).overrides;
     const textB = ovB.filter((o) => o.verdict === 'text');
-    check('MLBA1: fifteen overrides: six misprints, two as printed and seven text verdicts (five capital I misread, a speck, Armadillo\'s Claws colon), and only those eight blocks carry one',
-      ovB.length === 15 && ovB.filter((o) => o.verdict === 'misprint').length === 6 && ovB.filter((o) => o.verdict === 'as_printed').length === 2
+    check('MLBA1: twenty overrides: six misprints, two as printed and twelve text verdicts (five capital I misread, a speck, Armadillo\'s Claws colon, and five proofread misreads: three of map text in Mauler\'s identity line, the Beetle\'s attakcs and Wolverine\'s atiacks), and only those eight blocks carry one',
+      ovB.length === 20 && ovB.filter((o) => o.verdict === 'misprint').length === 6 && ovB.filter((o) => o.verdict === 'as_printed').length === 2
       && textB.map((o) => o.match.row.replace(/^mlba1:/, '')).join() === ['black-king-mlba1:power:1', 'beetle-mlba1:background', 'beetle-mlba1:power:5',
-        'chicken-mlba1:power:3', 'richtor-mlba1:power:3', 'sunspot-mlba1:notes', 'armadillo-mlba1:power:1'].join()
+        'chicken-mlba1:power:3', 'richtor-mlba1:power:3', 'sunspot-mlba1:notes', 'armadillo-mlba1:power:1',
+        'mauler-mlba1:background', 'mauler-mlba1:background', 'mauler-mlba1:background', 'beetle-mlba1:power:1', 'wolverine-mlba1:power:4'].join()
       && blocksB.filter(({ b }) => b.override).map(({ id }) => id).join()
         === 'ee-ha-mlba1,generic-punk-mlba1,rocco-mlba1,schiz-mlba1,generic-goon-mlba1,sentinel-mark-iv-mlba1,cannonball-mlba1,sunspot-mlba1',
       JSON.stringify(ovB.map((o) => [o.verdict, o.match])));
@@ -2921,7 +2922,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsB.length} ${entB.size} ${oddB.map((r) => r.key)} ${rowsB.filter((r) => /["']/.test(r.body)).length} ${nB(/"/g)} ${nB(/'/g)}`);
       const countB = (row, s) => (rowsB.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       check('MLBA1 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        textB.length === 7 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
+        textB.length === 12 && textB.every((o) => countB(o.match.row, o.printed) === 1 && countB(o.match.row, o.read) === 0),
         textB.map((o) => `${o.match.row} ${countB(o.match.row, o.printed)}/${countB(o.match.row, o.read)}`).join(' | '));
       // A bar, a backslash or an l for a capital I, and the scan's underscore
       // speck: each one the OCR left was read on the page and is a text
@@ -2929,6 +2930,19 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const noiseB = rowsB.filter((r) => /[|\\~_]/.test(r.body) || /\b(lf|ln|lt|tll)\b/.test(r.body)).map((r) => r.key.replace(/^mlba1:/, ''));
       check('MLBA1 text: no row carries a bar, a backslash, a tilde, an underscore or an l for a capital I',
         noiseB.length === 0, noiseB.join());
+      // the proofread scan's misreads (marvel-11 leftovers row 11f, read on
+      // the page 2026-11-03): the Shaw Industries map's lettering read into
+      // Mauler's Place of Birth, North-ern split, and two glyph misreads. None
+      // is left in any row. The Beetle's Excellect, attakcs and Bettle are the
+      // page's own misprints and stay.
+      const proofB = rowsB.flatMap((r) => [...r.body.matchAll(/\bed ae\b|North , ern|Pallets|Metal Barrels|\battakes\b|\batiacks\b/g)]
+        .map((m) => `${r.key.replace(/^mlba1:/, '')} ${m[0]}`));
+      check('MLBA1 text: no row reads the proofread misreads (ed ae, North , ern, Pallets, Metal Barrels, attakes, atiacks), and the Beetle\'s rows keep the page\'s Excellect, attakcs and Bettle',
+        rowsB.length > 0 && proofB.length === 0
+        && countB('mlba1:mauler-mlba1:background', 'Londonderry, Northern Ireland Marital') === 1
+        && countB('mlba1:beetle-mlba1:power:1', 'Excellect') === 1 && countB('mlba1:beetle-mlba1:power:1', 'attakcs') === 1
+        && countB('mlba1:beetle-mlba1:power:2', 'Bettle') === 1,
+        `${proofB.join(' | ')} ${countB('mlba1:mauler-mlba1:background', 'Londonderry, Northern Ireland Marital')} ${countB('mlba1:beetle-mlba1:power:1', 'Excellect')} ${countB('mlba1:beetle-mlba1:power:1', 'attakcs')} ${countB('mlba1:beetle-mlba1:power:2', 'Bettle')}`);
       // Where an entry's text ends, each measured with its registry field off
       // (books.json mlba1 notes): the lengths the field gives, so a reader
       // change that moves one moves this check.

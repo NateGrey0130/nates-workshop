@@ -61,6 +61,21 @@
      "note": "Weakness, printed 32: the page prints In unlit places; the OCR read the capital I as a vertical bar (300 dpi crop of PDF 33)."},
     {"match": {"row": "mlba1:armadillo-mlba1:power:1"}, "verdict": "text", "checked": "2026-11-01",
      "read": "Claws; Armadillo", "printed": "Claws: Armadillo",
-     "note": "Claws, inside Body Armor, printed 25, column 2: the page prints the italic run-in Claws with a colon, as every power head; the OCR read it as a semicolon (300 dpi crop of PDF 26). Found while reading the row's two apostrophes for quote marks."}
+     "note": "Claws, inside Body Armor, printed 25, column 2: the page prints the italic run-in Claws with a colon, as every power head; the OCR read it as a semicolon (300 dpi crop of PDF 26). Found while reading the row's two apostrophes for quote marks."},
+    {"match": {"row": "mlba1:mauler-mlba1:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Birth: ed ae Londonderry,", "printed": "Birth: Londonderry,",
+     "note": "Mauler's Place of Birth, printed 9, column 2: the identity line prints no word between Birth: and Londonderry; ed ae is the Shaw Industries map below the column read into the line (300 dpi crop of PDF 10, marvel-11 proofread, 2026-11-03)."},
+    {"match": {"row": "mlba1:mauler-mlba1:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "North , ern Ireland", "printed": "Northern Ireland",
+     "note": "Mauler's Place of Birth, printed 9, column 2: the page breaks North-ern across a line with a hyphen, closed up whole by the row 10 ruling; the comma between the halves is map text read into the line (300 dpi crop of PDF 10, marvel-11 proofread, 2026-11-03)."},
+    {"match": {"row": "mlba1:mauler-mlba1:background"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "Ireland c 3 Pallets Metal Barrels i I Marital", "printed": "Ireland Marital",
+     "note": "Mauler's Place of Birth, printed 9: the identity line ends at Ireland; c 3 Pallets Metal Barrels i I are the map's labels (area 3, Wooden Pallets, Metal Barrels) read into it, dropped as row 10d dropped art (300 dpi crop of PDF 10, marvel-11 proofread, 2026-11-03)."},
+    {"match": {"row": "mlba1:beetle-mlba1:power:1"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "attakes", "printed": "attakcs",
+     "note": "Body Armor, printed 8, column 2: the page itself misprints at-takcs (k before c), and the OCR read its c as an e; the verdict keeps the page's misprint, not attacks (600 dpi crop of PDF 9, marvel-11 proofread, 2026-11-03). Excellect two lines above is printed so too (Ex-cellect) and is kept with no verdict."},
+    {"match": {"row": "mlba1:wolverine-mlba1:power:4"}, "verdict": "text", "checked": "2026-11-03",
+     "read": "atiacks", "printed": "attacks",
+     "note": "Adamantium Skeleton, printed 32: the page prints edged attacks; the OCR read the second t as an i (300 dpi crop of PDF 33, marvel-11 proofread, 2026-11-03)."}
   ]
 }
