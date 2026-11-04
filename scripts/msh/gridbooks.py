@@ -103,6 +103,19 @@ def stream_of(book, slug, part, first, last):
         bottom = next((d[2] for d in book.get('page_bottoms', []) if d[:2] == [part, printed]), 0.935)
         body = [w for w in words if w['y'] > book.get('body_top', 0.10) * H and w['y'] + w['h'] < bottom * H
                 and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
+        # ME2 (plan marvel-11-residue row 5): the bottom cut is a word's, not a
+        # line's, so a column's last line that straddles it loses the words
+        # that box lower. Geirrodur's "dian god of mischief, Geirrodur over-"
+        # (printed 12) kept its last two words, bottoms at 3029 under a cut at
+        # 3029.4, and dropped the first four, bottoms at 3030-3039. A word
+        # whose top is above the cut and whose centre is inside a kept word's
+        # box is on a line the body holds, and is kept with it.
+        cut = bottom * H
+        spans = [(w['y'], w['y'] + w['h']) for w in body if w['y'] + w['h'] > cut - 4 * w['h']]
+        marks = (chr(0x2122), chr(0xae))
+        body += [w for w in words if w['y'] + w['h'] >= cut and w['y'] < cut
+                 and not any(m in w['t'] for m in marks)
+                 and any(y0 <= w['y'] + w['h'] / 2 <= y1 for y0, y1 in spans)]
         if not body:
             continue
         page_start = len(stream)

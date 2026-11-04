@@ -2133,13 +2133,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       `${blkK('kang-mt3')?.karma} ${playedK('kang-mt3')} ${blkK('kang-mt3')?.abilities.slice(4).map((a) => a.slice(1).join(' ')).join()}`);
     const ovK = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt3-overrides.json'), 'utf8')).overrides;
     const textK = ovK.filter((o) => o.verdict === 'text');
-    check('MT3: 22 overrides: five misprints, one as printed and 16 text verdicts (Kang\'s background quote, 11 capital I misread as a bar or an l, the Thugs\' last word, and three line-end hyphen breaks: Daredevil\'s and Spider-Man\'s backgrounds, the Super-Skrull\'s second power) whose printed fragment no longer reads the shape, and only those six blocks carry one',
-      ovK.length === 22 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
+    // The Thugs' last word, a text verdict until marvel-11 residue row 5, is
+    // the reader's now: gridbooks.stream_of keeps a word that straddles the
+    // page's bottom cut on a line the body holds.
+    check('MT3: 21 overrides: five misprints, one as printed and 15 text verdicts (Kang\'s background quote, 11 capital I misread as a bar or an l, and three line-end hyphen breaks: Daredevil\'s and Spider-Man\'s backgrounds, the Super-Skrull\'s second power) whose printed fragment no longer reads the shape, and only those six blocks carry one',
+      ovK.length === 21 && ovK.filter((o) => o.verdict === 'misprint').length === 5 && ovK.filter((o) => o.verdict === 'as_printed').length === 1
       && textK.map((o) => o.match.row.replace(/^mt3:/, '')).join() === ['kang-mt3:background', 'scarlet-witch-mt3:power:1', 'iceman-mt3:power:1',
         'iceman-mt3:power:2', 'professor-x-mt3:notes', 'human-torch-mt3:background', 'daredevil-mt3:power:2', 'iron-man-mt3:power:1',
-        'iron-man-mt3:power:4', 'o-malley-mt3:prose', 'kang-mt3:background', 'kang-mt3:background', 'thugs-mt3:prose',
+        'iron-man-mt3:power:4', 'o-malley-mt3:prose', 'kang-mt3:background', 'kang-mt3:background',
         'daredevil-mt3:background', 'spider-man-mt3:background', 'super-skrull-mt3:power:2'].join()
-      && textK.slice(13).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
+      && textK.slice(12).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
       && blocksK.filter(({ b }) => b.override).map(({ id }) => id).join()
         === 'moon-knight-mt3,kang-mt3,mandarin-mt3,kang-duplicate-s-battle-robots-mt3,mike-franklin-mt3,tom-tyler-mt3',
       JSON.stringify(ovK.map((o) => [o.verdict, o.match])));
@@ -2197,8 +2200,7 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const countK = (row, s) => (rowsK.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsK = textK.map((o) => `${o.match.row} ${countK(o.match.row, o.printed)}/${countK(o.match.row, o.read)}`);
       check('MT3 text: each text verdict is applied, its printed fragment in its row and the misread gone',
-        // the Thugs' verdict only adds a word, so its read fragment stays inside its printed one
-        textK.length === 16 && textK.every((o) => countK(o.match.row, o.printed) >= 1 && (o.printed.includes(o.read) || countK(o.match.row, o.read) === 0)),
+        textK.length === 15 && textK.every((o) => countK(o.match.row, o.printed) >= 1 && countK(o.match.row, o.read) === 0),
         verdictsK.join(' | '));
       // a word the page breaks at a line end after its hyphen, kept by the
       // reader as "<letters>- <letters>" (marvel-11 leftovers row 10s, Nate
@@ -3821,15 +3823,17 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     check('ME2: Death\'s "Health: 20,000" is 20000, his "Karma: Unlimited" is unset, and the Fenris Wolf\'s Popularity, read as a hyphen and a dash, is -5',
       death?.health === 20000 && death.karma === null && bookNpc({ character: 'fenris-wolf-me2' }).snapshot?.abilities.popularity.number === -5,
       `${death?.health} ${death?.karma}`);
-    // ME2's text verdicts: one word the page breaks at a line end after its
-    // hyphen (marvel-11 leftovers row 10c, Nate 2026-11-03). The text is
-    // msh_book_text's: read the generated .sql in the cache, by keys and by the
-    // overrides' own fragments, never a word of the book in this file.
+    // ME2 has no text verdict. Its one (marvel-11 leftovers row 10c) patched
+    // Geirrodur's background, printed 12, whose column's last line straddles
+    // the page's bottom cut: gridbooks.stream_of cut by word, so the line lost
+    // the words that box lower, and the hyphen break above it read "Asgar-"
+    // before a capital. The reader keeps the line now (marvel-11 residue row
+    // 5). The text is msh_book_text's: read the generated .sql and the cached
+    // page's txt in the cache, by keys and line numbers, never a word of the
+    // book in this file.
     const ovM = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'me2-overrides.json'), 'utf8')).overrides;
-    const textM = ovM.filter((o) => o.verdict === 'text');
-    check('ME2: four overrides: one as printed, one misprint, one chart misprint and one text verdict, a line-end hyphen break whose printed fragment no longer reads the shape',
-      ovM.length === 4 && ['as_printed', 'misprint', 'summary_misprint', 'text'].every((v) => ovM.filter((o) => o.verdict === v).length === 1)
-      && textM.every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed)),
+    check('ME2: three overrides: one as printed, one misprint and one chart misprint, and no text verdict',
+      ovM.length === 3 && ['as_printed', 'misprint', 'summary_misprint'].every((v) => ovM.filter((o) => o.verdict === v).length === 1),
       JSON.stringify(ovM.map((o) => o.verdict)));
     const sqlM = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'me2', 'book-text.sql');
     if (!existsSync(sqlM)) {
@@ -3838,9 +3842,17 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       const rowsM = [...readFileSync(sqlM, 'utf8').matchAll(/VALUES \('([^']+)', 'me2', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
         .map(([, key, body]) => ({ key, body: body.replace(/''/g, '\'') }));
       const countM = (row, s) => (rowsM.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
-      const verdictsM = textM.map((o) => `${o.match.row} ${countM(o.match.row, o.printed)}/${countM(o.match.row, o.read)}`);
-      check('ME2 text: the text verdict is applied, its printed fragment once in its row and the misread gone',
-        rowsM.length === 273 && verdictsM.length === 1 && verdictsM.every((v) => v.endsWith(' 1/0')), verdictsM.filter((v) => !v.endsWith(' 1/0')).join(' | ') || `${rowsM.length} rows`);
+      // PDF 46's txt lines 67 and 68 (1-based) are the hyphen break and the
+      // straddling line: the row holds the broken word closed up and the
+      // line's words up to its own last, hyphenated, word
+      const txtM = join(dirname(sqlM), 'txt', 'p046.txt');
+      const linesM = existsSync(txtM) ? readFileSync(txtM, 'utf8').split(/\r?\n/) : [];
+      const brokeM = (linesM[66] || '').trim().split(' ').pop() || '';
+      const nextM = (linesM[67] || '').trim().split(' ').slice(0, -1).join(' ');
+      const wantM = brokeM.endsWith('-') && nextM ? brokeM.slice(0, -1) + nextM : '';
+      check('ME2 text: Geirrodur\'s background keeps the whole of its column\'s last line on PDF 46, the broken word above it closed up, once in its row',
+        rowsM.length === 273 && wantM.split(' ').length === 5 && countM('me2:geirrodur-me2:background', wantM) === 1,
+        `${rowsM.length} rows; ${wantM.split(' ').length} words; found ${wantM && countM('me2:geirrodur-me2:background', wantM)}`);
       const shapeM = rowsM.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => r.key.slice(4)).sort();
       check('ME2 text: no row reads a letter, a hyphen and a space before a word (none is kept on purpose)',
         shapeM.length === 0, shapeM.join(' '));
