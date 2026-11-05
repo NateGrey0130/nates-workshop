@@ -3,7 +3,8 @@
 > **CLOSED 2026-11-04.** The fourteen items below were driven to completion by
 > PRs #2082-#2120 (2026-11-03 and 2026-11-04), and the residue those PRs handed
 > on was taken by the six-row plan `marvel-11-residue-2026-11-04` (PRs
-> #2121-#2126, 2026-11-04). Each item's `Closed by` column names its PRs. The
+> #2121-#2126, 2026-11-04), and the four pieces those PRs handed on by
+> #2128-#2131 (2026-11-04). Each item's `Closed by` column names its PRs. The
 > PR bodies' *What this left* sections are the record of anything smaller.
 > Kept as a record only.
 
@@ -37,7 +38,7 @@ cards.
 | 11 | MLA1-MSL4 | #2049-#2070 | The registry's `about` list did not cover 13 new fields. | #2088 (48 fields of the eight new books), #2126 (the 64 older fields, with a smoke check that every field is named) |
 | 12 | All | plan memory | `extras.py` fails late on a book with no `item_pages`. | #2118 (reproduced: it rewrote `items.json` then died writing `extras.json`; it now stops before the write) |
 | 13 | MLA2 | #2056 | The merged PR's title read "Import MLA2s 47 characters". | `gh pr edit`, 2026-11-03; the title reads "Import MLA2's 47 characters" |
-| 14 | Housekeeping | close-out note | `.claude/worktrees/festive-hermann-122237`, an empty directory `rmdir` calls busy. | Diagnosed 2026-11-04: two orphan `python -m http.server 8831` processes (PIDs 20260 and 36692, started 2026-10-27 in that worktree) hold it as their working directory. The auto-mode classifier refused `Stop-Process`. Nate's: `Stop-Process -Id 36692,20260 -Force`, then `rmdir`. |
+| 14 | Housekeeping | close-out note | `.claude/worktrees/festive-hermann-122237`, an empty directory `rmdir` calls busy. | Diagnosed 2026-11-04: two orphan `python -m http.server 8831` processes (PIDs 20260 and 36692, started 2026-10-27 in that worktree) hold it as their working directory. The auto-mode classifier refused `Stop-Process` and `Remove-Item`. Nate ran `Stop-Process -Id 36692,20260 -Force`, then `Remove-Item`, 2026-11-04; folder, processes and port 8831 gone. |
 
 ## The residue, and what took it
 
@@ -77,12 +78,18 @@ Two more the residue's workers took, which Nate may overrule:
 6. **MT3 Thugs verdict (#2125):** retired, because with the reader fix it made the row end "long. long." and MT3's smoke check caught it.
 7. **MHSP2 NOTE paragraph (#2124):** it had been read as a power named "Note"; it is now a `notes` part, so the Hate-Monger card loses that power row.
 
-## Still open after the residue (the PRs' own hand-offs)
+## The PRs' own hand-offs, and what took them
 
-- **MA4 Baxter Building floor keys (printed 76-77):** six line-end breaks left as read, because the reader took those lines out of order. Reader work.
-- MA4's Air-Walker Automaton and MT2's Mysterio Gas Nozzles, as #2122 and #2125 describe them; `body_top` left unmeasured in #2125.
-- Item 14 above, which only a hand at the machine can finish.
-- Each worker's first `gh pr checks --watch` returned early with only Cloudflare Pages listed; a second watch was needed once the Actions checks registered. A tooling note, not a fault.
+The residue PRs handed on four pieces. Side sessions took them on 2026-11-04, one PR each, every one merged after `NO DRIFT`. This section is the close-out record.
+
+- **(a) MA4 Baxter Building floor keys (printed 76-78):** two faults, not one. MA4's folio boxes above the body's bottom cut, so a page number sat inside ten body rows (#2130). PDF 78's 2x2 floor-plan grid was cut as three columns, so the six keys read out of order and two of them ran into the lobby prose (#2131: `page_columns` and `plan_keys` on the ma4 registry entry, `codegrids.items()` streaming page by page, two `map_label` rules; the Negative Zone Explorer lost a trailing art mark `61` the same way). Once the keys read in order, `roster.join_text` closed the line-end hyphens itself, so three text verdicts, not fifteen. A scrambled-order fault wants a reader fix, not verdicts.
+- **(b) MA4's Air-Walker Automaton:** its `reassem- ble` closed up (#2128).
+- **(c) MT2's Mysterio Gas Nozzles:** the minus set at a line's end and its digit at the next line's start, closed by one text verdict, the `minusLeft` exemption dropped (#2129).
+- **(d) `body_top`:** DROPPED, measured 2026-11-04. Over all seventeen grid-booklets books the only real line on or above the top cut is MLBA1 PDF 33, `cannot fly the way Cannonball can,`, Quicksilver adventure prose that no production row holds. The top cut loses nothing a row holds.
+
+Still Nate's, and done: item 14 above, cleared by his hand on 2026-11-04 (`Stop-Process`, then `Remove-Item`; the classifier refused both when asked). The six worker worktrees were already gone: `git worktree list` showed `main` alone, re-checked four times that day, and nothing was removed.
+
+A tooling note, not a fault: each worker's first `gh pr checks --watch` returned early with only Cloudflare Pages listed; a second watch was needed once the Actions checks registered.
 
 ## Already done before this record (2026-11-03)
 
