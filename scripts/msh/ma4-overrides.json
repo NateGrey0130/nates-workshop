@@ -180,6 +180,9 @@
      "note": "the Pogo Plane, printed 94 (PDF 95): the page breaks the compound Pogo-Plane at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 95 (marvel-11 residue row 2, 2026-11-04)."},
     {"match": {"row": "ma4:item-skrull-starship-ma4:prose:1"}, "verdict": "text", "checked": "2026-11-04",
      "read": "No Astro- Navigational", "printed": "No Astro-Navigational",
-     "note": "the Skrull starship, printed 95 (PDF 96): the page breaks the compound Astro-Navigational at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 96 (marvel-11 residue row 2, 2026-11-04)."}
+     "note": "the Skrull starship, printed 95 (PDF 96): the page breaks the compound Astro-Navigational at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 96 (marvel-11 residue row 2, 2026-11-04)."},
+    {"match": {"row": "ma4:air-walker-automaton-ma4:power:2"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "completely reassem- ble and", "printed": "completely reassemble and",
+     "note": "the Air-Walker Automaton, printed 46 (PDF 47): the page breaks the plain word reassemble at a line end, with a speck after its hyphen that the OCR read as a degree sign and the fold dropped; the reader kept the line break as a space, and the word closes up whole (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 47 (the hand-off of #2121, 2026-11-04)."}
   ]
 }
