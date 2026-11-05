@@ -44,6 +44,9 @@
      "note": "Printed 63, Two-Gun Kid's notes, the first of two such breaks: the page breaks the name Two-Gun Kid after its hyphen at the end of a line (Two- / Gun), and prints the same name whole mid-line on the same page, so the compound keeps its hyphen and loses only the space; read on a 300 dpi crop of PDF 66. a line-end break the reader kept as a hyphen and a space (marvel-11 leftovers row 10r, Nate 2026-11-03: a real compound keeps its hyphen and loses only the space)."},
     {"match": {"row": "mt2:two-gun-kid-mt2:notes"}, "verdict": "text", "checked": "2026-11-03",
      "read": "the Two- Gun Kid encountered", "printed": "the Two-Gun Kid encountered",
-     "note": "Printed 63, Two-Gun Kid's notes, the second of two such breaks: the Two- / Gun line-end break again (300 dpi crop of PDF 66, marvel-11 leftovers row 10r, 2026-11-03)."}
+     "note": "Printed 63, Two-Gun Kid's notes, the second of two such breaks: the Two- / Gun line-end break again (300 dpi crop of PDF 66, marvel-11 leftovers row 10r, 2026-11-03)."},
+    {"match": {"row": "mt2:mysterio-mt2:power:2"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "by - 3 CS", "printed": "by -3 CS",
+     "note": "Printed 7, Mysterio's Gas Nozzles: the page sets the minus at the end of a line (it by -) and its digit at the start of the next (3 CS), so the reader kept the line break as a space between them; the page prints -3 CS as one figure, so the minus closes against its digit. Read on a 400 dpi crop of PDF 9 (the hand-off of #2121, 2026-11-04)."}
   ]
 }
