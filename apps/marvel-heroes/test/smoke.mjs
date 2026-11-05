@@ -978,8 +978,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   if (!existsSync(sqlA) || !existsSync(sqlAX)) {
     check(`MA4: skipped the text checks: no ${rel(sqlA) || sqlA} or no extras-text.sql beside it`, true);
   } else {
-    const rowsOf = (file) => [...readFileSync(file, 'utf8').matchAll(/VALUES \('([^']+)', 'ma4', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)]
-      .map(([, key, body]) => ({ key, body: body.replace(/''/g, '\'') }));
+    const rowsOf = (file) => [...readFileSync(file, 'utf8').matchAll(/VALUES \('([^']+)', 'ma4', '[^']+', '[^']+', (?:NULL|'(?:[^']|'')*'), (?:NULL|(\d+)), '((?:[^']|'')*)'\);/g)]
+      .map(([, key, page, body]) => ({ key, page: Number(page), body: body.replace(/''/g, '\'') }));
     const rowsA = rowsOf(sqlA);
     const rowsAX = rowsOf(sqlAX);
     const countA = (row, s) => ([...rowsA, ...rowsAX].find((r) => r.key === row)?.body.split(s).length || 1) - 1;
@@ -1005,6 +1005,17 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them',
       shapeA.join() === ['air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
         'skrull-x-ma4:background(1)', 'thing-ma4:talents(1)', 'victor-von-doom-ii-ma4:running(2)'].join(), shapeA.join(' '));
+    // The folio: MA4's page number boxes above roster.page_stream's bottom
+    // cut on 17 pages, and read as a body word it sat inside ten rows' prose
+    // and was a Vertigo prose row on its own (msh/fix/ma4-folio-in-body,
+    // 2026-11-04). A row's text runs on to the next page or two, so a word of
+    // digits equal to its page or either of the next two is suspect; the three
+    // left are figures the page prints (a range of rounds, an age, a speed).
+    const folioA = [...rowsA, ...rowsAX].filter((r) => (r.body.match(/\b\d+\b/g) || []).some((w) => Number(w) >= r.page && Number(w) <= r.page + 2))
+      .map((r) => r.key.slice(4)).sort();
+    check('MA4 text: no row holds its own page number as a word, or the next two pages\', beyond the three figures the pages print',
+      folioA.join() === ['alicia-reiss-masters-storm-ma4:background', 'dragonman-ma4:power:4', 'ms-marvel-ii-ma4:notes'].join()
+      && !rowsA.some((r) => r.key === 'ma4:vertigo-ma4:prose'), folioA.join(' '));
   }
 
   const html = renderSheet({ name: nc.name, snapshot: nc.snapshot, sheet: {} });

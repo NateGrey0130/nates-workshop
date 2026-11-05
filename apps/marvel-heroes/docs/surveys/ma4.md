@@ -3,9 +3,9 @@
 Marvel Super Heroes Advanced Set accessory, David E. Martin, 1987. Registry
 entry: `scripts/msh/books.json` -> `ma4`. Measured 2026-09-30.
 
-**Rows citing this book:** 1026 `msh_book_text` rows over 157 entries in
-production (`DB_MARVEL`, read back 2026-10-21):
-- 980 over 128 character entries. The Turtle Transports (p.34) have none:
+**Rows citing this book:** 1025 `msh_book_text` rows over 157 entries in
+production (`DB_MARVEL`, read back 2026-11-04):
+- 979 over 128 character entries (Vertigo's prose row was the folio alone, dropped 2026-11-04). The Turtle Transports (p.34) have none:
   their text is a run-in in Atlantean Equipment's heading, which is not
   imported, so their card is the grid alone
 - 46 over 29 items: 21 places and 8 vehicles
