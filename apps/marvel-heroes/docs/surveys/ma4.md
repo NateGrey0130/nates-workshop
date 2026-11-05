@@ -3,12 +3,14 @@
 Marvel Super Heroes Advanced Set accessory, David E. Martin, 1987. Registry
 entry: `scripts/msh/books.json` -> `ma4`. Measured 2026-09-30.
 
-**Rows citing this book:** 1025 `msh_book_text` rows over 157 entries in
+**Rows citing this book:** 1027 `msh_book_text` rows over 157 entries in
 production (`DB_MARVEL`, read back 2026-11-04):
 - 979 over 128 character entries (Vertigo's prose row was the folio alone, dropped 2026-11-04). The Turtle Transports (p.34) have none:
   their text is a run-in in Atlantean Equipment's heading, which is not
   imported, so their card is the grid alone
-- 46 over 29 items: 21 places and 8 vehicles
+- 48 over 29 items: 21 places and 8 vehicles (the Baxter Building's six
+  floor keys are its last six parts since 2026-11-04, read in order through
+  the registry's `plan_keys` and `page_columns`)
 
 Committed:
 - 129 characters in `apps/marvel-heroes/data/npcs.json`, with 130 blocks and
@@ -253,7 +255,10 @@ the Guardian Robots' background. A line is dropped when it is not a header
 and either:
 - it is set smaller than 0.85 of the body, in capitals or with no lowercase
   word; or
-- it reads under 65% confidence with no lowercase word of three letters.
+- it reads under 65% confidence with no lowercase word of three letters; or
+- it has no letter at all (a floor plan's room numerals, p.77; an art mark
+  after the Negative Zone Explorer's text, p.94); or
+- it boxes over twice the body with fewer than three letters (`It`, p.76).
 
 The last line of a paragraph boxes small too ("scars."), and it keeps its
 lowercase word. Salem's Seven's headers are set small as well, so the rule
