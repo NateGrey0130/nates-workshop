@@ -44,6 +44,8 @@
     "  item_headers    a code-grids book: [printed page, TITLE, location|vehicle] for each place and vehicle scripts/msh/extras.py reads in item_pages, matched once in capitals",
     "  grid_headers    a code-grids book: [printed page, Health, NAME] for a character header the OCR lost; a line with the name goes in above that grid",
     "  block_labels    a code-grids book: [printed page, Health, label] for a grid that is a form or an item inside another entry (The Thing's Human Form); it gets no header of its own",
+    "  page_columns    a code-grids book: [printed page, columns] for an item page laid out in a column count other than the book's (MA4's 2x2 floor-plan grid, printed 77, is two); scripts/msh/codegrids.py items() builds its stream a page at a time so one page can differ",
+    "  plan_keys       a code-grids book: [printed page, TITLE] for a floor plan's key set beside the plan, each found once on its page; a key runs to the next title or the page's end and is written as the item's last parts in this order, so the prose it interrupts resumes its own part (MA4's Baxter Building, six keys on printed 76-77)",
     "  statted_pages   a code-grids book: pages outside character_pages that stat beings inside a place's text, {page, team (the place), names, partial: [[NAME, Karma]] for a grid printing only R, I and P}",
     "  teams (code-grids) [printed page, first entry's header, team] in book order: each starts a run of that team",
     "  team_names      a roster-book book: {team as its banner prints it: the team its cards file under}; an entry under no banner files under the book's title",
@@ -913,6 +915,9 @@
         [72, "TERMINUS", "Fiends and Foes"]
       ],
       "item_pages": [76, 95],
+      "page_columns": [[77, 2]],
+      "plan_keys": [[76, "ROOF LEVEL"], [76, "FIFTH LEVEL"], [77, "FOURTH LEVEL"], [77, "THIRD LEVEL"], [77, "SECOND LEVEL"], [77, "FIRST LEVEL"]],
+      "plan_keys_note": "The Baxter Building's floor plans (printed 76-77, PDF 77-78): the Roof and Fifth keys fill column 3 of printed 76 under titles set small-caps at 21 px against a 28 px body, and the other four are a 2x2 grid on printed 77 whose keys sit in two columns (x 496-1172 and 1294-1969 at 300 dpi), so that page is cut as two; read as three, the four keys' lines interleaved. Measured 2026-11-04. The keys are written as the item's last six parts, building top-down, and the lobby prose of printed 78 resumes the Lobby part.",
       "item_headers": [
         [76, "THE BAXTER BUILDING", "location"],
         [79, "FOUR FREEDOMS PLAZA", "location"],

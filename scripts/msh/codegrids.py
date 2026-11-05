@@ -256,7 +256,12 @@ def map_label(line):
     small = line['h'] < 0.85 * line['body_h'] and (roster.is_caps(t) or not re.search(r'[a-z]{2}', t) or line['conf'] < 65)
     # at the body's size, only marks read with little confidence ('"AR', p.39)
     marks = line['conf'] < 65 and not re.search(r'[a-z]{3}', t)
-    return not line.get('big') and (small or marks) and not roster.ANCHOR.search(t) and not ROW.match(t)
+    # a floor plan's room numerals have no letter at all ('9', '15 "', p.77),
+    # and a mark boxed over twice the body with fewer than three letters is a
+    # plan's lettering read tall ('It', p.76)
+    bare = not re.search(r'[A-Za-z]', t)
+    tall = line['h'] > 2 * line['body_h'] and sum(c.isalpha() for c in t) < 3
+    return not line.get('big') and (small or marks or bare or tall) and not roster.ANCHOR.search(t) and not ROW.match(t)
 
 
 def same_column(a, b):
@@ -508,9 +513,22 @@ def items(book, slug):
         capitals: a comic panel's balloons (p.87)
       - a being statted there (`statted_pages`) is on a card of its own, so its
         text is cut from its name to the next header
+      - a floor plan's key (`plan_keys`: [page, TITLE], each found once on its
+        page) runs from its title to the next title or the page's end, and is
+        collected aside and written as the item's last parts in registry
+        order, so the prose it interrupts resumes its own part. The Baxter
+        Building's six keys (p.76-77) are set beside the plans, two to a page
+        of three columns and four in a 2x2 grid, which `page_columns`
+        ([page, columns]) cuts as two columns instead of the book's three.
+    The stream is built a page at a time so one page can have its own column
+    count; nothing else about a page depends on its neighbours.
     MA4 prints no Control, Speed or Body line; a vehicle's are in its text."""
     first, last = book['item_pages']
-    stream = roster.page_stream(dict(book, character_pages=[first, last], sections=[]), slug)
+    columns = {p: n for p, n in book.get('page_columns', [])}
+    stream = []
+    for page in range(first, last + 1):
+        stream += roster.page_stream(dict(book, character_pages=[page, page], sections=[],
+                                          columns=columns.get(page, book['columns'])), slug)
     heads = {}
     for page, title, kind in book['item_headers']:
         lines = title.split(' / ')
@@ -532,19 +550,37 @@ def items(book, slug):
             if not hits:
                 raise SystemExit('statted %r: not found on printed %d' % (name, p['page']))
             cuts.add(hits[0])
-    out, cur, cutting = [], None, False
+    keys = {}
+    for page, title in book.get('plan_keys', []):
+        hits = [i for i, l in enumerate(stream) if l['printed'] == page and roster.is_caps(l['text'])
+                and roster.norm(printed(l['text'])) == roster.norm(title)]
+        if len(hits) != 1:
+            raise SystemExit('plan key %r: %d lines on printed %d, not 1' % (title, len(hits), page))
+        keys[hits[0]] = title
+    out, cur, cutting, key, found = [], None, False, None, {}
     for i, line in enumerate(stream):
+        if key is not None and line['pdf'] != key['pdf']:
+            key = None                  # a key ends with its page
         if i in heads:
             name, kind = heads[i]
             cur = {'name': name, 'kind': kind, 'page': line['printed'], 'vehicle': {}, 'parts': [], 'text': [['prose', None, []]]}
             out.append(cur)
-            cutting = False
+            cutting, key = False, None
+            continue
+        if i in keys:
+            if cur is None:
+                raise SystemExit('plan key %r: before any item header' % keys[i])
+            key = found[keys[i]] = {'item': cur, 'pdf': line['pdf'], 'lines': []}
             continue
         if i in cuts:
             cutting = True
         if cur is None or cutting or line.get('joined') or map_label(dict(line, big=False)):
             continue
         t = line['text'].strip()
+        if key is not None:
+            if not roster.is_caps(t):
+                key['lines'].append(t)
+            continue
         m = roster.RUN_IN.match(t)
         nxt = stream[i + 1]['text'] if i + 1 < len(stream) else ''
         if m and line['x0'] - line['left'] < 40:
@@ -557,6 +593,10 @@ def items(book, slug):
             cur['text'].append(['part', t, []])
         elif not roster.is_caps(t):
             cur['text'][-1][2].append(t)
+    for page, title in book.get('plan_keys', []):
+        k = found[title]
+        k['item']['parts'].append(title)
+        k['item']['text'].append(['part', title, k['lines']])
     return out
 
 

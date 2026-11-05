@@ -960,7 +960,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   // (marvel-11 leftovers row 10a, Nate 2026-11-03), and seven line-end breaks
   // in the item and location rows, which scripts/msh/extras.py applies (six
   // compounds and one plain word closed up whole; marvel-11 residue row 2,
-  // 2026-11-04). The text is msh_book_text's: read the generated .sql files in
+  // 2026-11-04), plus three on the Baxter Building's floor keys once they read
+  // in order (msh/fix/ma4-baxter-floor-keys, 2026-11-04): a slash the page
+  // breaks a line after, a slash the OCR dropped, and a compound whose hyphen
+  // the line join lost. The text is msh_book_text's: read the generated .sql files in
   // the cache, by keys and by the overrides' own fragments, never a word of
   // the book in this file.
   const ovA = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'ma4-overrides.json'), 'utf8')).overrides;
@@ -969,9 +972,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   const keptA = hyphA.filter((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2'));
   const closedA = hyphA.filter((o) => o.printed.toLowerCase() === o.read.replace(/([a-z])- ([A-Za-z])/, '$1$2').toLowerCase());
   const itemTextA = textA.filter((o) => o.match.row.startsWith('ma4:item-'));
-  check('MA4: 56 overrides: seven misprints, three rows verdicts and 46 text verdicts, seven of them on item rows; 26 a line-end break, 24 a compound whose printed fragment keeps the hyphen and drops the space and two a plain word closed up whole',
-    ovA.length === 56 && ovA.filter((o) => o.verdict === 'misprint').length === 7 && ovA.filter((o) => o.verdict === 'rows').length === 3
-    && textA.length === 46 && itemTextA.length === 7 && hyphA.length === 26 && keptA.length === 24 && closedA.length === 2,
+  check('MA4: 59 overrides: seven misprints, three rows verdicts and 49 text verdicts, ten of them on item rows; 26 a line-end break, 24 a compound whose printed fragment keeps the hyphen and drops the space and two a plain word closed up whole',
+    ovA.length === 59 && ovA.filter((o) => o.verdict === 'misprint').length === 7 && ovA.filter((o) => o.verdict === 'rows').length === 3
+    && textA.length === 49 && itemTextA.length === 10 && hyphA.length === 26 && keptA.length === 24 && closedA.length === 2,
     JSON.stringify(ovA.map((o) => o.verdict)));
   const sqlA = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'ma4', 'book-text.sql');
   const sqlAX = join(dirname(sqlA), 'extras-text.sql');
@@ -984,15 +987,20 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const rowsAX = rowsOf(sqlAX);
     const countA = (row, s) => ([...rowsA, ...rowsAX].find((r) => r.key === row)?.body.split(s).length || 1) - 1;
     const verdictsA = textA.map((o) => `${o.match.row} ${countA(o.match.row, o.printed)}/${countA(o.match.row, o.read)}`);
-    check('MA4 text: each of the 46 text verdicts is applied, its printed fragment once in its row and the misread gone (the seven item verdicts in extras-text.sql)',
-      rowsA.length > 900 && rowsAX.length > 40 && verdictsA.length === 46 && verdictsA.every((v) => v.endsWith(' 1/0')), verdictsA.filter((v) => !v.endsWith(' 1/0')).join(' | '));
-    // Kept on purpose (read on the page, 2026-11-04): the Baxter Building's
-    // floor keys, printed 76-77, read with their lines out of order, so the
-    // rest of each broken word is not the next word in the row; closing one
-    // up would make a word the page does not print.
+    check('MA4 text: each of the 49 text verdicts is applied, its printed fragment once in its row and the misread gone (the ten item verdicts in extras-text.sql)',
+      rowsA.length > 900 && rowsAX.length > 40 && verdictsA.length === 49 && verdictsA.every((v) => v.endsWith(' 1/0')), verdictsA.filter((v) => !v.endsWith(' 1/0')).join(' | '));
+    // The Baxter Building's six floor keys (printed 76-77) once read with
+    // their lines out of order, each broken word's rest somewhere else in the
+    // row; read in order (registry plan_keys and page_columns, 2026-11-04)
+    // every line-end break closes up in the join, and the keys are the
+    // item's last six parts, Roof Level down to First Level.
     const shapeAX = rowsAX.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => `${r.key.slice(4)}(${r.body.match(/[a-z]- [A-Za-z]/g).length})`).sort();
-    check('MA4 items: no item or location row reads a letter, a hyphen and a space before a word except the Baxter Building\'s two scrambled floor keys',
-      shapeAX.join() === ['item-the-baxter-building-ma4:part:5(1)', 'item-the-baxter-building-ma4:part:6(5)'].join(), shapeAX.join(' '));
+    check('MA4 items: no item or location row reads a letter, a hyphen and a space before a word', shapeAX.length === 0, shapeAX.join(' '));
+    const baxterAX = rowsAX.filter((r) => r.key.startsWith('ma4:item-the-baxter-building-ma4:')).map((r) => r.key.split(':').slice(2).join(':'));
+    check('MA4 items: the Baxter Building is ten rows, its six floor keys last and top-down',
+      baxterAX.join() === ['prose:1', 'part:2', 'part:3', 'part:4', 'part:5', 'part:6', 'part:7', 'part:8', 'part:9', 'part:10'].join()
+      && load('items.json').items.find((i) => i.id === 'item-the-baxter-building-ma4')?.parts.slice(-6).join() === ['Roof Level', 'Fifth Level', 'Fourth Level', 'Third Level', 'Second Level', 'First Level'].join(),
+      baxterAX.join(' '));
     // Kept on purpose (read on the page, 2026-11-03): a suspended hyphen
     // (Human Torch II, the Thing, Doom II's first), or a hyphen the page
     // prints mid-line with the space (Air-Walker's two, the Skrulls', the

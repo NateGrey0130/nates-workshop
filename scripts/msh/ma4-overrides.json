@@ -183,6 +183,15 @@
      "note": "the Skrull starship, printed 95 (PDF 96): the page breaks the compound Astro-Navigational at a line end after its hyphen, and the reader kept the line break as a space; the hyphen stays and the space goes (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 96 (marvel-11 residue row 2, 2026-11-04)."},
     {"match": {"row": "ma4:air-walker-automaton-ma4:power:2"}, "verdict": "text", "checked": "2026-11-04",
      "read": "completely reassem- ble and", "printed": "completely reassemble and",
-     "note": "the Air-Walker Automaton, printed 46 (PDF 47): the page breaks the plain word reassemble at a line end, with a speck after its hyphen that the OCR read as a degree sign and the fold dropped; the reader kept the line break as a space, and the word closes up whole (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 47 (the hand-off of #2121, 2026-11-04)."}
+     "note": "the Air-Walker Automaton, printed 46 (PDF 47): the page breaks the plain word reassemble at a line end, with a speck after its hyphen that the OCR read as a degree sign and the fold dropped; the reader kept the line break as a space, and the word closes up whole (Nate, 2026-11-03). Read on a 400 dpi crop of PDF 47 (the hand-off of #2121, 2026-11-04)."},
+    {"match": {"row": "ma4:item-the-baxter-building-ma4:part:8"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "Storage/ pathology", "printed": "Storage/pathology",
+     "note": "Third Level key, printed 77 (PDF 78): the page breaks Storage/pathology at the line end after its slash, which join_text leaves open; printed closed like the key's other slashes. Read on a 400 dpi crop 2026-11-04."},
+    {"match": {"row": "ma4:item-the-baxter-building-ma4:part:9"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "40foot", "printed": "40-foot",
+     "note": "Second Level key, printed 77 (PDF 78): 40-foot breaks at the line end after its hyphen and join_text closed the compound up without it; the page prints the hyphen. Read on a 400 dpi crop 2026-11-04."},
+    {"match": {"row": "ma4:item-the-baxter-building-ma4:part:9"}, "verdict": "text", "checked": "2026-11-04",
+     "read": "supportexhaust", "printed": "support/exhaust",
+     "note": "Second Level key, printed 77 (PDF 78): the OCR dropped the slash of support/exhaust; the page prints it. Read on a 400 dpi crop 2026-11-04."}
   ]
 }
