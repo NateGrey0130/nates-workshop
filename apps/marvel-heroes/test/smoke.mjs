@@ -969,9 +969,9 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   const keptA = hyphA.filter((o) => o.printed === o.read.replace(/([a-z])- ([A-Za-z])/, '$1-$2'));
   const closedA = hyphA.filter((o) => o.printed.toLowerCase() === o.read.replace(/([a-z])- ([A-Za-z])/, '$1$2').toLowerCase());
   const itemTextA = textA.filter((o) => o.match.row.startsWith('ma4:item-'));
-  check('MA4: 55 overrides: seven misprints, three rows verdicts and 45 text verdicts, seven of them on item rows; 25 a line-end break, 24 a compound whose printed fragment keeps the hyphen and drops the space and one a plain word closed up whole',
-    ovA.length === 55 && ovA.filter((o) => o.verdict === 'misprint').length === 7 && ovA.filter((o) => o.verdict === 'rows').length === 3
-    && textA.length === 45 && itemTextA.length === 7 && hyphA.length === 25 && keptA.length === 24 && closedA.length === 1,
+  check('MA4: 56 overrides: seven misprints, three rows verdicts and 46 text verdicts, seven of them on item rows; 26 a line-end break, 24 a compound whose printed fragment keeps the hyphen and drops the space and two a plain word closed up whole',
+    ovA.length === 56 && ovA.filter((o) => o.verdict === 'misprint').length === 7 && ovA.filter((o) => o.verdict === 'rows').length === 3
+    && textA.length === 46 && itemTextA.length === 7 && hyphA.length === 26 && keptA.length === 24 && closedA.length === 2,
     JSON.stringify(ovA.map((o) => o.verdict)));
   const sqlA = join(process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh'), 'books', 'ma4', 'book-text.sql');
   const sqlAX = join(dirname(sqlA), 'extras-text.sql');
@@ -984,8 +984,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const rowsAX = rowsOf(sqlAX);
     const countA = (row, s) => ([...rowsA, ...rowsAX].find((r) => r.key === row)?.body.split(s).length || 1) - 1;
     const verdictsA = textA.map((o) => `${o.match.row} ${countA(o.match.row, o.printed)}/${countA(o.match.row, o.read)}`);
-    check('MA4 text: each of the 45 text verdicts is applied, its printed fragment once in its row and the misread gone (the seven item verdicts in extras-text.sql)',
-      rowsA.length > 900 && rowsAX.length > 40 && verdictsA.length === 45 && verdictsA.every((v) => v.endsWith(' 1/0')), verdictsA.filter((v) => !v.endsWith(' 1/0')).join(' | '));
+    check('MA4 text: each of the 46 text verdicts is applied, its printed fragment once in its row and the misread gone (the seven item verdicts in extras-text.sql)',
+      rowsA.length > 900 && rowsAX.length > 40 && verdictsA.length === 46 && verdictsA.every((v) => v.endsWith(' 1/0')), verdictsA.filter((v) => !v.endsWith(' 1/0')).join(' | '));
     // Kept on purpose (read on the page, 2026-11-04): the Baxter Building's
     // floor keys, printed 76-77, read with their lines out of order, so the
     // rest of each broken word is not the next word in the row; closing one
@@ -996,14 +996,14 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     // Kept on purpose (read on the page, 2026-11-03): a suspended hyphen
     // (Human Torch II, the Thing, Doom II's first), or a hyphen the page
     // prints mid-line with the space (Air-Walker's two, the Skrulls', the
-    // Skrull-X's, Doom II's second). Not kept, and left for a text verdict:
-    // the Air-Walker Automaton's second power, printed 46 (PDF 47), breaks
-    // one word at a line end with a speck after its hyphen; the speck folded
-    // to nothing and hid the shape behind a double space until
-    // npcs.body_spacing closed it up (2026-11-04).
+    // Skrull-X's, Doom II's second). The Air-Walker Automaton's second power,
+    // printed 46 (PDF 47), breaks the plain word reassemble at a line end with
+    // a speck after its hyphen; the speck folded to nothing and hid the shape
+    // behind a double space until npcs.body_spacing closed that up
+    // (2026-11-04), and a text verdict now closes the word up whole.
     const shapeA = rowsA.filter((r) => /[a-z]- [A-Za-z]/.test(r.body)).map((r) => `${r.key.slice(4)}(${r.body.match(/[a-z]- [A-Za-z]/g).length})`).sort();
-    check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them and the Automaton\'s line-end break',
-      shapeA.join() === ['air-walker-automaton-ma4:power:2(1)', 'air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
+    check('MA4 text: no row reads a letter, a hyphen and a space before a word except the eight kept as the page prints them',
+      shapeA.join() === ['air-walker-ma4:background(1)', 'air-walker-ma4:talents(1)', 'human-torch-ii-ma4:power:2(1)', 'skrull-ma4:member:6(1)',
         'skrull-x-ma4:background(1)', 'thing-ma4:talents(1)', 'victor-von-doom-ii-ma4:running(2)'].join(), shapeA.join(' '));
   }
 
