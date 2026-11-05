@@ -221,9 +221,16 @@ def page_stream(book, slug):
         words, (W, H) = read_words(path)
         # The chevron banner across the top and the folio at the foot are not
         # body text; the banner's OCR is noise and its title is recorded in
-        # books.json sections instead.
+        # books.json sections instead. MA4's folio boxes at 0.92-0.93 of the
+        # page, above the cut on 17 pages (measured 2026-11-04; MA1's never
+        # is), and read as a body word it landed inside ten rows' prose. The
+        # folio is the one word of digits equal to the printed page, in the
+        # bottom tenth and lower than every other word on the page.
+        low = max(w['y'] for w in words) if words else 0
+        folio = [w for w in words if re.fullmatch(r'\d+', w['t']) and int(w['t']) == pdf - book['offset']
+                 and w['y'] > 0.9 * H and w['y'] == low]
         body = [w for w in words if w['y'] > 0.10 * H and w['y'] + w['h'] < 0.935 * H
-                and '\u2122' not in w['t'] and '\u00ae' not in w['t']]
+                and '\u2122' not in w['t'] and '\u00ae' not in w['t'] and not any(w is f for f in folio)]
         if not body:
             continue
         # the page's typical word height, ascenders and capitals included:
