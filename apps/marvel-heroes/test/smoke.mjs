@@ -1994,11 +1994,13 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       fixesT.join(' | '));
     const ovT = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'mt2-overrides.json'), 'utf8')).overrides;
     const textT = ovT.filter((o) => o.verdict === 'text');
-    check('MT2: eleven overrides: two misprints and nine text verdicts (the Scarlet Witch\'s first power, the Black Knight\'s second, Ghost Rider IV\'s notes, and six line-end hyphen breaks: Kid Colt\'s contacts, Krozzar\'s background, Two-Gun Kid\'s first power, talents and two in his notes) whose printed fragment no longer reads the shape, and only the two misprinted blocks carry one',
-      ovT.length === 11 && ovT.filter((o) => o.verdict === 'misprint').length === 2
+    check('MT2: twelve overrides: two misprints and ten text verdicts (the Scarlet Witch\'s first power, the Black Knight\'s second, Ghost Rider IV\'s notes, six line-end hyphen breaks: Kid Colt\'s contacts, Krozzar\'s background, Two-Gun Kid\'s first power, talents and two in his notes, whose printed fragment no longer reads the shape, and Mysterio\'s second power, a minus broken from its digit at a line end and printed against it), and only the two misprinted blocks carry one',
+      ovT.length === 12 && ovT.filter((o) => o.verdict === 'misprint').length === 2
       && textT.map((o) => o.match.row).join() === ['scarlet-witch-mt2:power:1', 'black-knight-nathan-garrett-mt2:power:2', 'ghost-rider-iv-mt2:notes',
-        'kid-colt-mt2:contacts', 'krozzar-mt2:background', 'two-gun-kid-mt2:power:1', 'two-gun-kid-mt2:talents', 'two-gun-kid-mt2:notes', 'two-gun-kid-mt2:notes'].map((k) => `mt2:${k}`).join()
-      && textT.slice(3).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
+        'kid-colt-mt2:contacts', 'krozzar-mt2:background', 'two-gun-kid-mt2:power:1', 'two-gun-kid-mt2:talents', 'two-gun-kid-mt2:notes', 'two-gun-kid-mt2:notes',
+        'mysterio-mt2:power:2'].map((k) => `mt2:${k}`).join()
+      && textT.slice(3, 9).every((o) => /[a-z]- [A-Za-z]/.test(o.read) && !/[a-z]- [A-Za-z]/.test(o.printed))
+      && /[a-z] - \d/.test(textT[9].read) && /[a-z] -\d/.test(textT[9].printed)
       && blocksT.filter(({ b }) => b.override).map(({ id }) => id).join() === 'genghis-khan-mt2,khan-s-champion-mt2',
       JSON.stringify(ovT.map((o) => [o.verdict, o.match])));
     const offStd = (id) => blkT(id)?.abilities.filter(([, n, code]) => {
@@ -2051,8 +2053,8 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
         `${rowsT.length} ${entT.size} ${rowsT.filter((r) => (r.body.match(/"/g) || []).length % 2 || r.body.includes('|')).map((r) => r.key)}`);
       const countT = (row, s) => (rowsT.find((r) => r.key === row)?.body.split(s).length || 1) - 1;
       const verdictsT = textT.map((o) => `${o.match.row} ${countT(o.match.row, o.printed)}/${countT(o.match.row, o.read)}`);
-      check('MT2 text: each of the nine text verdicts is applied, its printed fragment once in its row and the misread gone',
-        textT.length === 9 && verdictsT.every((v) => v.endsWith(' 1/0')), verdictsT.join(' | '));
+      check('MT2 text: each of the ten text verdicts is applied, its printed fragment once in its row and the misread gone',
+        textT.length === 10 && verdictsT.every((v) => v.endsWith(' 1/0')), verdictsT.join(' | '));
       // a word the page breaks at a line end after its hyphen, kept by the
       // reader as "<letters>- <letters>" (marvel-11 leftovers row 10r, Nate
       // 2026-11-03): MT2's six are closed up by the text verdicts above, and
@@ -4398,10 +4400,8 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     // one read on the page prints set against it, 2026-11-04). A spaced dash
     // after a digit is a range and one after punctuation a list dash, and
     // neither is a minus. Keys and counts only: the bodies are the book's.
-    // One row is not this shape and is left for a text verdict: Mysterio's
-    // Gas Nozzles (MT2 printed 7, PDF 9) breaks a minus at a line end, a
-    // plain hyphen and then its digit on the next line, with one space.
-    const minusLeft = new Set(['mt2:mysterio-mt2:power:2']);
+    // Mysterio's Gas Nozzles (MT2 printed 7, PDF 9), a minus broken from its
+    // digit at a line end, is closed up by a text verdict (mt2-overrides.json).
     const sqlFiles = existsSync(booksDir) ? readdirSync(booksDir)
       .flatMap((b) => ['book-text.sql', 'extras-text.sql'].map((n) => join(booksDir, b, n))).filter(existsSync) : [];
     const spaced = [];
@@ -4411,7 +4411,7 @@ section('No book text is in any tracked file (local only: needs the extraction)'
       inserts += (sql.match(/^INSERT INTO msh_book_text /gm) || []).length;
       for (const [, key, body] of sql.matchAll(/VALUES \('([^']+)', '[^']+', '[^']+', (?:NULL|'[^']*'), (?:NULL|'(?:[^']|'')*'), (?:NULL|\d+), '((?:[^']|'')*)'\);/g)) {
         bodies++;
-        if (body.includes('  ') || (/[A-Za-z] - \d/.test(body) && !minusLeft.has(key))) spaced.push(key);
+        if (body.includes('  ') || /[A-Za-z] - \d/.test(body)) spaced.push(key);
       }
     }
     check(`no body of the ${sqlFiles.length} generated text files holds a double space or a minus set apart from its digit (${bodies} rows read of ${inserts})`,
