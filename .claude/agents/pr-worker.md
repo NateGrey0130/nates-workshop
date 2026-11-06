@@ -192,4 +192,5 @@ holds. The planner recalibrates its reading budget from these lines.
 ## Out of scope
 
 Merging. Another row. A new audit-menu entry. A permission, a hook or a
-settings file. Removing a worktree, your own included.
+settings file, unless the brief says Nate asked for that edit in so many
+words. Removing a worktree, your own included.
