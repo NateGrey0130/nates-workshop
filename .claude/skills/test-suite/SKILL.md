@@ -34,10 +34,7 @@ the parser's output, not the parser.
 | `apps/character-creator/test/play-flow.mjs` | the play loop in a browser | reporting only |
 | `apps/character-creator/test/ui-shots.mjs` | that seven pages load in a real headless Chrome at desktop and phone size without a console error, a sideways scroll or sticky chrome over half the screen; keeps a PNG of each | not run by CI; a report, exit 0 unless `--strict` |
 
-The three bold names are required status checks on `main`. **`.github/workflows/tests.yml` runs
-the first three under one job, so a job id is a check-run name: renaming a job
-leaves a required check that never reports and nothing can merge.** Do not rename
-one without editing the ruleset.
+The three bold names are required status checks on `main`; why a workflow's job id must not be renamed is a rule: `.claude/rules/workflows.md`.
 
 **Not every suite runs on every pull request** (since 2026-09-25). Each job
 first asks `node scripts/groups.mjs --affected HEAD^1 HEAD` which groups the
