@@ -1,13 +1,15 @@
 ---
-name: media-vault
-description: Change MediaVault without widening who can read whose library. Use when touching apps/media-vault/, functions/api/media-vault/, the media_items or media_shares tables, sharing, ISBN lookup, bulk edit or CSV import. Covers the one endpoint that returns rows the caller does not own, what the structural checks can and cannot prove about that, the two case conventions on one join, and why the production library is not test data.
+paths:
+  - "apps/media-vault/**"
+  - "functions/api/media-vault/**"
 ---
 
 # MediaVault
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+> **What pins this file:** every absolute path it names, by
+> `apps/character-creator/test/checks/instruction-paths.mjs`. Nothing pins
+> its frontmatter or the repo paths it names: it is a path-scoped rule, not a
+> skill, so `environment.mjs` does not read it.
 >
 > **The prose is pinned by nothing** — read an undated claim here as true on
 > the day it was written.
