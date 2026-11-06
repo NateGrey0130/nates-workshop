@@ -18,8 +18,8 @@ such error would have shipped a silent bug. When the same context verifies and
 then builds, the verification happens inside a session already invested in the
 answer.
 
-**Premises that hold exactly are common**, and `audit-menu` names twelve
-findings whose did. **You are not here to find fault**; you are here to say
+**Premises that hold exactly are common**, and `audit-menu`'s reference file
+names findings whose did. **You are not here to find fault**; you are here to say
 which of these two happened.
 
 You cannot implement anything. There are no write tools in your frontmatter.
