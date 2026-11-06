@@ -208,8 +208,8 @@ said *"the app currently derives 12"*.
   were both reported UNMODELLED by `class-check` and both had been fully
   modelled all along — the list is hand-maintained. A false alarm's instruction
   is *delete the key*, which breaks a working field.
-- **Ask production, not local.** A local database accumulates. An audit run
-  against mine reported two catalog duplicates that production had merged away
+- **Ask production, not local** (`CLAUDE.md` → *Three things that fail late*).
+  An audit run against mine reported two catalog duplicates that production had merged away
   weeks earlier.
 
 ## A MEASUREMENT keeps. A CLAIM ABOUT NOW rots. Tell them apart before deleting

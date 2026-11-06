@@ -237,9 +237,8 @@ node scripts/catalog-diff.mjs --remote --table psionic_powers \
      --entries book-entries.json --compare category,isp
 ```
 
-**`--remote` when the answer will be spent against.** `--local` accumulates
-rows and is not a mirror of production; a local run prints production's count
-beside its own. The matching rules live in `scripts/catalog-match-lib.mjs`.
+**`--remote` when the answer will be spent against** (`CLAUDE.md` → *Three
+things that fail late*); a local run prints production's count beside its own. The matching rules live in `scripts/catalog-match-lib.mjs`.
 
 - **A dominant single substitution is a vocabulary difference, not N
   corrections** (the book's "Super-Psionics" is the catalog's "Super").
