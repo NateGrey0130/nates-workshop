@@ -36,8 +36,8 @@ ever appended to it. Its first line is
 `NEXT:` line, or `DONE`. Then the last row with its pull request and
 outcome in one line, and `In flight:`. Nothing else: a ruling a later row
 needs goes on that row's brief as a `From row` line (below), and every
-other fact lives in a pull request. Measured 2026-10-18: the file had grown
-to 16KB in five lines, and every worker and every driver re-read it.
+other fact lives in a pull request. The measurement behind this is in
+`reference/why.md`.
 
 ## Before a brief is written
 
@@ -64,9 +64,8 @@ to 16KB in five lines, and every worker and every driver re-read it.
    100k tokens) is split at plan time**, never left for the split agent under
    *Driving the chain*, which stays the fallback for a row that outgrew a
    brief sized this way. 400 KB is a starting value, to be recalibrated
-   against the peaks real rows report. Measured 2026-10-22: 60 of 204
-   workers hit the cap, and the 48 rows the outstanding-work plan planned
-   ran as 107 briefs.
+   against the peaks real rows report (the measurement behind it is in
+   `reference/why.md`).
 6. **A row that reads a book is two rows from the start**: extraction (the
    pages or renders and the skills, ending at a pushed branch that holds the
    drafts or data scripts with `class-check` reading `ready`, and no pull
@@ -74,8 +73,8 @@ to 16KB in five lines, and every worker and every driver re-read it.
    suites, the `--remote` apply and the pull request). The extraction brief
    has its worker end by appending `From row <id>: resume <branch> at
    <commit>` to the shipping row's brief and writing `state.md` with the
-   shipping row as `NEXT:` and its own row as `PUSHED`. Every book row's
-   first worker capped in the 2026-10-20 book-imports plan (ten rows).
+   shipping row as `NEXT:` and its own row as `PUSHED` (the incident is in
+   `reference/why.md`).
 
 Rulings 2 and 3 are Nate's, 2026-10-12.
 
@@ -119,8 +118,7 @@ context `fresh`, `use_worktree` false, `prompt` the one line
 or two sentences naming the plan (the call requires one), and `model`
 `claude-sonnet-5-5`. The Sonnet driver is a trial (Nate, 2026-10-22; the
 option he did not take was keeping the driver on Opus), judged against the
-0.72M per merge the Opus drivers measured that day: a driver's context is
-almost all session start, and it reads reports, never code. Each driver of
+Opus drivers' spend per merge measured that day (`reference/why.md`). Each driver of
 the first plan run this way says in its closing message its model and the
 number of rows it merged, so the next retrospective can read its spend per
 merge off the transcript against that figure. The hand-off at a driver's
@@ -168,13 +166,15 @@ take was the driver merging every row). The worker still never merges: one
 that did would skip the steps below. Four steps, each call on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
-   `--delete-branch`: the worker's worktree still holds the branch.
+   `--delete-branch`: the worker's worktree still holds the branch. From a
+   worktree or the driver's checkout, no `--delete-branch`; from the main
+   checkout, `ship-pr` step 7 applies.
 2. `node .claude/scripts/pr-landed.mjs <n> --wait`, which must exit 0.
 3. `git pull --ff-only origin main` in the driver's checkout, then
    `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
    Drift-check reads the checkout's data scripts, so after a data row an
    un-pulled `main` prints `RUN BUT NO FILE` for the script just merged
-   (row 32a, 2026-10-14).
+   (the incident is in `reference/why.md`).
 4. **Bring this checkout's local D1 up to the merge.** Every worker starts
    from a copy of it, and nothing else applies a merged migration here.
    `node scripts/d1-apply.mjs --check --local db/migrations/*.sql` lists
@@ -185,10 +185,7 @@ that did would skip the steps below. Four steps, each call on its own:
    applied the same way, `--local` with its path, but a failure there is said
    in the closing message and is not a stop: this database is hundreds of
    data scripts behind production, and a new one can need a row it never got.
-   Measured 2026-10-19: rows 46a1, 46b and 46c1 applied migrations 091 to 093
-   to production and to their own copies only, and five of the next seven
-   workers' copies failed smoke's *Migration state* and served the creator a
-   500.
+   The incident behind this step is in `reference/why.md`.
 
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
@@ -204,10 +201,8 @@ passing makes the row `READY`: merge it by the four steps above and write
 `state.md` from the `NEXT:` line the report carries (`pr-worker` puts it
 there for this case). Checks still pending: the same command with `--watch`,
 at the Bash tool's ten-minute timeout, once. A red check, or a report that
-names any other work left, goes to the split below. Measured 2026-10-19: rows 48a and 48b each stopped
-at the cap with their work committed and suites green, and each then cost a
-split agent (about 87k) and a resume worker (about 60k) to open a pull
-request and watch it.
+names any other work left, goes to the split below. What this saves is
+measured in `reference/why.md`.
 
 **A row that outgrew its brief is split by an agent, not by the driver.** Two
 reports mean that: a `BLOCKED` that stopped at the worker's cap with work
@@ -264,11 +259,10 @@ starts the next driver with `mcp__ccd_session__start_session` (load it with
 `use_worktree` false, the one-line prompt above with the plan's name in it,
 and the same `model` it was started with (*Starting the driver*). Nate is
 not asked, and the new driver needs no word from him: the allow rule above
-is what lets it merge. Then the old driver's closing message. Below 150k the
-post-merge line is nothing: it fires from 100k today (PR #1854 raises it to
-150k), which a driver reaches before its first row, and five drivers that
-obeyed it there each handed off after one merge and the next paid a fresh
-start (2026-10-18). Continue to the 200k line.
+is what lets it merge. Then the old driver's closing message. The post-merge
+line fires from 150k (`WARN_AT` in `.claude/hooks/session-budget.mjs`), so
+below that a merge prints nothing; continue to the 200k line. Why it is not
+100k is in `reference/why.md`.
 
 The closing message carries each row's outcome and pull request, every row
 that was split and into what, every line a worker marked as Nate's, and
