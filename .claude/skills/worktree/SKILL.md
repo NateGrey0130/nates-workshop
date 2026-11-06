@@ -171,8 +171,8 @@ mechanism rather than seen; nobody has done it here.
 
 ## What a worktree session does not inherit
 
-The skills and agents load, because those are junctioned into `~/.claude` per
-machine rather than per directory.
+The skills and agents load, from the main checkout's `.claude/`, not the
+worktree's (observed 2026-11-06 with the `app-suite` skill).
 
 **Memory does not.** The memory directory is keyed to the working directory, and
 the three that matter — the repo, the working directory and `Downloads` — are
