@@ -140,7 +140,7 @@ driver that opens a brief or a book cache is planning in the context every
 later row pays for. One row is one spawn, in the foreground:
 
 ```
-Agent  subagent_type: pr-worker   isolation: worktree   run_in_background: false
+Agent  subagent_type: pr-worker   run_in_background: false
 prompt:
   State file: <absolute path to state.md>
   Row brief:  <absolute path to rows\<id>.md>

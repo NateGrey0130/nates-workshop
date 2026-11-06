@@ -3,6 +3,10 @@ name: pr-worker
 description: Carry one row of a multi-PR plan from its brief to a pull request that is open with every required check green, in a context of its own. Use when a driver session is working through a plan one row at a time and hands over a state file and a row brief. Returns a short report only - it does not merge, choose the row, read the rest of the plan, start the next row, or decide anything the brief marks as Nate's.
 tools: Read, Grep, Glob, Bash, Edit, Write, Skill, mcp__Claude_Browser__preview_start, mcp__Claude_Browser__preview_stop, mcp__Claude_Browser__preview_logs, mcp__Claude_Browser__navigate, mcp__Claude_Browser__read_page, mcp__Claude_Browser__find, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__computer, mcp__Claude_Browser__read_console_messages, mcp__Claude_Browser__read_network_requests
 model: opus
+skills:
+  - ship-pr
+  - windows-shell
+isolation: worktree
 ---
 
 # One row, one pull request
@@ -67,15 +71,8 @@ You were started in a worktree of your own, and three things follow.
 - **The Browser pane cannot be sized to a phone.** Phone-size figures come from
   `node apps/character-creator/test/ui-shots.mjs`.
 
-**One plain command per Bash call.** A `git` or `gh` call that carries
-`$(...)`, `--jq`, a pipe or `;` is refused for you, and so is `powershell`.
-Filter output with a node script written with `Write`. Load `windows-shell`
-before an in-place edit: `sed -i` is refused and a heredoc eats backslashes.
-
-**Write every path out in full, every time.** A `node` call whose arguments
-carry a shell variable (`node $S/tidy.mjs`, `S=...; node ...`) is refused,
-however long the path. So is setting one for a later call: no shell state
-survives between calls anyway.
+**An in-place edit goes through the Edit tool or a node script written with
+`Write`:** `sed -i` is refused and a heredoc eats backslashes (`windows-shell`).
 
 Four more things that are refused or cost you the row:
 
@@ -195,4 +192,5 @@ holds. The planner recalibrates its reading budget from these lines.
 ## Out of scope
 
 Merging. Another row. A new audit-menu entry. A permission, a hook or a
-settings file. Removing a worktree, your own included.
+settings file, unless the brief says Nate asked for that edit in so many
+words. Removing a worktree, your own included.
