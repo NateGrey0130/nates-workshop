@@ -81,7 +81,7 @@ import { homedir, tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 
-const SECTIONS = ['Session budget hooks', 'Bash guard hook registration'];
+const SECTIONS = ['Session budget hooks', 'Skill gate hook', 'Bash guard hook registration'];
 
 // ── the session-budget hooks ─────────────────────────────────────────────────
 //
@@ -300,6 +300,110 @@ function sessionBudgetChecks() {
 
 const USER_SETTINGS = join(homedir(), '.claude', 'settings.json');
 
+// ── the skill gate ───────────────────────────────────────────────────────────
+//
+// .claude/hooks/skill-gate.mjs refuses `gh pr create`, `d1-apply.mjs --remote`
+// and the worktree commands until the skill owning each was loaded in the
+// session; its header says why and records Nate's two rulings. Behaviour runs
+// everywhere, CI included, against transcripts written for the purpose. The
+// registration is the repo's own .claude/settings.json, which CI has, so that
+// half runs everywhere too. Hook settings are read at session start, so the
+// session that adds the registration cannot see it fire: these checks are the
+// proof that it would.
+const GATE = join(HOOK_DIR, 'skill-gate.mjs');
+
+function skillGateChecks() {
+  section('Skill gate hook');
+
+  const dir = mkdtempSync(join(tmpdir(), 'skill-gate-'));
+  try {
+    const transcript = (name, lines) => {
+      const p = join(dir, name);
+      writeFileSync(p, lines.join('\n') + '\n');
+      return p;
+    };
+    const skillLine = (skill) => assistantLine(30_000, Date.now(), {
+      message: { content: [{ type: 'tool_use', id: 'toolu_x', name: 'Skill', input: { skill } }],
+        usage: { input_tokens: 2, cache_read_input_tokens: 29_998, cache_creation_input_tokens: 0 } },
+    });
+    const filler = Array.from({ length: 50 }, (_, i) => assistantLine(40_000 + i, Date.now()));
+    const bare = transcript('bare.jsonl', filler);
+    const withSkill = (skill) => transcript(`with-${skill}.jsonl`, [skillLine(skill), ...filler]);
+    const gate = (command, transcript_path, extra = {}) => runHook(GATE, {
+      hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command }, transcript_path, ...extra,
+    });
+    const refusedFor = (r, skill) => r.code === 2 && r.err.includes(skill);
+
+    const create = 'gh pr create --base main --head x --title "[proc/feat] X" --body-file b.tmp';
+    const noShip = gate(create, bare);
+    check('gh pr create with no Skill call for ship-pr is refused, exit 2, and the reason names ship-pr',
+      refusedFor(noShip, 'ship-pr'), JSON.stringify(noShip));
+    const shipped = gate(create, withSkill('ship-pr'));
+    check('the same command with ship-pr loaded early in the session passes',
+      shipped.code === 0 && shipped.err === '', JSON.stringify(shipped));
+    const wrongSkill = gate(create, withSkill('worktree'));
+    check('and another skill does not stand in for ship-pr', refusedFor(wrongSkill, 'ship-pr'), JSON.stringify(wrongSkill));
+    const typed = gate(create, transcript('typed.jsonl', [
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-message>ship-pr</command-message>\n<command-name>/ship-pr</command-name>' } }),
+      ...filler]));
+    check('a skill Nate typed as a slash command counts as loaded', typed.code === 0, JSON.stringify(typed));
+
+    const apply = 'node scripts/d1-apply.mjs --remote db/migrations/094-x.sql';
+    const noApply = gate(apply, bare);
+    check('d1-apply.mjs --remote with neither skill loaded is refused and names both',
+      refusedFor(noApply, 'ship-pr') && noApply.err.includes('schema-change'), JSON.stringify(noApply));
+    const schema = gate(apply, withSkill('schema-change'));
+    const shipApply = gate(apply, withSkill('ship-pr'));
+    check('and either ship-pr or schema-change lets it through',
+      schema.code === 0 && shipApply.code === 0, JSON.stringify([schema, shipApply]));
+    const local = gate('node scripts/d1-apply.mjs --local db/migrations/094-x.sql', bare);
+    check('d1-apply.mjs --local is not gated', local.code === 0, JSON.stringify(local));
+
+    const trees = ['git worktree add ../t -b x origin/main', 'node scripts/group-worktree.mjs marvel',
+      'cd /c/x && node scripts/book-worktree.mjs canada'];
+    const noTree = trees.map((c) => gate(c, bare));
+    check('git worktree add, group-worktree.mjs and book-worktree.mjs each need worktree',
+      noTree.every((r) => refusedFor(r, 'worktree')), JSON.stringify(noTree));
+    const treeOk = trees.map((c) => gate(c, withSkill('worktree')));
+    check('and pass once it is loaded', treeOk.every((r) => r.code === 0), JSON.stringify(treeOk));
+
+    const agent = gate(create, join(dir, 'no-such-file.jsonl'), { agent_id: 'a1', agent_type: 'pr-worker' });
+    check('a subagent envelope passes whatever the transcript holds (preloaded skills leave no Skill call)',
+      agent.code === 0 && agent.err === '', JSON.stringify(agent));
+
+    const garbled = runHook(GATE, 'not json');
+    const unreadable = gate(create, join(dir, 'no-such-file.jsonl'));
+    check('an unparsable envelope is refused, exit 2', garbled.code === 2, JSON.stringify(garbled));
+    check('and so is a gated command whose transcript cannot be read', unreadable.code === 2, JSON.stringify(unreadable));
+
+    // Every other command passes before the transcript is opened: a missing
+    // transcript would be refused if it were opened.
+    const others = ['git status', 'gh pr merge 12 --merge --delete-branch', 'gh pr view 12',
+      'git worktree list', 'echo "then gh pr create"', 'git commit -F msg.tmp'];
+    const passed = others.map((c) => gate(c, join(dir, 'no-such-file.jsonl')));
+    check('any other command exits 0 without the transcript being opened, gh pr merge included',
+      passed.every((r) => r.code === 0 && r.err === ''), JSON.stringify(passed));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  const projectSettings = join(repoRoot, '.claude', 'settings.json');
+  let hooks = {};
+  try { hooks = JSON.parse(readFileSync(projectSettings, 'utf8'))?.hooks ?? {}; } catch (e) {
+    check('.claude/settings.json parses as JSON', false, e.message);
+    return;
+  }
+  const bashHooks = (hooks.PreToolUse ?? [])
+    .filter((entry) => typeof entry?.matcher === 'string' && /\bBash\b/.test(entry.matcher))
+    .flatMap((entry) => entry.hooks ?? [])
+    .filter((h) => h?.type === 'command' && typeof h.command === 'string')
+    .map((h) => h.command);
+  check('.claude/settings.json registers skill-gate.mjs on PreToolUse Bash beside the guard',
+    bashHooks.includes('node "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-gate.mjs"')
+      && bashHooks.some((c) => c.includes('guard-bash.sh')),
+    JSON.stringify(bashHooks));
+}
+
 // The script every registration here is expected to run. Matched on basename so
 // the check does not care which path spelling the registration uses.
 const SCRIPT = 'guard-bash.sh';
@@ -320,6 +424,7 @@ export function run() {
   if (!SECTIONS.some(wantSection)) return;
 
   if (wantSection('Session budget hooks')) sessionBudgetChecks();
+  if (wantSection('Skill gate hook')) skillGateChecks();
   if (!wantSection('Bash guard hook registration')) return;
 
   section('Bash guard hook registration');
