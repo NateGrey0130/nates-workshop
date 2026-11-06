@@ -34,8 +34,18 @@ const sections = [];
 // until 2026-09-17 - and since then the flagless run reads every module's
 // list against its section() calls (smoke.mjs, 'The checks modules declare
 // the sections they run'), so on a green main a no-match is the typo.
+//
+// A passing check prints nothing unless asked: --verbose, or WORKSHOP_VERBOSE
+// set to anything but empty or 0, prints its `  ok  <label>` line again. A
+// flagless character-creator run printed thousands of those lines and every
+// session running the suite held them in context. A FAIL line still prints
+// where it happens, and summary() still lists every failure and the count, so
+// the quiet run carries everything a red run needs (Nate, 2026-11-03: quiet in
+// CI too).
 const filters = [];
+let verboseFlag = false;
 for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '--verbose') verboseFlag = true;
   if (process.argv[i] === '--section' && process.argv[i + 1]) {
     for (const part of process.argv[++i].split(',')) {
       const f = part.trim().toLowerCase();
@@ -44,6 +54,8 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 }
 export const filtered = filters.length > 0;
+const envVerbose = process.env.WORKSHOP_VERBOSE;
+const verbose = verboseFlag || (envVerbose !== undefined && envVerbose !== '' && envVerbose !== '0');
 
 export function wantSection(name) {
   return !filtered || filters.some((f) => name.toLowerCase().includes(f));
@@ -65,7 +77,7 @@ export function check(label, cond, detail) {
   checks++;
   if (current) current.checks++;
   if (cond) {
-    console.log('  ok  ' + label);
+    if (verbose) console.log('  ok  ' + label);
   } else {
     failures++;
     if (current) current.failures++;
@@ -84,9 +96,9 @@ export function summary() {
     return 1;
   }
   if (failures) {
-    // Every failure again, together, at the end. A run prints one line per
-    // check, thousands of them, and a FAIL in the middle is otherwise found by
-    // searching. Section first, so each line reads on its own.
+    // Every failure again, together, at the end. A --verbose run prints one
+    // line per check, thousands of them, and a FAIL in the middle is otherwise
+    // found by searching. Section first, so each line reads on its own.
     console.error('\nfailed checks:');
     for (const f of failed) console.error('  ' + f);
     console.error('\nfailing sections:');
