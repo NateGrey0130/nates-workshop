@@ -24,9 +24,10 @@
 // it FAILS CLOSED on an envelope it cannot parse, so the gap is noticed on the
 // first spawn rather than never.
 //
-// Registered at USER level only (C:\Users\natha\.claude\settings.json), with an
-// absolute path. checks/hook-registration.mjs holds the registration and the
-// behaviour.
+// Registered in the repo's .claude/settings.json on PreToolUse for
+// `Agent|Task`, as `node "$CLAUDE_PROJECT_DIR/.claude/hooks/..."` (user level
+// only until 2026-11-06). checks/hook-registration.mjs holds the registration
+// and the behaviour.
 
 export const MAX_PAGES = 15;
 export const BOUNDED = ['book-reconcile'];

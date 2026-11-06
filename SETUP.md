@@ -324,26 +324,28 @@ nowhere, so **edit it by hand when anything it names moves**.
 `machine-instructions.mjs` (local smoke only) holds it to naming no skill or
 agent and stating no count.
 
-**The Bash guard hook is registered twice, on purpose.** Once in the repo's
-`.claude/settings.json` and once at user level in
-`C:\Users\natha\.claude\settings.json`, with an absolute path to
-`.claude/hooks/guard-bash.sh`. A fresh machine must add the user-level
-registration by hand; `hook-registration.mjs` checks it locally.
+**Every hook is registered in the repo's `.claude/settings.json`**, each as
+`"$CLAUDE_PROJECT_DIR/.claude/hooks/<script>"`, so a fresh machine needs no
+hook registration of its own, and `hook-registration.mjs` checks them in CI as
+well as locally. They fire in a session of the repo or of a worktree of it, and
+**not in a session started anywhere else**. `C:\Users\natha\.claude\settings.json`
+should carry none of them: a copy left there fires that hook twice (until
+2026-11-06 it carried the guard a second time and the three budget hooks alone).
 
-**Two more hooks are registered at user level only**, each as
-`node "<absolute path>"`: `.claude/hooks/session-budget.mjs` on
-`UserPromptSubmit` and on `PostToolUse` for `Bash`, which warns about a large
-context or a cold cache and never blocks, and `.claude/hooks/agent-slice.mjs`
-on `PreToolUse` for `Agent|Task`, which refuses a `book-reconcile` brief with
-no `Slice:` line of 15 pages or fewer. Neither guards a tree, so a repo
-registration would only fire each one twice. The same check holds both.
-
-**A third is registered the same way**: `.claude/hooks/agent-run-cap.mjs` on
-`PreToolUse` with matcher `*`. It acts only on a subagent's calls. At 200k of
-context it tells the run to return what it has and name what is left, and from
-250k it refuses every tool call but the hand-back. It imports
-`session-budget.mjs` from beside itself, so the two move together. The same
-check holds it.
+- `.claude/hooks/guard-bash.sh` on `PreToolUse` for `Bash`, with
+  `"onFailure": "block"`, so a guard that cannot start blocks the command
+  rather than letting it run (Claude Code 2.1.295 or later).
+- `.claude/hooks/skill-gate.mjs` beside it.
+- `.claude/hooks/session-budget.mjs` on `UserPromptSubmit` and on
+  `PostToolUse` for `Bash`, which warns about a large context or a cold cache
+  and never blocks.
+- `.claude/hooks/agent-slice.mjs` on `PreToolUse` for `Agent|Task`, which
+  refuses a `book-reconcile` brief with no `Slice:` line of 15 pages or fewer.
+- `.claude/hooks/agent-run-cap.mjs` on `PreToolUse` with matcher `*`. It acts
+  only on a subagent's calls. At 200k of context it tells the run to return
+  what it has and name what is left, and from 250k it refuses every tool call
+  but the hand-back. It imports `session-budget.mjs` from beside itself, so the
+  two move together.
 
 **`launch.json` exists twice.** The tracked `.claude/launch.json` is
 machine-independent. The working directory's untracked copy has every command
