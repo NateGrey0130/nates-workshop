@@ -50,16 +50,29 @@ const PORT = await choosePort('REGRESSION_PORT');
 const BASE = `http://127.0.0.1:${PORT}/api/character-creator`;
 const marker = runMarker();
 
+// A passing check prints nothing unless asked, the same two switches as
+// shared/test/harness.mjs: --verbose, or WORKSHOP_VERBOSE set to anything but
+// empty or 0, prints its `  ok  <label>` line again. This suite has its own
+// check() and does not import the harness (it is standalone on purpose), so
+// the harness's quiet mode never reached it and a flagless run printed one ok
+// line per check. A FAIL line still prints where it happens, and every FAIL is
+// listed again before the summary line (Nate, 2026-11-03: quiet in CI too).
+const verbose = process.argv.slice(2).includes('--verbose')
+  || (process.env.WORKSHOP_VERBOSE !== undefined && process.env.WORKSHOP_VERBOSE !== ''
+    && process.env.WORKSHOP_VERBOSE !== '0');
 let failures = 0;
 let checks = 0;
+const failedLines = [];
 function check(label, cond, detail = '') {
   checks++;
   if (cond) {
-    console.log('  ok  ' + label);
+    if (verbose) console.log('  ok  ' + label);
   } else {
     failures++;
     const why = detail && typeof detail === 'object' ? JSON.stringify(detail) : String(detail ?? '');
-    console.log('  FAIL ' + label + (why ? ' — ' + why.slice(0, 260) : ''));
+    const line = 'FAIL ' + label + (why ? ' — ' + why.slice(0, 260) : '');
+    failedLines.push(line);
+    console.log('  ' + line);
   }
 }
 
@@ -7319,6 +7332,12 @@ const partialWhy = partialRun
   ? ` — --upto ${STAGES[uptoIndex]}, so ${STAGES.slice(uptoIndex + 1).join(' and ')} did not run;`
     + ' the merge gate is the flagless run'
   : '';
+// Every failure again, together, so a red run is read here rather than found
+// by searching the log for FAIL.
+if (failedLines.length) {
+  console.log('\nfailed checks:');
+  for (const line of failedLines) console.log('  ' + line);
+}
 console.log('\n' + (failures === 0
   ? `${partialTag}REGRESSION PASSED (${checks} checks)${partialWhy}`
   : `${partialTag}REGRESSION FAILED (${failures} of ${checks} checks)${partialWhy}`));
