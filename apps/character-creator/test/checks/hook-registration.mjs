@@ -46,7 +46,7 @@
 //
 // checks/instruction-paths.mjs is the near neighbour and deliberately does NOT
 // cover this: its ROOTS are CLAUDE.md, SETUP.md, docs/cloudflare-credentials.md,
-// .claude/skills and .claude/agents, read 2026-09-27, and its READABLE extension list is
+// .claude/skills, .claude/agents and .claude/rules, read 2026-11-06, and its READABLE extension list is
 // md|json|ps1|mjs|js. `.claude/hooks` is not a root, `.sh` is not readable, and
 // `.claude/settings.json` is outside ROOTS - so neither the script nor its
 // registration is reached by it. checks/environment.mjs does not reach them

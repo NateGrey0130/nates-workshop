@@ -66,7 +66,7 @@ The group must match `groups.mjs --affected`. Any `shared` path forces
 `F<n>`) are **claimed at merge**. Re-read `origin/main` for the highest number
 immediately before the merge, never earlier.
 
-## Fifteen skills
+## Fourteen skills
 
 Each one lives in `.claude/skills/`. A new skill needs a pressure test before
 it merges (`test-suite` → *A skill is a check too*). Agents are in
@@ -87,7 +87,6 @@ next turn.
 | `test-suite` | adding or changing a check, pinning a count, reading a failure |
 | `windows-shell` | before an in-place edit, an inline script with backslashes, or a query you will act on |
 | `worktree` | a second concurrent session, and **before `git worktree remove`** |
-| `media-vault` | `apps/media-vault/`, `functions/api/media-vault/`, `media_items`, `media_shares` |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
 | `plan-rows` | writing briefs for a multi-PR plan, or driving the `pr-worker` chain through one |
 
