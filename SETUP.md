@@ -419,7 +419,7 @@ the main checkout.
 `C:\Users\natha\Backups\nates-workshop\<YYYY-MM-DD>\<db>\<table>.json`, keeps
 the newest eight dated folders, and writes `last-run.json` in the root. A run
 with any failure stays in `<YYYY-MM-DD>.partial` and deletes nothing.
-`docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
+`apps/character-creator/docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
 not.
 
 **The same run mirrors the R2 bucket** `nates-workshop-media` into
