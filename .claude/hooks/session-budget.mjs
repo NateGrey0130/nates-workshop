@@ -32,10 +32,10 @@
 // are skipped - their context is their own. Only the tail of the file is read,
 // because a long session's transcript runs to tens of megabytes.
 //
-// Registered at USER level only (C:\Users\natha\.claude\settings.json), with an
-// absolute path, so it fires from every directory the work is started in. It is
-// not in the repo's .claude/settings.json: unlike guard-bash.sh it guards no
-// tree, so a second registration would only print each warning twice.
+// Registered in the repo's .claude/settings.json (UserPromptSubmit, and
+// PostToolUse for Bash) as `node "$CLAUDE_PROJECT_DIR/.claude/hooks/..."`, so it
+// fires in a session of this repo or of a worktree of it, and not in a session
+// started anywhere else. Until 2026-11-06 it was registered at user level only.
 // checks/hook-registration.mjs holds the registration and the behaviour.
 
 import { openSync, readSync, fstatSync, closeSync } from 'node:fs';
