@@ -33,55 +33,7 @@ layout is nearest before starting another:
   adventure's chapters too, read by `scripts/msh/gridbooks.py` through
   `roster.py`'s own entry loop
 
-## Many books in one set of files
-
-Since 2026-09-28 the chain is multi-book. What that means for a new one:
-
-- **`npcs.py` and `extras.py` merge by book.** Every character and item
-  carries its `book`, and rebuilding one book replaces only that book's rows
-  in `data/npcs.json` and `data/items.json`. The D1 rows were already keyed by
-  book.
-- **Adventures are not in the app** (Nate, 2026-09-29, #1550). There is no
-  `data/adventures.json` and no Adventures section. Do not set a new book's
-  registry `adventure` or import its adventure's sections, and ask before
-  importing items that live only inside one. `extras.py` still parses
-  MHSP1's, the only registry `adventure` left, because its items are found
-  inside it, and writes text only for a section an item names (`section`:
-  its two vehicles read First Blood and Patrol).
-- **The registry's ORDER is part of the data.** The first book in
-  `scripts/msh/books.json` keeps plain ids (`magneto`); every later book's ids
-  end in `-<slug>` (`magneto-mhsp1`). **Append a new book; never reorder**, or
-  every id, Codex link and saved GM sheet of the moved books changes.
-- **The same character in two books is two cards** (Nate, 2026-09-28), each
-  citing its own book. The GM's list tells them apart by book.
-- A book needs a `short` (the code a card cites it by, e.g. MA1).
-- A book with no team sections (laid out A-Z) files its characters under
-  the book's own title.
-- **A book laid out differently gets a reader of its own**, chosen by the
-  registry's `layout`: absent is MA1's (`roster.py`), `roster-booklet` is
-  MHSP1's (`booklet.py`), `grid-booklets` is ME1's (`gridbooks.py`). The
-  reader returns the same `roster.json` entries, and `npcs.py` and
-  `extras.py` gate what is new behind the same field. Do not bend MA1's path
-  to fit another book: its header height, column cut and number grid are
-  tuned to MA1 and live data depends on them. Reusing its pieces is fine:
-  `gridbooks.py` builds its own streams and headers and hands them to
-  `roster.read_entries()`.
-- **Prove every earlier book did not move.** Before a PR that touches
-  `scripts/msh/` merges, build each book already in the registry with
-  `origin/main`'s scripts (a
-  `git archive origin/main scripts/msh apps/marvel-heroes/data` into the
-  scratchpad, with a copy of the cache under its own `WORKSHOP_MSH_CACHE`)
-  and with the branch's, and `cmp` its `roster.json`, `book-text.sql`,
-  `extras.json`, `extras-text.sql` and its rows of `npcs.json`.
-  Byte-identical, or say why not: ME1's parser fixed a real MA1 misread
-  (Nekra's `40In` alternate, stored as 401), and a difference like that is
-  read on the page image before it ships.
-- **A team name is a filter group shared by every book.** MHSP1's sides are
-  "Secret Wars Heroes" and "Secret Wars Villains" because MA1 already has a
-  team called Villains.
-
-So a new book's first PR is the survey (registry entry and survey doc, no
-data). If its layout is new, the reader is the second, and the data is last.
+**Many books in one set of files** (merging by book, the registry's order, a reader per layout, proving every earlier book did not move) is a rule: `.claude/rules/marvel-pipeline.md`.
 
 ## The chain
 
@@ -95,9 +47,8 @@ data). If its layout is new, the reader is the second, and the data is last.
 | items | `python scripts/msh/extras.py <slug>` | `data/items.json` + `.../extras-text.sql` |
 | load | `node scripts/d1-apply.mjs --remote --db marvel <each .sql>` | `msh_book_text` in `DB_MARVEL`, BEFORE the merge (`ship-pr`) |
 
-`WORKSHOP_MSH_CACHE` defaults to `.cache/msh` under the checkout. **From a
-worktree, set it to the main checkout's `.cache/msh`**, or the worktree builds a
-cache of its own and its removal deletes it. `roster.py` exits 1 on a failed
+`WORKSHOP_MSH_CACHE` from a worktree is a rule: `.claude/rules/marvel-pipeline.md`.
+`roster.py` exits 1 on a failed
 check, an override that no longer matches, or an index name it cannot place:
 that exit code is the gate, not the report's numbers.
 
@@ -196,11 +147,7 @@ so either can be re-run alone. Keep it that way.
   the chapter resumes, at an indented paragraph or a run-in that is not a
   section. A run-in's curly apostrophe (`CLAUD VICTOR'S:`) defeats `RUN_IN`
   unless it is folded first.
-- **The Edit and Write tools turn `\uXXXX` into the literal character**, and
-  the Bash tool's heredocs lose one backslash of `\\u` (build it with
-  `chr(92)`). Every file here must stay ASCII. Check the bytes after editing.
-- **Worktrees:** the local D1 may predate the Marvel tables; apply
-  `db/migrations/marvel/*` locally before driving the GM page.
+- **The ASCII-only trap and the worktree's local D1** are a rule: `.claude/rules/marvel-pipeline.md`.
 - **Low confidence is not junk.** A title, a header or a real word can read at
   confidence 0 and still be right (MHSP1's "Galactus's 'Cat'" header), and art
   beside a column can read at 60. Filter prose by what the book reads
