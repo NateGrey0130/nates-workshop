@@ -283,19 +283,17 @@ export function run() {
     check('and every name in the map is a script that exists',
       ghosts.length === 0, ghosts.join(', '));
 
-    // The skills are DIRECTORY-SCOPED by nature: a session started outside the
-    // repo root would not see them, and one ran an entire class import by hand
-    // for exactly that reason. They are junction-linked into ~/.claude/skills so
-    // they DO load from anywhere on this machine (SETUP.md), but the junctions are
-    // per-machine and a new skill needs its own. CLAUDE.md is loaded either way,
-    // so it carries the list - and a list is only useful while it is complete.
+    // The skills are DIRECTORY-SCOPED: a session of the repo or of a worktree
+    // of it reads them from the main checkout, and a session started anywhere
+    // else does not see them. CLAUDE.md carries the list, and a list is only
+    // useful while it is complete.
     const skillsDir = join(repoRoot, '.claude', 'skills');
     const skills = readdirSync(skillsDir, { withFileTypes: true })
       .filter((e) => e.isDirectory()).map((e) => e.name).sort();
     const claudeMd = readFileSync(join(repoRoot, 'CLAUDE.md'), 'utf8');
     const skillsUnnamed = skills.filter((s) => !claudeMd.includes('`' + s + '`'));
     check('every skill is named in CLAUDE.md', skillsUnnamed.length === 0,
-      skillsUnnamed.join(', ') + ' - a session outside the repo root sees only CLAUDE.md');
+      skillsUnnamed.join(', ') + ' - CLAUDE.md is the list every session of the repo reads');
     const claimed = [...claudeMd.matchAll(/^\| `([a-z0-9-]+)` \| /gm)].map((m) => m[1]).sort();
     check('and CLAUDE.md names no skill that does not exist',
       claimed.length > 0 && claimed.every((c) => skills.includes(c)),
@@ -315,29 +313,6 @@ export function run() {
       word === undefined
         ? `${skills.length} skills, and NUMBER_WORDS in this file stops at ${NUMBER_WORDS.length} - extend it`
         : `there are ${skills.length}, so CLAUDE.md should say "${word} skills"`);
-
-    // And CLAUDE.md must not go back to saying they DO NOT load. It said so for
-    // two days after the junctions landed, on the one file that is loaded into
-    // every session regardless of working directory - a live instruction
-    // describing a solved problem as unsolved, inviting the exact cost the
-    // junctions were bought to remove. The junctions themselves are per-machine
-    // and cannot be tested from here; the sentence about them can.
-    check('CLAUDE.md says the skills load from anywhere, not only from the repo root',
-      /skills[^\n]*load from anywhere/i.test(claudeMd)
-      && !/only load from the repo root/i.test(claudeMd));
-    check('and points at the junction block that makes that true',
-      /junction/i.test(claudeMd) && claudeMd.includes('SETUP.md'));
-    const setup = readFileSync(join(repoRoot, 'SETUP.md'), 'utf8');
-    check('which SETUP.md still carries',
-      /New-Item -ItemType Junction/.test(setup));
-    // The loop in SETUP.md is the thing a fresh machine runs, so it has to name
-    // every skill - the same completeness problem as the CLAUDE.md table.
-    const linked = [...setup.matchAll(/'([a-z0-9-]+)'/g)].map((m) => m[1]);
-    const unlinked = skills.filter((s) => !linked.includes(s));
-    check('and its junction loop names every skill',
-      unlinked.length === 0,
-      unlinked.join(', ') + ' - a skill with no link does not exist outside the repo');
-
 
     // A skill's reference/ must not FORK repo code. book-survey shipped its own
     // copy of read-columns.py and the two diverged completely - the copy was an

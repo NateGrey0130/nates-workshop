@@ -76,8 +76,7 @@ function wrangler(args) {
 // LOCAL ONLY, and that is not a hedge. A GitHub runner resolves its own
 // wrangler, its timings are nobody's to act on, and a required check that fails
 // on a slow runner would be flaky in the one direction that gets a check
-// deleted. `checks/machine-instructions.mjs` declines off this machine the same
-// way and for the same reason.
+// deleted.
 if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS) {
   check('wrangler start-up is not timed in CI', true,
     'a runner resolves its own wrangler and its timings are not actionable here');
@@ -591,8 +590,7 @@ section('Documentation claims');
 // and the two it named were simply the two that existed when it was written.
 //
 // The remedy is the one this repo keeps arriving at: stop enumerating. The
-// machine's own CLAUDE.md names no skill and no agent for the same reason and
-// is held to it by checks/machine-instructions.mjs, and the repo CLAUDE.md
+// machine's own CLAUDE.md names no skill and no agent, and the repo CLAUDE.md
 // says `ls .claude/agents/` "is the list, and it is the ONLY list". This is
 // that rule for the checks directory, which had grown the fastest of the three.
 //
@@ -769,9 +767,8 @@ section('Agents stay true');
 
 // An agent file is instructions with no runtime, exactly like a skill - and
 // unlike a skill, nothing here opened one until SKILL-AUDIT F51.
-// instruction-paths.mjs pins the absolute paths inside them, and
-// machine-instructions.mjs reads this directory to hold the machine's own
-// CLAUDE.md to naming no agent. Neither of those opens an agent file to ask
+// instruction-paths.mjs pins the absolute paths inside them, and does not
+// open an agent file to ask
 // whether it is well formed. So a name: that disagrees with the filename, a
 // malformed tools: line, or frontmatter that does not parse all reach the
 // harness instead of the suite - and the harness reports them mid-task, in the

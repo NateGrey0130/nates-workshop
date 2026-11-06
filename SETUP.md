@@ -1,9 +1,9 @@
 # Nate's Workshop — Deployment Reference
 
 > **Pinned sentences, not a pinned file.** Under
-> `apps/character-creator/test/checks/`, `documented-counts.mjs` (the junction
-> loop), `environment.mjs` (the endpoint count) and `server-plumbing.mjs` (the
-> metering sentence) each read one passage here, as does
+> `apps/character-creator/test/checks/`, `environment.mjs` (the endpoint
+> count) and `server-plumbing.mjs` (the metering sentence) each read one
+> passage here, as does
 > `apps/media-vault/test/smoke.mjs` (the candidate count), and
 > `instruction-paths.mjs` resolves every absolute path. Everything else is
 > prose: ask the thing it describes before acting on it. History is in
@@ -281,25 +281,11 @@ auto-created Access policy. A friend who needs a preview is added there too.
 
 ## Setting up a machine
 
-**The skills and the agents need a junction, once per machine**, because a
-session started outside the repo (the book work runs from
-`C:\Users\natha\Projects\workshop`) would register neither. Junctions need no
-admin rights and follow repo edits:
-
-```powershell
-foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','marvel-book','media-vault','plan-rows','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
-  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
-}
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
-```
-
-- **A new skill needs its own line here, in the PR that adds it.** Nothing
-  notices the gap. A new agent needs nothing, because the whole directory is
-  linked.
-- The agents link is a directory because an agent is a file, and a per-file
-  symlink needs administrator rights here. So `~/.claude/agents` **is** the
-  repo's directory and can hold nothing else.
-- An agent file written mid-session cannot be spawned until the next turn.
+**The skills and the agents need nothing per machine.** A session of the repo,
+or of a worktree of it, reads `.claude/skills/` and `.claude/agents/` from the
+main checkout. A session started anywhere else sees neither, and none has been
+started anywhere else since 2026-10-04. An agent file written mid-session
+cannot be spawned until the next turn.
 
 **Session memory is one store behind junctions.** The real store is
 `C:\Users\natha\.claude\projects\C--Users-natha-Projects-workshop\memory`; the
@@ -317,12 +303,10 @@ in one starts with no memory. The exception is `scripts/book-worktree.mjs`,
 which links it. See the `worktree` skill.
 
 **The answer is a pointer at the user level.** A repo `CLAUDE.md` loads only
-inside the repo, so `~/.claude/CLAUDE.md` holds a few lines pointing at it:
-where the repo is, read its `CLAUDE.md` when the work touches it, and where the
-working directory is. It is neither a copy nor a junction. It is checked in
-nowhere, so **edit it by hand when anything it names moves**.
-`machine-instructions.mjs` (local smoke only) holds it to naming no skill or
-agent and stating no count.
+inside the repo, so `~/.claude/CLAUDE.md` holds two lines pointing at it: where
+the repo is, and to read its `CLAUDE.md` first when the work touches it. It is
+not a copy. It is checked in nowhere and no check reads it, so **edit it by
+hand if the repo moves**.
 
 **Every hook is registered in the repo's `.claude/settings.json`**, each as
 `"$CLAUDE_PROJECT_DIR/.claude/hooks/<script>"`, so a fresh machine needs no
