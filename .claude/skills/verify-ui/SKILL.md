@@ -19,8 +19,7 @@ browser"*; this is how, here.
 
 ## What you changed probably belongs to five apps
 
-Since the split on 2026-09-19, `apps/character-creator/` is a **library as well
-as an app**. Five pages link its stylesheet and pull modules out of its `js/`:
+`apps/character-creator/` is a **library as well as an app**. Five pages link its stylesheet and pull modules out of its `js/`:
 the Creator, the Sheet, the Codex, Campaign and GM Tools.
 `apps/character-creator/js/api.js` is loaded by all five;
 `apps/character-creator/js/derive.js`,
@@ -78,8 +77,8 @@ and is not: an API layer once showed old markdown while
 
 Use an escape hatch — `nates-apps-8791` or `nates-apps-8793`, in both
 `.claude/launch.json` and the working directory's own
-(`C:\Users\natha\Projects\workshop\.claude\launch.json` since the move on
-2026-09-02, `MACHINE-AUDIT.md` M7/M9/M12; both entries are present there). A
+(`C:\Users\natha\Projects\workshop\.claude\launch.json`, where both entries
+are present). A
 different port is also a different **origin**, so `localStorage` state cannot
 collide either.
 
