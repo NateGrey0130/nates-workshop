@@ -3,6 +3,7 @@ name: pr-worker
 description: Carry one row of a multi-PR plan from its brief to a pull request that is open with every required check green, in a context of its own. Use when a driver session is working through a plan one row at a time and hands over a state file and a row brief. Returns a short report only - it does not merge, choose the row, read the rest of the plan, start the next row, or decide anything the brief marks as Nate's.
 tools: Read, Grep, Glob, Bash, Edit, Write, Skill, mcp__Claude_Browser__preview_start, mcp__Claude_Browser__preview_stop, mcp__Claude_Browser__preview_logs, mcp__Claude_Browser__navigate, mcp__Claude_Browser__read_page, mcp__Claude_Browser__find, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__computer, mcp__Claude_Browser__read_console_messages, mcp__Claude_Browser__read_network_requests
 model: opus
+maxTurns: 150
 skills:
   - ship-pr
   - windows-shell
