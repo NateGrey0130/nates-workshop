@@ -1,6 +1,8 @@
 ---
 name: take
 description: Take a numbered audit finding the way audit-menu requires, in the order it requires - grep every menu and the memory directory for the finding's subject, run the audit-premise-auditor on it, and only then create the branch. Use when told "take F76", "/take BOOK-INGEST-AUDIT F76", or whenever a numbered finding is about to be implemented. Adds nothing new; it exists so the two steps that get skipped cannot be skipped.
+disable-model-invocation: true
+argument-hint: "<MENU> <ID>"
 ---
 
 # /take <MENU> <ID>
