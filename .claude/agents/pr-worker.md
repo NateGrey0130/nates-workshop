@@ -75,6 +75,23 @@ You were started in a worktree of your own, and three things follow.
 **An in-place edit goes through the Edit tool or a node script written with
 `Write`:** `sed -i` is refused and a heredoc eats backslashes (`windows-shell`).
 
+**The worktree-isolation guard reads every Bash call** (it comes with
+`isolation: worktree`) **and refuses a command it cannot prove stays inside
+this tree.** Two shapes cost rows 3, 4 and 5 a retry each on 2026-11-05:
+
+- **`git` with anything else in the call.** `cd <path> && git …`,
+  `git add <file>; git commit …`, two `git`s on one line, a pipe or `$(...)`:
+  each is refused as too complex to verify. One plain `git` command per call,
+  run from here. A `cd` is never needed: a path outside this tree is written
+  out absolute, the way the state copy above is. A `gh` call carrying `--jq`,
+  `$(...)`, a pipe or `;` has been refused too (`pr-landed.mjs` exists for
+  that); filter output with a node script written with `Write`.
+- **`node` with a computed program or argument.** `for a in …; do node
+  apps/$a/test/smoke.mjs`, `node $S/x.mjs`, a glob in the path: refused
+  because what it runs "cannot be shown not to be git". Each suite and each
+  script is its own call with its path spelled out in full. No shell state
+  survives between calls anyway, so a variable set for a later call is lost.
+
 Four more things that are refused or cost you the row:
 
 - **`scripts/menu-check.mjs` takes no ref.** Run it bare. An argument is read
@@ -102,9 +119,16 @@ Four more things that are refused or cost you the row:
   fail is dropped: say so in the report and fix the rest of the row.
 - **A fix carries a check**, and the check is made to fail once before it is
   trusted. Keep each suite's full output in a file; never tail a failure away.
-  A suite run in the background ends its command with `; echo "rc=$?" >> <that file>`,
-  and the wait is over only when a line of the file is exactly `rc=<n>`:
-  passing lines carry `ok` and `failed`, so a looser pattern ends it early.
+  **Each suite is its own background Bash call** (`run_in_background`), its
+  path spelled out, its output in a file of its own that no earlier run wrote:
+  `node apps/filament-forge/test/smoke.mjs > <file> 2>&1; echo "rc=$?" >> <file>`.
+  **Do not wait on it in a loop.** A foreground call is moved to the
+  background after 180 seconds, so `until grep -qx rc=0 <file>; do sleep 10; done`
+  is not a wait (row 5, 2026-11-05). The background call's own completion
+  notice is the wait. Then read the file: the run is over only when a line of
+  it is exactly `rc=<n>`, because passing lines carry `ok` and `failed`, so a
+  looser pattern reads a run that has not finished, and a file an earlier run
+  wrote already holds an `rc=0` (row 3, 2026-11-05).
 - **A pinned figure comes off `main`, never off the brief.** A survey's
   `Rows citing this book` line, or any count the brief quotes, was written
   against an older `main`. Paste the line `regression` prints on your branch.
