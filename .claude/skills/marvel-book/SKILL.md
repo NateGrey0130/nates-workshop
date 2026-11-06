@@ -45,7 +45,7 @@ layout is nearest before starting another:
 | parse | `python scripts/msh/roster.py <slug>` | `.../roster.json` (prose, local only) |
 | characters | `python scripts/msh/npcs.py <slug>` | `apps/marvel-heroes/data/npcs.json` + `.../book-text.sql` |
 | items | `python scripts/msh/extras.py <slug>` | `data/items.json` + `.../extras-text.sql` |
-| load | `node scripts/d1-apply.mjs --remote --db marvel <each .sql>` | `msh_book_text` in `DB_MARVEL`, BEFORE the merge (`ship-pr`) |
+| load | `node scripts/d1-apply.mjs --remote --db marvel <each .sql>` | `msh_book_text` in `DB_MARVEL`, before the merge (`ship-pr` → *The ordering rule*) |
 
 `WORKSHOP_MSH_CACHE` from a worktree is a rule: `.claude/rules/marvel-pipeline.md`.
 `roster.py` exits 1 on a failed
@@ -171,6 +171,7 @@ so either can be re-run alone. Keep it that way.
 - `roster.py` exits 0; every misprint has an override read off the page
 - `npcs.py` and `extras.py` exit 0, so no row has an unpaired double quote
 - the Marvel suite passes **with the cache present** (leak check ran)
-- the `.sql` applied to production before the merge and read back by count
+- the `.sql` applied to production before the merge (`ship-pr` → *The ordering
+  rule*) and read back by count
 - the survey's `**Rows citing this book:**` line updated in the same PR
 - the Codex card and, for NPCs, "Add an NPC from the book" driven in a browser

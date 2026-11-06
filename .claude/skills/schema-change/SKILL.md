@@ -54,7 +54,7 @@ See *Standing up a new environment* in
 
 ## Applying it
 
-Before the merge that needs it — see the `ship-pr` skill.
+Before the merge that needs it (`ship-pr` → *The ordering rule*).
 
 ```bash
 node scripts/d1-apply.mjs --remote db/migrations/NNN-thing.sql
