@@ -30,7 +30,7 @@ A 302 is the wall working, not the site down. To ask production a question,
 query D1 (`scripts/q.mjs --remote`) rather than fetching a page. Confirming a
 deploy is the one thing that needs the page (ask production, in a logged-in
 browser, for a string the change added; D1 cannot answer that, because it moved
-before the merge).
+before the merge: `ship-pr` → *The ordering rule*).
 
 ## Project Structure
 
@@ -84,11 +84,8 @@ repo root is published. `main` refuses direct pushes, and a merge needs the
 `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348` is the source of
 truth). `play-flow` and `deploy-alarm` report only.
 
-Schema and data are applied **before** the merge that needs them:
-
-```bash
-node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
-```
+Schema and data are applied **before** the merge that needs them (`ship-pr` →
+*The ordering rule*).
 
 `apps/character-creator/docs/operations.md` has the migration convention and
 the per-migration table. Two things are outside *merge = deploy*: the

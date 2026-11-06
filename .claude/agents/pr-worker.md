@@ -110,7 +110,7 @@ Four more things that are refused or cost you the row:
   against an older `main`. Paste the line `regression` prints on your branch.
 - Before the push: `git diff --name-only HEAD...origin/main`. If `main` moved on
   a path you touched or a shared one, merge it and run the suites again.
-- **D1 is applied before the merge**, through `node scripts/d1-apply.mjs`.
+- **D1 is applied before the merge** (`ship-pr` → *The ordering rule*).
   Push the branch before `--remote`: it reads every branch on origin for a
   file with the same number, yours included, so a renamed `~NNN` script whose
   old name origin still holds stops as `NUMBER TAKEN`.

@@ -397,7 +397,7 @@ on another's branch with `git status` looking clean.
 
 **Data ships with its book; UNASKED-FOR code waits** (next section). Classes,
 skills, spells, psionics, gear and `books.json` entries go in with the book,
-applied `--remote` before the merge, per `ship-pr`.
+applied before the merge (`ship-pr` → *The ordering rule*).
 
 ### What "no code from a book" forbids: three tiers, and this is the copy that governs
 

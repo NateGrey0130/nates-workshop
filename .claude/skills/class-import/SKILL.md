@@ -56,7 +56,8 @@ rather than the reference, which is not the whole key list.
    node scripts/class-check.mjs apps/character-creator/db/add-<id>-class.sql
    ```
 5. **Apply** `--local`, then `--remote` once it looks right. **Ask before
-   `--remote`**: it writes the live database, before the merge.
+   `--remote`**: it writes the live database, before the merge (`ship-pr` →
+   *The ordering rule*).
    ```bash
    node scripts/d1-apply.mjs --local apps/character-creator/db/add-<id>-class.sql
    ```
