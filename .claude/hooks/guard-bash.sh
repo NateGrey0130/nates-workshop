@@ -117,30 +117,33 @@ cmd=$(printf '%s' "$envelope" | sed '1,2d')
 has() { printf '%s\n' "$cmd" | grep -Eq -- "$1"; }
 
 # repo_posix / repo_win : where the repo IS, derived from this script's own
-# location rather than from CLAUDE_PROJECT_DIR. Since SKILL-AUDIT F55 this hook
-# is registered at USER level from settings that are not the repo's, so
-# CLAUDE_PROJECT_DIR is the directory the SESSION started in - Downloads,
-# usually - and rule 2 used it as "the repo". $0 is the path sh was invoked
-# with, and that registration spells it absolutely.
+# location rather than from CLAUDE_PROJECT_DIR. From SKILL-AUDIT F55
+# (2026-09-22) until 2026-11-07 this hook was ALSO registered at user level,
+# from settings that were not the repo's, so CLAUDE_PROJECT_DIR was the
+# directory the SESSION started in - Downloads, usually - and rule 2 had used
+# it as "the repo". $0 is the path sh was invoked with, and it is right under
+# either registration.
 #
-# THE HOOK IS REGISTERED TWICE, and both registrations are live: the user-level
-# one above, and the repo's own .claude/settings.json, which spells the path
-# "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh". This comment used to call
-# that second form hypothetical and circular. It is neither hypothetical - it
-# has fired, 2026-09-22T17:18:40Z - nor wrong: project settings load only when
-# the session's project root IS that checkout, so $0's grandparent is that
-# checkout's real root. The derivation is circular and lands on the right
-# answer.
+# THE HOOK IS REGISTERED ONCE, in the repo's own .claude/settings.json, which
+# spells the path "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh" (PR #2141;
+# the user-level copy was deleted 2026-11-07, hand step N3). Project settings
+# load only when the session's project root IS that checkout, so $0's
+# grandparent is that checkout's real root. The derivation is circular and
+# lands on the right answer, and it was kept rather than reading
+# CLAUDE_PROJECT_DIR so the script needs no change if a second registration
+# ever returns.
 #
-# KEEPING BOTH IS DELIBERATE - SKILL-AUDIT F60, which proposed removing the
-# repo's and was DECLINED on measurement, 2026-09-22. Each copy of this script
-# guards only the tree it lives in, because repo_posix is $0's grandparent. In
-# a git worktree the repo registration runs the WORKTREE's copy and guards the
-# worktree; the user-level one runs the main checkout's copy and does not. Drop
-# the repo block and rule 2 stops refusing `sed -i` on a worktree's own files -
-# which is the workflow the `worktree` skill exists for. The repo block is also
-# the only half that is checked in: SETUP.md documents no hook at all, so
-# nothing tracked would tell a second machine the user-level one must exist.
+# WHY THE REPO REGISTRATION IS THE ONE THAT STAYED - SKILL-AUDIT F60 proposed
+# removing it and was DECLINED on measurement, 2026-09-22. A copy of this
+# script guards only the tree it lives in, because repo_posix is $0's
+# grandparent. In a git worktree the repo registration runs the WORKTREE's
+# copy and guards the worktree; the user-level one ran the main checkout's
+# copy and did not. Drop the repo block and rule 2 stops refusing `sed -i` on
+# a worktree's own files - which is the workflow the `worktree` skill exists
+# for. The repo block is also the half that is checked in, so a second machine
+# gets it with the clone (SETUP.md -> the hooks paragraph; hook-registration.mjs
+# checks it in CI). The cost is that a session started outside the repo has
+# no guard at all.
 hook_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd)
 repo_posix=$(cd "$hook_dir/../.." 2>/dev/null && pwd)
 repo_win=$(cd "$hook_dir/../.." 2>/dev/null && pwd -W 2>/dev/null || printf '%s' "$repo_posix")

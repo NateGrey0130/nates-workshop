@@ -22,7 +22,10 @@ rule looks wrong. Read an undated claim as true on the day it was written.
   Measured 2026-09-22 by running each copy against each tree: a target resolves
   as in-repo only for the copy living in that tree. `F60` proposed removing the
   repo registration and was declined on that measurement, and because the repo
-  block is the only half that is checked in.
+  block is the only half that is checked in. Both stayed until 2026-11-07:
+  PR #2141 moved every hook into the repo's settings as
+  `$CLAUDE_PROJECT_DIR` paths, and the user-level copies were then deleted,
+  so the repo registration is the only one.
 - **LF on the hook.** A CR on the shebang fails as `/bin/sh^M: bad
   interpreter`, a hook that silently stops guarding.
 - **`.gitattributes` is the list.** The line-endings paragraph named only

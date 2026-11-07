@@ -29,11 +29,13 @@ block) on six shapes:
   `guard-bash:` (zero by construction) or the bare string (matches quotes of it).
 - **A refusal is not a permission denial.** A denial waits for Nate to approve
   your command; a refusal tells you to write a different one.
-- **It is registered twice, on purpose:** in the repo's `.claude/settings.json`
-  and at user level in `C:\Users\natha\.claude\settings.json`, so it guards
-  every directory. Each copy guards only the tree it lives in, so in a git
-  worktree only the repo's registration guards the worktree. A doubled refusal
-  is expected. **Do not remove either** (`SKILL-AUDIT` `F60`).
+- **It is registered once**, in the repo's `.claude/settings.json` as
+  `"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh"`, so it runs the copy in
+  whichever tree the session is in, worktrees included, and not at all in a
+  session started outside the repo. The user-level
+  `C:\Users\natha\.claude\settings.json` carries none of this repo's hooks
+  (since 2026-11-07, after #2141); a copy left there fires the hook twice. One
+  refusal per call is the expected shape.
 - **It fails closed** on an envelope it cannot parse. A wrong path in a
   registration fails as `sh` exit 127, which is reported, not blocking;
   `hook-registration.mjs` is the local check for that.

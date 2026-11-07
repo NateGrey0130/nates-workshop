@@ -134,8 +134,11 @@ widen the `gh api` entry. The allowed merge is still bound by the `ship-pr`
 skill's order (D1 applied first, every required check green, the merge as its
 own call) and by the `plan-rows` skill, which merges only a row a worker
 reported `READY`. Work that is not a plan row is still merged by Nate.
-`.claude/hooks/guard-bash.sh` refuses six command shapes. It is also registered
-at user level in `C:\Users\natha\.claude\settings.json`, so it runs twice in
-this repo, and that is intended. A refusal appears as
+`.claude/hooks/guard-bash.sh` refuses six command shapes. Every hook is
+registered once, in the repo's `.claude/settings.json` as
+`$CLAUDE_PROJECT_DIR/.claude/hooks/<script>`; the user-level
+`C:\Users\natha\.claude\settings.json` carries none of them (since 2026-11-07,
+after #2141), so each fires once per call in a repo or worktree session and
+not at all outside one. A refusal appears as
 `PreToolUse:Bash hook error: … guard-bash: <reason>`. Rationale:
 `docs/cloudflare-credentials.md` → *Permissions*.
