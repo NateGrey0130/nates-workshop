@@ -176,7 +176,7 @@ Then it is Nate's call:
   | `js/compose.js` | Fold it in, if an R.C.C.+O.C.C. pair combines it |
   | `js/derive.js` | Turn it into a number, if the sheet adds it up |
   | `app.js` / `sheet.js` | Show it in the wizard **and** on the sheet; they are separate paths |
-  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data (`schema-change`); record it in the `docs/operations.md` migration table |
+  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data (`schema-change`); record it in the `apps/character-creator/docs/operations.md` migration table |
   | `test/smoke.mjs` | A case for the new shape |
   | `apps/character-creator/README.md` or the right file under `docs/` | What it means and why |
 

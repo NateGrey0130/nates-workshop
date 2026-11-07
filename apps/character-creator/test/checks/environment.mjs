@@ -689,7 +689,7 @@ section('Skills stay true');
       const rel = f.slice(repoRoot.length + 1).replace(/\\/g, '/');
 
       // A repo path a skill tells you to open must exist.
-      for (const m of text.matchAll(/`((?:db|scripts|apps|functions|shared)\/[A-Za-z0-9_./-]+\.(?:js|mjs|sql|md|json|css|html))`/g)) {
+      for (const m of text.matchAll(/`((?:db|scripts|apps|functions|shared|docs)\/[A-Za-z0-9_./-]+\.(?:js|mjs|sql|md|json|css|html))`/g)) {
         // Skip placeholders and elisions: NNN-kebab.sql, <id>.sql, api/.../x.js
         if (/\.\.\.|NNN|<|>|\*/.test(m[1])) continue;
         if (!existsSync(join(repoRoot, m[1]))) badPaths.push(`${rel} -> ${m[1]}`);
