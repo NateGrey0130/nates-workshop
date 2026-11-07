@@ -1,6 +1,6 @@
 ---
 name: test-suite
-description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the five suites and which three gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
+description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the four smoke suites that run as one job and the three checks that gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
 ---
 
 # Adding a check
