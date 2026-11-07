@@ -166,9 +166,9 @@ take was the driver merging every row). The worker still never merges: one
 that did would skip the steps below. Four steps, each call on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
-   `--delete-branch`: the worker's worktree still holds the branch. From a
-   worktree or the driver's checkout, no `--delete-branch`; from the main
-   checkout, `ship-pr` step 7 applies.
+   `--delete-branch` while a worker's worktree still holds the branch, which
+   is true of every plan row. When no worktree holds it, `ship-pr` step 7
+   applies.
 2. `node .claude/scripts/pr-landed.mjs <n> --wait`, which must exit 0.
 3. `git pull --ff-only origin main` in the driver's checkout, then
    `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
