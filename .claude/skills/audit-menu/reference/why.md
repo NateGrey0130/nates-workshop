@@ -122,6 +122,16 @@ Removing an ordinal beats incrementing it (`SKILL-AUDIT` `F7`). `S`, `T` and
   third scan misreading D1–D6.
 - Closed files were split out on 2026-09-16.
 
+## Closed findings
+
+Until 2026-10-22 a closed finding's text was never deleted from the tree
+(Nate's posture, `docs/prompts/meta-audit-prompt.md`, 2026-09-03; `META-AUDIT`
+`A15`), and the 2026-09-16 move kept it in sibling `<MENU>.closed.md` archive
+files. On 2026-10-22 Nate reversed that: the archives were deleted that day,
+their text is read at `c530a474799d9621ce1b9433dfa6ef1721d0b666`, and every
+finding closed after that day is stubbed in place under its own heading. The
+menu staying where it is was not reversed.
+
 ## Status headers
 
 The widest header ran to 98 lines naming 33 findings, and the menu that audited
@@ -180,7 +190,7 @@ another menu while taking `A5` and took neither. `META-AUDIT` `A16`.
 
 ## The apparatus pause
 
-Seven menus were filed on 2026-09-02 and 2026-09-03 and none was about an app
+A default since 2026-09-04. Seven menus were filed on 2026-09-02 and 2026-09-03 and none was about an app
 or the data (`SKILL-AUDIT`, `META-AUDIT`, `SHIP-PR-AUDIT`, `REPO-AUDIT`,
 `HEALTH-AUDIT`, `MACHINE-AUDIT`, `DOCS-AUDIT-2`). The last product menus were
 `UI-AUDIT` and `REDESIGN-AUDIT`, 2026-08-31.

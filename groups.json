@@ -113,7 +113,7 @@
         "db/schema-tools.sql",
         "scripts/ofd-refresh.mjs",
         "scripts/ofd-refresh-lib.mjs",
-        ".claude/skills/media-vault/",
+        ".claude/rules/media-vault.md",
         "docs/prompts/filament-forge-standardization-prompt.md",
         "docs/prompts/media-vault-isbn-bulk-research-prompt.md",
         "docs/prompts/media-vault-standardization-prompt.md"

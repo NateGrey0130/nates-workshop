@@ -36,18 +36,17 @@ second pair of eyes on a run you already did.
    ```bash
    git checkout -b pal/data/triax-ngr-police-club
    ```
-   **A branch that takes a numbered finding names the menu** in its slug and
-   its commit subject: `proc/audit/ui-audit-f30-banked-picks` and
-   `Take UI-AUDIT F30: …`, never a bare `f30`. Menus number with `F`, `D` and
-   `N`, so a bare number identifies nothing once the branch is gone.
+   A branch that takes a numbered finding names the menu in its slug and
+   commit subject (`CLAUDE.md` → *Naming*; the examples are in `audit-menu`).
 2. **Make the change.**
 3. **Apply schema and data FIRST**, if the change needs them. See
    [the ordering rule](#the-ordering-rule). This step is wrong by default.
 4. **Verify**, at the layer the change lives in:
-   - **always**, the three smoke suites:
+   - **always**, the four smoke suites:
      `node apps/character-creator/test/smoke.mjs`,
      `node apps/filament-forge/test/smoke.mjs`,
-     `node apps/media-vault/test/smoke.mjs`.
+     `node apps/media-vault/test/smoke.mjs`,
+     `node apps/marvel-heroes/test/smoke.mjs`.
      `smoke.mjs --section <name>` is for iterating; **the merge gate is the
      flagless run**, and a partial run labels itself `PARTIAL SMOKE PASSED` so
      it cannot be quoted as this step.
@@ -55,7 +54,7 @@ second pair of eyes on a run you already did.
      `**Rows citing this book:**` line in its survey **in the same commit**, and
      its `**Status:**` line if it moved. `test/regression.mjs` prints the line to
      paste. Rows citing no surveyed book are the one shared count, in
-     `docs/operations.md`. Never quote a current value from memory; run the test.
+     `apps/character-creator/docs/operations.md`. Never quote a current value from memory; run the test.
    - **moved a survey's Status or Rows line, or a Marvel book's data:** then run
      `node scripts/sourcebooks.mjs` and commit the list it changes
      (`apps/sourcebooks/palladium/books.json` or `.../marvel/books.json`), in
@@ -98,6 +97,8 @@ second pair of eyes on a run you already did.
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
+   From a worktree or a plan driver's checkout, `plan-rows` merges without
+   `--delete-branch`, because the worker's worktree still holds the branch.
    `--delete-branch` removes the branch on GitHub and locally. Keep passing it
    even though `delete_branch_on_merge` is on, because that setting does not
    touch your local branch.
@@ -269,12 +270,10 @@ prescribed per apply. Migrations themselves: `schema-change`.
 
 ## `--local` is not a mirror of production
 
-**Never audit against the local database.** It drifts in both directions and
-neither is visible from inside it: extra rows give false reports, and missing
-rows make `class-check` print stub SQL for rows that exist, which
-`--emit-script` writes into a file that ships (`class-import`). Local is for
-applying and testing a script; production is for asking what is true, and this
-compares what the repo builds with production, by row name and by field value:
+The rule is `CLAUDE.md` → *Three things that fail late*. What it costs here:
+missing local rows make `class-check` print stub SQL for rows that exist, which
+`--emit-script` writes into a file that ships (`class-import`). This compares
+what the repo builds with production, by row name and by field value:
 
 ```bash
 node scripts/repo-vs-live.mjs

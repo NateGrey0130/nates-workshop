@@ -57,9 +57,7 @@
   Paste the pass lines. The merge gate is the FLAGLESS run - a `--section` run
   labels itself PARTIAL precisely so it cannot stand in for this.
 
-  Touched D1? Say which files are ALREADY APPLIED. Schema and data go to
-  production BEFORE the merge, so by review time merging them is a no-op and a
-  reviewer looking for the deploy step will not find one.
+  Touched D1? Say which files are ALREADY APPLIED (`ship-pr` -> The ordering rule).
 -->
 
 ```

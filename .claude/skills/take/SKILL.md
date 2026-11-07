@@ -1,6 +1,8 @@
 ---
 name: take
 description: Take a numbered audit finding the way audit-menu requires, in the order it requires - grep every menu and the memory directory for the finding's subject, run the audit-premise-auditor on it, and only then create the branch. Use when told "take F76", "/take BOOK-INGEST-AUDIT F76", or whenever a numbered finding is about to be implemented. Adds nothing new; it exists so the two steps that get skipped cannot be skipped.
+disable-model-invocation: true
+argument-hint: "<MENU> <ID>"
 ---
 
 # /take <MENU> <ID>
@@ -104,8 +106,8 @@ returns **verbatim** - the disagreements, the posture in the proposal's words,
 what still cites the finding, and how many premises it settled. *These premises
 hold* is a real and common result; say so plainly and move on.
 
-If the agent answers `Agent type 'audit-premise-auditor' not found`, the agents
-junction is missing on this machine - `SETUP.md` -> *Setting up a machine*.
+If the agent answers `Agent type 'audit-premise-auditor' not found`, the
+session was started outside the repo, or the agent file was written this turn.
 Run the audit by hand from `audit-menu` -> *Taking a finding is also AUDITING
 the finding*, and say that you did.
 

@@ -1,6 +1,6 @@
 ---
 name: test-suite
-description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the five suites and which three gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
+description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the four smoke suites that run as one job and the three checks that gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
 ---
 
 # Adding a check
@@ -29,15 +29,15 @@ the parser's output, not the parser.
 | `apps/character-creator/test/smoke.mjs` | the machinery: parser, dice, composition, schema, and what the repo says about itself | **`smoke`** |
 | `apps/filament-forge/test/smoke.mjs` | that app's README, its snapshot SQL, its sanitizers | **`smoke`** |
 | `apps/media-vault/test/smoke.mjs` | the localStorage merge planner, and that no endpoint can replace a library | **`smoke`** |
+| `apps/marvel-heroes/test/smoke.mjs` | the Marvel app's rules: its roll tables cover every roll, the NPC blocks add up, its endpoints read only the owner's rows, and no book prose is in a tracked file | **`smoke`** |
 | `scripts/menu-check.mjs` | every new claim about another file says where it was read | **`menus`** |
 | `apps/character-creator/test/regression.mjs` | real HTTP against real endpoints, on a D1 built from nothing | **`regression`** |
 | `apps/character-creator/test/play-flow.mjs` | the play loop in a browser | reporting only |
 | `apps/character-creator/test/ui-shots.mjs` | that seven pages load in a real headless Chrome at desktop and phone size without a console error, a sideways scroll or sticky chrome over half the screen; keeps a PNG of each | not run by CI; a report, exit 0 unless `--strict` |
 
-The three bold names are required status checks on `main`. **`.github/workflows/tests.yml` runs
-the first three under one job, so a job id is a check-run name: renaming a job
-leaves a required check that never reports and nothing can merge.** Do not rename
-one without editing the ruleset.
+The four smoke suites run as steps of one job, `smoke` (`.github/workflows/tests.yml`).
+
+The three bold names are required status checks on `main`; why a workflow's job id must not be renamed is a rule: `.claude/rules/workflows.md`.
 
 **Not every suite runs on every pull request** (since 2026-09-25). Each job
 first asks `node scripts/groups.mjs --affected HEAD^1 HEAD` which groups the
@@ -144,28 +144,18 @@ flag, for a structural reason rather than a fixable one.
 
 A red check names the rows **it reads**. Fixing those rows turns it green, but
 that says nothing about the rows the same cause wrote where no check looks.
-The OCR sweep in `apps/character-creator/test/regression.mjs` is the record.
-Until 2026-09-18 it read only super abilities, and only for page numbers,
-headings and junk. Commit `0d4bef06` widened it in two directions: three more
-tables, and a digit-cipher pattern. It found 46 spells, 1 psionic power and 2
-more super abilities (the comment at its `SELECT * FROM ${table}` loop). The
-defects were mostly level headings attached to the end of a spell, with 8
-spells in the cipher. None of those rows was red until someone widened what
-was read.
+The OCR sweep in `apps/character-creator/test/regression.mjs` is the record:
+widening what it read turned up dozens of defective rows that no check had
+shown red (`reference/why.md`).
 
 **The rule that follows from this lives in `CLAUDE.md`**, in the paragraph
-opening *When a check goes red*, and not here. Measured 2026-09-23
-(`SKILL-AUDIT` `F67`): six sessions fixing a red check had the rule in this
-section, and only one of them loaded this skill.
-- Of the four that had it **only** here, that one session was the only one to
-  act on it.
-- The two that also had it in `CLAUDE.md` both acted on it from there. Every session
-reads `CLAUDE.md`. This section keeps the reasoning behind the rule:
+opening *When a check goes red*, and not here, because every session reads
+`CLAUDE.md` and few load this skill (`SKILL-AUDIT` `F67`; the measurement is
+in `reference/why.md`). This section keeps the reasoning behind the rule:
 
 - **Grep a book's scripts by the name it prints, not the filenames by its
-  slug.** Filenames do not reliably carry the slug. All four of Mystic
-  Russia's spell imports are `zzzzzzzzzz-mr-*-spells.sql`, and a slug grep
-  finds none of them (measured 2026-09-23). The content grep over-includes,
+  slug.** Filenames do not reliably carry the slug (an example is in
+  `reference/why.md`). The content grep over-includes,
   which is the safe direction for a sweep.
 - **What the sweep above does not read.** A book usually feeds gear, classes
   and creatures as well as spells and psionics. The sweep reads only spells,
@@ -176,11 +166,9 @@ reads `CLAUDE.md`. This section keeps the reasoning behind the rule:
 
 `regression.mjs` and `play-flow.mjs` boot `wrangler pages dev` through
 `apps/character-creator/test/dev-server.mjs`, which exists because a fixed port
-is not safe here. On 2026-09-16 a run in one worktree left a `workerd`
-listening; a later run from another worktree spawned its own wrangler on the
-same port, and **its poll got a 200 from the foreign server.** It reported that
-tree's catalog counts as a regression in this one, with a block of Talent
-failures that read exactly like a real break.
+is not safe here: a server another worktree left running can answer this run's
+poll with a 200, and its catalog then reads as a regression in this tree
+(the incident is in `reference/why.md`).
 
 Nothing failed to bind, and that is the part worth knowing: against a `workerd`
 holder, the second wrangler's `workerd` binds the same port too, both show
@@ -248,11 +236,11 @@ adopted without the plugin (`SKILL-AUDIT` `F64`):
 2. **RED: run it BEFORE editing the skill.** Use two fresh subagents with the
    same prompt. Make it planning only: they may read anything and run nothing
    that writes, and they reply with their steps and the first change they would
-   make. **Do this before the edit, because the junction serves the main
-   checkout:** once a skill file there is edited, that edit is what every
-   subagent loads, including ones spawned in the same turn. It is also what
-   every other session on the machine loads.
-   **In a worktree the junction serves nothing you edit**, so GREEN would
+   make. **Do this before the edit, because every session loads the skills
+   from the main checkout:** once a skill file there is edited, that edit is
+   what every subagent loads, including ones spawned in the same turn. It is
+   also what every other session of the repo loads.
+   **In a worktree no session loads what you edit**, so GREEN would
    load the old skill and match RED. Step 4 would then read that as "the
    skill adds nothing", and the verdict would be false. Run this from the
    main checkout.

@@ -110,7 +110,8 @@ against a port that IS listening is the tell.**
 
 **Other wranglers may be running, and a blanket kill takes them too.**
 `regression.mjs` and `play-flow.mjs` boot their own on OS-assigned ports, and
-8788 may be another worktree's server. So list first, from PowerShell:
+`verify-ui` §0 says why the one on 8788 is probably not yours. So list first,
+from PowerShell:
 
 ```powershell
 Get-CimInstance Win32_Process -Filter "Name='node.exe' OR Name='workerd.exe'" |

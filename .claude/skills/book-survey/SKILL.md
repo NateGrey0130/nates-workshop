@@ -237,9 +237,8 @@ node scripts/catalog-diff.mjs --remote --table psionic_powers \
      --entries book-entries.json --compare category,isp
 ```
 
-**`--remote` when the answer will be spent against.** `--local` accumulates
-rows and is not a mirror of production; a local run prints production's count
-beside its own. The matching rules live in `scripts/catalog-match-lib.mjs`.
+**`--remote` when the answer will be spent against** (`CLAUDE.md` → *Three
+things that fail late*); a local run prints production's count beside its own. The matching rules live in `scripts/catalog-match-lib.mjs`.
 
 - **A dominant single substitution is a vocabulary difference, not N
   corrections** (the book's "Super-Psionics" is the catalog's "Super").
@@ -397,7 +396,7 @@ on another's branch with `git status` looking clean.
 
 **Data ships with its book; UNASKED-FOR code waits** (next section). Classes,
 skills, spells, psionics, gear and `books.json` entries go in with the book,
-applied `--remote` before the merge, per `ship-pr`.
+applied before the merge (`ship-pr` → *The ordering rule*).
 
 ### What "no code from a book" forbids: three tiers, and this is the copy that governs
 

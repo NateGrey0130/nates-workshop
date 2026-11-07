@@ -1,7 +1,7 @@
 # CLAUDE.md — nates-workshop
 
 > Pinned by `apps/character-creator/test/checks/documented-counts.mjs` (the
-> skill table, the count in words, "load from anywhere") and
+> skill table, the count in words) and
 > `instruction-paths.mjs` beside it (every absolute path resolves). Rules only.
 > History lives in git, PR bodies and the audit menus.
 
@@ -66,13 +66,12 @@ The group must match `groups.mjs --affected`. Any `shared` path forces
 `F<n>`) are **claimed at merge**. Re-read `origin/main` for the highest number
 immediately before the merge, never earlier.
 
-## Fifteen skills, and they load from anywhere on this machine
+## Fourteen skills
 
-Each one lives in `.claude/skills/` and is junction-linked into
-`~/.claude/skills` (`SETUP.md` → junction block). A new skill needs its link in
-the same PR, and a pressure test before it merges (`test-suite` → *A skill is
-a check too*). Agents are in `.claude/agents/`, and the whole directory is
-linked. An agent written mid-session cannot be spawned until the next turn.
+Each one lives in `.claude/skills/`. A new skill needs a pressure test before
+it merges (`test-suite` → *A skill is a check too*). Agents are in
+`.claude/agents/`. An agent written mid-session cannot be spawned until the
+next turn.
 
 | skill | when |
 |---|---|
@@ -88,7 +87,6 @@ linked. An agent written mid-session cannot be spawned until the next turn.
 | `test-suite` | adding or changing a check, pinning a count, reading a failure |
 | `windows-shell` | before an in-place edit, an inline script with backslashes, or a query you will act on |
 | `worktree` | a second concurrent session, and **before `git worktree remove`** |
-| `media-vault` | `apps/media-vault/`, `functions/api/media-vault/`, `media_items`, `media_shares` |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
 | `plan-rows` | writing briefs for a multi-PR plan, or driving the `pr-worker` chain through one |
 

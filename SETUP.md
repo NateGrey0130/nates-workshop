@@ -1,9 +1,9 @@
 # Nate's Workshop — Deployment Reference
 
 > **Pinned sentences, not a pinned file.** Under
-> `apps/character-creator/test/checks/`, `documented-counts.mjs` (the junction
-> loop), `environment.mjs` (the endpoint count) and `server-plumbing.mjs` (the
-> metering sentence) each read one passage here, as does
+> `apps/character-creator/test/checks/`, `environment.mjs` (the endpoint
+> count) and `server-plumbing.mjs` (the metering sentence) each read one
+> passage here, as does
 > `apps/media-vault/test/smoke.mjs` (the candidate count), and
 > `instruction-paths.mjs` resolves every absolute path. Everything else is
 > prose: ask the thing it describes before acting on it. History is in
@@ -30,7 +30,7 @@ A 302 is the wall working, not the site down. To ask production a question,
 query D1 (`scripts/q.mjs --remote`) rather than fetching a page. Confirming a
 deploy is the one thing that needs the page (ask production, in a logged-in
 browser, for a string the change added; D1 cannot answer that, because it moved
-before the merge).
+before the merge: `ship-pr` → *The ordering rule*).
 
 ## Project Structure
 
@@ -84,11 +84,8 @@ repo root is published. `main` refuses direct pushes, and a merge needs the
 `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348` is the source of
 truth). `play-flow` and `deploy-alarm` report only.
 
-Schema and data are applied **before** the merge that needs them:
-
-```bash
-node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
-```
+Schema and data are applied **before** the merge that needs them (`ship-pr` →
+*The ordering rule*).
 
 `apps/character-creator/docs/operations.md` has the migration convention and
 the per-migration table. Two things are outside *merge = deploy*: the
@@ -281,25 +278,11 @@ auto-created Access policy. A friend who needs a preview is added there too.
 
 ## Setting up a machine
 
-**The skills and the agents need a junction, once per machine**, because a
-session started outside the repo (the book work runs from
-`C:\Users\natha\Projects\workshop`) would register neither. Junctions need no
-admin rights and follow repo edits:
-
-```powershell
-foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','marvel-book','media-vault','plan-rows','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
-  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
-}
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
-```
-
-- **A new skill needs its own line here, in the PR that adds it.** Nothing
-  notices the gap. A new agent needs nothing, because the whole directory is
-  linked.
-- The agents link is a directory because an agent is a file, and a per-file
-  symlink needs administrator rights here. So `~/.claude/agents` **is** the
-  repo's directory and can hold nothing else.
-- An agent file written mid-session cannot be spawned until the next turn.
+**The skills and the agents need nothing per machine.** A session of the repo,
+or of a worktree of it, reads `.claude/skills/` and `.claude/agents/` from the
+main checkout. A session started anywhere else sees neither, and none has been
+started anywhere else since 2026-10-04. An agent file written mid-session
+cannot be spawned until the next turn.
 
 **Session memory is one store behind junctions.** The real store is
 `C:\Users\natha\.claude\projects\C--Users-natha-Projects-workshop\memory`; the
@@ -317,33 +300,33 @@ in one starts with no memory. The exception is `scripts/book-worktree.mjs`,
 which links it. See the `worktree` skill.
 
 **The answer is a pointer at the user level.** A repo `CLAUDE.md` loads only
-inside the repo, so `~/.claude/CLAUDE.md` holds a few lines pointing at it:
-where the repo is, read its `CLAUDE.md` when the work touches it, and where the
-working directory is. It is neither a copy nor a junction. It is checked in
-nowhere, so **edit it by hand when anything it names moves**.
-`machine-instructions.mjs` (local smoke only) holds it to naming no skill or
-agent and stating no count.
+inside the repo, so `~/.claude/CLAUDE.md` holds two lines pointing at it: where
+the repo is, and to read its `CLAUDE.md` first when the work touches it. It is
+not a copy. It is checked in nowhere and no check reads it, so **edit it by
+hand if the repo moves**.
 
-**The Bash guard hook is registered twice, on purpose.** Once in the repo's
-`.claude/settings.json` and once at user level in
-`C:\Users\natha\.claude\settings.json`, with an absolute path to
-`.claude/hooks/guard-bash.sh`. A fresh machine must add the user-level
-registration by hand; `hook-registration.mjs` checks it locally.
+**Every hook is registered in the repo's `.claude/settings.json`**, each as
+`"$CLAUDE_PROJECT_DIR/.claude/hooks/<script>"`, so a fresh machine needs no
+hook registration of its own, and `hook-registration.mjs` checks them in CI as
+well as locally. They fire in a session of the repo or of a worktree of it, and
+**not in a session started anywhere else**. `C:\Users\natha\.claude\settings.json`
+should carry none of them: a copy left there fires that hook twice (until
+2026-11-06 it carried the guard a second time and the three budget hooks alone).
 
-**Two more hooks are registered at user level only**, each as
-`node "<absolute path>"`: `.claude/hooks/session-budget.mjs` on
-`UserPromptSubmit` and on `PostToolUse` for `Bash`, which warns about a large
-context or a cold cache and never blocks, and `.claude/hooks/agent-slice.mjs`
-on `PreToolUse` for `Agent|Task`, which refuses a `book-reconcile` brief with
-no `Slice:` line of 15 pages or fewer. Neither guards a tree, so a repo
-registration would only fire each one twice. The same check holds both.
-
-**A third is registered the same way**: `.claude/hooks/agent-run-cap.mjs` on
-`PreToolUse` with matcher `*`. It acts only on a subagent's calls. At 200k of
-context it tells the run to return what it has and name what is left, and from
-250k it refuses every tool call but the hand-back. It imports
-`session-budget.mjs` from beside itself, so the two move together. The same
-check holds it.
+- `.claude/hooks/guard-bash.sh` on `PreToolUse` for `Bash`, with
+  `"onFailure": "block"`, so a guard that cannot start blocks the command
+  rather than letting it run (Claude Code 2.1.295 or later).
+- `.claude/hooks/skill-gate.mjs` beside it.
+- `.claude/hooks/session-budget.mjs` on `UserPromptSubmit` and on
+  `PostToolUse` for `Bash`, which warns about a large context or a cold cache
+  and never blocks.
+- `.claude/hooks/agent-slice.mjs` on `PreToolUse` for `Agent|Task`, which
+  refuses a `book-reconcile` brief with no `Slice:` line of 15 pages or fewer.
+- `.claude/hooks/agent-run-cap.mjs` on `PreToolUse` with matcher `*`. It acts
+  only on a subagent's calls. At 200k of context it tells the run to return
+  what it has and name what is left, and from 250k it refuses every tool call
+  but the hand-back. It imports `session-budget.mjs` from beside itself, so the
+  two move together.
 
 **`launch.json` exists twice.** The tracked `.claude/launch.json` is
 machine-independent. The working directory's untracked copy has every command
@@ -436,7 +419,7 @@ the main checkout.
 `C:\Users\natha\Backups\nates-workshop\<YYYY-MM-DD>\<db>\<table>.json`, keeps
 the newest eight dated folders, and writes `last-run.json` in the root. A run
 with any failure stays in `<YYYY-MM-DD>.partial` and deletes nothing.
-`docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
+`apps/character-creator/docs/operations.md` → *Recovery* says what a dump covers that Time Travel does
 not.
 
 **The same run mirrors the R2 bucket** `nates-workshop-media` into
