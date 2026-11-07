@@ -799,7 +799,7 @@ button. A pick-one group needs the bands to cover 01-00.
 - A later pick's dice and pool bonuses are rolled and stored when it is spent.
   NOT handled for a later pick: `mdc_from_hp_sdc`, `attribute_dice`, a pool
   base (`mdc_base`, `sdc_base`, `hit_points_base`), and the
-  I.S.P. base of a `psionics` block. `docs/leveling.md` has the whole account.
+  I.S.P. base of a `psionics` block. `apps/character-creator/docs/leveling.md` has the whole account.
 
 **An ability whose text changes by level carries `progression`** (F117),
 display only:
@@ -913,7 +913,7 @@ What a variant still **cannot** do: take a parent skill away, or override
 `xp_table`, `natural_abilities`, `special_abilities`, `magic` or `psionics`.
 Those stay shared, and a variant naming any of them is warned about and
 ignored. `VARIANT_OVERRIDES` in `js/parser.js` is the list, and
-`docs/leveling.md` → *Classes that come in stages* documents every key on it;
+`apps/character-creator/docs/leveling.md` → *Classes that come in stages* documents every key on it;
 read that rather than a copy here (`BOOK-INGEST-AUDIT.md` F31).
 
 **A variant is not a second body.** Two forms a character changes between in play
