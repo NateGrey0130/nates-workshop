@@ -362,8 +362,14 @@ function skillGateChecks() {
     const noTree = trees.map((c) => gate(c, bare));
     check('git worktree add, group-worktree.mjs and book-worktree.mjs each need worktree',
       noTree.every((r) => refusedFor(r, 'worktree')), JSON.stringify(noTree));
-    const treeOk = trees.map((c) => gate(c, withSkill('worktree')));
-    check('and pass once it is loaded', treeOk.every((r) => r.code === 0), JSON.stringify(treeOk));
+    // The removal is the hazard the skill exists for: on 2026-09-19 a remove
+    // followed a junction and emptied the main checkout's .cache/books.
+    const remove = gate('git worktree remove ../t', bare);
+    check('git worktree remove needs worktree too: the removal is the hazard the skill exists for',
+      refusedFor(remove, 'worktree'), JSON.stringify(remove));
+    const treeOk = [...trees, 'git worktree remove ../t', 'git -C /c/x worktree remove --force ../t']
+      .map((c) => gate(c, withSkill('worktree')));
+    check('and pass once it is loaded, git worktree remove included', treeOk.every((r) => r.code === 0), JSON.stringify(treeOk));
 
     const agent = gate(create, join(dir, 'no-such-file.jsonl'), { agent_id: 'a1', agent_type: 'pr-worker' });
     check('a subagent envelope passes whatever the transcript holds (preloaded skills leave no Skill call)',
