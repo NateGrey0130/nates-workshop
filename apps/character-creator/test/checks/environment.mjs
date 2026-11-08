@@ -27,7 +27,7 @@ import { globalWranglerJs, groupDatabases, localD1Args, runWrangler } from '../.
 // 'The checks modules declare the sections they run', since 2026-09-17).
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
-  'Skills stay true', 'Agents stay true', 'Book surveys', 'Migration state',
+  'Skills stay true', 'Agents stay true', 'Rules stay true', 'Book surveys', 'Migration state',
   'What Pages will compile'];
 
 export function run() {
@@ -836,6 +836,96 @@ section('Agents stay true');
     nameMismatch.join('; '));
   check('and every tools line is a comma-separated list of tool names',
     badTools.length === 0, badTools.join('; '));
+
+  // maxTurns is a count that was measured, not chosen. #2135 set the
+  // pr-worker's to the p95 of tool calls per run that scripts/pr-worker-cost.mjs
+  // read off 489 runs (#2134): 150, rounded up to the next ten, floor 100.
+  // Nothing read it back until this check, so dropping the line or editing the
+  // number failed nothing. Pinned to the number, like the skill count in
+  // CLAUDE.md: a change to it comes with a re-measurement, and edits this
+  // constant in the same PR.
+  const PR_WORKER_MAX_TURNS = 150;
+  const prWorker = agentFiles.includes('pr-worker.md')
+    ? readFileSync(join(agentsDir, 'pr-worker.md'), 'utf8') : '';
+  const prWorkerFront = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(prWorker)?.[1] ?? '';
+  const maxTurns = /^maxTurns:[ \t]*(\S.*?)[ \t]*$/m.exec(prWorkerFront)?.[1] ?? null;
+  check(`pr-worker declares maxTurns: ${PR_WORKER_MAX_TURNS}, the p95 tool calls per run #2134 measured`,
+    maxTurns === String(PR_WORKER_MAX_TURNS),
+    maxTurns === null ? 'no maxTurns line in .claude/agents/pr-worker.md frontmatter' : `maxTurns is ${maxTurns}`);
+}
+
+section('Rules stay true');
+
+// A path-scoped rule (.claude/rules/*.md) loads when a session reads a file one
+// of its `paths:` globs matches, and nothing else loads it. So a glob that
+// matches no tracked file is a rule nobody will read, and it fails nothing: the
+// file parses, the harness registers it, and it waits for a path that does not
+// exist. Five rules were moved out of skills on 2026-11-06 (#2143-#2147), and
+// each said in its header that nothing pinned its frontmatter.
+//
+// Each glob is matched against `git ls-files`, not the working tree, so an
+// untracked local file cannot satisfy it. The matcher reads the three tokens
+// the rules use (`**`, `*`, `?`) and reports any other glob syntax rather than
+// guessing, because a glob this check cannot read is one it would otherwise
+// pass vacuously.
+{
+  const rulesDir = join(repoRoot, '.claude', 'rules');
+  const ruleFiles = existsSync(rulesDir)
+    ? readdirSync(rulesDir).filter((f) => f.endsWith('.md'))
+    : [];
+  check('rule files are present to check', ruleFiles.length > 0,
+    'no .claude/rules/*.md - every check below would pass vacuously');
+
+  const ls = spawnSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' });
+  const tracked = (ls.stdout ?? '').split('\0').filter(Boolean);
+  check('git ls-files answers from the repo root', ls.status === 0 && tracked.length > 100,
+    `exit ${ls.status}, ${tracked.length} paths`);
+
+  const globToRegex = (glob) => {
+    let re = '';
+    for (let i = 0; i < glob.length; i++) {
+      const c = glob[i];
+      if (c === '*') {
+        if (glob[i + 1] === '*') {
+          // `**/` eats whole segments, zero or more; a trailing `**` eats the rest.
+          i++;
+          if (glob[i + 1] === '/') { i++; re += '(?:[^/]+/)*'; } else re += '.*';
+        } else re += '[^/]*';
+      } else if (c === '?') re += '[^/]';
+      else if ('{}[]!'.includes(c)) return null;   // syntax this matcher does not read
+      else re += c.replace(/[.+^$()|\\]/g, '\\$&');
+    }
+    return new RegExp(`^${re}$`);
+  };
+
+  const noPaths = [];
+  const unreadable = [];
+  const matchesNothing = [];
+  for (const file of ruleFiles) {
+    const text = readFileSync(join(rulesDir, file), 'utf8');
+    const block = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(text);
+    const front = (block?.[1] ?? '').replace(/\r/g, '');
+    // `paths:` as a YAML list (one `- "glob"` per line) or inline (`paths: ["a", "b"]`).
+    const inline = /^paths:[ \t]*\[([^\]]*)\]/m.exec(front);
+    const listed = /^paths:[ \t]*\n((?:[ \t]+-[ \t]*.*\n?)+)/m.exec(front);
+    const globs = inline
+      ? [...inline[1].matchAll(/["']([^"']+)["']/g)].map((m) => m[1])
+      : listed
+        ? [...listed[1].matchAll(/^[ \t]+-[ \t]*["']?([^"'\n]+?)["']?[ \t]*$/gm)].map((m) => m[1])
+        : [];
+    if (!block || globs.length === 0) { noPaths.push(file); continue; }
+    for (const g of globs) {
+      const re = globToRegex(g);
+      if (!re) { unreadable.push(`${file} -> ${g}`); continue; }
+      if (!tracked.some((p) => re.test(p))) matchesNothing.push(`${file} -> ${g}`);
+    }
+  }
+  check('every rule opens with frontmatter naming at least one paths: glob', noPaths.length === 0,
+    noPaths.join(', ') + ' - a rule without paths: is not path-scoped');
+  check('every paths: glob uses only the syntax this check reads (** * ?)', unreadable.length === 0,
+    unreadable.join('; '));
+  check('every paths: glob in .claude/rules matches at least one tracked file', matchesNothing.length === 0,
+    matchesNothing.join('; ') + ' - a rule no file can load');
 }
 
 section('Book surveys');
