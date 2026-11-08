@@ -58,6 +58,7 @@
         "BOOK-INGEST-QUEUE.md",
         ".claude/skills/book-survey/",
         ".claude/skills/class-import/",
+        ".claude/rules/class-data-scripts.md",
         ".claude/agents/book-extract-worker.md",
         ".claude/agents/book-reconcile.md",
         "docs/prompts/BOOK-INGEST-PROMPT.md",
