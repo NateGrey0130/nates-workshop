@@ -90,7 +90,8 @@
         "db/migrations/marvel/",
         "db/schema-marvel.sql",
         "scripts/msh-extract.py",
-        "scripts/msh/"
+        "scripts/msh/",
+        ".claude/rules/marvel-pipeline.md"
       ],
       "tables": [
         "msh_power_text", "msh_heroes", "msh_book_text",
