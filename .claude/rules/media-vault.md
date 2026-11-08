@@ -2,6 +2,7 @@
 paths:
   - "apps/media-vault/**"
   - "functions/api/media-vault/**"
+  - "db/migrations/tools/**"
 ---
 
 # MediaVault
@@ -22,6 +23,13 @@ mistakes are quiet.
 
 **Everything here is one invariant.** A media library is private until its owner
 says otherwise. A character is shared with a table; this is not.
+
+This rule also loads for a migration under `db/migrations/tools/`, because
+`media_items` and `media_shares` live in the tools database (`DB_TOOLS`), which
+FilamentForge shares. A migration that touches only `ff_` tables can skip the
+rest of this page; one that touches a media table is bound by the invariant
+above and the two case conventions below, and `.claude/rules/d1-schema.md`
+says where the migration itself has to land.
 
 ## The invariant, and what the checks actually prove
 
