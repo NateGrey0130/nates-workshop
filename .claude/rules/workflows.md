@@ -19,11 +19,14 @@ of the `test-suite` skill (2026-11-06), which still owns which suite a check
 belongs in and which of them stop a merge.
 
 `smoke`, `menus` and `regression` are required status checks on `main`, set by
-the ruleset `22209348` (ask it: `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`),
-and "the first three" below are the smoke suites of the character creator,
-FilamentForge and MediaVault, which report as the one check `smoke`.
+the ruleset `22209348` (ask it: `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`).
+The check `smoke` is one job whose steps are the four apps' smoke suites - the
+character creator's always, FilamentForge's and MediaVault's for a tools or
+shared change, Marvel Heroes' for a marvel or shared change - and The Table's
+room Worker test for a Palladium, marvel or shared change;
+`node scripts/groups.mjs --affected` decides (read at `tests.yml`, 2026-11-07).
 
 **`.github/workflows/tests.yml` runs
-the first three under one job, so a job id is a check-run name: renaming a job
+those suites under one job, so a job id is a check-run name: renaming a job
 leaves a required check that never reports and nothing can merge.** Do not rename
 one without editing the ruleset.
