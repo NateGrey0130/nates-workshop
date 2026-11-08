@@ -5,7 +5,8 @@
 //
 //   gh pr create                                  needs ship-pr
 //   node scripts/d1-apply.mjs ... --remote        needs ship-pr or schema-change
-//   git worktree add, node scripts/group-worktree.mjs,
+//   git worktree add, git worktree remove,
+//   node scripts/group-worktree.mjs,
 //   node scripts/book-worktree.mjs                needs worktree
 //
 // Why it exists. The setup retrospective of 2026-11-03 measured main-thread
@@ -59,7 +60,10 @@ export const GATES = [
   {
     what: 'a worktree command',
     skills: ['worktree'],
-    test: (c) => new RegExp(`${AT}git\\s+(?:-C\\s+\\S+\\s+)?worktree\\s+add\\b`).test(c)
+    // `remove` since 2026-11-08 (#2138 gated `add` only, by its brief): the
+    // removal is what emptied the main checkout's .cache/books on 2026-09-19.
+    // `git worktree list` stays ungated.
+    test: (c) => new RegExp(`${AT}git\\s+(?:-C\\s+\\S+\\s+)?worktree\\s+(?:add|remove)\\b`).test(c)
       || SCRIPT('group-worktree').test(c) || SCRIPT('book-worktree').test(c),
   },
 ];
