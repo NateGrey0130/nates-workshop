@@ -3681,6 +3681,11 @@ function pendingPowersPanel() {
 
 // The selects for one banked class-ability grant. The option's own description
 // is its tooltip, read off the class the sheet already holds.
+//
+// A list named for percentile bands is a table the book rolls on, so each owed
+// row also gets the wizard's Roll d100 (BOOK-INGEST-AUDIT F145). The bands are
+// read off the whole printed list, held names included: a table with a hole in
+// it is no table (abilityRollBands), and a held result is reported, not hidden.
 function abilityPickRows(g) {
   const heldNames = new Set((C.data.abilities || [])
     .map((a) => String(a?.name ?? a ?? '').trim().toLowerCase()).filter(Boolean));
@@ -3699,7 +3704,38 @@ function abilityPickRows(g) {
           ${pool.map((n) => `<option value="${escHtml(n)}" title="${escHtml(defs.get(n.trim().toLowerCase())?.description || '')}">${escHtml(n)}</option>`).join('')}
         </select>
         <span class="muted small">a class ability, from a list of ${(g.from || []).length}</span>
+        ${bankedAbilityBands(g) ? `<button type="button" class="btn btn-sm" onclick="rollBankedAbility('claim-power-ability-${g.granted_at_level}-${g.slot ?? 0}-${i}')">🎲 Roll d100</button>
+        <span class="small" id="roll-claim-power-ability-${g.granted_at_level}-${g.slot ?? 0}-${i}" aria-live="polite"></span>` : ''}
       </div>`).join('');
+}
+
+// One roll is one pick, so the grant's list is asked as a choose-1 group,
+// whatever its count: each owed row rolls on its own.
+function bankedAbilityBands(g) {
+  const from = Array.isArray(g?.from) ? g.from.map(String) : [];
+  return globalThis.abilityRoll?.abilityRollBands({ choose: 1, from }) || null;
+}
+
+// Roll d100 for one owed row and set its select to what the dice land on. Saves
+// nothing: the pick is still made with "Learn these". Where the book prints two
+// results for the band, or the result is already held, the select is cleared
+// and the choice left to the player, as the wizard's rollAbilityGroup does.
+function rollBankedAbility(selectId) {
+  const sel = document.getElementById(selectId);
+  const out = document.getElementById('roll-' + selectId);
+  if (!sel || !out || !globalThis.diceRoll) return;
+  const g = (C.pendingPowers || []).find((x) => x.kind === 'ability'
+    && x.granted_at_level === +sel.dataset.level && (x.slot ?? 0) === +(sel.dataset.slot || 0));
+  const bands = bankedAbilityBands(g);
+  if (!bands) return;
+  const roll = globalThis.diceRoll.evalDice('1d100');
+  const names = globalThis.abilityRoll.abilityRollMatches(bands, roll);
+  const offered = new Set([...sel.options].map((o) => o.value).filter(Boolean));
+  const takes = names.length === 1 && offered.has(names[0]);
+  sel.value = takes ? names[0] : '';
+  out.innerHTML = ` Rolled <b>${roll}</b>: ${names.length === 1
+    ? escHtml(names[0]) + (takes ? '' : ' &mdash; already held, roll again or choose')
+    : `the book prints ${names.length} results for this band &mdash; choose between ${names.map(escHtml).join(' and ')}`}`;
 }
 
 async function claimPowers() {
