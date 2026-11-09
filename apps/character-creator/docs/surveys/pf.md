@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 113, psionic_powers 2, creatures 36
+**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 9, skill_system_bases 1, spells 113, psionic_powers 2, creatures 36
 
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
@@ -117,6 +117,7 @@ None. This book has no open import.
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 1 classes of this book (`summoner`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c3-ward-symbols` | **The ward symbols as a catalog, and the Diabolist wired to them** (`~165`, `~166`, close-out package C3; `BOOK-INGEST-AUDIT` F123, Nate's ruling 9). `~165`: 34 `spells` rows in tradition `ward`, level 0, covering the 52 symbols of the printed 127 plate (4 alarms, 22 conditions, 6 major wards; the seven colors and thirteen numerals one row per group), each named for its kind; P.P.E. from the general rule of printed 120 and 122 (1, 5 for power, 20 for permanence), components and power words in each description. Where the book contradicts itself (the trigger alarm's range, the power ward's components, inflict with area affect) the row states both sides. `~166`: the `diabolist` names all 34 in a magic block, because no page gives a first-level count or a gain by level (printed 117, 119, 120); Use Magic Circles is corrected (it can use an active circle at 30% +5%, two tries, and cannot create or activate one), Recognize Wards, Runes & Circles takes printed 119's 22% +4% in place of the Rifts catalog base, and the Lore's ward that lasts a year lasts centuries. Read off renders of printed 117-133 and checked row by row by `book-reconcile`: no wrong figure. Spells 79 to 113. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-closeout-claim-sweep` | **The close-out's claim sweep** (`~170`, `~171`): 1 class of this book corrected (`merchant`). `claim-capability-verifier` judged 988 limitation claims across the 218 classes the close-out touched; these are sentences that were false while the class's data was right, or that cited a finding for a gap it did not cover. No figure read from a book moves. No rows added. Applied `--remote` before the merge. |
+| 2026-11-09 | `pal/data/book-ingest-audit-f138-summoner-circles` | **The Summoner's Deciphering Circles skill and circle strength rule** (`~271`, `~272`, BOOK-INGEST-AUDIT F138 residue): a `Deciphering Circles` skills row (Technical, 20% +4%, printed 135), granted to `summoner` as a fixed O.C.C. skill, and the circle strength rule (base 16, +1 at levels seven and fourteen, printed 136) as a special ability. Skills citing this book rise by one. Applied `--remote` before the merge. |
 
 ### What remains
 
