@@ -6357,6 +6357,26 @@ up on production the same day: `ninja-juicer`, `ultra-crazy` and `ninja-crazy`,
 offered before, are refused now. `trimadore`, `kremin-cyborg` and `faerie-bot`
 remain; the finding stays open.
 
+**Partly taken, 2026-11-09 (branch `pal/docs/book-ingest-audit-f141-trimadore`).**
+Under the same authorisation and posture, `trimadore` does NOT convert: both
+books print an R.C.C., and the census above sorted it with the shape-changed
+four by mistake. D-Bees printed 207-208 (OCR text cache p208-p209, read
+2026-11-09) heads a Trimadore Mechanic R.C.C. with its own R.C.C. skills, five
+R.C.C. Related Skills plus two at levels 3, 6, 9 and 12, four secondary skills
+plus one at 4, 8 and 12, Standard Equipment for the Trimadore Mechanic and
+2D6x1,000 credits, and says the Mechanic uses the Operator's experience table.
+Its Available O.C.C.s line is optional and an alternative ("Instead of
+selecting the Trimadore Mechanic"), with the O.C.C.'s table, equipment and
+money then governing. Coalition War Campaign printed 208-209 (cache p209-p210,
+read the same day) prints the same R.C.C. with the same optional O.C.C. line.
+That is the shape production's class carries (`--remote` 2026-11-09:
+`xp_table` the Operator ladder, its own skill program, `equipment_starting`,
+`starting_money` 2d6x1000, an `occ_restrictions` only-list of the optional
+O.C.C.s, and a first restriction saying the two are alternatives), so no data
+script and no class edit; the Demolitions and Trap entry stored under F138
+stays as it is. The shape-changed classes the census names are three, not
+four. `kremin-cyborg` and `faerie-bot` remain; the finding stays open.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
