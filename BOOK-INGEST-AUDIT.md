@@ -6290,6 +6290,19 @@ the special-equipment pick for a character who takes another package.
 
 **Two of those granted, 2026-10-20 (branch `pal/data/book-ingest-audit-f140-gloves-cape-lore`), by Nate's ruling of 2026-10-19:** `war-knight` now starts with `cape-or-cloak-long` and `gloves` (printed 93, read off a 150 dpi render of cache p094), and `enlightened-demon`'s "Lore: Choose any two" pick (printed 100, cache p101 render) now lists `Lore: Sea Creatures`; production's markdown was read with `q.mjs --remote` before the change, and every other item left for Nate above stays left. Data only, in `~239-book-ingest-audit-f140-gloves-cape-lore.sql`, applied `--remote` before the merge.
 
+**Residue taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f140-leftovers`):** the items left for Nate above, decided on his authorisation of 2026-11-09 to take the recommendations on every item of the 2026-10-03 retrospective; each ruling below is the plan driver's reading taken on that authorisation. Each class's markdown was read `--remote` on 2026-11-09 and each page off a 110 dpi render. Posture: data only.
+
+- `gypsy-seer` and `gypsy-gifted`: the two `scarf` granted to each are removed, and each class says "no Rifts row" for its bandanna and scarf (Triax printed 184 and 185 print one of each; `gear.scarf` is tagged `palladium-fantasy` and the two bandanna rows `heroes-unlimited` and `nightbane`, `q.mjs --remote` 2026-11-09), by the 2026-10-12 ruling under F139.
+- `pneuma-biform-dolphin`: `mdc_base` and `ppe_base` now carry printed 52's P.E. term and per-level gain (`P.E. + 2d6x10, +2d6 per level`, `P.E. + 3d6x10, +3d6 per level`), the shape `horune-pirate` stores; `poolFormulaBounds` gave 29-129 M.D.C. at P.E. 9 and 44-144 at P.E. 24 where the stored base gave 20-120 at both (2026-11-09). The restriction that carried the gains is gone with them.
+- `pneuma-biform-dolphin`'s combat form stays prose and is not a `second_form`, which would be the first outside the Nightbane.
+- `anti-monster`: the armour choice now offers the nine `rifts` cyborg armour rows after its four medium and heavy suits (South America printed 37: "any suit of cyborg armor"); its note says the catalog's Heavy Infantry row is Japan's 240 M.D.C. suit and no row holds the 420 M.D.C. one the page names.
+- `war-knight`'s Geomancy & Ley Lines lore stays ungranted: the near row, `Lore: Geomancy or Lines of Power`, is tagged `nightbane`, so the same ruling applies. Production's one `rifts` geomancy row, `Lore: Feng Shui/Geomancy` (`q.mjs --remote` 2026-11-09), is China's feng shui lore and is not offered in its place (a reading, not measured).
+- `enlightened-demon`'s seven 5th-level styles stay unsold; `hand_to_hand: { costs: {} }` stands, since a condition shown and not enforced would mislead.
+- `phreaker-military-grunt`'s Tanker keeps `hit_points_base: "P.E. + 1d6 per level"` beside its option's `mdc_base`, as F128's rulings have an option's base do.
+- `bounty-hunter`'s robot horse stays in the special-equipment pick as stored on 2026-10-16.
+
+The War-Knight's Master psionic variant is not taken here. One data script, `~269-book-ingest-audit-f140-leftovers.sql`, written by `scripts/class-fix-sql.mjs --remote`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
