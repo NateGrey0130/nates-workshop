@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the Palladium Character Conversions section is inventoried and all four batches are in: the nine races the Palladium Fantasy catalog already holds, the seven new humanoids, the eight giants, and the three race occupations with Hand to Hand: Skudasa and the Chant of Dreaming. (2026-09-27)
 
-**Rows citing this book:** classes 37, skills 1, spells 1, creatures 76
+**Rows citing this book:** classes 37, skills 1, spells 1, creatures 75
 
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,

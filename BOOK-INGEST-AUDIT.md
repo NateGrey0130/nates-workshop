@@ -6648,6 +6648,30 @@ unchanged, and the row keeps its shape (`F141`). Before the apply it cited
 Conversion Book One on production (`q.mjs --remote`, 2026-11-09). Posture as
 proposed: data only. The finding stays open for `cyber-horsemen-of-ixion`.
 
+**Taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f143-cyber-horsemen`), the
+finding's last row: nothing of it is held any more, and the finding is closed.**
+The Conversion Book One remainder, part 2 of 2:
+`~264-book-ingest-audit-f143-cyber-horsemen.sql` moves the `creatures` row
+`cyber-horsemen-of-ixion` to D-Bees printed 51-54, the class's own range,
+with Conversion Book One's replaced figures (printed 138-139) kept in its
+`description`. Every attribute roll, S.D.C. 40, P.P.E. 3D6, Horror Factor 12,
+size, weight and habitat are the same in both books and do not move. Hit
+Points go from P.E. +1D6 to P.E. x2 +1D6 per level, the life span from 150
+years (some to 220) to 6D6+140, the alignment takes D-Bees' percentages, and
+the M.D.C. by location gains hands, arms, head and the upper bionic body,
+front legs going from 100 to 110 and the upper body armor from 130 to 90
+additional. Psionics go from standard to none and magic from by O.C.C. to
+none but items and Lore. `combat` keeps +3 initiative, +1 parry, +1 disarm,
++3 pull punch and +1 roll; its +3 dodge is "when running" in both books and
+goes to `bonuses_note` as conditional, as `~263` read the Centaur. By the
+line rule the skills drop the two languages of choice and Spear and gain
+Dowsing, and the allies drop Reid's Rangers and gain other Centaurs and
+Psi-Ponies. The six `stat_attacks` rows are unchanged: D-Bees prints no
+per-attack damage, only "as per bionic P.S." with +1D6 M.D. from rear kicks,
+which `natural_abilities` carries. The row keeps its shape (`F141`). Before
+the apply it cited Conversion Book One on production (`q.mjs --remote`,
+2026-11-09). Posture as proposed: data only.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
