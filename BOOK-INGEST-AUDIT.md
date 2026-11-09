@@ -6283,6 +6283,53 @@ that takes an O.C.C., and no data follows. **Posture recorded:** a decision, and
 the decision is to keep what Phase A kept. Held is not closed, so the finding
 stays in this file with this note.
 
+**Partly taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f141-quick-flex`).**
+Nate, 2026-11-09: "take recommendations on all items in 2026-10-03
+retrospective so that we can complete it, start new sessions as needed, merge
+when green". Under it the Proposal's recommendation is the ruling: list every
+one of the 34 whose shape differs, count saved characters on each, convert
+only where there are none. **Posture recorded:** a decision, then data; the
+decision is now to convert.
+
+The census is the planner's measurement of 2026-11-09, production, every one
+of the 34 reprinted classes' markdown read for `xp_table`, `occ_restrictions`,
+`equipment_starting`, `starting_money` and its shape sentence. ELEVEN already
+have no `xp_table` and take an occupation (`aardan-tek`, `centaur`,
+`cyber-horsemen-of-ixion`, `fennodi`, `grackle-tooth`, `greot-hunter`,
+`mastadonoid`, `nmbyr-gorilla-man`, `noli-bushman`, `tirrvol-sword-fist`,
+`yeno`). EIGHTEEN keep an `xp_table` and their notes record no shape change
+(the seven Psyscape races, `true-sasquatch`, `worldly-sasquatch`, `tokanii`,
+`simvan-monster-rider`, `psi-x-alien`, `cactus-people`, `lyn-srial`,
+`lyn-srial-sky-knight`, `blind-warrior-women`, `horune-pirate`,
+`pogtalian-dragon-slayer`). FOUR keep the held R.C.C. shape where D-Bees
+prints a race with an O.C.C.: `quick-flex-alien`, `vanguard-brawler`,
+`trimadore`, `kremin-cyborg`. `faerie-bot` is undecided. Saved characters:
+`SELECT class_id, occ_class_id, count(*) FROM characters GROUP BY 1, 2`
+returned six rows, none on any of the 34, so every shape-changed class
+converts.
+
+This branch converts the first, `quick-flex-alien` (data script
+`apps/character-creator/db/~265-book-ingest-audit-f141-quick-flex.sql`). Read off a
+render of D-Bees printed 169 on 2026-11-09: R.C.C. skills in addition to the
+O.C.C.'s, the chosen O.C.C.'s experience table, Standard Equipment and Money
+as per O.C.C. The class lost its `xp_table`, `starting_money`,
+`equipment_starting`, related and secondary skills, hand to hand block and the
+Quick-Flex Rogue skill program; Coalition War Campaign's Rogue program and its
+ladder (printed 224) are in the class's `extraction_notes`. It kept the five
+R.C.C. skills and two languages D-Bees prints. No `yields_to_occupation`,
+`pairing_skills` or `pairing_counts`: the page prints no cut and no figure that
+gives way. Measured with `parseClassMarkdown` and `combineClasses` against
+production's `city-rat`, `gunfighter` and `songjuicer` on 2026-11-09: before,
+every pairing took the race's 1D6x100 credits and its seven equipment entries
+on top of the occupation's, and a City Rat gained six secondary skills; after,
+money, equipment and related and secondary counts are the occupation's alone,
+and the five R.C.C. skills survive the union. The `occ_restrictions` ids were
+each looked up on production the same day: the eight full-conversion cyborg
+O.C.C.s the `except` list lacked (four Dragon-Borgs, three Geo-Borgs, the
+Luftwaffe Cyborg Combat Pilot) were offered before and are refused now.
+`vanguard-brawler`, `trimadore`, `kremin-cyborg` and `faerie-bot` are later
+work; the finding stays open until they are done.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
