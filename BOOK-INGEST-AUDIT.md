@@ -5206,6 +5206,41 @@ With the two branches above, this closes the finding.
   on `crocodillian` and `gifted-one-russian`). The function reads them now.
   Whether a level-up reaches a pool held there was not driven for this branch.
 
+**Residue taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f133-level-one`).**
+The five classes left "not decided" above are decided, as the plan driver's
+reading, taken on Nate's authorisation of 2026-11-09, in his words: "take
+recommendations on all items in 2026-10-03 retrospective so that we can
+complete it, start new sessions as needed, merge when green."
+
+- **The reading:** "+N per level of experience starting at level one" means a
+  first-level character already holds one increment. The data is corrected
+  and no code moves: the flat increment is folded into the level-one roll and
+  the per-level phrase stays as written. `mind-mage` now reads `3d6x10+12`,
+  `psi-healer` `2d6x10+10`, and `psi-mystic`, `psychic-sensitive` and
+  `quorian-oneiromancer` `2d4x10+10`, each still followed by its "+N per
+  level of experience starting at level one". Each class's `extraction_notes`
+  gains one sentence citing this note.
+- **Measured** on 2026-11-09 against production's markdown for the five
+  (read `--remote`), through `parseClassMarkdown`, `poolFormulaBounds`,
+  `rollPoolFormula` (20,000 rolls, M.E. 10), `perLevelDiceOf` and
+  `perLevelBounds`. Before: `psi-healer` rolled 30-130 at level one, so the
+  +10 was outside it. After: 40-140. All five parse; each level-one range
+  moves up by its increment at both ends (12 for `mind-mage`, 10 for the
+  rest), and `perLevelDiceOf` and `perLevelBounds` return the same answer for
+  the old and new string on all five, so level two on is unchanged. The
+  parser and the dice grammar take a flat term after `x10` as written, so no
+  live class's shape had to be borrowed.
+- **Posture, said back:** data only. A NEW character's level-one I.S.P. rises
+  by the increment; a saved character is not back-filled. Unlike the three
+  branches above, this raises the server's level-one MINIMUM as well as its
+  maximum, because the roll itself moved. `validate-character.js` (header,
+  lines 18-21, read 2026-11-09) refuses an out-of-range pool only on create by
+  a non-GM and warns otherwise, so a saved character below the new floor could
+  draw a `pool_out_of_range` warning. None does: one saved character is on
+  these classes (`psi-healer`, level 5, `isp_max` 64, M.E. 14, `--remote`
+  2026-11-09), and 64 lies inside both the old range (34-174) and the new one
+  (44-184). The row is untouched.
+
 ### F134 - low - nobody has driven the sheet's banked-pick panel on a band-named `at_levels` group
 
 `F116` banks a later-level pick and spends it from the sheet's banked panel.
