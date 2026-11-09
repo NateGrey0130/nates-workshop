@@ -7015,3 +7015,50 @@ injector, 3 million credits, a different item from the row). **Dropped, not
 deferred:** the other twenty or so of the 35 were never identified and are
 not being looked for, by the same ruling, so nothing new is filed
 (`audit-menu` → *A deferral is work*). **F144 is closed by this note.**
+
+### F145 - low - the sheet's banked-pick panel offers no Roll d100 for a band-named group
+
+A later-level ability pick banks (`F116`) and is spent from the character
+sheet's banked panel. When the group's options are named for percentile bands
+(`Insanity (01-10): …` to `Insanity (91-00): …`), the creator's wizard offers a
+Roll d100 button that picks the band for the player, and the sheet's panel
+offers only a `<select>`, so the player rolls elsewhere and matches the band
+by eye. `F134`'s outcome note (2026-10-12) drove this on a throwaway `lyvorrk`
+character, recorded the gap, and filed nothing, because Nate was then avoiding
+new menu entries, though `F134`'s own proposal said "file what is missing".
+This filing is that step: on 2026-11-09 Nate authorised taking the
+recommendations on every item of the 2026-10-03 retrospective ("take
+recommendations on all items in 2026-10-03 retrospective so that we can
+complete it, start new sessions as needed, merge when green"), and this is the
+recommendation `F134` left untaken. Nothing is lost or stored wrong; the gap is
+a convenience the wizard has and the sheet does not.
+
+**Proposal:** on the banked panel's ability rows, draw a Roll d100 control
+when `abilityRollBands` returns bands for the grant's `from` list. A roll fills
+that row's `<select>` with the option whose band it lands in; where the book
+prints two results for one band, the roll narrows the choice to those two and
+leaves it to the player, the wizard's rule. The wizard's `rollAbilityGroup` is
+the model. **Posture:** a display-side convenience, no new gate; the pick is
+still confirmed with `Learn these`, and nothing is written until it is.
+**Evidence:** `F134`'s drive of 2026-10-12 (the panel held one `<select>`,
+`claim-power-ability-2-0-0`, and the buttons `Learn these` and `Later`); and,
+read 2026-11-09 on `origin/main` at `c4695d7e`: `abilityPickRows` at
+`apps/character-sheet/sheet.js:3684-3703` emits one `<select>` per unit of the
+grant's `count` and nothing to roll with; `grep -n "abilityRoll\|rollAbility"
+apps/character-sheet/sheet.js` prints nothing;
+the wizard's button is `apps/character-creator/app.js:2029-2030`
+(`abilityRollBands(g)`), its handler `rollAbilityGroup` at `app.js:2073-2103`;
+the three helpers are defined in `apps/character-creator/js/abilities.js`
+(`abilityRollBands` line 174, `abilityRollMatches` line 200,
+`rollAbilityTable` line 343) and re-exported by `js/parser.js:10-12`, which
+`app.js:29` imports. The sheet was not driven for this filing.
+
+**Confidence:** high on the gap, read and driven. What raises it for the
+proposal is a drive of the control on the banked panel, desktop and phone
+width (`verify-ui`). **Ongoing cost:** one more control the sheet draws and
+keeps in step with the wizard's band rule.
+
+**Reach**, reported by `F134`'s note from its planning check of production on
+2026-10-12 and not re-run here: nine band-named `at_levels` groups in six
+classes (`african-witch`, `dewtani` x4, `keeper-of-the-desert`, `lyvorrk`,
+`necromancer`, `wired-gunslinger`).
