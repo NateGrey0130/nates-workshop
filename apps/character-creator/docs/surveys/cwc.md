@@ -4,9 +4,9 @@
 
 **Rows citing this book:** classes 15, gear 25, vehicles 33, skills 4, notable_npcs 7, creatures 3
 
-**MOS:** cs-rcsg-scientist 7, cs-special-forces 8, iss-peacekeeper 7, iss-specter 8, iss-intel-specter 10, ntset-protector 7, psi-net-agent 10, kremin-cyborg 7
+**MOS:** cs-rcsg-scientist 7, cs-special-forces 8, iss-peacekeeper 7, iss-specter 8, iss-intel-specter 10, ntset-protector 7, psi-net-agent 10
 
-*Each class's MOS packages, pinned by `test/regression.mjs` against a clean build. Every one of these classes takes four skills from ONE area of specialty, stored as a pick of four inside each area. The Psi-Net Agent's ten include the book's two named packages, Tracker and Spotter (printed 195).*
+*Each class's MOS packages, pinned by `test/regression.mjs` against a clean build. Every one of these classes takes four skills from ONE area of specialty, stored as a pick of four inside each area. The Psi-Net Agent's ten include the book's two named packages, Tracker and Spotter (printed 195). The Kremin Cyborg's seven left the line on 2026-11-09, when it became a race that takes an O.C.C. (BOOK-INGEST-AUDIT F141, branch `pal/data/book-ingest-audit-f141-kremin`).*
 
 Slug `cwc`. Cached 2026-09-25 from
 `Rifts- World Book 11 Coalition War Campaign.pdf`, 226 PDF pages, **text layer**

@@ -6377,6 +6377,40 @@ script and no class edit; the Demolitions and Trap entry stored under F138
 stays as it is. The shape-changed classes the census names are three, not
 four. `kremin-cyborg` and `faerie-bot` remain; the finding stays open.
 
+**Partly taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f141-kremin`).**
+Under the same authorisation and posture (a decision, then data; the decision
+is to convert), this branch converts the third shape-changed class,
+`kremin-cyborg` (data script
+`apps/character-creator/db/~267-book-ingest-audit-f141-kremin.sql`). Saved
+characters on the class: none, per the census above. D-Bees printed 113 (OCR
+text cache p114, read 2026-11-09) heads the entry Optional Player Character or
+NPC, lists Available O.C.C.s (just about any Adventurer or Scholar O.C.C. or a
+basic soldier or law enforcement O.C.C.; Combat Cyborg, Headhunter and
+military O.C.C.s rare; magic and psionics out of the question), says to use
+the experience table of the chosen O.C.C., and prints the R.C.C. skills as in
+addition to the O.C.C.'s. The class lost its `xp_table` (the 'Borg ladder),
+the CS Technical Officer program Coalition War Campaign printed 210 pointed
+to, its seven-way MOS and its related and secondary skills; all of it is in
+the class's `extraction_notes`. It kept the six R.C.C. skills D-Bees prints and
+gained `occ_restrictions` excepting the magic, psychic and clergy groups. **One
+departure from the converted shape, read off the page:** D-Bees prints the
+Kremin's own Standard Equipment ("in addition to the standard bionic systems")
+and 1D4x1000 credits for player characters, where it prints "As per O.C.C."
+for both on the Krak entry beside it (printed 111, cache p112). So the class
+keeps `equipment_starting` and `starting_money`: in a pairing the race's gear
+joins the occupation's and the race's money governs (`CLASS_MERGE` in
+`apps/character-creator/js/class-keys.js` lines 196-205, read 2026-11-09). No
+`yields_to_occupation`, `pairing_skills` or `pairing_counts`: the page prints
+no cut. Measured with `parseClassMarkdown`, `occAllowedForRace` and
+`combineClasses` against production's `operator`, `cyber-doc`,
+`rogue-scholar`, `combat-cyborg`, `ley-line-walker`, `mind-melter` and
+`rifts-priest` on 2026-11-09: before, every pairing offered the MOS, a Cyber-Doc
+gained three secondary skills, a Rifts Priest levelled on the 'Borg ladder,
+and all seven were allowed; after, no MOS and no race secondary skills, the
+ladder is always the occupation's, the six R.C.C. skills survive every union,
+and the Ley Line Walker, Mind Melter and Rifts Priest are refused. `faerie-bot`
+remains; the finding stays open.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
