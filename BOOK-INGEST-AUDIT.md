@@ -7062,3 +7062,47 @@ keeps in step with the wizard's band rule.
 2026-10-12 and not re-run here: nine band-named `at_levels` groups in six
 classes (`african-witch`, `dewtani` x4, `keeper-of-the-desert`, `lyvorrk`,
 `necromancer`, `wired-gunslinger`).
+
+**Taken, 2026-11-09 (branch `pal/feat/book-ingest-audit-f145-banked-roll`).**
+Posture said back: a display-side convenience and no new gate. The roll saves
+nothing; the pick is still confirmed with `Learn these`, whose request is
+unchanged, and the level-up dialog is untouched (`F134`'s ruling that the
+banked pick is spent only from this panel stands).
+
+Premises re-read 2026-11-09 on this branch's base `3033e6c3` before any
+edit, and none had moved: `abilityPickRows` at
+`apps/character-sheet/sheet.js:3684-3703`, `grep -n "abilityRoll\|rollAbility"
+apps/character-sheet/sheet.js` printed nothing, the wizard's button at
+`apps/character-creator/app.js:2029-2030` and `rollAbilityGroup` at
+`:2073`, the helpers at `apps/character-creator/js/abilities.js:174` and
+`:200`, re-exported by `js/parser.js:10-12`.
+
+What changed. The sheet is a classic script and reaches `js/parser.js` only
+through the page's bridge (`apps/character-sheet/index.html:72-78`), so the
+same import now also publishes `abilityRollBands` and `abilityRollMatches` as
+`globalThis.abilityRoll`; nothing new is imported. `abilityPickRows` draws a
+`🎲 Roll d100` button beside each owed row when the grant's whole `from` list,
+held names included, forms a table as a choose-1 group (one roll is one pick).
+Its handler `rollBankedAbility` rolls with the page's `diceRoll.evalDice`,
+sets that row's `<select>` to the band's option and prints the roll beside
+it. Where the book prints two results for the band, or the result is one the
+character already holds, it clears the select and says so, leaving the choice
+to the player as `rollAbilityGroup` does.
+
+Checked by a smoke section, `The banked ability panel rolls a band-named list
+(BOOK-INGEST-AUDIT F145)`, which runs the sheet's own functions: one button per
+owed row on a band-named grant, none on a plain list or on a band list with a
+hole, and the handler's three outcomes. Seen red once with the band rule
+broken upstream in `bankedAbilityBands` (4 of its 7 checks failed). Driven
+2026-11-09 on a local server from this branch's tree against this tree's
+local D1, nothing on production clicked: a throwaway `lyvorrk` character,
+2,500 XP, the sheet's level-up to 2, `Choose now`. The panel held one
+`<select>` (`claim-power-ability-2-0-0`) and the buttons `🎲 Roll d100`,
+`Learn these` and `Later`. Three rolls read back 11, 72 and 37, and each time
+the select's value was the matching band (`(11-20)`, `(71-80)`, `(31-40)`).
+The banked row was still pending afterwards and the character's abilities
+were still empty, so the roll wrote nothing. Screenshotted at the pane's
+desktop width (852px), not at tablet or phone width. The character and its
+campaign were then deleted. No class note cites this finding
+(`node scripts/audit-citations.mjs --remote F145`, 2026-11-09: 0 of 773 live
+classes).

@@ -5597,6 +5597,69 @@ section('A class ability picked at set levels (BOOK-INGEST-AUDIT F116)');
     /kind TEXT NOT NULL CHECK \(kind IN \('spell', 'psionic', 'talent', 'talent_purchase', 'ability'\)\)/.test(schemaSrc));
 }
 
+// The sheet's banked panel draws the wizard's Roll d100 for a band-named
+// ability list, one per owed row, and nothing for a plain list or a table with
+// a hole in it. The sheet's own functions, run here against the real band rule.
+section('The banked ability panel rolls a band-named list (BOOK-INGEST-AUDIT F145)');
+{
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  const from = sheetSrc.indexOf('// The selects for one banked class-ability grant.');
+  const to = sheetSrc.indexOf('\nasync function claimPowers(');
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const bands = ['Insanity (01-40): Fear', 'Insanity (41-70): Rage',
+    'Insanity (71-00): Dread', 'Insanity (71-00): Gloom'];
+  const table = ['Insanity (01-40): Fear', 'Insanity (41-00): Rage'];
+  let run = null;
+  try {
+    run = new Function('C', 'escHtml', 'globalThis', 'document', sheetSrc.slice(from, to)
+      + '\nreturn { abilityPickRows, rollBankedAbility };');
+  } catch (e) { check('the banked ability rows parse outside the page', false, e.message); }
+  const world = (pending, held = [], roll = 50, doc = null) => {
+    const C = { data: { abilities: held }, cls: null, pendingPowers: pending };
+    const g = { abilityRoll: { abilityRollBands, abilityRollMatches },
+      diceRoll: { evalDice: (e) => (e === '1d100' ? roll : NaN) } };
+    return run && from > 0 && to > from ? run(C, esc, g, doc) : null;
+  };
+  const grant = (list, count = 1) => ({ kind: 'ability', granted_at_level: 2, slot: 0, count, from: list });
+  const buttons = (html) => (html.match(/🎲 Roll d100/g) || []).length;
+  const w = world([]);
+  const banded = w ? w.abilityPickRows(grant(table, 2)) : '';
+  check('a band-named grant draws one Roll d100 per owed row',
+    buttons(banded) === 2 && banded.includes('onclick="rollBankedAbility(\'claim-power-ability-2-0-1\')"')
+    && banded.includes('id="roll-claim-power-ability-2-0-0"'), banded.slice(0, 300));
+  check('a plain-named grant draws none',
+    !!w && buttons(w.abilityPickRows(grant(['Fear', 'Rage']))) === 0);
+  check('and neither does a band-named list with a hole in it',
+    !!w && buttons(w.abilityPickRows(grant(['Insanity (01-40): Fear', 'Insanity (51-00): Rage']))) === 0);
+  check('and the button does not change the select every "Learn these" reads',
+    /<select id="claim-power-ability-2-0-0"\s+data-level="2" data-slot="0" data-kind="ability">/.test(banded));
+
+  // The handler, on a stand-in page: the roll sets the select, or leaves it.
+  const page = (options) => {
+    const sel = { value: 'stale', dataset: { level: '2', slot: '0' },
+      options: ['', ...options].map((value) => ({ value })) };
+    const out = { innerHTML: '' };
+    const doc = { getElementById: (x) => (x === 'claim-power-ability-2-0-0' ? sel
+      : x === 'roll-claim-power-ability-2-0-0' ? out : null) };
+    return { sel, out, doc };
+  };
+  const rollOn = (list, roll, held = []) => {
+    const p = page(list.filter((n) => !held.includes(n)));
+    const wr = world([grant(list)], held, roll, p.doc);
+    if (wr) wr.rollBankedAbility('claim-power-ability-2-0-0');
+    return p;
+  };
+  const one = rollOn(table, 55);
+  check('a roll sets the row\'s select to the band it lands in, and says what it rolled',
+    one.sel.value === 'Insanity (41-00): Rage' && one.out.innerHTML.includes('Rolled <b>55</b>'), one.out.innerHTML);
+  const two = rollOn(bands, 90);
+  check('a band the book prints two results for leaves the choice to the player',
+    two.sel.value === '' && /2 results for this band/.test(two.out.innerHTML), two.out.innerHTML);
+  const held = rollOn(table, 10, ['Insanity (01-40): Fear']);
+  check('a result already held picks nothing and says so',
+    held.sel.value === '' && /already held/.test(held.out.innerHTML), held.out.innerHTML);
+}
+
 section('A level of a levelled group may carry its own count (BOOK-INGEST-AUDIT F127)');
 {
   const LF = String.fromCharCode(10);
