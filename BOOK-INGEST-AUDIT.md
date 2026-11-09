@@ -5805,6 +5805,26 @@ says it is open (the same SELECT over the 22 live classes
 `audit-citations.mjs --remote F139` lists, 2026-10-15), so none was corrected.
 Posture as proposed: data only, and this PR is documentation only.
 
+**Residue taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f139-paradox-raider`):
+the Paradox Shaman's printed kit.** Taken on Nate's word of 2026-11-09 to take
+the 2026-10-03 retrospective's recommendations. Data only, as proposed, under
+the 2026-10-12 ruling. The Standard Equipment paragraph of Spirit West printed
+65 (cache p066, read off a 150 dpi render on 2026-11-09) was listed item by
+item and each item looked up with a `--remote` SELECT on `gear` (2026-11-09).
+Granted, each a `rifts` or `both` row: the musical instrument, the hand axe,
+the flint, the mallet (`hammer-and-mallet`, the only Rifts row that holds
+one), 3D4 wooden stakes, and a choose-one of the three silver cross rows (the
+book names no size). Three items the class already granted were Palladium
+Fantasy rows (`bedroll`, `blanket-light`, `water-skin`), and were swapped for
+`bedroll-rifts`, `blanket-light-rifts` and the two Rifts water skins, as
+Soldati's bedroll was in the first note above. The class body now says "no
+Rifts row" for the ceremonial garments, the headdress or animal skin, the
+moccasins and the silver-plated tomahawk, and leaves the two S.D.C. weapons of
+choice as the open choice the book prints. The item-by-item table is in the
+pull request body. `adna-nomad`'s sidearm needs nothing, as the closing note
+says. One data script, `~273-book-ingest-audit-f139-paradox-raider.sql`,
+applied `--remote` before the merge.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
