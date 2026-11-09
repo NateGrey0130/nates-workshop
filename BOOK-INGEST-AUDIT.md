@@ -6628,6 +6628,26 @@ work*). `F142` is held, and held is not closed, so this finding stays in this
 file with that remainder open under `F142` rather than moving to
 `BOOK-INGEST-AUDIT.closed.md`. Posture as proposed: data only.
 
+**Partly taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f143-centaurs`).**
+The Conversion Book One remainder, part 1 of 2, released by `F142`'s second
+clause: `~263-book-ingest-audit-f143-centaurs.sql` moves the `creatures` row
+`centaurs` to D-Bees printed 44-45, the class's own range, with Conversion
+Book One's replaced figures (printed 136-138) kept in its `description`.
+P.S., P.P., P.E. and Spd take D-Bees' 3D6+6, 3D6+6, 3D6+12 and 6D6x2,
+S.D.C. goes from 25 to 50, the life span from 90 years to 4D6+66, and the
+size down a foot; Hit Points, P.P.E. 4D6, Horror Factor 10 and weight are
+the same in both books and do not move. `combat` loses its three attacks
+(D-Bees' line is "as per Hand to Hand"), +2 parry and +3 dodge, and takes
++2 initiative, +1 Perception, +1 strike, +4 damage, +2 pull punch and +2
+roll; the dodge when running goes to `bonuses_note` as conditional. By the
+line rule the allies drop Fennodi, Psi-Ponies and the Colorado Baronies and
+the enemies take D-Bees' line whole. The three items the row had taken from
+Canada (swim, W.P. Bow and Arrow, equipment) D-Bees restates, so nothing on
+the row cites Canada now. Its two `stat_attacks` rows match D-Bees and are
+unchanged, and the row keeps its shape (`F141`). Before the apply it cited
+Conversion Book One on production (`q.mjs --remote`, 2026-11-09). Posture as
+proposed: data only. The finding stays open for `cyber-horsemen-of-ixion`.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
