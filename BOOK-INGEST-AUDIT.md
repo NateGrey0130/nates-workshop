@@ -6317,6 +6317,39 @@ second clause is added to the year rule. **Posture recorded:** a decision, with
 none of the three data rows following. Held is not closed, so the finding stays
 in this file with this note.
 
+**Taken, 2026-11-09 (branch `pal/audit/book-ingest-audit-f142-year-clause`).**
+On 2026-11-09 Nate wrote: "take recommendations on all items in 2026-10-03
+retrospective so that we can complete it, start new sessions as needed, merge
+when green". Under it each held finding's recorded recommendation is his
+ruling. This finding records no per-row recommendation, so the ruling below is
+the plan driver's reading, taken on that authorisation. **Posture said back:**
+a decision; none of the three data rows this finding names changes here.
+
+- **The clause.** The year rule (Nate, 2026-10-04: the newest printing that
+  states a figure wins) gains the second clause the proposal offered: *unless
+  the newer book says it describes an earlier model*. This note is the only
+  place it is written.
+- `pa-06a-deaths-head-samas` and `fassar-20-30-skelebot` **stay** on Coalition
+  War Campaign: RUE prints them under its "Circa 100 to 104 P.A." heading, an
+  earlier model by its own account, so the clause bites.
+- `ostrosaurus` **stays** on New West: New West and Lone Star are both 1997,
+  the clause does not bite, and the fuller entry stands.
+- The `centaurs` creature's Canada-against-Conversion-Book-One question is
+  **moot**: D-Bees of North America (`"published": 2007` in
+  `scripts/books.json`, line 234, read 2026-11-09) is the newest printing of
+  the Centaur and describes no earlier model. So the two Conversion Book One
+  creature rows F143's last note holds with this finding, `centaurs` and
+  `cyber-horsemen-of-ixion`, move to D-Bees of North America in the plan's
+  rows 2 and 3, recorded under F143's heading, not this one. Production before
+  this note (`node scripts/q.mjs --remote`, 2026-11-09): `centaurs` cites Rifts
+  Conversion Book One p.136-138, `cyber-horsemen-of-ixion` p.138-139, and
+  `ostrosaurus` Rifts World Book 14: New West p.153-155.
+- `node scripts/audit-citations.mjs --remote F142` (2026-11-09): 0 of 773 live
+  classes cite F142, so no class note needs correcting.
+
+**This closes F142.** The section is not stubbed, because F143's text still
+names it.
+
 ### F143 - low - the creature rows of the reprinted D-Bees races still carry their original book's figures
 
 Data only. Phase A updated 34 held CLASSES to D-Bees (`F141`) and added 72
