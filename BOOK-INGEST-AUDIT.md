@@ -6303,6 +6303,15 @@ the special-equipment pick for a character who takes another package.
 
 The War-Knight's Master psionic variant is not taken here. One data script, `~269-book-ingest-audit-f140-leftovers.sql`, written by `scripts/class-fix-sql.mjs --remote`, applied `--remote` before the merge.
 
+**Residue taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f140-war-knight-psi`):** the War-Knight's Master psionic variant, the last item the Warlords of Russia note above left for Nate, decided on his authorisation of 2026-11-09 ("take recommendations on all items in 2026-10-03 retrospective so that we can complete it, start new sessions as needed, merge when green"); the ruling below is the plan driver's reading on that authorisation. `war-knight`, `mind-melter`, `roane-piper` and `gifted-one-russian` were read `--remote` on 2026-11-09, and printed 92's psionics sentence off a 200 dpi render of cache p093. Posture: data only.
+
+- `war-knight` states `psionics_allowed: false` and a pick group `Psionics (01-82): None`, `(83-94): Minor`, `(95-98): Major`, `(99-00): Master`, the F118 shape `roane-piper` took under F138. The page prints 12%, 4% and 2% and no bands; the bands are those percentages in the book's order (a reading).
+- Minor and Major carry the standard tiers' blocks (`PSIONIC_TIER_RULES` in `js/psionics.js`, read 2026-11-09): Minor two powers, Major six from the three categories, each with its tier's I.S.P.
+- Master carries production's `mind-melter` block: type `master`, its four automatic powers, three picks each from Healing, Physical and Sensitive, and one Super pick for the Mind Melter's three, halved and rounded down, as `powers_starting_groups`. Its I.S.P. is stored as `3d6x9 + M.E.`, `+9` per level: a tenth off the dice and the gain, the M.E. term left whole, because a pool formula takes no percentage. `poolFormulaBounds` at M.E. 10 gives 37-172 against the Mind Melter's 40-190 (2026-11-09). The option carries `related_skills_count: 0`, the key `gifted-one-russian` carries for the same sentence.
+- Not enforced, and said in the option's description: the related picks the class schedules at levels 3, 6, 9 and 12 (the key moves the starting count only), the one-category rule on a Minor's two powers, and the Mind Melter's level 2 and later selections.
+
+One data script, `~270-book-ingest-audit-f140-war-knight-psi.sql`, written by `scripts/class-fix-sql.mjs --remote`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
