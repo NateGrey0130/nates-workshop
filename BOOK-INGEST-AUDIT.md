@@ -6330,6 +6330,33 @@ Luftwaffe Cyborg Combat Pilot) were offered before and are refused now.
 `vanguard-brawler`, `trimadore`, `kremin-cyborg` and `faerie-bot` are later
 work; the finding stays open until they are done.
 
+**Partly taken, 2026-11-09 (branch `pal/data/book-ingest-audit-f141-vanguard`).**
+Under the same authorisation and posture (a decision, then data; the decision
+is to convert), this branch converts the second, `vanguard-brawler` (data
+script `apps/character-creator/db/~266-book-ingest-audit-f141-vanguard.sql`).
+Saved characters on the class: none, per the census above. D-Bees printed 209,
+read off the book's OCR text cache on 2026-11-09: R.C.C. skills Climbing
+(+20%), Boxing, Roadwise (+20%) and Streetwise (+20%) regardless of the chosen
+O.C.C., the Hand to Hand upgrade for ONE O.C.C. Related Skill, the chosen
+O.C.C.'s experience table, Standard Equipment and Money as per O.C.C. The class
+lost its `xp_table`, `starting_money`, `equipment_starting`, related and
+secondary skills and the rest of Coalition War Campaign's Thug R.C.C. program,
+which with its ladder (printed 224) is now in the class's `extraction_notes`;
+Boxing is granted outright, as D-Bees prints, where the Thug list's Boxing or
+Wrestling pick was kept before. The `hand_to_hand` price list stays as the
+page prints it; in a pairing the occupation's list governs (Nate, 2026-10-12),
+and a restriction line says so. No `yields_to_occupation`, `pairing_skills` or
+`pairing_counts`: the page prints no cut. Measured with `parseClassMarkdown`,
+`occAllowedForRace` and `combineClasses` against production's `city-rat`,
+`gunfighter` and `maxi-killer` on 2026-11-09: before, every pairing took the
+race's 1D4x1000 credits and seven equipment entries on top of the
+occupation's, and a City Rat gained five secondary skills; after, money,
+equipment and related and secondary counts are the occupation's alone, and the
+four R.C.C. skills survive the union. Every `occ_restrictions` id was looked
+up on production the same day: `ninja-juicer`, `ultra-crazy` and `ninja-crazy`,
+offered before, are refused now. `trimadore`, `kremin-cyborg` and `faerie-bot`
+remain; the finding stays open.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
