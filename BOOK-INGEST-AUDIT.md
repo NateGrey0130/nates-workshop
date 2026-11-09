@@ -6411,6 +6411,46 @@ ladder is always the occupation's, the six R.C.C. skills survive every union,
 and the Ley Line Walker, Mind Melter and Rifts Priest are refused. `faerie-bot`
 remains; the finding stays open.
 
+**Taken, 2026-11-09 (branch `pal/docs/book-ingest-audit-f141-faerie-bot`).**
+This note closes F141. **Posture recorded:** a decision, then data, under
+Nate's authorisation of 2026-11-09 quoted above; the decision is to convert
+every class whose book prints a race that takes an O.C.C. and on which no
+character is saved, and to keep every class whose books print an R.C.C.
+
+`faerie-bot` does NOT convert: both books print an R.C.C. D-Bees printed 78
+(read off a render of PDF page 79 on 2026-11-09, and the OCR text cache p077-p080
+for printed 76-79) prints R.C.C. Skills ("use these skills only", plus the
+Magical and Creation abilities of the TW O.C.C.), two R.C.C. Related Skills at
+levels 1, 4, 8 and 12, two Secondary Skills at levels 3, 5, 8, 11 and 14, the
+Techno-Wizard's experience table, and its own Standard Equipment (printed 79).
+Its Available O.C.C.s line reads that all are effectively a Techno-Wizard/
+Scientist or TW Explorer/Operator and points back to the R.C.C.: it names what
+the race resembles, not an occupation it takes. Canada printed 149-151 (OCR
+text cache p150-p152, read the same day) prints R.C.C. Skills/Instincts, R.C.C.
+Bonuses and the vehicle as Standard Equipment, and no Available O.C.C.s line.
+Production's class carries that shape (`--remote` 2026-11-09: `xp_table` the
+Techno-Wizard ladder from 0, 2301, 4601; `equipment_starting`; no
+`occ_restrictions`; a restriction reading "Available O.C.C.s: none" with the
+Techno-Wizard sentence), so no data script and no class edit. The `creatures`
+row of the same name, moved under F143, is untouched.
+
+The outcome across the finding: three classes converted (`quick-flex-alien`,
+`~265`; `vanguard-brawler`, `~266`; `kremin-cyborg`, `~267`, keeping its own
+equipment and money because D-Bees prints them), and two recorded as an R.C.C.
+in both books (`trimadore`, D-Bees and Coalition War Campaign; `faerie-bot`,
+D-Bees and Canada). `centaur`, which Phase A named, was among the eleven the
+census found already taking an occupation. Saved characters, re-run
+`--remote` on 2026-11-09 after the three conversions:
+`SELECT class_id, occ_class_id, count(*) FROM characters GROUP BY 1, 2`
+returned six rows (`adna-nomad`/`spacer`, `chiang-ku-dragon`/`psi-healer`,
+`creature:blind-warrior-women`, `demigod`/`bandit`, `nb-nightbane-sorcerer`,
+`notable:abdul-ra`), none on any of the 34; the `creature:` row is a creature
+id, not the `blind-warrior-women` class. `node scripts/audit-citations.mjs
+--remote F141` on 2026-11-09: three of 773 live classes cite F141
+(`kremin-cyborg`, `quick-flex-alien`, `vanguard-brawler`), each a conversion
+note written by its own branch above; `faerie-bot` cites nothing, so no class
+note needs correcting.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
