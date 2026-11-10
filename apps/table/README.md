@@ -15,7 +15,7 @@ is initiative.
 | | Display (the TV) | A player's phone | The GM |
 |---|---|---|---|
 | sees | public rolls, in large type; the picture on the table, fitted to the screen on black; the initiative strip, with the name that is up large | public rolls, and their own To-GM rolls; the picture, under the feed, tap for full screen and pinch-zoom; the initiative order, "You're up" (and a vibration) and "On deck" | every roll, GM-only ones included; the picture; the whole order, hidden NPCs by name |
-| does | nothing | rolls from the dice box, Everyone or To GM; rolls their own initiative (Palladium) | rolls Everyone or GM only; runs initiative; closes the table. Shows and clears pictures from Present mode |
+| does | nothing | rolls from the dice box, Everyone or To GM; rolls their own initiative (Palladium) | rolls Everyone or GM only; on Marvel, calls for a FEAT; runs initiative; closes the table. Shows and clears pictures from Present mode |
 
 **The page never decides what it is shown.** It asks for a role; the game's
 join route decides from D1 whether the person may take it, and the room sends
@@ -34,6 +34,57 @@ bookmark rejoin as the Display without asking.
   wrote. The sheet keeps saving to the session log itself; the table saves
   nothing there. A roll sent To the GM is marked private in the log too, so
   only its owner and the G.M. read it back.
+
+## Calling for a FEAT (Marvel)
+
+On a Marvel table the GM can **call for a FEAT**: pick a seated player, the
+ability they roll, what it is for (a column of the Universal Table, such as
+Blunt Attacks) and the opposition, which is an ability and a rank belonging to
+someone on the campaign's roster, a name typed in, or another seated player.
+The player's phone gets a prompt with one Roll button.
+
+**This is a house rule** (Nate, 2026-11-09). The book resolves a dodge as a
+column shift on the attacker; this table rolls head to head.
+
+- **Both sides roll d100 on their own rank's column and the colours are
+  compared.** White < Green < Yellow < Red, with two rolls outside them: a
+  natural 13 is below White and a natural 69 is above Red. The attacker wins
+  only on a higher result; every tie is the defender's.
+- **A winning attack reads the attacker's own colour** on the column called
+  (Blunt Attacks: Green Hit, Yellow Slam, Red Stun). A win on a 69 reads as
+  Red and is marked Extra crit; a 13 is marked Extra fail.
+- **A Slam, Stun or Kill** leaves the GM a button for the target's Endurance
+  FEAT on that column.
+- **The opposing roll** is rolled by the room, or typed in by the GM from real
+  dice, at the call or later. Another seated player rolls their own.
+- **The player's rank comes from their seat**, which the join read from D1
+  (`seatStats` in `functions/api/marvel-heroes/_lib/table.js`). The GM is
+  believed about an NPC's rank, as for initiative.
+
+**Karma is shown, never deducted.** Either side may call on Karma before
+rolling (a tick on the player's prompt, a tick on the GM's form for the other
+side). The result line then says what it costs: 10 if that side won anyway; if
+it lost, the points that would take its roll to the lowest winning colour, and
+10 if the result stands; a flat 100 to buy out of a natural 13; 50 more when
+both sides called. No Karma beats a natural 69, and an attacker facing a Red
+cannot buy, because only a 69 ranks above Red. The table writes none of it to
+the sheet: the player and the GM settle it by hand. The Karma a prompt shows
+is the hero's as it stood when they sat down.
+
+**Hidden values.** The GM can hide the opposing ability, rank and roll. The
+phones and the TV are then sent the opponent's name and nothing else, in the
+prompt and in the result, and the GM alone gets a second, GM-only line in
+full. An NPC hidden in the initiative order is hidden here without asking, and
+its name is `???`. The seated player's own Karma line stays public, and its
+cost does bound the hidden colour. Nothing about a call reaches the feed until
+both sides have rolled.
+
+On **every** FEAT at the table, called or not, a natural 13 is an automatic
+White and a natural 69 an automatic Red (ruling R26, in the Marvel app's own
+`js/feat.js`), and the line says so.
+
+A finished contest is a roll like any other and is saved with the session.
+Calls still waiting when the table closes are dropped.
 
 ## Pictures on the table
 
@@ -125,6 +176,7 @@ rolls, and the campaign page saves them on the GM's next visit.
 | `functions/api/table/lookup.js` | which game a code belongs to |
 | `workers/table-room/src/showing.js` | who may look at, and fetch, the picture on the table |
 | `workers/table-room/src/initiative.js` | the order, the turn, and what each screen may see of it |
+| `workers/table-room/src/contest.js` | Marvel's opposed FEAT: the compare, the Karma sums and the line the feed shows |
 | `workers/table-room/src/palladium.js` | Palladium's roll, tie-break and melee |
 | `workers/table-room/test/room.mjs` | the suite: the room, the routes against `node:sqlite`, and these clients |
 
