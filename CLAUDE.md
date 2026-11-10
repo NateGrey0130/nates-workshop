@@ -69,7 +69,8 @@ immediately before the merge, never earlier.
 ## Fifteen skills
 
 Each one lives in `.claude/skills/`. A new skill needs a pressure test before
-it merges (`test-suite` → *A skill is a check too*). Agents are in
+it merges (`test-suite` → *A skill is a check too*; the method is in that skill's
+`reference/pressure-test.md`). Agents are in
 `.claude/agents/`. An agent written mid-session cannot be spawned until the
 next turn.
 

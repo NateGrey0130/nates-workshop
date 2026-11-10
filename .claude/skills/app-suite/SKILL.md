@@ -1,6 +1,6 @@
 ---
 name: app-suite
-description: Add an app to Nate's Workshop, or change the hub, the app switcher or the shared header. Use when creating a new app, editing apps/manifest.json, touching shared/js/appnav.js or the landing page, splitting an app in two, or asking why a new app does not appear on the hub. Covers what makes a directory a URL, the one manifest field that must not be escaped, which apps share a stylesheet, and the app whose icons are missing on purpose.
+description: Add an app to Nate's Workshop, or change the hub, the app switcher or the shared header. Use when creating a new app, editing apps/manifest.json, touching shared/js/appnav.js or the landing page, splitting an app in two, or asking why a new app does not appear on the hub.
 ---
 
 # The app suite

@@ -140,7 +140,7 @@ git log --oneline origin/main..HEAD   # must print nothing
 Any other branch, or a work branch with commits `origin/main` lacks, is work
 in progress: refuse, and say which.
 
-Then, named for the menu and the finding, per `ship-pr` step 1, and **off
+Then, named for the menu and the finding, per `ship-pr` → *The loop*, **Branch**, and **off
 `origin/main`** whatever the tree has checked out:
 
 ```bash

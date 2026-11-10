@@ -1,5 +1,25 @@
 # Why each audit-menu rule exists
 
+**Contents:**
+
+- Counts of menus
+- The shape of a finding
+- Taking is auditing
+- The subject grep
+- The hand-over pass
+- Claims about another file
+- Stale citations
+- Prefixes
+- Outcome notes
+- Closed findings
+- Status headers
+- The heading table
+- Records
+- Reasoned-to claims
+- Placement
+- Deferrals
+- The apparatus pause
+
 `SKILL.md` states the rules; this holds the incident or measurement behind
 each, for when a rule looks wrong. Read an undated claim as true on the day it
 was written.

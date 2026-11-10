@@ -1,5 +1,23 @@
 # Class frontmatter reference
 
+**Contents:**
+
+- Required
+- Attributes and pools
+- Tags — what the wizard's picker filters on
+- Grouping and levelling — two keys the parser never asks for
+- Skills
+- Equipment
+- Powers
+- Bonuses — the numbers the sheet adds up
+- Abilities
+- Prose and display
+- Trackable resources — what a player spends during play
+- Variants — one creature, several stages
+- A second body — `second_form`
+- What a skill itself grants
+- Body
+
 The blocks worth explaining, with what reads each one. **This is not a complete
 key list and must not be read as one** — the contract is `js/parser.js`,
 `js/derive.js` and, for anything about levels, spells or psionic powers,

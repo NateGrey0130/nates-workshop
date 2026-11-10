@@ -1,5 +1,22 @@
 # Why each book-survey rule exists
 
+**Contents:**
+
+- Scale
+- §0, the probe and the caches
+- §0b, caching
+- §0c, rendering
+- §0d, offsets
+- §0e, priced prose
+- §1–§2, inventory and authority
+- §3, the diff
+- §4–§5, extraction and reconcile
+- §6, shipping
+- §7, the survey
+- §8, batches
+- The three tiers
+- What the deferral bought
+
 `SKILL.md` states the rules; this holds the incident or measurement behind
 each, for when a rule looks wrong. `WORKED-EXAMPLES.md` holds the longer worked
 cases. Read an undated claim as true on the day it was written.

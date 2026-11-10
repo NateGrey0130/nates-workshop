@@ -1,6 +1,6 @@
 ---
 name: marvel-book
-description: Import a Marvel Super Heroes (TSR, FASERIP) sourcebook into the Marvel app - its characters into the Marvel Codex's Notable NPCs and the GM tools, its items and locations into the Codex's Items and locations. A book's adventure is not imported. Use when handed a Marvel/MSH sourcebook PDF or asked to add a Marvel book's characters, to correct one, or to give a team's members stats. NOT book-survey, class-import or scripts/ocr-book.py - those are the Palladium/Rifts pipeline and must not be used or changed for a Marvel book. Covers the scripts/msh/ chain, the registry fields a new book needs and how each is measured, the book's own arithmetic as the check, facts in the repo and prose in D1, and the traps that bit the first book.
+description: Import a Marvel Super Heroes (TSR, FASERIP) sourcebook into the Marvel app - its characters into the Marvel Codex's Notable NPCs and the GM tools, its items and locations into the Codex's Items and locations. A book's adventure is not imported. Use when handed a Marvel/MSH sourcebook PDF or asked to add a Marvel book's characters, to correct one, or to give a team's members stats. NOT book-survey, class-import or scripts/ocr-book.py - those are the Palladium/Rifts pipeline and must not be used or changed for a Marvel book.
 ---
 
 # A Marvel sourcebook

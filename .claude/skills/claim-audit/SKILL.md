@@ -1,6 +1,6 @@
 ---
 name: claim-audit
-description: Check what this repo says about itself against what it does — README sentences, code comments, class markdown prose, and the counts pinned in the test suite. Use when auditing, when a doc feels stale, before trusting a comment that explains why something cannot be done, and after any change that lifts a limitation something else describes. Covers where the claims are, how to find the false ones, and why a note about a fixed bug is worse than no note.
+description: Check what this repo says about itself against what it does — README sentences, code comments, class markdown prose, and the counts pinned in the test suite. Use when auditing, when a doc feels stale, before trusting a comment that explains why something cannot be done, and after any change that lifts a limitation something else describes.
 ---
 
 # Auditing what the repo claims about itself
@@ -30,32 +30,15 @@ reading a sentence and then asking the code.
 | `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | the skills, their reference files, every agent file | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
 
 **The instruction layer is in scope, and it was the last place anyone looked.**
-Five of `SKILL-AUDIT.md`'s findings were sentences inside `.claude/` that a
-`claim-audit` pass would never have opened, because this table did not list them.
 A wrong sentence in a skill is worse than a wrong sentence in the README: the
 README describes the app, and a skill tells the next session what to do. Memory
 is worse again — no grep of the repo reaches it.
 
-**The `docs/` row is the one this skill kept missing.** The README was split into
-a spine plus eleven topic files on 2026-08-26 (PR #309) — thirteen now — and the
-command below was written the day before and not touched again, so for a week it
-searched the spine and skipped the majority of what it hunts. A file named
-`known-limitations.md` is precisely the shape described two sections down as *the
-expensive one*, and the skill's own search could not see it.
-
-**Sizes and class counts are deliberately not given here.** This table used to
-say "~4,600 lines" and "~190 sentences over 76 classes"; by 2026-08-25 the README
-had passed 5,600 lines and the catalog 88 classes, and a skill about stale claims
-that carries stale claims is the worst possible advertisement. Count them when
+**Sizes and class counts are deliberately not given here.** Count them when
 you need the number.
 
-**Removing them from the table was not enough, which is the lesson.** The line
-count survived three lines above this paragraph, in the opening sentence, and the
-sentence count survived in *When not to* at the bottom: the fix was applied where
-the number had been noticed rather than to the file. Both were still standing on
-2026-09-02, by which time the README had been **split** (PR #309) and was under a
-thousand lines — the figure was out by nearly a factor of five, in the skill
-whose subject is exactly that.
+How this section came to say so, and the `docs/` row this skill kept missing,
+are in `reference/why.md`.
 
 **Grep the whole file for a number you are deleting, not just the paragraph you
 are editing** — and do not restate the deleted wording anywhere, or the grep that
@@ -94,8 +77,7 @@ that the key exists** — a self-contradiction inside one record, where the data
 is already right and only the sentence is false, so no test fails and nothing
 else notices. There is no false-positive class: a record cannot both carry a key
 and truthfully say the key does not exist. Every hit is a note to rewrite, never
-a mechanic to build. `CLASS-AUDIT` S4 found the first on the Godling and
-`RETRO-AUDIT` R1 found five more.
+a mechanic to build. Who found the first ones is in `reference/why.md`.
 
 **Its silence is not coverage, and its own output says so.** A class with no key
 at all has nothing to contradict, so the commoner half — a class that predates a
@@ -192,9 +174,7 @@ pair it with a claim you know to be stale before believing a number.
 ## The rule that makes it cheap
 
 **When you lift a limitation, grep for the sentence that described it — in the
-same change.** That is the whole discipline, and it is what PR #208 got right:
-the psionic save fix included a follow-up script rewriting the four classes that
-said *"the app currently derives 12"*.
+same change.** The PR that got it right is in `reference/why.md`.
 
 ## Verify, do not assume, in both directions
 
@@ -206,8 +186,7 @@ said *"the app currently derives 12"*.
   modelled all along — the list is hand-maintained. A false alarm's instruction
   is *delete the key*, which breaks a working field.
 - **Ask production, not local** (`CLAUDE.md` → *Three things that fail late*).
-  An audit run against mine reported two catalog duplicates that production had merged away
-  weeks earlier.
+  The incident is in `reference/why.md`.
 
 ## A MEASUREMENT keeps. A CLAIM ABOUT NOW rots. Tell them apart before deleting
 
@@ -233,20 +212,13 @@ five.
 
 Two rules that fall out of it, both learned the expensive way:
 
-- **Grep the whole file, not the paragraph.** `claim-audit` deleted its own
-  counts from one table and left the same figure standing three lines above and
-  again at the bottom — the fix went where the number had been noticed rather
-  than to the file.
+- **Grep the whole file, not the paragraph.**
 - **Do not restate the wording you are replacing.** A note quoting the old
   phrase defeats the grep that should find the next copy. Describe what the
   sentence said; do not reprint it.
 
-**The three skills that state this rule are the three that broke it.**
-`claim-audit`, `ship-pr` and `schema-change` each say some version of *do not
-quote a moving number* — and on 2026-09-02 the live breaches were in
-`claim-audit`, `class-import` and `book-survey`. Each of the three had fixed its
-own file after being burned and none had looked at the others'. Being the author
-of the rule is not evidence of following it.
+Where each was learned, and the three skills that broke the rule they state,
+are in `reference/why.md`.
 
 ## Turning a finding into something that cannot recur
 

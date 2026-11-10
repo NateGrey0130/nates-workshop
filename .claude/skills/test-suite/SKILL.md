@@ -1,6 +1,6 @@
 ---
 name: test-suite
-description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the four smoke suites that run as one job and the three checks that gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
+description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships.
 ---
 
 # Adding a check
@@ -94,7 +94,7 @@ so a `--section` run can skip the whole module without parsing it. That list is
 typed by hand, and drift in either direction is invisible to the flagless run:
 a `section()` call the list lacks is unreachable by name, and a listed name no
 call announces matches nothing. Both end in *no section matched*, which reads as
-the reader's typo. `rendered-ui.mjs` carried two such names until 2026-09-17.
+the reader's typo.
 The flagless run now reads every module's list against its calls, so **add the
 name to `SECTIONS` in the same edit that adds the `section()` call.**
 
@@ -110,9 +110,9 @@ codex, the notes and the dashboard live in their own app directories while
 `apps/character-creator/js/` stayed put, because the Pages Functions import
 those modules by path. `harness.mjs` owns that map: call `appPath('sheet.js')`
 rather than joining a directory, and sweep with `siblingAppDirs` rather than a
-`readdir` of `appDir`. A sweep written the readdir way silently covered four
-fewer files the moment they moved — the parse check stopped opening `sheet.js`
-and said nothing, which is the exact hole it exists to close.
+`readdir` of `appDir`.
+
+The incidents behind both are in `reference/why.md`.
 
 ## The flagless run is the gate. Both flags say so themselves
 
@@ -121,7 +121,7 @@ repeatable, comma-separated, and skips the wrangler half. `regression.mjs --upto
 <stage>` truncates at `setup`, `play` or `data`.
 
 **A truncated or filtered run labels its summary `PARTIAL`**, specifically so its
-output cannot be pasted into a PR as `ship-pr` step 4. If you are quoting a pass
+output cannot be pasted into a PR as the **Verify** step of `ship-pr` → *The loop*. If you are quoting a pass
 line, it has no flags in it.
 
 **`regression.mjs` takes `--upto` rather than `--section`, and that is not a
@@ -180,10 +180,8 @@ server, use this module rather than a port number.
 
 ## Splitting a checks module
 
-`smoke.mjs` has been split three times and will be again. It passed 4,000
-lines and `checks/environment.mjs` came out. It grew back past 10,000 and
-`checks/second-body.mjs` took four Nightbane sections out. At 11,000, on
-2026-10-10, nine more modules took thirty-nine sections. **`smoke.mjs`'s own
+`smoke.mjs` has been split three times and will be again (the three are in
+`reference/why.md`). **`smoke.mjs`'s own
 header is the record**: how to cut, which names are really shared, and which
 sections are the next candidate. Read it there, because this page went stale
 once already by repeating it.
@@ -198,9 +196,7 @@ each column-0 declaration inside and outside the range. **Then read every hit
 the count calls shared, because most are not.** `rel`, `legal`, `bad` and
 `skill` are declared at column 0 somewhere and found in dozens of other
 sections, and every one of those is a local of the same name or the word in a
-string. Four scope-aware passes written during the second split each returned
-a confidently wrong answer, and a bare count during the third was pessimistic
-in the same way.
+string.
 
 **The trap is a local no import analysis can see.** `D` is built in the
 `Psychic tiers` section, and `derive` in `Class bonuses`, by evaluating
@@ -215,80 +211,13 @@ from `checks/` it is one directory deeper.
 
 ## A skill is a check too, so pressure-test it before it ships
 
-A skill in `.claude/skills/` is a check on behaviour, and until 2026-09-23 none
-had been seen to fail. Each was written after an incident and tested by the
-next one. `take` is what that costs: it exists because `audit-menu` already
-required the subject grep and the premise audit, and sessions skipped both
-anyway (`take` → the paragraph opening *This skill adds no rule*). A skill that reads as correct
-and changes nothing is a green tick that retired a real rule, which is the
-same failure this file opens with.
+**A new or changed skill is run against a scenario before it merges**, whenever
+the change is meant to make a session **do** something differently. Skip it
+for a typo, a moved path, or a dated fact.
 
-**So a new or changed skill is run against a scenario before it merges.** The
-method comes from obra/superpowers' `writing-skills`, reviewed 2026-09-22 and
-adopted without the plugin (`SKILL-AUDIT` `F64`):
-
-1. **Write the scenario with the pressure that caused the incident.** Use a
-   real failing line, a request to "just fix it tonight", or a branch that's
-   already open. A calm scenario tests reading comprehension, not behaviour.
-2. **RED: run it BEFORE editing the skill.** Use two fresh subagents with the
-   same prompt. Make it planning only: they may read anything and run nothing
-   that writes, and they reply with their steps and the first change they would
-   make. **Do this before the edit, because every session loads the skills
-   from the main checkout:** once a skill file there is edited, that edit is
-   what every subagent loads, including ones spawned in the same turn. It is
-   also what every other session of the repo loads.
-   **In a worktree no session loads what you edit**, so GREEN would
-   load the old skill and match RED. Step 4 would then read that as "the
-   skill adds nothing", and the verdict would be false. Run this from the
-   main checkout.
-   **Keep the prompt blind.** It describes the situation and never the
-   behaviour you hope for. `claim-audit`'s fixture rule is the precedent: an
-   agent that has read the answer key cannot be scored (`SKILL-AUDIT` `F28`,
-   `.claude/skills/claim-audit/reference/negatives.md`).
-   **The prompt is not the only place the answer can be.** Subagents grep
-   the tree and read files from disk, and the harness hands every one of them
-   a git snapshot. So keep the answer out of all three places below while any
-   run is live:
-   - **The branch name and commit subjects.** The snapshot carries the
-     current branch, the uncommitted file list and recent commit subjects,
-     whatever the tree holds. A branch called `…-sweep-past-the-check` states
-     the answer. Run from a neutrally named branch, and don't commit anything
-     that describes the test until the runs are done.
-   - **The working tree.** An uncommitted finding, a PR-body draft or a
-     notes file that describes the test is an answer key. Keep drafts in the
-     scratchpad, and write the finding after the runs.
-   - **The skill under test.** It must not name the scenario, quote the
-     failing row, or record its own RED and GREEN results. Evidence belongs
-     in the finding, not in the skill.
-
-   A run that read any of these does not count. Say so in the record, and run
-   it again. `SKILL-AUDIT` `F65` had all three leaks in its second GREEN
-   round, and its one hit there was discarded. The branch name was still live
-   in its third round too (`SKILL-AUDIT` `F66`).
-3. **GREEN: edit, WAIT, then run the identical prompt again**, two more runs.
-   The edit reaches subagents after a delay, not on save. Measured 2026-09-23:
-   a probe spawned two tool calls after an edit loaded the old headings. The
-   session then showed a skill-listing refresh carrying the new description,
-   and the next probe loaded the new headings. **Wait for that refresh**, or
-   have one probe list the skill's `## ` headings, before believing a GREEN
-   run saw the new text.
-4. **Read the difference, and trust a failure more than a pass.**
-   - If RED already does what the skill asks, the skill adds nothing on that
-     scenario. **Say so, then ship it smaller or not at all.**
-   - If GREEN still misses, either the wording is wrong or the skill never
-     loaded. The description is what makes it load.
-   - A pass in a clean scenario is weak evidence. A miss is strong evidence.
-5. **Put the prompt and what each run did in the PR body.** The next person to
-   change the skill can then re-run the same scenario, not invent a new one.
-
-**An agent file is different.** One written mid-session answers
-`Agent type '<name>' not found` until the next turn (`CLAUDE.md`,
-`SKILL-AUDIT` `F26`), so an agent's GREEN half waits for the next turn. A
-skill's waits only for the refresh in step 3.
-
-**Cost: four subagent runs per skill change.** Skip it for a typo, a moved
-path, or a dated fact. Run it whenever the change is meant to make a session
-**do** something differently.
+The shape: RED before the edit, GREEN after, the same prompt both times, run
+from the main checkout. The method is in `reference/pressure-test.md`: read it
+before writing or changing a skill.
 
 ## What "checked" means
 
