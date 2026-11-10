@@ -179,7 +179,8 @@ finishes that row itself. More than that left is `BLOCKED` at the warning.
   goes in your report, because no pull request body will hold it.
 - **`BLOCKED`**, with the pull request left open if one exists: a check is red
   for a reason outside your diff, the fix needs a decision the brief does not
-  record, the change is larger than the brief describes, or your context is
+  record (name the options, and the one you recommend with its reason, or
+  say you recommend none: the driver takes or asks by that line), the change is larger than the brief describes, or your context is
   past 200k with more left than the pull request and its watch (above). If
   you stop with work committed, push it first and name the branch and commit,
   so the next worker can resume it.
