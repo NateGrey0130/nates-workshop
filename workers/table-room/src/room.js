@@ -34,10 +34,26 @@
 //   { type: 'init.back' }                     GM: undo the last Next, once
 //   { type: 'init.newRound', reroll? }        GM: a new melee (Palladium keeps the
 //                                             order unless reroll) or round (Marvel)
+//   An opposed FEAT, Marvel only (contest.js has the rule; a house rule):
+//   { type: 'contest.call', seat, role: 'attacker' | 'defender', ability, action,
+//     label?, hide?, opp: { kind: 'pc' | 'npc' | 'name', ref?, name, ability,
+//     rank, roll?: 'server' | 'typed', d100?, karma? } }      GM. `seat` is a
+//       seated character's id; its rank is the seat's (D1), never the message's.
+//       An `opp` that is another seated character gets a prompt of its own.
+//       Otherwise the GM's rank is believed, and the opposing d100 is rolled
+//       here now, typed now (d100), or left for the GM to type (roll: 'typed').
+//   { type: 'contest.roll', id, karma? }          a seated player: their side, one tap
+//   { type: 'contest.roll', id, d100?, karma? }   GM: the side nobody is seated as
+//   { type: 'contest.cancel', id }                GM
+//   { type: 'contest.follow', id, rank? }         GM: the target's Endurance FEAT
+//                                                 after a Slam, Stun or Kill
 //
 // Room -> client:
 //   { type: 'state', you, room, people, feed, shown, init }   on hello, and after a seat
 //   { type: 'init', init }                       the order changed; masked per screen
+//   { type: 'contests', contests }               the calls this screen is part of:
+//                                                all of them for the GM, a player's
+//                                                own prompts, nothing for the TV
 //   { type: 'up', round, pass }                  this phone's character is up (it vibrates)
 //   { type: 'deck' }                             this phone's character acts next
 //   { type: 'roll', roll }                       a new roll this screen may see
@@ -71,6 +87,8 @@
 //                and never nears the per-value size limit
 //   shown        the picture on the table, or absent. Not saved with the
 //                feed and dropped on close: showing leaves no trace.
+//   contests     the opposed FEATs called and not yet rolled out. Dropped on
+//                close like `init`; a finished contest's RESULT is a roll.
 //   init         the initiative order and whose turn it is (initiative.js).
 //                Not saved with the feed either; the initiative ROLLS are
 //                rolls, and go into the feed like any other.
@@ -103,9 +121,10 @@ import { imageRef, mayView, mayFetch } from './showing.js';
 import { parseExpression, rollExpression, rollFeat } from './dice.js';
 import { feat, hasInitTalent, rollRound, orderMarvel } from './marvel.js';
 import * as P from './palladium.js';
+import { ABILITIES, callable, resolve, resultText } from './contest.js';
 import {
   emptyInit, addEntry, rollEntry, rollAll, next as nextTurn, newRound, removeEntry,
-  moveEntry, setEntry, initView, onDeck, characterOf, back, forgetUndo,
+  moveEntry, setEntry, initView, onDeck, characterOf, back, forgetUndo, HIDDEN_NAME,
 } from './initiative.js';
 
 // How each game rolls an order and runs a round out (initiative.js).
@@ -137,6 +156,24 @@ export function initStats(game, s = {}) {
   }
   return { bonus: int(s.bonus, -50, 50, 0), attacks: int(s.attacks, 0, 30, P.DEFAULT_ATTACKS) };
 }
+
+// A Marvel seat's seven ranks, as the join brought them from D1 (`sheet`), kept
+// as seven ladder positions: a socket attachment is small, and a player may
+// hold several heroes. -1 is an ability the sheet has no rank for.
+export function seatRanks(sheet) {
+  return ABILITIES.map((a) => {
+    const v = sheet?.abilities?.[a];
+    const id = v?.rank ?? (v?.number == null ? null : feat.rankForNumber(Number(v.number)));
+    return feat.ladder.findIndex((r) => r.id === id);
+  });
+}
+const rankOfSeat = (seat, ability) => feat.ladder[seat?.ranks?.[ABILITIES.indexOf(ability)] ?? -1]?.id ?? null;
+// A rank the GM typed: on the ladder, and with a column on the Universal Table.
+const rankTyped = (id) => {
+  try { feat.printed(String(id), 1); return String(id); } catch { return null; }
+};
+const d100Typed = (v) => (Number.isInteger(v) && v >= 1 && v <= 100 ? v : null);
+export const CONTESTS_MAX = 20;
 
 export const IDLE_CLOSE_MS = 12 * 60 * 60 * 1000;
 export const FEED_MAX = 4000;          // about 1.2 MB saved: inside one D1 row
@@ -292,6 +329,8 @@ export class TableRoom {
     characters = characters.map((c) => ({
       id: String(c.id), name: clean(c.name, 80),
       ...(c.init && typeof c.init === 'object' ? { init: c.init } : {}),
+      ...(c.sheet && typeof c.sheet === 'object'
+        ? { ranks: seatRanks(c.sheet), karma: Number.isFinite(c.sheet.karma) ? c.sheet.karma : null } : {}),
     }));
     let name = '';
     try { name = decodeURIComponent(headers.get('X-Table-Name') || ''); } catch { name = ''; }
@@ -330,6 +369,7 @@ export class TableRoom {
         case 'roll':  await this.onRoll(ws, conn, msg); break;
         default:
           if (String(msg.type).startsWith('init.')) await this.onInit(ws, conn, msg, meta);
+          else if (String(msg.type).startsWith('contest.')) await this.onContest(ws, conn, msg, meta);
           else this.sendError(ws, `Unknown message: ${String(msg.type).slice(0, 20)}`);
       }
     } catch (err) {
@@ -548,6 +588,192 @@ export class TableRoom {
     }
   }
 
+  // ─── Opposed FEATs (Marvel) ─────────────────────────────────────────────
+
+  async contests() {
+    return (await this.ctx.storage.get('contests')) ?? [];
+  }
+
+  liveSeat(characterId) {
+    return this.liveSockets().map((s) => s.deserializeAttachment() ?? {})
+      .find((c) => c.role === 'player' && c.seat?.id === String(characterId))?.seat ?? null;
+  }
+
+  d100() {
+    return 1 + Math.floor(this.random() * 100);
+  }
+
+  // Every contest.* message. Nothing about a contest is published until both
+  // sides have rolled: a first roll seen would tell the second whether to
+  // call on Karma.
+  async onContest(ws, conn, msg, meta) {
+    if (meta.game !== 'marvel') return this.sendError(ws, 'An opposed FEAT is a Marvel roll');
+    const gm = conn.role === 'gm';
+    const list = await this.contests();
+    const c = msg.type === 'contest.call' ? null : list.find((x) => x.id === String(msg.id));
+    if (msg.type !== 'contest.call' && !c) return this.sendError(ws, 'That call is over');
+
+    switch (msg.type) {
+      case 'contest.call': {
+        if (!gm) return this.sendError(ws, 'Only the GM calls for a FEAT');
+        if (list.length >= CONTESTS_MAX) return this.sendError(ws, 'Too many calls are waiting; cancel one');
+        const made = await this.makeContest(msg);
+        if (made.error) return this.sendError(ws, made.error);
+        list.push(made);
+        break;
+      }
+      case 'contest.roll': {
+        if (c.done) return this.sendError(ws, 'Both sides have rolled');
+        let side;
+        if (gm) {
+          side = [c.attacker, c.defender].find((x) => x.seat === null && x.d100 === null);
+          if (!side) return this.sendError(ws, 'That roll is the player\'s to make');
+          if (msg.d100 != null && d100Typed(msg.d100) === null) return this.sendError(ws, 'A typed roll is a whole number from 1 to 100');
+          side.d100 = msg.d100 != null ? msg.d100 : this.d100();
+        } else {
+          side = conn.role === 'player' && conn.seat
+            ? [c.attacker, c.defender].find((x) => x.seat === String(conn.seat.id)) : null;
+          if (!side) return this.sendError(ws, 'That roll is not yours');
+          if (side.d100 !== null) return this.sendError(ws, 'You have rolled');
+          side.d100 = this.d100();
+        }
+        if (msg.karma === true) side.karma = true;
+        if (c.attacker.d100 !== null && c.defender.d100 !== null) await this.finishContest(c, list, meta);
+        break;
+      }
+      case 'contest.cancel': {
+        if (!gm) return this.sendError(ws, 'Only the GM cancels a call');
+        list.splice(list.indexOf(c), 1);
+        break;
+      }
+      case 'contest.follow': {
+        if (!gm) return this.sendError(ws, 'Only the GM rolls the follow-up');
+        if (!c.follow) return this.sendError(ws, 'That call has no follow-up');
+        const seat = c.defender.seat === null ? null : this.liveSeat(c.defender.seat);
+        const rank = seat ? rankOfSeat(seat, 'endurance') : rankTyped(msg.rank);
+        if (!rank) return this.sendError(ws, 'Pick the Endurance rank for the follow-up');
+        const r = feat.roll({ rank, d100: this.d100(), action: c.follow.column });
+        const colour = r.colour[0].toUpperCase() + r.colour.slice(1);
+        await this.append({
+          by: { email: meta.gmEmail, name: 'GM', role: 'gm', characterId: null },
+          source: 'feat',
+          // The target's Endurance and roll are as hidden as the rest of it was.
+          visibility: c.mask === 'defender' ? 'secret' : 'all',
+          text: `${c.follow.name} ${c.defender.name}, Endurance ${feat.ladder.find((x) => x.id === rank).name}: ${r.d100} — ${colour}: ${r.result}`,
+          detail: { d100: r.d100, colour: r.colour, column: r.column, contest: c.id },
+        });
+        list.splice(list.indexOf(c), 1);
+        break;
+      }
+      default: return this.sendError(ws, `Unknown message: ${String(msg.type).slice(0, 20)}`);
+    }
+    await this.ctx.storage.put('contests', list);
+    this.broadcastContests(list);
+  }
+
+  // A call, checked and filled in. The seated side's rank is its seat's.
+  async makeContest(msg) {
+    const seat = this.liveSeat(msg.seat);
+    if (!seat) return { error: 'Nobody is seated as that character' };
+    const action = callable(feat).find((a) => a.id === msg.action);
+    if (!action) return { error: 'Pick what the FEAT is for' };
+    if (!ABILITIES.includes(msg.ability)) return { error: 'Pick the ability to roll' };
+    const rank = rankOfSeat(seat, msg.ability);
+    if (!rank) return { error: `${seat.name}'s sheet has no rank for that ability` };
+    const o = msg.opp && typeof msg.opp === 'object' ? msg.opp : {};
+    if (!ABILITIES.includes(o.ability)) return { error: 'Pick the opposing ability' };
+    const mine = { seat: String(seat.id), name: seat.name, ability: msg.ability, rank, d100: null, karma: false };
+
+    let theirs;
+    let hide = false;
+    const other = o.kind === 'pc' && o.ref != null ? this.liveSeat(o.ref) : null;
+    if (other) {
+      if (String(other.id) === String(seat.id)) return { error: 'A character cannot oppose itself' };
+      const r = rankOfSeat(other, o.ability);
+      if (!r) return { error: `${other.name}'s sheet has no rank for that ability` };
+      theirs = { seat: String(other.id), name: other.name, ability: o.ability, rank: r, d100: null, karma: false };
+    } else {
+      const r = rankTyped(o.rank);
+      if (!r) return { error: 'Pick the opposing rank' };
+      let name = clean(o.name, LABEL_MAX) || 'Someone';
+      // An NPC the GM hid in the order stays hidden here: no name, no numbers.
+      const init = await this.init();
+      const secret = init.entries.some((e) => e.hidden
+        && ((o.ref != null && e.ref != null && String(e.ref) === String(o.ref) && e.kind === o.kind) || e.name === name));
+      if (secret) name = HIDDEN_NAME;
+      hide = secret || msg.hide === true;
+      let d100 = null;
+      if (o.d100 != null) {
+        d100 = d100Typed(o.d100);
+        if (d100 === null) return { error: 'A typed roll is a whole number from 1 to 100' };
+      } else if (o.roll !== 'typed') d100 = this.d100();
+      theirs = { seat: null, name, ability: o.ability, rank: r, d100, karma: o.karma === true };
+    }
+    const attacking = msg.role !== 'defender';
+    return {
+      id: this.newId(), at: Date.now(), label: clean(msg.label, LABEL_MAX), action: action.id,
+      // The side whose ability, rank and roll no player or TV is sent.
+      mask: hide ? (attacking ? 'defender' : 'attacker') : null,
+      attacker: attacking ? mine : theirs, defender: attacking ? theirs : mine,
+      done: false, follow: null,
+    };
+  }
+
+  // Both rolls are in: the result is a roll, and goes into the feed under the
+  // rule every roll follows. A hidden contest is TWO rows, a public one with
+  // the hidden side as its name alone and a GM-only one in full, so canSee()
+  // and the saved session need no rule of their own.
+  async finishContest(c, list, meta) {
+    const action = feat.actions.find((a) => a.id === c.action);
+    const r = resolve(feat, action, c.attacker, c.defender);
+    const by = { email: meta.gmEmail, name: 'GM', role: 'gm', characterId: null };
+    const shown = (which) => (c.mask === which ? null : { d100: c[which].d100, colour: r[which].colour });
+    await this.append({
+      by, source: 'contest', visibility: 'all',
+      text: resultText(feat, action, c.label, c.attacker, c.defender, r, c.mask),
+      detail: { contest: c.id, winner: r.winner, result: r.result, crit: r.crit, attacker: shown('attacker'), defender: shown('defender') },
+    });
+    if (c.mask) {
+      await this.append({
+        by, source: 'contest', visibility: 'secret',
+        text: resultText(feat, action, c.label, c.attacker, c.defender, r),
+        detail: { contest: c.id, winner: r.winner, result: r.result, crit: r.crit },
+      });
+    }
+    const follow = r.winner === 'attacker' ? feat.followUp(r.result) : null;
+    if (follow) Object.assign(c, { done: true, follow: { column: follow.id, name: follow.name } });
+    else list.splice(list.indexOf(c), 1);
+  }
+
+  // The calls as one screen may see them. The GM gets every call whole. A
+  // seated player gets only the calls their character is a side of and has
+  // yet to see rolled out: their own side, and the other's name, ability and
+  // rank unless the GM hid them. Never the other side's roll. Anyone else
+  // gets nothing at all.
+  contestsView(list, conn) {
+    if (conn.role === 'gm') return list;
+    if (conn.role !== 'player' || !conn.seat) return [];
+    const id = String(conn.seat.id);
+    return list.filter((c) => !c.done && (c.attacker.seat === id || c.defender.seat === id)).map((c) => {
+      const role = c.attacker.seat === id ? 'attacker' : 'defender';
+      const you = c[role];
+      const them = c[role === 'attacker' ? 'defender' : 'attacker'];
+      return {
+        id: c.id, label: c.label, action: c.action, role,
+        you: { ability: you.ability, rank: you.rank, d100: you.d100, karma: you.karma },
+        other: c.mask ? { name: them.name } : { name: them.name, ability: them.ability, rank: them.rank },
+      };
+    });
+  }
+
+  broadcastContests(list) {
+    for (const s of this.liveSockets()) {
+      const c = s.deserializeAttachment() ?? {};
+      if (c.role === 'display') continue;
+      this.send(s, { type: 'contests', contests: this.contestsView(list, c) });
+    }
+  }
+
   rollerOf(conn) {
     if (conn.role === 'gm') return { email: conn.email, name: 'GM', role: 'gm', characterId: null };
     return { email: conn.email, name: conn.seat?.name || conn.name || 'Player', role: 'player', characterId: conn.seat?.id ?? null };
@@ -599,6 +825,7 @@ export class TableRoom {
       feed,
       shown: mayView(conn) ? await this.shown() : null,
       init: initView(await this.init(), conn, RULES[meta.game]),
+      contests: this.contestsView(await this.contests(), conn),
     });
   }
 
@@ -619,6 +846,7 @@ export class TableRoom {
     await this.ctx.storage.put('meta', meta);
     await this.ctx.storage.delete('shown');
     await this.ctx.storage.delete('init');
+    await this.ctx.storage.delete('contests');
     await this.ctx.storage.deleteAlarm();
     for (const s of this.liveSockets()) {
       this.send(s, { type: 'closed', reason });
@@ -636,7 +864,8 @@ export class TableRoom {
     return sockets.map((s) => {
       const c = s.deserializeAttachment() ?? {};
       const name = c.role === 'gm' ? 'GM' : c.role === 'display' ? 'Display' : (c.seat?.name || 'Choosing a character');
-      return { name, role: c.role };
+      // The seated character's id: the GM's page lists who a FEAT can be called on.
+      return { name, role: c.role, characterId: c.role === 'player' ? c.seat?.id ?? null : null };
     });
   }
 
