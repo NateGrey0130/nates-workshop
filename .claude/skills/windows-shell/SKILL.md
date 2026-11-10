@@ -18,7 +18,12 @@ three cases the obvious check reports clean.
 block) on six shapes:
 
 - `git add -A`, `git add --all`, `git add .` (see *Commit messages*)
-- `sed -i` on a path under the repo (see *Editing a file in place*)
+- `sed -i` on a path under the repo (see *Editing a file in place*). It is
+  wider and narrower than that (`SKILL-AUDIT` `F68`, open): a read-only
+  `sed -n '1p' f.md; grep -i x f.md` is refused, because the `;` or `|` glued
+  to the file name does not end the walk and the next command's `-i` is read
+  as sed's. Put a space before the `;` or `|`, or split the call. And
+  `echo x; sed -i …` is not refused at all, so the hook is no excuse.
 - `scripts/q.mjs` or `scripts/d1-apply.mjs` with neither `--local` nor `--remote`
 - `gh pr merge` on a line with a chaining operator or a pipe
 - `git commit -m` with a backtick in it

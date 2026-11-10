@@ -34,7 +34,7 @@ the parser's output, not the parser.
 
 The four smoke suites run as steps of one job, `smoke` (`.github/workflows/tests.yml`).
 
-The three bold names are required status checks on `main`; why a workflow's job id must not be renamed is a rule: `.claude/rules/workflows.md`.
+The three bold names are required status checks on `main`; why a workflow's job id must not be renamed is in `.claude/rules/workflows.md`. That file loads by itself only when a workflow file is read, so read it before renaming a job or adding a workflow.
 
 **Not every suite runs on every pull request** (since 2026-09-25). Each job
 first asks `node scripts/groups.mjs --affected HEAD^1 HEAD` which groups the

@@ -66,6 +66,8 @@ are read.**
 1. `state.md`, whole.
 2. `mcp__ccd_session_mgmt__list_sessions` (load it with `ToolSearch`): a
    running or waiting session whose prompt names this plan is a live driver.
+   If the tool does not exist in this session (a CLI session), stop and say
+   so: a live driver cannot be ruled out.
 3. `node scripts/ground-truth.mjs`: the open pull requests with their CI
    verdict, and any worktree still holding a row's branch. Exit 2 is
    UNKNOWN, not clean.
@@ -82,4 +84,5 @@ are read.**
 
 The driver is started exactly as `plan-rows` → *Starting the driver* says.
 **This session never drives the chain itself**, and a refused
-`start_session` is a stop.
+`start_session` is a stop. So is a session where
+`mcp__ccd_session__start_session` does not exist (a CLI session).

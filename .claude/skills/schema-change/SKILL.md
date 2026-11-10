@@ -1,6 +1,6 @@
 ---
 name: schema-change
-description: Add or change a D1 table or column in this repo without leaving a fresh environment broken. Use when writing a migration, adding a table or column, or editing db/schema.sql — "add a column for X", "new table", "write migration NNN". Covers the five places one column has to land, why a new database must NOT run the migrations, and the smoke checks that fail when a step is skipped.
+description: Add or change a D1 table or column in this repo without leaving a fresh environment broken. Use when writing a migration, adding a table or column, or editing db/schema.sql — "add a column for X", "new table", "write migration NNN".
 ---
 
 # Changing the schema
@@ -12,7 +12,7 @@ A column lives in **five** places, not one. Four of the five are easy to skip
 and none of them fail at the moment you skip them.
 
 This is not hypothetical: migrations `020` and `021` added `isp_note` and
-`ppe_note` and reached only step 1. Every existing database was fine, so nothing
+`ppe_note` and reached only the first place, the migration. Every existing database was fine, so nothing
 looked wrong for weeks — but a database built the documented way came up without
 the columns, and the wizard's first call selected both. The smoke test could not
 see it either, because it applies `schema.sql` to a local database that had
@@ -29,9 +29,7 @@ A group whose tables have moved uses `db/schema-<group>.sql` and
 smoke checks run once per group and name the group when it is not Palladium,
 and `groups.mjs --check` fails a table created in the wrong group's file.
 
-**The five places** a column lands, **the four more** a whole TABLE needs and the hand-written catalog ledgers are a rule: `.claude/rules/d1-schema.md`.
-
-**Writing the migration** and **the guarded seed line** are a rule: `.claude/rules/d1-schema.md`.
+**The five places** a column lands, **the four more** a whole TABLE needs, the hand-written catalog ledgers, **writing the migration** and **the guarded seed line** are all in `.claude/rules/d1-schema.md`, not in this file. That file loads by itself only when a file under `db/` is read. **Read it now if it is not in context**, before you plan the change or list where it lands.
 
 ## A new database does not run the migrations
 
@@ -67,16 +65,17 @@ is not — over `--remote` it has returned stale replica data mid-migration.
 
 ## What fails when you skip a step
 
-The smoke test names the step:
+The smoke test names the place. The numbers are the `#` column of *The five
+places* in `.claude/rules/d1-schema.md`:
 
 | Failure | Missed |
 |---|---|
-| `every migrated column is also in a schema.sql CREATE` | step 2 |
-| `every migration has a guarded seed line in schema.sql` | step 3 |
-| `every seed line is guarded by a schema feature` | step 3, unguarded |
-| `every migration has a row in the docs/operations.md table` | step 4 |
-| `every table has a row in a data-model table` | step 5 |
-| `and it matches schema.sql` (table count) | step 5, new table |
+| `every migrated column is also in a schema.sql CREATE` | place 2, the `db/schema.sql` `CREATE` |
+| `every migration has a guarded seed line in schema.sql` | place 3, the seed row |
+| `every seed line is guarded by a schema feature` | place 3, the row is there but unguarded |
+| `every migration has a row in the docs/operations.md table` | place 4, the `apps/character-creator/docs/operations.md` migration table |
+| `every table has a row in a data-model table` | place 5, the `README.md` data model |
+| `and it matches schema.sql` (table count) | place 5, a new table's count |
 
 Run it before pushing:
 
