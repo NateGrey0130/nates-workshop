@@ -8,6 +8,16 @@
 > words *"No action proposed."* — which wrap across a line break, so a search for
 > that phrase does not find it.
 
+> **Adjusted 2026-11-10: `apps/pick3cut5/AUDIT.md`, which this file cites, is no
+> longer in the tree.** It was deleted with the rest of `apps/pick3cut5/` when the
+> app was retired on 2026-10-28 (#2015, commit `e314d3f8`;
+> `git show e314d3f8 --stat -- apps/pick3cut5/` lists what went). Read it with
+> `git show e314d3f8^:apps/pick3cut5/AUDIT.md`; any other path under
+> `apps/pick3cut5/` reads with the same `e314d3f8^:` prefix. What this file says
+> about that menu, its items and its shape was written against that text and is
+> left as written. It is a record, and none of it describes a file a scan of the
+> tree will meet today.
+
 Read-only pass over every `.md` in the repo — 38 files, ~11,600 lines — asking
 what has gone stale, what points at nothing, and what records a decision that
 has since been reversed. Checked against `main` @ the merge of #268, production
@@ -185,6 +195,11 @@ rather than as a fix for a known production bug.
 **Withdrawn 2026-08-25**, at Nathan's request to put F6 and F10 on hold — a
 request that turned out to be already satisfied. F6's note now carries a dated
 confirmation so the hold is explicit rather than inferred.
+
+**Adjusted 2026-11-10.** The menu this finding misread was deleted with its app
+on 2026-10-28 (#2015, commit `e314d3f8`). Its last text reads with
+`git show e314d3f8^:apps/pick3cut5/AUDIT.md`. The finding stays, for the reason
+its first paragraph gives.
 
 ## What was checked and found healthy
 
