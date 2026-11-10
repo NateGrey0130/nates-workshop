@@ -14,7 +14,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { section, check, summary, repoRoot } from '../../../shared/test/harness.mjs';
-import { TableRoom, IDLE_CLOSE_MS, FEED_ON_CONNECT } from '../src/room.js';
+import { TableRoom, IDLE_CLOSE_MS, FEED_ON_CONNECT, seatRanks } from '../src/room.js';
+import { level, resolve, resultText, callable } from '../src/contest.js';
 import { canSee, visibilityFor, rollView, filterFeed } from '../src/visibility.js';
 import { imageRef, mayView, mayFetch, sameImage } from '../src/showing.js';
 import { parseExpression, rollExpression, rollFeat } from '../src/dice.js';
@@ -1175,6 +1176,9 @@ section('initiative routes: a player\'s numbers come from D1, never the page');
   await S.call(M.join, 'GET', { who: BEN, query: `?code=${mcode}`, headers: up });
   check('a Marvel seat carries the hero\'s Agility number and Talents from its sheet',
     JSON.stringify(S.socketOf(mcode).deserializeAttachment().seat.init) === '{"agility":30,"talents":["martial-arts-e"]}');
+  const mseat = S.socketOf(mcode).deserializeAttachment().seat;
+  check('and its ranks for an opposed FEAT, as ladder positions: Agility 30 is Remarkable, the rest unknown',
+    JSON.stringify(mseat.ranks) === '[-1,6,-1,-1,-1,-1,-1]' && 'karma' in mseat && !('sheet' in mseat), JSON.stringify(mseat));
   const mr = (await S.call(M.roster, 'GET', { who: GM, query: '?campaign_id=5' })).body?.combatants ?? [];
   check('Marvel\'s roster lists the heroes and the GM\'s NPC sheets',
     mr.map((c) => `${c.kind}:${c.name}:${c.init.agility}`).join(',') === 'pc:Nightfox:30,npc:Doom:40', JSON.stringify(mr));
@@ -1189,6 +1193,271 @@ section('initiative: the server derives combat numbers the way the sheet does');
   check('and so does the server', bonusCall.test(lib));
   check('the sheet\'s first-form combat block is derive.combat(attrs, c.combat, bonuses)', /: derive\.combat\(attrs, c\.combat, bonuses\);/.test(sheet));
   check('and the server\'s', /derive\.combat\(c\.attributes \|\| \{\}, c\.combat, bonuses\)/.test(lib));
+}
+
+// ── Opposed FEATs (Marvel): a house rule, head to head ──────────────────────
+
+// The worked examples are Nate's, from planning (2026-11-09): Fighting
+// Remarkable (green from 36, yellow from 66, red from 95) against Agility Good
+// (green from 46, yellow from 76, red from 98), on Blunt Attacks.
+const BLUNT = feat.actions.find((a) => a.id === 'blunt-attacks');
+const sideOf = (name, ability, rank, d100, karma = false) => ({ name, ability, rank, d100, karma });
+const punch = (a, d, ka = false, kd = false) => resolve(feat, BLUNT,
+  sideOf('Spider-Man', 'fighting', 'remarkable', a, ka), sideOf('Doc Ock', 'agility', 'good', d, kd));
+
+section('contests: levels are compared, and every tie is the defender\'s');
+{
+  const lv = (rank, n) => level(feat, rank, n);
+  check('natural 13 < white < green < yellow < red < natural 69',
+    [lv('good', 13), lv('good', 20), lv('good', 62), lv('good', 80), lv('good', 100), lv('good', 69)].join() === '0,1,2,3,4,5');
+  check('the levels come off the printed table: 68 and 70 on Good are Green beside the 69',
+    lv('good', 68) === 2 && lv('good', 70) === 2);
+  const r = punch(71, 62);
+  check('71 on Remarkable (Yellow) beats 62 on Good (Green): a Slam', r.winner === 'attacker' && r.result === 'Slam', JSON.stringify(r));
+  check('Green against Green is the defender\'s', punch(50, 62).winner === 'defender');
+  check('13 against 13 is the defender\'s', punch(13, 13).winner === 'defender');
+  check('69 against 69 is the defender\'s', punch(69, 69).winner === 'defender');
+  check('a natural 13 loses to a White', punch(13, 20).winner === 'defender' && punch(20, 13).winner === 'attacker');
+  check('a natural 69 beats a Red from a 100, either way round',
+    punch(69, 100).winner === 'attacker' && punch(100, 69).winner === 'defender');
+  check('a win on a 69 reads as the Red result, marked a crit', punch(69, 100).result === 'Stun' && punch(69, 100).crit === true);
+  check('a White attack that beats a 13 is still a Miss on the column', punch(20, 13).result === 'Miss');
+  check('the columns a contest can be called on leave out the follow-ups and the shift columns',
+    callable(feat).map((a) => a.id).join() === 'blunt-attacks,edged-attacks,shooting,throwing-edged,throwing-blunt,energy,force,grappling,grabbing,escaping,charging',
+    callable(feat).map((a) => a.id).join());
+}
+
+section('contests: Karma is a cost shown, worked out from the two rolls');
+{
+  check('called and won anyway: 10', JSON.stringify(punch(71, 62, true).attacker.karma) === '{"owes":10}');
+  check('not called: no Karma line at all', punch(50, 62).attacker.karma === null);
+  const lost = punch(50, 62, true).attacker.karma;
+  check('called and lost: 50 needs Yellow, from 66 on Remarkable, so 16', lost.buy.cost === 16 && lost.buy.colour === 'yellow' && lost.owes === 10, JSON.stringify(lost));
+  check('both called: the buy costs 50 more', punch(50, 62, true, true).attacker.karma.buy.cost === 66);
+  const def = punch(71, 62, false, true).defender.karma;
+  check('a defender only has to MATCH: 62 needs Yellow, from 76 on Good, so 14', def.buy.cost === 14 && def.buy.colour === 'yellow', JSON.stringify(def));
+  const thirteen = punch(13, 20, true).attacker.karma;
+  check('lost on a natural 13: a flat 100 buys the lowest winning colour', thirteen.buy.cost === 100 && thirteen.buy.colour === 'green', JSON.stringify(thirteen));
+  check('and 150 when both called', punch(13, 20, true, true).attacker.karma.buy.cost === 150);
+  check('no Karma beats a natural 69', punch(96, 69, true).attacker.karma.buy === null && /natural 69/.test(punch(96, 69, true).attacker.karma.why));
+  check('an attacker facing a Red cannot buy: only a 69 ranks above it', punch(50, 100, true).attacker.karma.buy === null);
+  check('a buy never costs less than the 10 a call costs', punch(65, 62, true).attacker.karma.buy.cost === 10);
+  const a = sideOf('Spider-Man', 'fighting', 'remarkable', 50, true);
+  const d = sideOf('Doc Ock', 'agility', 'good', 62);
+  const text = resultText(feat, BLUNT, 'Punch', a, d, punch(50, 62, true));
+  check('the line the feed shows, in full',
+    text === 'Punch: Spider-Man Fighting Remarkable 50 Green v Doc Ock Agility Good 62 Green. Doc Ock wins. Spider-Man called on Karma: 16 would win it (Yellow: Slam); 10 if it stands.', text);
+  const masked = resultText(feat, BLUNT, '', a, { ...d, karma: true }, punch(50, 62, true, true), 'defender');
+  check('a hidden side is its name alone, and its own Karma line is left out',
+    masked === 'Blunt Attacks: Spider-Man Fighting Remarkable 50 Green v Doc Ock. Doc Ock wins. Spider-Man called on Karma: 66 would win it (Yellow: Slam); 10 if it stands.', masked);
+  check('13 and 69 are marked', /13 White, Extra fail/.test(resultText(feat, BLUNT, '', { ...a, d100: 13 }, { ...d, d100: 69 }, punch(13, 69)))
+    && /69 Red, Extra crit/.test(resultText(feat, BLUNT, '', { ...a, d100: 13 }, { ...d, d100: 69 }, punch(13, 69))));
+}
+
+// A Marvel table: the GM, the TV, Spider-Man on Ben's phone and Daredevil on
+// Ann's, each seat with its ranks as the join would bring them.
+const RANKS = { fighting: 'remarkable', agility: 'amazing', strength: 'incredible', endurance: 'excellent', reason: 'good', intuition: 'amazing', psyche: 'good' };
+const sheetFor = (ranks) => ({ abilities: Object.fromEntries(Object.entries(ranks).map(([k, rank]) => [k, { rank, number: null }])), karma: 40 });
+const die = (n) => (n - 1) / 100 + 0.001;
+async function contestTable(game = 'marvel') {
+  const t = makeRoom();
+  await post(t.room, '/init', { code: 'FEAT', game, campaignId: 5, campaignName: 'Avengers', gmEmail: GM });
+  t.gm = new FakeSocket('gm');
+  t.tv = new FakeSocket('tv');
+  t.spidey = new FakeSocket('spidey');
+  t.dd = new FakeSocket('dd');
+  await t.room.connect(t.gm, { role: 'gm', email: GM, name: 'GM', characters: [] });
+  await t.room.connect(t.tv, { role: 'display', email: GM, name: 'Display', characters: [] });
+  await t.room.connect(t.spidey, { role: 'player', email: BEN, name: '', characters: [{ id: 'h1', name: 'Spider-Man', ranks: seatRanks(sheetFor(RANKS)), karma: 40 }] });
+  await t.room.connect(t.dd, { role: 'player', email: ANN, name: '', characters: [{ id: 'h2', name: 'Daredevil', ranks: seatRanks(sheetFor({ ...RANKS, agility: 'good' })), karma: 12 }] });
+  for (const s of [t.gm, t.tv, t.spidey, t.dd]) await say(t.room, s, { type: 'hello' });
+  t.dice = (...q) => { t.room.random = () => (q.length ? die(q.shift()) : 0.5); };
+  return t;
+}
+const callsOn = (ws) => ws.messages.filter((m) => m.type === 'contests').at(-1)?.contests
+  ?? ws.messages.find((m) => m.type === 'state')?.contests;
+const OCK = { kind: 'name', name: 'Doc Ock', ability: 'agility', rank: 'good' };
+const CALL = { type: 'contest.call', seat: 'h1', role: 'attacker', ability: 'fighting', action: 'blunt-attacks', label: 'Punch' };
+
+section('contests: the GM calls, the player rolls, the result is one roll in the feed');
+{
+  const t = await contestTable();
+  check('a seat keeps its seven ranks as ladder positions', JSON.stringify(t.spidey.att.seat.ranks) === '[6,8,7,5,4,8,4]', JSON.stringify(t.spidey.att.seat));
+  check('and the GM is told who is seated as each screen joins, a player with one hero included',
+    t.gm.messages.filter((m) => m.type === 'people').at(-1)?.people.find((p) => p.name === 'Spider-Man')?.characterId === 'h1');
+  t.dice(62, 71, 40);
+  await say(t.room, t.gm, { ...CALL, rank: 'unearthly', opp: OCK });
+  const mine = callsOn(t.spidey);
+  check('the prompt reaches the phone seated as that character, with the rank from its seat whatever the message said',
+    mine.length === 1 && mine[0].you.rank === 'remarkable' && mine[0].you.d100 === null && mine[0].role === 'attacker', JSON.stringify(mine));
+  check('an open call shows the opposing name, ability and rank', JSON.stringify(mine[0].other) === '{"name":"Doc Ock","ability":"agility","rank":"good"}');
+  check('and never the opposing roll: the phone was sent no d100 of 62', !/"d100":62/.test(everything(t.spidey)));
+  check('the other phone and the TV get no prompt', callsOn(t.dd).length === 0 && !t.tv.messages.some((m) => m.type === 'contests') && callsOn(t.tv).length === 0);
+  check('nothing is in the feed until both have rolled', rollsOn(t.tv).length === 0);
+  await say(t.room, t.dd, { type: 'contest.roll', id: mine[0].id });
+  check('a player cannot roll another\'s call', errorsOn(t.dd).at(-1) === 'That roll is not yours');
+  await say(t.room, t.gm, { type: 'contest.roll', id: mine[0].id });
+  check('the GM cannot roll the player\'s side', errorsOn(t.gm).at(-1) === 'That roll is the player\'s to make');
+  await say(t.room, t.spidey, { type: 'contest.roll', id: mine[0].id });
+  const row = rollsOn(t.tv).at(-1);
+  check('both rolled: one public row, the same on every screen',
+    row?.source === 'contest' && row.text === 'Punch: Spider-Man Fighting Remarkable 71 Yellow v Doc Ock Agility Good 62 Green. Spider-Man wins: Slam.'
+    && rollsOn(t.dd).at(-1)?.text === row.text && rollsOn(t.gm).length === 1, JSON.stringify(row));
+  check('the prompt is gone from the phone', callsOn(t.spidey).length === 0);
+  const kept = callsOn(t.gm);
+  check('a Slam leaves the GM the follow-up', kept.length === 1 && kept[0].follow?.column === 'slam', JSON.stringify(kept));
+  await say(t.room, t.gm, { type: 'contest.follow', id: kept[0].id });
+  check('which needs the target\'s Endurance when nobody is seated as it', errorsOn(t.gm).at(-1) === 'Pick the Endurance rank for the follow-up');
+  await say(t.room, t.gm, { type: 'contest.follow', id: kept[0].id, rank: 'excellent' });
+  check('and is the target\'s Endurance FEAT on the Slam column',
+    rollsOn(t.tv).at(-1)?.text === 'Slam? Doc Ock, Endurance Excellent: 40 — White: Gr. Slam' && callsOn(t.gm).length === 0, rollsOn(t.tv).at(-1)?.text);
+
+  t.dice(62, 50);
+  await say(t.room, t.gm, { ...CALL, opp: { ...OCK, karma: true } });
+  await say(t.room, t.spidey, { type: 'contest.roll', id: callsOn(t.spidey)[0].id, karma: true });
+  check('Karma called on both sides: the loser\'s buy is 16 + 50, the winner\'s call 10',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 50 Green v Doc Ock Agility Good 62 Green. Doc Ock wins. Spider-Man called on Karma: 66 would win it (Yellow: Slam); 10 if it stands. Doc Ock called on Karma: 10.',
+    rollsOn(t.tv).at(-1)?.text);
+  check('a call that ends without a Slam, Stun or Kill leaves nothing behind', callsOn(t.gm).length === 0);
+  check('nothing was written anywhere but the feed: the seat\'s Karma is what the join brought', t.spidey.att.seat.karma === 40);
+
+  t.dice(13);
+  await say(t.room, t.gm, { ...CALL, opp: { ...OCK, d100: 20 } });
+  await say(t.room, t.spidey, { type: 'contest.roll', id: callsOn(t.spidey)[0].id, karma: true });
+  check('13 against a typed 20: Extra fail, and 100 would buy the Hit',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 13 White, Extra fail v Doc Ock Agility Good 20 White. Doc Ock wins. Spider-Man called on Karma: 100 would win it (Green: Hit); 10 if it stands.',
+    rollsOn(t.tv).at(-1)?.text);
+  t.dice(96);
+  await say(t.room, t.gm, { ...CALL, opp: { ...OCK, d100: 69 } });
+  await say(t.room, t.spidey, { type: 'contest.roll', id: callsOn(t.spidey)[0].id, karma: true });
+  check('96 against a natural 69: Extra crit, and no Karma beats it',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 96 Red v Doc Ock Agility Good 69 Red, Extra crit. Doc Ock wins. Spider-Man called on Karma: no Karma beats a natural 69; 10.',
+    rollsOn(t.tv).at(-1)?.text);
+}
+
+section('contests: who may call, and what a typed roll may be');
+{
+  const t = await contestTable();
+  await say(t.room, t.spidey, { ...CALL, opp: OCK });
+  check('a player cannot call for a FEAT', errorsOn(t.spidey).at(-1) === 'Only the GM calls for a FEAT');
+  await say(t.room, t.tv, { ...CALL, opp: OCK });
+  check('nor can the Display', errorsOn(t.tv).at(-1) === 'Only the GM calls for a FEAT');
+  const refused = async (patch, opp = OCK) => { await say(t.room, t.gm, { ...CALL, ...patch, opp }); return errorsOn(t.gm).at(-1); };
+  check('nobody seated as that character', await refused({ seat: 'h9' }) === 'Nobody is seated as that character');
+  check('a follow-up column cannot be called', await refused({ action: 'slam' }) === 'Pick what the FEAT is for');
+  check('nor a defence column, whose results are shifts', await refused({ action: 'dodging' }) === 'Pick what the FEAT is for');
+  check('an ability that is not one of the seven', await refused({ ability: 'luck' }) === 'Pick the ability to roll');
+  check('an opposing rank that is not on the ladder', await refused({}, { ...OCK, rank: 'mighty' }) === 'Pick the opposing rank');
+  check('a typed roll of 101', await refused({}, { ...OCK, d100: 101 }) === 'A typed roll is a whole number from 1 to 100');
+  check('a typed roll of 12.5', await refused({}, { ...OCK, d100: 12.5 }) === 'A typed roll is a whole number from 1 to 100');
+  check('a character cannot oppose itself', await refused({}, { kind: 'pc', ref: 'h1', name: 'x', ability: 'agility' }) === 'A character cannot oppose itself');
+  check('and none of those left a call waiting', callsOn(t.gm).length === 0);
+
+  t.dice(71);
+  await say(t.room, t.gm, { ...CALL, opp: { ...OCK, roll: 'typed' } });
+  const id = callsOn(t.gm)[0].id;
+  check('roll: typed waits for the GM\'s real dice', callsOn(t.gm)[0].defender.d100 === null);
+  await say(t.room, t.spidey, { type: 'contest.roll', id });
+  check('the player has rolled and sees their own roll at once', callsOn(t.spidey)[0].you.d100 === 71 && rollsOn(t.tv).length === 0);
+  await say(t.room, t.spidey, { type: 'contest.roll', id });
+  check('once', errorsOn(t.spidey).at(-1) === 'You have rolled');
+  await say(t.room, t.gm, { type: 'contest.roll', id, d100: 0 });
+  check('the GM\'s typed roll is 1 to 100', errorsOn(t.gm).at(-1) === 'A typed roll is a whole number from 1 to 100' && rollsOn(t.tv).length === 0);
+  await say(t.room, t.gm, { type: 'contest.roll', id, d100: 62 });
+  check('and then it is compared', /71 Yellow v Doc Ock Agility Good 62 Green\. Spider-Man wins: Slam\.$/.test(rollsOn(t.tv).at(-1)?.text ?? ''), rollsOn(t.tv).at(-1)?.text);
+  await say(t.room, t.gm, { type: 'contest.cancel', id });
+  check('cancel takes a call down', callsOn(t.gm).length === 0);
+  await say(t.room, t.gm, { type: 'contest.roll', id });
+  check('and a call that is gone answers so', errorsOn(t.gm).at(-1) === 'That call is over');
+
+  const p = await contestTable('palladium');
+  await say(p.room, p.gm, { ...CALL, opp: OCK });
+  check('a Palladium table has no opposed FEAT', errorsOn(p.gm).at(-1) === 'An opposed FEAT is a Marvel roll');
+}
+
+section('contests: a hidden opposing value reaches the GM alone');
+{
+  const t = await contestTable();
+  t.dice(50);
+  // Doc Ock dodges on Agility Good and rolls 62: none of that may leave the GM.
+  await say(t.room, t.gm, { ...CALL, hide: true, opp: { ...OCK, d100: 62, karma: true } });
+  const mine = callsOn(t.spidey)[0];
+  check('the prompt names the opponent and nothing else about it', JSON.stringify(mine.other) === '{"name":"Doc Ock"}', JSON.stringify(mine));
+  await say(t.room, t.spidey, { type: 'contest.roll', id: mine.id, karma: true });
+  await say(t.room, t.spidey, { type: 'hello' });
+  await say(t.room, t.tv, { type: 'hello' });
+  const LEAK = /Good|gility|"d100":62|62 Green|"rank":"good"/;
+  check('no byte of the ability, the rank or the roll reached the player, reconnect included', !LEAK.test(everything(t.spidey)), everything(t.spidey).match(LEAK)?.[0]);
+  check('nor the other phone', !LEAK.test(everything(t.dd)));
+  check('nor the TV', !LEAK.test(everything(t.tv)));
+  check('the public row has the hidden side as its name, and the seated side\'s Karma',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 50 Green v Doc Ock. Doc Ock wins. Spider-Man called on Karma: 66 would win it (Yellow: Slam); 10 if it stands.',
+    rollsOn(t.tv).at(-1)?.text);
+  const gmRows = rollsOn(t.gm).slice(-2);
+  check('the GM gets that row and a GM-only one in full',
+    gmRows[0].visibility === 'all' && gmRows[1].visibility === 'secret' && /Doc Ock Agility Good 62 Green/.test(gmRows[1].text) && /Doc Ock called on Karma: 10\.$/.test(gmRows[1].text), JSON.stringify(gmRows));
+  check('the saved feed is filtered by the same rule: a player reads back the public row only',
+    filterFeed((await (await get(t.room, '/feed')).json()).feed, { role: 'player', email: BEN }).length === 1);
+
+  // A hidden side that wins on a natural 69: the public row may not say so in
+  // its detail either, or `crit` is the hidden roll.
+  t.dice(40);
+  await say(t.room, t.gm, { ...CALL, hide: true, opp: { ...OCK, d100: 69 } });
+  await say(t.room, t.spidey, { type: 'contest.roll', id: callsOn(t.spidey)[0].id });
+  check('a hidden natural 69 is not in the public row\'s detail',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 40 Green v Doc Ock. Doc Ock wins.' && rollsOn(t.tv).at(-1)?.detail.crit === false,
+    JSON.stringify(rollsOn(t.tv).at(-1)));
+  check('and the GM-only row still marks it', rollsOn(t.gm).at(-1)?.detail.crit === true && /69 Red, Extra crit/.test(rollsOn(t.gm).at(-1)?.text));
+
+  // An NPC the GM hid in the order is hidden here too, name and all.
+  await say(t.room, t.gm, { type: 'init.add', kind: 'npc', ref: '4', name: 'Doctor Doom', hidden: true, agility: 40 });
+  t.dice(71, 40);
+  await say(t.room, t.gm, { ...CALL, opp: { kind: 'npc', ref: '4', name: 'Doctor Doom', ability: 'agility', rank: 'good', d100: 62 } });
+  const doom = callsOn(t.spidey)[0];
+  check('a hidden NPC is ??? and its numbers are hidden without the GM asking', JSON.stringify(doom.other) === `{"name":"${HIDDEN_NAME}"}`, JSON.stringify(doom));
+  await say(t.room, t.spidey, { type: 'contest.roll', id: doom.id });
+  await say(t.room, t.gm, { type: 'contest.follow', id: callsOn(t.gm)[0].id, rank: 'incredible' });
+  check('its name reached no player and not the TV, the follow-up included',
+    !/Doom|Incredible/.test(everything(t.spidey)) && !/Doom|Incredible/.test(everything(t.tv)) && !/Doom/.test(everything(t.dd)));
+  check('the GM read the follow-up, GM only', rollsOn(t.gm).at(-1)?.visibility === 'secret' && /^Slam\? \?\?\?, Endurance Incredible/.test(rollsOn(t.gm).at(-1)?.text), rollsOn(t.gm).at(-1)?.text);
+}
+
+section('contests: player against player, and the table closing');
+{
+  const t = await contestTable();
+  t.dice(71, 62);
+  // The GM's rank for a seated opponent is ignored: Daredevil's Agility is Good.
+  await say(t.room, t.gm, { ...CALL, hide: true, opp: { kind: 'pc', ref: 'h2', name: 'whoever', ability: 'agility', rank: 'unearthly', d100: 99 } });
+  const a = callsOn(t.spidey)[0];
+  const d = callsOn(t.dd)[0];
+  check('both phones get a prompt, each for its own side, with the rank from its own seat',
+    a.role === 'attacker' && d.role === 'defender' && d.you.rank === 'good' && d.you.d100 === null && a.other.name === 'Daredevil', JSON.stringify([a, d]));
+  check('hide does not apply between two players', a.other.rank === 'good' && d.other.rank === 'remarkable');
+  await say(t.room, t.spidey, { type: 'contest.roll', id: a.id });
+  check('the first roll publishes nothing, and the other phone is not sent it',
+    rollsOn(t.tv).length === 0 && !/"d100":71/.test(everything(t.dd)) && callsOn(t.spidey)[0].you.d100 === 71);
+  await say(t.room, t.dd, { type: 'contest.roll', id: d.id, karma: true });
+  check('the second completes it',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 71 Yellow v Daredevil Agility Good 62 Green. Spider-Man wins: Slam. Daredevil called on Karma: 14 would win it; 10 if it stands.',
+    rollsOn(t.tv).at(-1)?.text);
+  t.dice(40);
+  await say(t.room, t.gm, { type: 'contest.follow', id: callsOn(t.gm)[0].id, rank: 'unearthly' });
+  check('a seated target\'s follow-up is on its own Endurance, whatever the GM sent',
+    rollsOn(t.tv).at(-1)?.text === 'Slam? Daredevil, Endurance Excellent: 40 — White: Gr. Slam', rollsOn(t.tv).at(-1)?.text);
+
+  await say(t.room, t.gm, { ...CALL, opp: { ...OCK, roll: 'typed' } });
+  check('a call is waiting', (await t.storage.get('contests')).length === 1);
+  await post(t.room, '/close', {});
+  check('closing the table drops the calls and keeps the rolls',
+    !t.storage.map.has('contests') && (await (await get(t.room, '/feed')).json()).feed.length === 2);
+}
+
+section('contests: a plain FEAT says when R26 decided it');
+{
+  const at = (n) => rollFeat(feat, { rank: 'shift-x' }, () => die(n)).text;
+  check('a natural 13 on Shift X is White, and the line says why', at(13) === 'FEAT on Shift X: 13 — White (a natural 13)', at(13));
+  check('a natural 69 is Red', at(69) === 'FEAT on Shift X: 69 — Red (a natural 69)', at(69));
+  check('any other roll reads as it did', at(70) === `FEAT on Shift X: 70 — ${feat.printed('shift-x', 70)[0].toUpperCase()}${feat.printed('shift-x', 70).slice(1)}`, at(70));
 }
 
 // summary() returns the exit code; ignoring it made this suite pass CI on a failure.

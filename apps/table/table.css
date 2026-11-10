@@ -282,3 +282,16 @@ body.tv-showing .tv-picture figcaption:empty { display: none; }
 body.tv-showing .tv-feed { margin-top: 1.5vh; }
 body.tv-showing .tv-roll.newest { font-size: clamp(18px, 2vw, 34px); grid-template-columns: max-content 1fr; gap: 1.5vw; align-items: baseline; }
 body.tv-showing .tv-status { margin-top: 0; }
+
+/* An opposed FEAT (Marvel): the GM's calls and a player's prompt. */
+.table-calls { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.table-call {
+  display: grid; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 6px;
+}
+.table-call-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.table-call-acts .btn, .table-call-acts select, .table-call-acts input[type="number"] { min-height: 44px; font-size: 16px; }
+.table-call-acts input[type="number"] { width: 6em; padding: 6px 10px; }
+.table-roll.contest .table-roll-text { font-weight: 600; }
+/* .table-field sets display, which would beat the hidden attribute. */
+.table-contest [hidden] { display: none; }

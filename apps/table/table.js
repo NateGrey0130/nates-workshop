@@ -251,6 +251,7 @@ function onMessage(msg) {
     S.feed = msg.feed;
     S.shown = msg.shown ?? null;
     S.init = msg.init ?? null;
+    S.contests = msg.contests ?? [];
     // A new connection starts unseated when there is more than one character
     // to choose from. The choice made earlier in this sitting is sent again.
     const mine = recall('seat');
@@ -262,6 +263,14 @@ function onMessage(msg) {
   } else if (msg.type === 'init') {
     S.init = msg.init;
     paintInit();
+  } else if (msg.type === 'contests') {
+    // A call this phone has not seen before buzzes, as "You're up" does.
+    const seen = new Set((S.contests || []).map((c) => c.id));
+    if (S.you?.role === 'player' && msg.contests.some((c) => !seen.has(c.id))) {
+      try { navigator.vibrate?.([120, 80, 120]); } catch { /* no vibration here */ }
+    }
+    S.contests = msg.contests;
+    paintContests();
   } else if (msg.type === 'up') {
     S.upAt = Date.now();
     try { navigator.vibrate?.([250, 120, 250]); } catch { /* no vibration here */ }
@@ -319,6 +328,7 @@ function render() {
       <p id="status" class="muted" role="status" aria-live="polite"></p>
     </div>
     ${!gm && !seat ? seatHtml() : ''}
+    ${S.room.game === 'marvel' && (gm || seat) ? contestHtml(gm) : ''}
     <div class="panel table-init">
       <h3>Initiative <span class="muted small" id="init-round"></span></h3>
       <p class="table-up" id="init-up" role="status" aria-live="assertive" hidden></p>
@@ -356,6 +366,7 @@ function render() {
   if (gm) $('close-table').addEventListener('click', closeTable);
   if (gm) wireInitGm();
   if (gm) wirePics();
+  if (S.room.game === 'marvel' && (gm || seat)) wireContests(gm);
   wireInit();
   $('picture-open').addEventListener('click', openZoom);
   paintInit();
@@ -453,6 +464,196 @@ async function loadRanks() {
   }
 }
 
+// ---------- an opposed FEAT (Marvel) ----------
+//
+// The GM calls for a FEAT: a seated player rolls an ability against an
+// opposing ability and rank, head to head (a house rule; the room's
+// contest.js has it). This page only asks and shows. The player's rank comes
+// from their seat in the room, the compare and the Karma sums are the room's,
+// and a hidden opposing value is never sent to a phone at all.
+
+const ABILITIES = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+// The room refuses these columns too: follow-ups, and the book's shift columns.
+const NOT_CALLED = ['stun', 'slam', 'kill', 'dodging', 'evading', 'blocking', 'catching'];
+const cap = (s) => String(s || '').replace(/^./, (c) => c.toUpperCase());
+const rankName = (id) => (S.ranks || []).find((r) => r.id === id)?.name || cap(id);
+const actionName = (id) => (S.actions || []).find((a) => a.id === id)?.name || cap(id);
+const abilityOptions = (pick) => ABILITIES.map((a) => `<option value="${a}"${a === pick ? ' selected' : ''}>${cap(a)}</option>`).join('');
+
+function contestHtml(gm) {
+  if (!gm) {
+    return `<div class="panel table-contest" id="contest-panel" hidden>
+      <h3>The GM calls for a FEAT</h3>
+      <div id="contest-list"></div>
+    </div>`;
+  }
+  return `<div class="panel table-contest" id="contest-panel">
+    <h3>Call for a FEAT</h3>
+    <p class="muted small">A player rolls an ability against an opposing one, head to head: the higher colour wins and a tie is the defender's. A natural 13 loses to anything; a natural 69 beats anything.</p>
+    <form id="contest-form" class="table-dice-form">
+      <div class="table-field"><label for="c-seat">Player</label><select id="c-seat" required></select></div>
+      <div class="table-field"><label for="c-role">Is</label>
+        <select id="c-role"><option value="attacker">attacking</option><option value="defender">defending</option></select></div>
+      <div class="table-field"><label for="c-ability">Rolls</label><select id="c-ability">${abilityOptions('fighting')}</select></div>
+      <div class="table-field"><label for="c-action">For</label><select id="c-action"></select></div>
+      <div class="table-field"><label for="c-label">Called</label><input id="c-label" type="text" maxlength="60" autocomplete="off" placeholder="optional, e.g. Punch"></div>
+      <div class="table-field"><label for="c-opp">Against</label><select id="c-opp"><option value="">Someone typed in</option></select></div>
+      <div class="table-field" id="c-name-field"><label for="c-name">Their name</label><input id="c-name" type="text" maxlength="60" autocomplete="off"></div>
+      <div class="table-field"><label for="c-opp-ability">Their ability</label><select id="c-opp-ability">${abilityOptions('agility')}</select></div>
+      <div class="table-field"><label for="c-opp-rank">Their rank</label><select id="c-opp-rank"></select></div>
+      <div class="table-field"><label for="c-roll">Their roll</label>
+        <select id="c-roll"><option value="server">Rolled here, now</option><option value="now">Typed in now</option><option value="typed">Typed in later</option></select></div>
+      <div class="table-field" id="c-d100-field" hidden><label for="c-d100">d100</label><input id="c-d100" type="number" min="1" max="100" inputmode="numeric"></div>
+      <label class="check small"><input type="checkbox" id="c-hide"> Hide their ability, rank and roll from the players</label>
+      <label class="check small"><input type="checkbox" id="c-karma"> They call on Karma</label>
+      <button type="submit" class="btn btn-primary">Call for the FEAT</button>
+    </form>
+    <div id="contest-list"></div>
+  </div>`;
+}
+
+// Who a FEAT can be called on: whoever is seated now.
+function paintContestSeats() {
+  const sel = $('c-seat');
+  if (!sel) return;
+  const was = sel.value;
+  // Once each: a player on two screens (a phone and a laptop) is one seat.
+  const seated = (S.people || []).filter((p, i, all) => p.role === 'player' && p.characterId != null
+    && all.findIndex((q) => q.role === 'player' && String(q.characterId) === String(p.characterId)) === i);
+  sel.innerHTML = seated.length
+    ? seated.map((p) => `<option value="${esc(p.characterId)}"${String(p.characterId) === was ? ' selected' : ''}>${esc(p.name)}</option>`).join('')
+    : '<option value="">Nobody is seated yet</option>';
+}
+
+// The opposition: the campaign's roster (its heroes and statted NPCs, with
+// the ranks their sheets hold) or a name and a rank typed in.
+function paintContestOpp() {
+  const sel = $('c-opp');
+  if (!sel) return;
+  const was = sel.value;
+  sel.innerHTML = '<option value="">Someone typed in</option>' + (S.roster || []).map((c, i) =>
+    `<option value="${i}"${String(i) === was ? ' selected' : ''}>${esc(c.name)}${c.kind === 'npc' ? ' (NPC)' : ''}</option>`).join('');
+  const rank = $('c-opp-rank');
+  const had = rank.value;
+  rank.innerHTML = (S.ranks || []).map((r) => `<option value="${esc(r.id)}"${r.id === (had || 'typical') ? ' selected' : ''}>${esc(r.name)}</option>`).join('');
+  const act = $('c-action');
+  const hadAct = act.value;
+  act.innerHTML = (S.actions || []).map((a) => `<option value="${esc(a.id)}"${a.id === hadAct ? ' selected' : ''}>${esc(a.name)}</option>`).join('');
+  syncContestOpp();
+}
+
+// A roster pick fills in the rank its sheet holds for the ability chosen.
+function syncContestOpp() {
+  const c = S.roster?.[Number($('c-opp').value)] && $('c-opp').value !== '' ? S.roster[Number($('c-opp').value)] : null;
+  $('c-name-field').hidden = !!c;
+  const held = c?.sheet?.abilities?.[$('c-opp-ability').value]?.rank;
+  if (held && [...$('c-opp-rank').options].some((o) => o.value === held)) $('c-opp-rank').value = held;
+  $('c-d100-field').hidden = $('c-roll').value !== 'now';
+}
+
+async function loadContestData() {
+  try {
+    if (!S.actions) {
+      const u = await getJson('/apps/marvel-heroes/data/universal.json');
+      S.actions = u.actions.filter((a) => !NOT_CALLED.includes(a.id));
+    }
+    if (S.you.role === 'gm' && !S.roster) {
+      const r = await getJson(`${GAMES[S.game].base}/table/roster?campaign_id=${encodeURIComponent(S.access.campaign.id)}`);
+      S.roster = r.combatants || [];
+    }
+  } catch (err) {
+    say(`Could not load the FEAT lists: ${err.message}`, true);
+  }
+  paintContestOpp();
+  paintContests();
+}
+
+function wireContests(gm) {
+  $('contest-list').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    const id = b.dataset.id;
+    const row = b.closest('.table-call');
+    if (b.dataset.act === 'roll') send({ type: 'contest.roll', id, karma: !!row.querySelector('.call-karma')?.checked });
+    else if (b.dataset.act === 'gm-roll') send({ type: 'contest.roll', id });
+    else if (b.dataset.act === 'gm-type') {
+      const n = Number(row.querySelector('.call-d100').value);
+      if (!Number.isInteger(n) || n < 1 || n > 100) return say('A typed roll is a whole number from 1 to 100.', true);
+      send({ type: 'contest.roll', id, d100: n });
+    } else if (b.dataset.act === 'cancel') send({ type: 'contest.cancel', id });
+    else if (b.dataset.act === 'follow') send({ type: 'contest.follow', id, rank: row.querySelector('.call-rank')?.value });
+  });
+  if (gm) {
+    for (const id of ['c-opp', 'c-opp-ability', 'c-roll']) $(id).addEventListener('change', syncContestOpp);
+    $('contest-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const c = $('c-opp').value === '' ? null : S.roster?.[Number($('c-opp').value)];
+      const how = $('c-roll').value;
+      const opp = {
+        kind: c ? c.kind : 'name', ref: c ? c.ref : null, name: c ? c.name : $('c-name').value,
+        ability: $('c-opp-ability').value, rank: $('c-opp-rank').value,
+        roll: how === 'typed' ? 'typed' : 'server', karma: $('c-karma').checked,
+      };
+      if (how === 'now') {
+        const n = Number($('c-d100').value);
+        if (!Number.isInteger(n) || n < 1 || n > 100) return say('A typed roll is a whole number from 1 to 100.', true);
+        opp.d100 = n;
+      }
+      send({
+        type: 'contest.call', seat: $('c-seat').value, role: $('c-role').value, ability: $('c-ability').value,
+        action: $('c-action').value, label: $('c-label').value, hide: $('c-hide').checked, opp,
+      });
+    });
+  }
+  if (!S.ranks) loadRanks().then(paintContestOpp);
+  loadContestData();
+  paintContestSeats();
+  paintContests();
+}
+
+const sideLine = (s) => `${esc(s.name)} ${esc(cap(s.ability))} ${esc(rankName(s.rank))}`;
+
+// The GM's row for a call: who has rolled, the roll still owed, the follow-up.
+function gmCallHtml(c) {
+  const what = `<strong>${esc(c.label || actionName(c.action))}</strong>: ${sideLine(c.attacker)} v ${sideLine(c.defender)}${c.mask ? ' <span class="tag">hidden</span>' : ''}`;
+  if (c.done) {
+    const seated = c.defender.seat !== null;
+    return `<li class="table-call" data-id="${esc(c.id)}"><span>${what}. Rolled: <strong>${esc(c.follow.name)}</strong></span>
+      <span class="table-call-acts">${seated ? '' : `<select class="call-rank" aria-label="${esc(c.defender.name)}'s Endurance">${(S.ranks || []).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select>`}
+      <button type="button" class="btn btn-primary" data-act="follow" data-id="${esc(c.id)}">Roll ${esc(c.defender.name)}'s Endurance</button>
+      <button type="button" class="btn" data-act="cancel" data-id="${esc(c.id)}">Skip it</button></span></li>`;
+  }
+  const owed = [c.attacker, c.defender].filter((s) => s.d100 === null);
+  const mine = owed.find((s) => s.seat === null);
+  return `<li class="table-call" data-id="${esc(c.id)}"><span>${what}. Waiting on ${owed.map((s) => esc(s.name)).join(' and ')}.</span>
+    <span class="table-call-acts">${mine ? `<input class="call-d100" type="number" min="1" max="100" inputmode="numeric" aria-label="${esc(mine.name)}'s d100">
+      <button type="button" class="btn" data-act="gm-type" data-id="${esc(c.id)}">Enter roll</button>
+      <button type="button" class="btn" data-act="gm-roll" data-id="${esc(c.id)}">Roll it here</button>` : ''}
+    <button type="button" class="btn" data-act="cancel" data-id="${esc(c.id)}">Cancel</button></span></li>`;
+}
+
+// A player's prompt: their ability and rank, who it is against, one button.
+function playerCallHtml(c) {
+  const them = c.other.ability ? `${esc(c.other.name)}'s ${esc(cap(c.other.ability))} (${esc(rankName(c.other.rank))})` : esc(c.other.name);
+  const head = `<strong>${esc(c.label || actionName(c.action))}</strong>: roll your <strong>${esc(cap(c.you.ability))} (${esc(rankName(c.you.rank))})</strong> ${c.role === 'attacker' ? 'against' : 'to defend against'} ${them}.`;
+  if (c.you.d100 !== null) {
+    return `<li class="table-call" data-id="${esc(c.id)}"><span>${head} You rolled <strong>${c.you.d100}</strong>${c.you.karma ? ', calling on Karma' : ''}. Waiting on ${esc(c.other.name)}.</span></li>`;
+  }
+  const have = S.you.seat?.karma;
+  return `<li class="table-call" data-id="${esc(c.id)}"><span>${head}</span>
+    <span class="table-call-acts"><label class="check small"><input type="checkbox" class="call-karma"> Call on Karma${have == null ? '' : ` (you had ${esc(have)} when you sat down)`}</label>
+    <button type="button" class="btn btn-primary" data-act="roll" data-id="${esc(c.id)}">Roll</button></span></li>`;
+}
+
+function paintContests() {
+  const list = $('contest-list');
+  if (!list) return;
+  const gm = S.you.role === 'gm';
+  const calls = S.contests || [];
+  if (!gm) $('contest-panel').hidden = !calls.length;
+  list.innerHTML = calls.length ? `<ul class="table-calls">${calls.map(gm ? gmCallHtml : playerCallHtml).join('')}</ul>` : '';
+}
+
 const VIS_TAG = { gm: 'To GM', secret: 'GM only' };
 const time = (at) => new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
@@ -460,7 +661,7 @@ function rollHtml(r) {
   const tag = VIS_TAG[r.visibility];
   const toMe = S.you.role === 'gm' && r.visibility === 'gm';
   const mine = r.mine && S.you.role !== 'gm';
-  return `<li class="table-roll${mine ? ' mine' : ''}${toMe ? ' to-gm' : ''}" data-id="${r.id}">
+  return `<li class="table-roll${mine ? ' mine' : ''}${toMe ? ' to-gm' : ''}${r.source === 'contest' ? ' contest' : ''}" data-id="${r.id}">
     <span class="table-roll-who">${esc(r.by.name)}${r.source === 'sheet' ? ' <span class="muted small">(sheet)</span>' : ''}</span>
     <span class="table-roll-text">${esc(r.text)}</span>
     <span class="table-roll-meta muted small">${tag ? `<span class="tag">${esc(tag)}</span> ` : ''}${toMe ? 'rolled to you · ' : ''}${esc(time(r.at))}</span>
@@ -483,6 +684,7 @@ function renderFeed(freshId = null) {
 function renderPeople() {
   const list = $('people');
   if (!list) return;
+  paintContestSeats();
   list.innerHTML = S.people.map((p) => `<li>${esc(p.name)}</li>`).join('') || '<li class="muted">Nobody yet.</li>';
 }
 

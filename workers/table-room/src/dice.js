@@ -89,6 +89,8 @@ export function rollFeat(feat, { rank, cs = 0 }, random) {
     d100, colour: r.colour, column: r.column,
     // The colour as a word, capitalised as the Marvel app writes it: a FEAT
     // result is "Yellow", never a colour alone (DESIGN.md, Newsprint).
-    text: `FEAT on ${known.name}${cols}: ${d100} — ${r.colour[0].toUpperCase()}${r.colour.slice(1)}`,
+    // House rule R26: a natural 13 is White and a natural 69 Red, whatever the
+    // column prints. The line says so, or the colour reads as a mistake.
+    text: `FEAT on ${known.name}${cols}: ${d100} — ${r.colour[0].toUpperCase()}${r.colour.slice(1)}${r.natural ? ` (a natural ${r.natural})` : ''}`,
   };
 }
