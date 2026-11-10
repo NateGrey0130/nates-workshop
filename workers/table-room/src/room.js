@@ -737,7 +737,8 @@ export class TableRoom {
     await this.append({
       by, source: 'contest', visibility: 'all',
       text: resultText(feat, action, c.label, c.attacker, c.defender, r, c.mask),
-      detail: { contest: c.id, winner: r.winner, result: r.result, crit: r.crit, attacker: shown('attacker'), defender: shown('defender') },
+      // `crit` is the winner's natural 69: a hidden winner's roll, so not here.
+      detail: { contest: c.id, winner: r.winner, result: r.result, crit: c.mask === r.winner ? false : r.crit, attacker: shown('attacker'), defender: shown('defender') },
     });
     if (c.mask) {
       await this.append({

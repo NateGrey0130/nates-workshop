@@ -517,7 +517,9 @@ function paintContestSeats() {
   const sel = $('c-seat');
   if (!sel) return;
   const was = sel.value;
-  const seated = (S.people || []).filter((p) => p.role === 'player' && p.characterId != null);
+  // Once each: a player on two screens (a phone and a laptop) is one seat.
+  const seated = (S.people || []).filter((p, i, all) => p.role === 'player' && p.characterId != null
+    && all.findIndex((q) => q.role === 'player' && String(q.characterId) === String(p.characterId)) === i);
   sel.innerHTML = seated.length
     ? seated.map((p) => `<option value="${esc(p.characterId)}"${String(p.characterId) === was ? ' selected' : ''}>${esc(p.name)}</option>`).join('')
     : '<option value="">Nobody is seated yet</option>';

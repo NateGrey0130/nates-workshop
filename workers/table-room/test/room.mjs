@@ -1399,6 +1399,16 @@ section('contests: a hidden opposing value reaches the GM alone');
   check('the saved feed is filtered by the same rule: a player reads back the public row only',
     filterFeed((await (await get(t.room, '/feed')).json()).feed, { role: 'player', email: BEN }).length === 1);
 
+  // A hidden side that wins on a natural 69: the public row may not say so in
+  // its detail either, or `crit` is the hidden roll.
+  t.dice(40);
+  await say(t.room, t.gm, { ...CALL, hide: true, opp: { ...OCK, d100: 69 } });
+  await say(t.room, t.spidey, { type: 'contest.roll', id: callsOn(t.spidey)[0].id });
+  check('a hidden natural 69 is not in the public row\'s detail',
+    rollsOn(t.tv).at(-1)?.text === 'Punch: Spider-Man Fighting Remarkable 40 Green v Doc Ock. Doc Ock wins.' && rollsOn(t.tv).at(-1)?.detail.crit === false,
+    JSON.stringify(rollsOn(t.tv).at(-1)));
+  check('and the GM-only row still marks it', rollsOn(t.gm).at(-1)?.detail.crit === true && /69 Red, Extra crit/.test(rollsOn(t.gm).at(-1)?.text));
+
   // An NPC the GM hid in the order is hidden here too, name and all.
   await say(t.room, t.gm, { type: 'init.add', kind: 'npc', ref: '4', name: 'Doctor Doom', hidden: true, agility: 40 });
   t.dice(71, 40);
