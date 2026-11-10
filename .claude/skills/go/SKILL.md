@@ -26,6 +26,8 @@ file owns the routing, the stop in step 4, and the resume table.
 1. **Route the input.**
    - **Numbered findings** (`SKILL-AUDIT F12 F14`): each goes through `take`
      steps 1 to 3 (locate, subject grep, premise auditor) before it is a row.
+     Read `.claude/skills/take/SKILL.md` with the Read tool: it is a slash
+     command and the Skill tool cannot load it.
      One finding is one row. `take` step 4's branch is the worker's, not
      yours. A finding the auditor disagrees with is shown in step 4 below
      with the disagreement, never quietly re-scoped.

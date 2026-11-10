@@ -1,6 +1,6 @@
 ---
 name: take
-description: Take a numbered audit finding the way audit-menu requires, in the order it requires - grep every menu and the memory directory for the finding's subject, run the audit-premise-auditor on it, and only then create the branch. Use when told "take F76", "/take BOOK-INGEST-AUDIT F76", or whenever a numbered finding is about to be implemented. Adds nothing new; it exists so the two steps that get skipped cannot be skipped.
+description: Take a numbered audit finding the way audit-menu requires, in the order it requires - grep every menu and the memory directory for the finding's subject, run the audit-premise-auditor on it, and only then create the branch. A slash command, /take <MENU> <ID>; a session that was not handed the command reads this file by path. Adds nothing new; it exists so the two steps that get skipped cannot be skipped.
 disable-model-invocation: true
 argument-hint: "<MENU> <ID>"
 ---
@@ -15,6 +15,12 @@ argument-hint: "<MENU> <ID>"
 (`F76`, `G8`, `M7`). **If either is missing, stop and ask which.** A bare number
 identifies nothing - most menus number with `F` (`audit-menu` -> *Which is why
 a finding reference names its menu*).
+
+**This file is loaded only by the typed command.** Its frontmatter sets
+`disable-model-invocation`, so its description is in no skill listing and the
+Skill tool cannot load it (commit `1cde4909`, 2026-11-05, has the reason). A
+session told "take F76" in plain words, or sent here by `audit-menu` or `go`,
+reads `.claude/skills/take/SKILL.md` with the Read tool and follows it.
 
 **This skill adds no rule.** Every step below is already in `audit-menu`, and
 `audit-menu` is the authority; where the two disagree, that skill is right and
@@ -65,12 +71,16 @@ menu in the repo for each of them, plus the memory directory, which no grep of
 the repo reaches:
 
 ```bash
-find . -name '*AUDIT*.md' -not -path './node_modules/*' -not -path './.cache/*' | xargs grep -n -i '<subject word>'
+grep -n -i '<subject word>' $(find . -name '*AUDIT*.md' -not -path './node_modules/*' -not -path './.cache/*' -not -path './docs/*') ./SETUP-v2-CHANGES.md
 grep -rn -i '<subject word>' ~/.claude/projects/*/memory/
 ```
 
 The glob is `*AUDIT*.md`, not `*-AUDIT.md`, because not every menu's name ends
 in `-AUDIT` (`apps/character-creator/AUDIT.md`, `DOCS-AUDIT-2.md`).
+`SETUP-v2-CHANGES.md` is named by hand because it is a menu whose filename
+does not say `AUDIT`, and `docs/` is left out because what the glob finds
+there is a brief under `docs/prompts/`, not a menu (`audit-menu` → *The
+headings are not uniform*).
 
 **A closed finding's full text is not in the tree**, and a decision recorded
 there is exactly what this grep exists to find. Its menu keeps a one-line stub
@@ -79,7 +89,7 @@ outcome note*). So grep history too:
 
 ```bash
 git grep -n -i '<subject word>' c530a474799d9621ce1b9433dfa6ef1721d0b666 -- '*.closed.md'
-git log --oneline -i -G '<subject word>' -- '*AUDIT*.md'
+git log --oneline -i -G '<subject word>' -- '*AUDIT*.md' SETUP-v2-CHANGES.md
 ```
 
 The first reads the archives deleted on 2026-10-22; the second finds a finding
@@ -113,14 +123,28 @@ Refuse unless all three hold, and say which failed:
 
 ```bash
 git status --porcelain          # must be empty - another session may be mid-write in this tree
-git branch --show-current       # must be main
+git branch --show-current       # must be main, or this tree's own work branch (below)
 git fetch -q && git status -sb  # must not be behind origin/main
 ```
 
-Then, named for the menu and the finding, per `ship-pr` step 1:
+**A group or book worktree is never on `main`.** `scripts/group-worktree.mjs`
+leaves its tree on `<group>-work` (`tools-work`) and `scripts/book-worktree.mjs`
+on a `<slug>-` branch, because git will not check `main` out in two trees.
+That branch passes the second check when it is the one the script made and it
+holds nothing of its own:
 
 ```bash
-git checkout -b proc/audit/<menu-stem-lowercase>-<id-lowercase>-<three-word-slug>
+git log --oneline origin/main..HEAD   # must print nothing
+```
+
+Any other branch, or a work branch with commits `origin/main` lacks, is work
+in progress: refuse, and say which.
+
+Then, named for the menu and the finding, per `ship-pr` step 1, and **off
+`origin/main`** whatever the tree has checked out:
+
+```bash
+git checkout -b proc/audit/<menu-stem-lowercase>-<id-lowercase>-<three-word-slug> --no-track origin/main
 ```
 
 `proc/audit/book-ingest-audit-f76-talent-picks`, never `f76-talent-picks`. The
