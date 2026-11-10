@@ -29,7 +29,7 @@ layout is nearest before starting another:
   adventure's chapters too, read by `scripts/msh/gridbooks.py` through
   `roster.py`'s own entry loop
 
-**Many books in one set of files** (merging by book, the registry's order, a reader per layout, proving every earlier book did not move) is a rule: `.claude/rules/marvel-pipeline.md`.
+**Many books in one set of files** (merging by book, the registry's order, a reader per layout, proving every earlier book did not move) is in `.claude/rules/marvel-pipeline.md`. That file loads by itself only when a file under `scripts/msh/` or `apps/marvel-heroes/` is read, so read it now if it is not in context.
 
 ## The chain
 
@@ -43,7 +43,7 @@ layout is nearest before starting another:
 | items | `python scripts/msh/extras.py <slug>` | `data/items.json` + `.../extras-text.sql` |
 | load | `node scripts/d1-apply.mjs --remote --db marvel <each .sql>` | `msh_book_text` in `DB_MARVEL`, before the merge (`ship-pr` → *The ordering rule*) |
 
-`WORKSHOP_MSH_CACHE` from a worktree is a rule: `.claude/rules/marvel-pipeline.md`.
+`WORKSHOP_MSH_CACHE` from a worktree is in `.claude/rules/marvel-pipeline.md`: read it before running the chain in one.
 `roster.py` exits 1 on a failed
 check, an override that no longer matches, or an index name it cannot place:
 that exit code is the gate, not the report's numbers.
@@ -143,7 +143,7 @@ so either can be re-run alone. Keep it that way.
   the chapter resumes, at an indented paragraph or a run-in that is not a
   section. A run-in's curly apostrophe (`CLAUD VICTOR'S:`) defeats `RUN_IN`
   unless it is folded first.
-- **The ASCII-only trap and the worktree's local D1** are a rule: `.claude/rules/marvel-pipeline.md`.
+- **The ASCII-only trap and the worktree's local D1** are in `.claude/rules/marvel-pipeline.md`: read it if it is not in context.
 - **Low confidence is not junk.** A title, a header or a real word can read at
   confidence 0 and still be right (MHSP1's "Galactus's 'Cat'" header), and art
   beside a column can read at 60. Filter prose by what the book reads

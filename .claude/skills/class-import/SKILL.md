@@ -129,7 +129,7 @@ and noted as such. **After any catalog rename, re-run the restriction sweep**:
 scratch D1. To run it `--remote` by hand, pass `restrictionNames()` the
 `.data` of `parseClassMarkdown`'s result, not the result itself.
 
-**Rules that are easy to get wrong** when writing a class are a rule: `.claude/rules/class-data-scripts.md`.
+**The rules that are easy to get wrong** when writing a class are in `.claude/rules/class-data-scripts.md`. That file loads by itself only when a file under `apps/character-creator/db/` is read, so read it now if it is not in context.
 
 ## An extraction note that describes the APP will go stale
 
@@ -149,7 +149,7 @@ Where the mechanism has to be in the class, write it past tense and name the
 PR. `node scripts/audit-citations.mjs --remote F8` lists every class citing a
 finding.
 
-**Correcting a class that already shipped** (the `fix-` script, `class-fix-sql.mjs`, where a name sorts, keying a catalog write) is a rule: `.claude/rules/class-data-scripts.md`.
+**Correcting a class that already shipped** (the `fix-` script, `class-fix-sql.mjs`, where a name sorts, keying a catalog write) is in the same file, `.claude/rules/class-data-scripts.md`: read it before writing the correction if it is not in context.
 
 ## When a class needs the app to change
 

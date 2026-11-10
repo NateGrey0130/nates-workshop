@@ -24,6 +24,10 @@ C:\Users\natha\.claude\projects\C--Users-natha-Projects-nates-apps\memory\plans\
   rows\<id>.md     one brief per row
 ```
 
+**The folder has no history and no backup**: it is outside the repo, and
+nothing copies it. A memory clean-up or consolidation must not touch
+`memory\plans\`.
+
 A row id is a number in run order; a row split from row 9 is `9a`, `9b`.
 **`state.md` is not a history**; the pull requests are. It is six lines at
 most, each one sentence, replaced whole by whoever writes it; nothing is
@@ -61,7 +65,9 @@ other fact lives in a pull request. The measurement behind this is in
    `ls -l` on a directory, a page count times the cache's bytes per page
    (the `txt` directory's total over its file count). The mechanism: a
    worker's run is capped at 200k, it starts at about 37k, and what it reads
-   before its first edit fills the rest. **A reading set over 400 KB (about
+   before its first edit fills the rest. (200k and 37k are dated values, as
+   this page stood on 2026-11-10: re-check both, and every 200k below, at a
+   model change.) **A reading set over 400 KB (about
    100k tokens) is split at plan time**, never left for the split agent under
    *Driving the chain*, which stays the fallback for a row that outgrew a
    brief sized this way. 400 KB is a starting value, to be recalibrated
@@ -132,7 +138,8 @@ deferred): initiation `user_asked` (his approval of the plan is the ask),
 context `fresh`, `use_worktree` false, `prompt` the one line
 `Load plan-rows and drive <plan> from its state.md.`, a `background` of one
 or two sentences naming the plan (the call requires one), and `model`
-`claude-sonnet-5-5`. The Sonnet driver is a trial (Nate, 2026-10-22; the
+`claude-sonnet-5-5` (the id on 2026-11-10, a dated value: re-check it at a
+model change). The Sonnet driver is a trial (Nate, 2026-10-22; the
 option he did not take was keeping the driver on Opus), judged against the
 Opus drivers' spend per merge measured that day (`reference/why.md`). Each driver of
 the first plan run this way says in its closing message its model and the
@@ -142,7 +149,8 @@ budget line (below) passes the same `model`. The worker's model is what
 `.claude/agents/pr-worker.md`'s frontmatter says; this changes nothing there.
 **A refusal of the `start_session` call is a stop**: say so to Nate. It is
 not a reason to type the prompt into a session by hand, or to drive the
-chain from the planning session.
+chain from the planning session. A session where `ToolSearch` finds no
+`mcp__ccd_session__start_session` at all (a CLI session) is the same stop.
 
 ## Driving the chain
 
