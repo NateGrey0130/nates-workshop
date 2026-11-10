@@ -1,6 +1,6 @@
 ---
 name: windows-shell
-description: The shell traps on this Windows machine that corrupt a file, a command or a commit without failing. Use before any in-place edit of repo source, before writing an inline script with backslashes or Windows paths, when a dev-server port will not free, when a commit message contains backticks, when chaining a command on another command's success, and when a wrangler query returns something that looks wrong. Covers line endings, encoding, the Bash tool's own unescaping, killing wrangler properly, the pipe that discards the exit code you were testing, and the PowerShell quoting that has produced wrong data.
+description: The shell traps on this Windows machine that corrupt a file, a command or a commit without failing. Use before any in-place edit of repo source, before writing an inline script with backslashes or Windows paths, when a dev-server port will not free, when a commit message contains backticks, when chaining a command on another command's success, and when a wrangler query returns something that looks wrong.
 ---
 
 # Shell traps on this machine
@@ -117,7 +117,7 @@ against a port that IS listening is the tell.**
 
 **Other wranglers may be running, and a blanket kill takes them too.**
 `regression.mjs` and `play-flow.mjs` boot their own on OS-assigned ports, and
-`verify-ui` §0 says why the one on 8788 is probably not yours. So list first,
+`verify-ui` → *Serve on YOUR port* says why the one on 8788 is probably not yours. So list first,
 from PowerShell:
 
 ```powershell

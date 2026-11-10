@@ -1,5 +1,12 @@
 # Worked examples
 
+**Contents:**
+
+- Palladium Fantasy's text layer — what "damaged" looks like when it is not OCR
+- Reading a column index off a SCAN — four approaches, three wrong
+- Two authorities, and the two typesetting accidents they turned into data
+- The Finger of Lictalon — how a page-versus-index argument was actually settled
+
 The evidence behind four rules in `SKILL.md`. Each rule stays there with a
 pointer here; this file holds the case that produced it.
 

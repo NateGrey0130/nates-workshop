@@ -1,5 +1,13 @@
 # Why each class-import rule exists
 
+**Contents:**
+
+- Sessions and the README
+- class-check
+- Names and conventions
+- Data script safety
+- Modelling
+
 `SKILL.md` states the rules. This file holds the incident behind each one, for
 when a rule looks wrong and you are about to break it. Nothing here is a rule
 that `SKILL.md` does not also state. Read an undated claim as true on the day it

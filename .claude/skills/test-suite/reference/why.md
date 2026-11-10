@@ -40,3 +40,28 @@ listening; a later run from another worktree spawned its own wrangler on the
 same port, and **its poll got a 200 from the foreign server.** It reported that
 tree's catalog counts as a regression in this one, with a block of Talent
 failures that read exactly like a real break.
+
+## The harness, and the two things it will not let you hand-maintain
+
+On a checks module declaring its sections twice:
+
+`rendered-ui.mjs` carried two such names until 2026-09-17.
+
+On the four pages that moved:
+
+A sweep written the readdir way silently covered four
+fewer files the moment they moved — the parse check stopped opening `sheet.js`
+and said nothing, which is the exact hole it exists to close.
+
+## Splitting a checks module
+
+It passed 4,000
+lines and `checks/environment.mjs` came out. It grew back past 10,000 and
+`checks/second-body.mjs` took four Nightbane sections out. At 11,000, on
+2026-10-10, nine more modules took thirty-nine sections.
+
+On deriving the list:
+
+Four scope-aware passes written during the second split each returned
+a confidently wrong answer, and a bare count during the third was pessimistic
+in the same way.

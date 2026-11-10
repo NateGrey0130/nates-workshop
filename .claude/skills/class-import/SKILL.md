@@ -1,6 +1,6 @@
 ---
 name: class-import
-description: Transcribe a Rifts or Palladium Fantasy O.C.C. or R.C.C. from a sourcebook into the character creator as a D1 data script, and fill the catalog gaps it turns up. Use when adding, importing, transcribing, publishing or fixing a class — "add the Crazy O.C.C.", "import this R.C.C. from the scans", "the Dragon's bonuses are wrong", "these skills are missing" — and when importing skills, spells or gear from a book. Covers the frontmatter contract, the validator, catalog conventions, and what to do when a class needs a mechanic the app cannot express yet.
+description: Transcribe a Rifts or Palladium Fantasy O.C.C. or R.C.C. from a sourcebook into the character creator as a D1 data script, and fill the catalog gaps it turns up. Use when adding, importing, transcribing, publishing or fixing a class — "add the Crazy O.C.C.", "import this R.C.C. from the scans", "the Dragon's bonuses are wrong", "these skills are missing" — and when importing skills, spells or gear from a book.
 ---
 
 # Importing a class

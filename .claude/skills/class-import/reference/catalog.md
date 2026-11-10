@@ -1,5 +1,15 @@
 # Catalog conventions
 
+**Contents:**
+
+- Naming
+- A rename is not a new row
+- Where a book and the catalog disagree
+- Stubs
+- A skill can grant bonuses
+- Category restrictions across categories
+- Extracting a skill list from a PDF
+
 The four catalogs — skills, spells, psionic powers, gear — are what class files
 cite. **Characters reference skills and spells by NAME and gear by SLUG**, and
 nothing rewrites those citations, so a name is close to permanent. Everything

@@ -1,6 +1,6 @@
 ---
 name: ship-pr
-description: Take a change in this repo from branch to deployed, the way this repo actually works. Use when opening, reviewing, merging or deploying a PR — "ship this", "open a PR", "merge it", "deploy this" — and whenever a change touches D1, because schema and data are applied BEFORE the merge rather than by it. Covers the branch/verify/PR/merge/prune loop, the ordering rule that makes it safe, and the shell traps that have corrupted commits and commands here before.
+description: Take a change in this repo from branch to deployed, the way this repo actually works. Use when opening, reviewing, merging or deploying a PR — "ship this", "open a PR", "merge it", "deploy this" — and whenever a change touches D1, because schema and data are applied BEFORE the merge rather than by it.
 ---
 
 # Shipping a change

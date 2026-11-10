@@ -1,6 +1,6 @@
 ---
 name: plan-rows
-description: Turn an approved list of work into a chain the pr-worker agent can run - a state file and one brief per row in the memory store - and drive that chain. Use when Nate approves a multi-PR plan, when asked to "write the briefs", "queue the rows" or "get the chain ready", when a row is added to or split in an existing plan, and when starting or resuming a driver session. Covers the stored format, what a brief must carry, Nate's three rulings on planning, how a worker hands something to a later row, and when the driver stops.
+description: Turn an approved list of work into a chain the pr-worker agent can run - a state file and one brief per row in the memory store - and drive that chain. Use when Nate approves a multi-PR plan, when asked to "write the briefs", "queue the rows" or "get the chain ready", when a row is added to or split in an existing plan, and when starting or resuming a driver session.
 ---
 
 # Planning rows, and driving them
@@ -191,7 +191,7 @@ that did would skip the steps below. Four steps, each call on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
    `--delete-branch` while a worker's worktree still holds the branch, which
-   is true of every plan row. When no worktree holds it, `ship-pr` step 7
+   is true of every plan row. When no worktree holds it, `ship-pr` → *The loop*, **Merge**,
    applies.
 2. `node .claude/scripts/pr-landed.mjs <n> --wait`, which must exit 0.
 3. `git pull --ff-only origin main` in the driver's checkout, then

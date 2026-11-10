@@ -1,5 +1,16 @@
 # The negatives — claims that look stale and are true
 
+**Contents:**
+
+- Why these three and not others
+- N1 — the Ranger's poison row
+- N2 — Large Axes, in three classes
+- N3 — the compound version, in two more classes
+- Scoring
+- The run of 2026-09-04 — both models scored 9/9
+- One figure that did not reproduce
+- Re-verifying
+
 Every claim in this file **passed**. Nothing here needs fixing, and each one has
 already survived at least one pass that was about to "correct" it into a
 falsehood.

@@ -1,6 +1,6 @@
 ---
 name: worktree
-description: Create, work in and remove a git worktree of this repo without destroying the OCR caches or half-merging a PR. Use when a second session needs its own tree, when told to work in a worktree, before running `git worktree remove`, and when a merge from one exits 1. Covers the two environment variables a worktree needs, the junction that made a removal delete the main checkout's book caches, why `gh pr merge` fails after succeeding there, and what a worktree session does not inherit.
+description: Create, work in and remove a git worktree of this repo without destroying the OCR caches or half-merging a PR. Use when a second session needs its own tree, when told to work in a worktree, before running `git worktree remove`, and when a merge from one exits 1.
 ---
 
 # Working in a worktree
@@ -32,7 +32,7 @@ writes both environment variables
 below into the tree's own `.claude/settings.local.json`. It links the tree's
 memory directory to the real store. Start the book's session in that tree.
 `--remove` refuses while the tree holds uncommitted changes or any junction,
-which is the removal hazard below. `book-survey` §8 has the parallel-book
+which is the removal hazard below. `book-survey` → *A BATCH* (its `reference/batches.md`) has the parallel-book
 routine it belongs to.
 
 **For a group of apps, the same setup:**
@@ -70,7 +70,7 @@ Then give it the two things it does not inherit:
   `SETUP.md` → *Worktrees, and the two stores that live under the repo root* has
   the table of what reads each. Point them at the main checkout.
 - **its own dev port.** `apps/character-creator/test/dev-server.mjs` picks a free
-  one per run, but a dev server you start by hand does not. See `verify-ui` §0
+  one per run, but a dev server you start by hand does not. See `verify-ui` → *Serve on YOUR port*
   and the port section of `test-suite`: a fixed port let one worktree's `workerd`
   answer another's poll with a `200`, and that run reported the wrong tree's
   catalog counts as a regression.
@@ -82,9 +82,8 @@ variables do not reach it.
 ## Checking whether another session is already in a tree
 
 `git branch -a`, `gh pr list --state open` and `git worktree list` are **all
-blind** to a session editing the same working tree. A session that checked all
-three, found a clean `main`, no branches and no open PRs, and said so in its PR
-was sharing the checkout with a live import session at the time.
+blind** to a session editing the same working tree. The incident is in
+`reference/why.md`.
 
 **The check is `git status` and file mtimes, repeatedly** — `ls -lt` on what you
 are about to stage, or `find . -newermt '-5 minutes'`. `git status --porcelain`
@@ -92,12 +91,8 @@ showing changes you did not make is the same signal one step later.
 
 ## Removing one. This is the dangerous step
 
-**On 2026-09-19 `git worktree remove` on five clean, merged worktrees emptied the
-main checkout's `.cache/books` at the same second** — every sourcebook's OCR and
-text-layer cache. The likeliest mechanism is that a worktree held the cache as a
-**junction** to the main one and removal deleted through it; the worktrees were
-gone by the time anyone looked, so it is not proven. All five printed `removed`.
-Nothing warned.
+A removal emptied the main checkout's `.cache/books`. The incident is in
+`reference/why.md`.
 
 Two reasons nothing caught it, and both generalise past this one directory:
 
@@ -147,7 +142,7 @@ failed. **Never retry the merge on that error.** Read the state instead:
 gh pr view <n> --json state,mergeCommit --jq '.state + "  " + .mergeCommit.oid'
 ```
 
-Then do `ship-pr` steps 8 and 9 **from the main checkout**, with `git fetch`
+Then do the **Sync** and **Confirm the deploy ran** steps of `ship-pr` → *The loop* **from the main checkout**, with `git fetch`
 rather than a pull into a tree another session may be using. Finally
 `git worktree remove` (after the reparse-point scan above) and `git branch -D` —
 capital `D`, because local `main` is behind and `-d` will call the branch
@@ -191,10 +186,7 @@ and do not assume the next session in one will know what this one did.
 
 A parallel campaign gives each worker a slice and assumes it brings the standing
 rules with it. It does not, and the slice is the only half that belongs in the
-prompt. Measured 2026-09-17: one session spawned **23** workers, 16 following a
-brief written into that session's own scratchpad and 5 told to implement inside
-a named worktree. The briefs were good and they were per-session; the standing
-half was re-derived in that session's words because it was written nowhere.
+prompt. The measurements behind this section are in `reference/why.md`.
 
 **Do not retype the two environment variables into a brief.** *Making one*,
 above, has them and what breaks without them. Point the worker at the tree and
@@ -204,16 +196,12 @@ give it the values from there, so there is one copy to keep true.
 *Merging from a worktree* is written for the session that owns the tree. A
 worker it spawns gets the opposite instruction, and it needs it in words: do not
 push, do not open a pull request, **do not merge**, do not apply anything to the
-remote database, and **never delete a file you did not create**. The 2026-09-17
-prompts carried the middle three in some form. They did not carry *do not
-merge*, and *never delete* survived only because one brief happened to say it.
+remote database, and **never delete a file you did not create**.
 
 **Give every path the worker needs, and expect the instruction not to hold.** A
 worker hunting for a file it was not handed searches from the drive root, and
 the process outlives the agent that started it: **18 such calls** across
-2026-09-16, 09-18 and 09-19, every one from a spawned worker. One brief said
-*"NEVER search from / or C:\\"* and gave the full path; two workers searched from
-the root anyway, for fifty minutes. **So the paths are the control and the
+2026-09-16, 09-18 and 09-19, every one from a spawned worker. **So the paths are the control and the
 sentence is a reminder** — and since `SKILL-AUDIT` `F54` the hook refuses the
 shape outright, which is the control that does not depend on being read.
 
