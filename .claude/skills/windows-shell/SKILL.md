@@ -12,7 +12,7 @@ description: The shell traps on this Windows machine that corrupt a file, a comm
 Every one of these **succeeds**: nothing exits non-zero, nothing warns, and in
 three cases the obvious check reports clean.
 
-## Six of these are a hook now, and it fires everywhere on this machine
+## Six of these are a hook now, and it fires in every repo and worktree session
 
 `.claude/hooks/guard-bash.sh` runs before every `Bash` call and exits 2 (a
 block) on six shapes:

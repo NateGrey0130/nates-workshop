@@ -5,12 +5,8 @@ description: Create, work in and remove a git worktree of this repo without dest
 
 # Working in a worktree
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 A worktree is the **only** acceptable shape for a second concurrent session
 here. Two sessions in one checkout is the thing that is never acceptable: it has
@@ -182,7 +178,8 @@ under `C:\Users\natha\.claude\projects` holds a transcript and nothing else.
 
 So a session in a worktree starts blind to everything memory holds — including
 the removal incident this page exists for. **The exception is a tree made by
-`scripts/book-worktree.mjs`**, which links the new project directory's `memory`
+`scripts/book-worktree.mjs` or `scripts/group-worktree.mjs`** (both through
+`scripts/worktree-lib.mjs`), which links the new project directory's `memory`
 to the real store before any session starts there. **Say what you learned into the PR
 body or the audit menu**, which are the two stores a worktree session does share,
 and do not assume the next session in one will know what this one did.

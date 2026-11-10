@@ -5,12 +5,8 @@ description: Add or change a D1 table or column in this repo without leaving a f
 
 # Changing the schema
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 A column lives in **five** places, not one. Four of the five are easy to skip
 and none of them fail at the moment you skip them.

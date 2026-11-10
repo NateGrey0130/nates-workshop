@@ -6,9 +6,9 @@ description: Take a change in this repo from branch to deployed, the way this re
 # Shipping a change
 
 > **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
-> every absolute path (`instruction-paths.mjs`), and four runnable lines: it
-> merges with `--delete-branch`, records `git config remote.origin.prune true`,
-> and teaches no manual prune. The incident behind each rule is in
+> every absolute path (`instruction-paths.mjs`), and four checks on its `bash` fences: there
+> are fences to read, it merges with `--delete-branch`, records
+> `git config remote.origin.prune true`, and teaches no manual prune. The incident behind each rule is in
 > `reference/why.md`.
 
 **Merging to `main` IS the deploy.** Pages publishes the repo root on every

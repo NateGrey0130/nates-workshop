@@ -5,12 +5,9 @@ description: Add or change a check in this repo's test suites without writing on
 
 # Adding a check
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`). The incident behind each rule
+> is in `reference/why.md`.
 
 A seventh of the commits here touch these suites. They are the mechanism the
 repo uses instead of remembering things, so the cost of a check that cannot fail
@@ -222,7 +219,7 @@ A skill in `.claude/skills/` is a check on behaviour, and until 2026-09-23 none
 had been seen to fail. Each was written after an incident and tested by the
 next one. `take` is what that costs: it exists because `audit-menu` already
 required the subject grep and the premise audit, and sessions skipped both
-anyway (`.claude/skills/take/SKILL.md:21-30`). A skill that reads as correct
+anyway (`take` → the paragraph opening *This skill adds no rule*). A skill that reads as correct
 and changes nothing is a green tick that retired a real rule, which is the
 same failure this file opens with.
 

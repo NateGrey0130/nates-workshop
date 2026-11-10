@@ -5,12 +5,8 @@ description: Import a Marvel Super Heroes (TSR, FASERIP) sourcebook into the Mar
 
 # A Marvel sourcebook
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** - read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 **A Marvel book has a pipeline of its own, in `scripts/msh/`, and never goes
 through the Palladium one.** Not `book-survey`, not `class-import`, not the
