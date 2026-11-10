@@ -4609,6 +4609,67 @@ section('A FEAT reads the Universal Table the way the book prints it');
     r.column === 'good' && r.colour === 'red' && r.success === true && r.result === 'Stun', JSON.stringify(r));
   const miss = safe(() => feat.roll({ rank: 'typical', d100: 60, need: 'yellow' }));
   check('and green does not meet a yellow FEAT', miss.colour === 'green' && miss.success === false && miss.result === null);
+
+  // R26. The table itself prints 13 green on Shift X and 69 green on Typical,
+  // which is what makes these checks able to fail.
+  const ids = feat.ladder.map((x) => x.id);
+  check('the table prints 13 green on Shift X and 69 green on Typical, so R26 changes something',
+    feat.printed('shift-x', 13) === 'green' && feat.printed('typical', 69) === 'green');
+  const not13 = ids.filter((id) => safe(() => feat.colour(id, 13)) !== 'white');
+  const not69 = ids.filter((id) => safe(() => feat.colour(id, 69)) !== 'red');
+  check('R26: a natural 13 is White on every column', not13.length === 0, not13.join(', '));
+  check('R26: a natural 69 is Red on every column', not69.length === 0, not69.join(', '));
+  const moved = [];
+  for (const id of ids) for (let d = 1; d <= 100; d++) if (d !== 13 && d !== 69 && feat.colour(id, d) !== feat.printed(id, d)) moved.push(`${id} ${d}`);
+  check('and no other roll on any column reads differently from the table', moved.length === 0, moved.slice(0, 5).join(', '));
+  const n13 = safe(() => feat.roll({ rank: 'shift-x', d100: 13, action: 'blunt-attacks' }));
+  const n69 = safe(() => feat.roll({ rank: 'feeble', d100: 69, need: 'red', action: 'blunt-attacks' }));
+  check('a whole FEAT says when R26 decided it: 13 misses on Shift X, 69 Stuns on Feeble',
+    n13.colour === 'white' && n13.natural === 13 && n13.success === false && n13.result === 'Miss'
+    && n69.colour === 'red' && n69.natural === 69 && n69.success === true && n69.result === 'Stun'
+    && r.natural === null, JSON.stringify([n13, n69]));
+  // What a roll would have to be: Remarkable is green from 36, yellow from 66,
+  // red from 95; Good green from 46, yellow from 76, red from 98 (PB back cover).
+  check('the lowest roll of each colour is read off the printed table, not through R26',
+    ['white', 'green', 'yellow', 'red'].map((c) => feat.lowest('remarkable', c)).join() === '1,36,66,95'
+    && ['green', 'yellow', 'red'].map((c) => feat.lowest('good', c)).join() === '46,76,98'
+    && feat.lowest('feeble', 'red') === 100, ['green', 'yellow', 'red'].map((c) => feat.lowest('remarkable', c)).join());
+}
+
+section('The Table: a seat and the roster carry the sheet\'s seven ranks and Karma, from D1');
+
+{
+  const { sqlite, env } = await marvelStandIn();
+  const T = await import(new URL('../../../functions/api/marvel-heroes/_lib/table.js', import.meta.url));
+  const SEVEN = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+  const snap = (ranks, extra = {}) => JSON.stringify({ abilities: Object.fromEntries(SEVEN.map((a, i) => [a, { rank: ranks[i], number: (i + 1) * 10 }])),
+    talents: [{ id: 'martial-arts-e' }], karma: 40, ...extra });
+  const ranks = ['remarkable', 'good', 'typical', 'excellent', 'poor', 'good', 'incredible'];
+  sqlite.prepare("INSERT INTO msh_campaigns (id, name, gm_email) VALUES (7, 'Tuesday', 'gm@x.org')").run();
+  sqlite.prepare("INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet) VALUES ('hero-ann-0001', 'ann@x.org', 'Nightfox', '{}', ?, ?)")
+    .run(snap(ranks), JSON.stringify({ karma: 12 }));
+  sqlite.prepare("INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet) VALUES ('hero-bob-0002', 'bob@x.org', 'Old Save', '{}', ?, '{}')")
+    .run(JSON.stringify({ abilities: { agility: { number: 30 } }, talents: [] }));
+  for (const h of ['hero-ann-0001', 'hero-bob-0002']) sqlite.prepare("INSERT INTO msh_campaign_heroes (campaign_id, hero_id, campaign_open, added_by) VALUES (7, ?, 1, 'gm@x.org')").run(h);
+  sqlite.prepare("INSERT INTO msh_npc_sheets (campaign_id, name, build, snapshot, created_by) VALUES (7, 'Doom', '{}', ?, 'gm@x.org')")
+    .run(snap(['incredible', 'excellent', 'good', 'incredible', 'amazing', 'incredible', 'amazing'], { karma: 90 }));
+
+  const seats = await T.seatStats(env, 7, [{ id: 'hero-ann-0001', name: 'Nightfox' }, { id: 'hero-bob-0002', name: 'Old Save' }, { id: 'hero-gone-0003', name: 'Gone' }]);
+  const [fox, old, gone] = seats;
+  check('a seat carries all seven ranks, each with its number',
+    SEVEN.map((a) => fox.sheet.abilities[a]?.rank).join() === ranks.join() && fox.sheet.abilities.psyche.number === 70, JSON.stringify(fox.sheet));
+  check('and the hero\'s Karma as it stands now (the sheet\'s 12), not as it was built (40)', fox.sheet.karma === 12, String(fox.sheet.karma));
+  check('what initiative reads is exactly what it was: Agility number and Talent ids, nothing added',
+    JSON.stringify(fox.init) === '{"agility":20,"talents":["martial-arts-e"]}', JSON.stringify(fox.init));
+  check('a sheet holding only a number gives that number and no rank, and the abilities it lacks are absent',
+    JSON.stringify(old.sheet.abilities) === '{"agility":{"rank":null,"number":30}}', JSON.stringify(old.sheet));
+  check('a hero that is not in D1 gets an empty sheet rather than an error',
+    JSON.stringify(gone.sheet) === '{"abilities":{},"karma":null}' && gone.init.agility === 0, JSON.stringify(gone));
+  const roster = await T.roster(env, 7);
+  const doom = roster.find((c) => c.kind === 'npc');
+  check('the roster carries the same for heroes and for the GM\'s NPC sheets, an NPC\'s Karma as rolled',
+    roster.length === 3 && roster.find((c) => c.ref === 'hero-ann-0001').sheet.karma === 12
+    && doom.sheet.abilities.fighting.rank === 'incredible' && doom.sheet.karma === 90 && doom.init.agility === 20, JSON.stringify(roster));
 }
 
 section('Every element the page script looks up is on the page');

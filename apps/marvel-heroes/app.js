@@ -114,7 +114,7 @@ function initFeat(feat) {
         <span class="feat ${r.colour}">${r.colour}</span>
         <span class="verdict ${r.success ? 'ok' : 'no'}">${r.success ? 'Success' : 'Failure'}</span>
         ${r.result ? `<span class="effect">${esc(r.result)}</span>` : ''}
-        <p class="muted">${esc(nameOf(r.rank))}${shifted}; needed ${esc(r.need)}.</p>
+        <p class="muted">${esc(nameOf(r.rank))}${shifted}; needed ${esc(r.need)}.${r.natural ? ` A natural ${r.natural}: an automatic ${r.natural === 13 ? 'White' : 'Red'} (R26).` : ''}</p>
         ${follow}
       </div>`;
     const li = document.createElement('li');

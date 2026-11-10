@@ -452,6 +452,14 @@ And one that is not from any book at all:
   an unticked box breaks nothing, and every tick clears when the round ends.
   The GM page tags each row with what broke its tie. The rules are in
   `js/initiative.js`.
+- **R26** **A natural 13 and a natural 69 are house rules** (Nate, 2026-11-09):
+  on every FEAT, a d100 that falls 13 is an automatic **White** and one that
+  falls 69 an automatic **Red**, on every column, whatever the Universal Table
+  prints there (13 is Green from Shift X up; 69 is Green on Typical). "Natural"
+  is the die as it fell, before anything is added to it. The rule is in
+  `js/feat.js`, which the FEAT roller here, GM Tools' roller and The Table's
+  room all call, so one d100 cannot be read two ways. `data/universal.json`
+  stays as the book prints it.
 
 How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
 many body types it combines and the chance of keeping each trait (50%, 33%,
@@ -493,7 +501,7 @@ by roll, and they decide nothing here.
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
 | `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
-| `js/feat.js` | a FEAT on the Universal Table: rank from a rank number, column shifts that stop at the ladder's ends, the colour a roll gives, and what that colour means for each kind of FEAT |
+| `js/feat.js` | a FEAT on the Universal Table: rank from a rank number, column shifts that stop at the ladder's ends, the colour a roll gives (R26's natural 13 and 69 first, then the table), the lowest roll a column prints as a colour, and what that colour means for each kind of FEAT |
 | `styles.css` | the whole visual system; contrast is pinned by the smoke test |
 | `data/ranks.json` | the rank ladder: standard number, range, initial number |
 | `data/universal.json` | the Universal Table: d100 bands, a colour per rank, and what each colour means per FEAT |
