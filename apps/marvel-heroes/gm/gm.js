@@ -410,7 +410,7 @@ function initFeat(feat) {
       <div><span class="feat ${r.colour}">${r.colour}</span>
         <span class="verdict ${r.success ? 'ok' : 'no'}">${r.success ? 'Success' : 'Failure'}</span>
         ${r.result ? `<span class="effect">${esc(r.result)}</span>` : ''}
-        <p class="muted">${esc(nameOf(r.rank))}${r.column !== r.rank ? ` shifted to ${esc(nameOf(r.column))}` : ''}; needed ${esc(r.need)}.</p></div>`;
+        <p class="muted">${esc(nameOf(r.rank))}${r.column !== r.rank ? ` shifted to ${esc(nameOf(r.column))}` : ''}; needed ${esc(r.need)}.${r.natural ? ` A natural ${r.natural}: an automatic ${r.natural === 13 ? 'White' : 'Red'} (R26).` : ''}</p></div>`;
   });
   drawCs();
 }

@@ -4,6 +4,11 @@
 
 const ORDER = ['white', 'green', 'yellow', 'red'];
 
+// R26: a natural 13 is an automatic White and a natural 69 an automatic Red,
+// on every column, whatever the table prints there. "Natural" is the d100 as
+// it fell, before anything is added to it. A house rule (README, Rulings).
+export const NATURAL = { 13: 'white', 69: 'red' };
+
 export function makeFeat(ranks, universal) {
   const ladder = ranks.ranks;
   const index = Object.fromEntries(ladder.map((r, i) => [r.id, i]));
@@ -28,13 +33,28 @@ export function makeFeat(ranks, universal) {
     return ladder[Math.max(0, Math.min(ladder.length - 1, i + cs))].id;
   }
 
-  // The colour a d100 roll gives on a rank's column.
-  function colour(rankId, roll) {
+  // The colour the Universal Table PRINTS for a roll on a rank's column, with
+  // no house rule read into it. For asking what a roll would have to be (the
+  // lowest roll that is yellow on this column), never for reading a FEAT.
+  function printed(rankId, roll) {
     const col = column[rankId];
     if (!col) throw new Error(`no Universal Table column for ${rankId}`);
     const row = universal.rows.findIndex(([lo, hi]) => roll >= lo && roll <= hi);
     if (row < 0) throw new Error(`roll ${roll} is not on the table`);
     return col[row];
+  }
+
+  // The colour a d100 roll gives on a rank's column: R26 first, then the table.
+  function colour(rankId, roll) {
+    if (!column[rankId]) throw new Error(`no Universal Table column for ${rankId}`);
+    return NATURAL[roll] ?? printed(rankId, roll);
+  }
+
+  // The lowest d100 the table prints as a colour on a rank's column, or null
+  // where the column has none of it.
+  function lowest(rankId, want) {
+    for (const [lo] of universal.rows) if (printed(rankId, lo) === want) return lo;
+    return null;
   }
 
   // A whole FEAT: rank, shift, roll -> the column used, the colour, whether it
@@ -44,6 +64,8 @@ export function makeFeat(ranks, universal) {
     const got = colour(used, d100);
     return {
       rank, cs, column: used, d100, colour: got, need,
+      // 13 or 69 when R26 decided the colour, else null.
+      natural: NATURAL[d100] ? d100 : null,
       success: ORDER.indexOf(got) >= ORDER.indexOf(need),
       result: action ? actions[action]?.results[got] ?? null : null,
     };
@@ -58,5 +80,5 @@ export function makeFeat(ranks, universal) {
     return FOLLOW[result] ? actions[FOLLOW[result]] ?? null : null;
   }
 
-  return { ladder, actions: universal.actions, rankForNumber, shift, colour, roll, followUp, ORDER };
+  return { ladder, actions: universal.actions, rankForNumber, shift, colour, printed, lowest, roll, followUp, ORDER, NATURAL };
 }

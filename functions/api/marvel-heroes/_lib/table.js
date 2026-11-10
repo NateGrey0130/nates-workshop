@@ -6,7 +6,7 @@
 // A PLAYER is the owner of a hero linked to the campaign. A hero is linked,
 // never copied (migration 086), so ownership is msh_heroes.owner_email.
 
-import { owner } from './campaigns.js';
+import { owner, currentSql } from './campaigns.js';
 
 export const game = 'marvel';
 export const email = owner;
@@ -77,29 +77,59 @@ const numbers = (snapshotText) => {
   };
 };
 
-// The heroes a player may seat, each with `init`.
+// ---------- opposed FEATs ----------
+//
+// A FEAT the GM calls for at the table is rolled on the hero's own rank, and
+// that rank comes from here, never from a page. `sheet` is the seven
+// abilities as the snapshot holds them, each { rank, number } (a rank id from
+// data/ranks.json, or null where the sheet has only the number), and `karma`:
+// a hero's Karma as it stands now, an NPC sheet's as it was rolled. It rides
+// beside `init` and not inside it, so what initiative reads stays exactly
+// what it was. Karma is for showing: nothing at the table writes it back.
+
+const ABILITIES = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+
+const sheetOf = (snapshotText, karma = null) => {
+  let s = null;
+  try { s = JSON.parse(snapshotText || 'null'); } catch { s = null; }
+  const abilities = {};
+  for (const a of ABILITIES) {
+    const v = s?.abilities?.[a];
+    if (!v || typeof v !== 'object') continue;
+    const number = Number(v.number);
+    abilities[a] = { rank: typeof v.rank === 'string' ? v.rank : null, number: Number.isFinite(number) ? number : null };
+  }
+  const raw = karma ?? s?.karma ?? null;
+  return { abilities, karma: raw !== null && Number.isFinite(Number(raw)) ? Number(raw) : null };
+};
+
+// The heroes a player may seat, each with `init` and `sheet`.
 export async function seatStats(env, campaignId, chars) {
   if (!chars.length) return chars;
   const { results } = await env.DB_MARVEL.prepare(
-    `SELECT id, snapshot FROM msh_heroes WHERE id IN (${chars.map(() => '?').join(', ')})`
+    `SELECT id, snapshot, ${currentSql('karma')} AS cur_karma FROM msh_heroes WHERE id IN (${chars.map(() => '?').join(', ')})`
   ).bind(...chars.map((c) => String(c.id))).all();
-  const by = new Map(results.map((r) => [String(r.id), numbers(r.snapshot)]));
-  return chars.map((c) => ({ ...c, init: by.get(String(c.id)) ?? { agility: 0, talents: [] } }));
+  const by = new Map(results.map((r) => [String(r.id), r]));
+  return chars.map((c) => {
+    const r = by.get(String(c.id));
+    return { ...c, init: r ? numbers(r.snapshot) : { agility: 0, talents: [] }, sheet: sheetOf(r?.snapshot, r?.cur_karma) };
+  });
 }
 
-// Everyone the GM may add to initiative: the campaign's heroes and the NPC
-// sheets the GM has rolled for it (the list GM Tools offers today).
+// Everyone the GM may add to initiative or name in an opposed FEAT: the
+// campaign's heroes and the NPC sheets the GM has rolled for it (the list GM
+// Tools offers today), each with `init` and `sheet`.
 export async function roster(env, campaignId) {
   const heroes = (await env.DB_MARVEL.prepare(
-    `SELECT h.id, h.name, h.snapshot FROM msh_campaign_heroes ch JOIN msh_heroes h ON h.id = ch.hero_id
+    `SELECT h.id, h.name, h.snapshot, ${currentSql('karma', 'h')} AS cur_karma FROM msh_campaign_heroes ch JOIN msh_heroes h ON h.id = ch.hero_id
      WHERE ch.campaign_id = ? ORDER BY h.name`
   ).bind(campaignId).all()).results;
   const npcs = (await env.DB_MARVEL.prepare(
     'SELECT id, name, snapshot FROM msh_npc_sheets WHERE campaign_id = ? ORDER BY name'
   ).bind(campaignId).all()).results;
   return [
-    ...heroes.map((h) => ({ kind: 'pc', ref: String(h.id), name: h.name, init: numbers(h.snapshot) })),
-    ...npcs.map((n) => ({ kind: 'npc', ref: String(n.id), name: n.name, init: numbers(n.snapshot) })),
+    ...heroes.map((h) => ({ kind: 'pc', ref: String(h.id), name: h.name, init: numbers(h.snapshot), sheet: sheetOf(h.snapshot, h.cur_karma) })),
+    ...npcs.map((n) => ({ kind: 'npc', ref: String(n.id), name: n.name, init: numbers(n.snapshot), sheet: sheetOf(n.snapshot) })),
   ];
 }
 
