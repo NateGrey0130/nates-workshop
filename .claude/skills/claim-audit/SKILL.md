@@ -5,12 +5,9 @@ description: Check what this repo says about itself against what it does — REA
 
 # Auditing what the repo claims about itself
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`). The incident behind each rule
+> is in `reference/why.md`.
 
 This repo explains itself unusually well, and that is the hazard. A README and
 thirteen topic files under `docs/`, comments that argue their case, and class
@@ -30,7 +27,7 @@ reading a sentence and then asking the code.
 | code comments in `js/` **and `functions/`** | everywhere | counts of things ("offers five"), and "cannot express" |
 | class markdown in D1 | a couple of sentences per published class | `extraction_notes` saying the schema cannot hold something |
 | `apps/character-creator/docs/rules-audit.md`, `apps/character-creator/docs/plans/` | | superseded by later work; the plans README says so |
-| `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | the skills, their reference files, one agent | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
+| `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | the skills, their reference files, every agent file | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
 
 **The instruction layer is in scope, and it was the last place anyone looked.**
 Five of `SKILL-AUDIT.md`'s findings were sentences inside `.claude/` that a
@@ -72,7 +69,7 @@ in the repo. It does not turn up in a grep of the working tree.
 **The class prose**, which needs a query rather than a grep:
 
 ```bash
-node scripts/q.mjs --remote "SELECT class_id, markdown FROM imported_classes WHERE status = 'published'" > /tmp/classes.json
+node scripts/q.mjs --remote "SELECT class_id, markdown FROM imported_classes WHERE status = 'published'" > classes.tmp
 ```
 
 then match sentences containing `the app`, `the wizard`, `the sheet`, `the

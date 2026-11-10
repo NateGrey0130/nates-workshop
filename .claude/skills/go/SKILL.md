@@ -7,12 +7,8 @@ argument-hint: "<goal | MENU ID ... | book.pdf> | resume [plan]"
 
 # /go <input>, and /go resume [plan]
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing.** Read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 Nate typed the same paragraph at the start of every plan: plan it, ask me in
 one batch, write the briefs, start the driver, merge on green. This command

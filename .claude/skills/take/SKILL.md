@@ -7,17 +7,13 @@ argument-hint: "<MENU> <ID>"
 
 # /take <MENU> <ID>
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 `/take BOOK-INGEST-AUDIT F76`. The menu is the file's stem (`BOOK-INGEST-AUDIT`,
 `SKILL-AUDIT`, `apps/media-vault/SHARE-AUDIT`) and the id is the finding's own
 (`F76`, `G8`, `M7`). **If either is missing, stop and ask which.** A bare number
-identifies nothing - eleven menus number with `F` (`audit-menu` -> *Which is why
+identifies nothing - most menus number with `F` (`audit-menu` -> *Which is why
 a finding reference names its menu*).
 
 **This skill adds no rule.** Every step below is already in `audit-menu`, and

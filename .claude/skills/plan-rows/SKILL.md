@@ -5,12 +5,9 @@ description: Turn an approved list of work into a chain the pr-worker agent can 
 
 # Planning rows, and driving them
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing.** Read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`). The incident behind each rule
+> is in `reference/why.md`.
 
 A row is run by the `pr-worker` agent (`.claude/agents/pr-worker.md`), which
 reads two small files and nothing else of the plan. **The brief is everything

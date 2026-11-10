@@ -5,12 +5,8 @@ description: Add an app to Nate's Workshop, or change the hub, the app switcher 
 
 # The app suite
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`).
 
 **A directory under `apps/` is a URL.** Cloudflare Pages publishes the repo root
 with no build step, so `apps/<slug>/index.html` is live at `/apps/<slug>/` the
