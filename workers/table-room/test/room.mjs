@@ -1283,8 +1283,8 @@ section('contests: the GM calls, the player rolls, the result is one roll in the
 {
   const t = await contestTable();
   check('a seat keeps its seven ranks as ladder positions', JSON.stringify(t.spidey.att.seat.ranks) === '[6,8,7,5,4,8,4]', JSON.stringify(t.spidey.att.seat));
-  check('and the GM\'s list of people names who is seated',
-    t.gm.messages.find((m) => m.type === 'state').people.find((p) => p.name === 'Spider-Man')?.characterId === 'h1');
+  check('and the GM is told who is seated as each screen joins, a player with one hero included',
+    t.gm.messages.filter((m) => m.type === 'people').at(-1)?.people.find((p) => p.name === 'Spider-Man')?.characterId === 'h1');
   t.dice(62, 71, 40);
   await say(t.room, t.gm, { ...CALL, rank: 'unearthly', opp: OCK });
   const mine = callsOn(t.spidey);

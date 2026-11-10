@@ -293,3 +293,5 @@ body.tv-showing .tv-status { margin-top: 0; }
 .table-call-acts .btn, .table-call-acts select, .table-call-acts input[type="number"] { min-height: 44px; font-size: 16px; }
 .table-call-acts input[type="number"] { width: 6em; padding: 6px 10px; }
 .table-roll.contest .table-roll-text { font-weight: 600; }
+/* .table-field sets display, which would beat the hidden attribute. */
+.table-contest [hidden] { display: none; }

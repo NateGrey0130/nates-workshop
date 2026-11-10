@@ -364,7 +364,13 @@ export class TableRoom {
     const conn = ws.deserializeAttachment() ?? {};
     try {
       switch (msg.type) {
-        case 'hello': await this.sendState(ws, conn, meta); break;
+        case 'hello':
+          await this.sendState(ws, conn, meta);
+          // Whoever is already here learns of the arrival now. A player with one
+          // character is seated at connect and sends no 'seat', so without this
+          // the GM's list, and who a FEAT can be called on, missed them.
+          this.broadcastPeople();
+          break;
         case 'seat':  await this.onSeat(ws, conn, msg, meta); break;
         case 'roll':  await this.onRoll(ws, conn, msg); break;
         default:
