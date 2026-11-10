@@ -45,8 +45,12 @@ other fact lives in a pull request. The measurement behind this is in
    day**, with the instrument that shows it. A claim that no longer holds is
    not queued; tell Nate which rows fell. One you could not check goes in the
    brief as `Not checked when written:`.
-2. **Ask Nate everything that is his in one batch, before any brief exists.**
-   No brief is written with an open question, because a worker cannot ask.
+2. **Settle every open choice before any brief exists**, because a worker
+   cannot ask. A choice on *The asked list* below goes to Nate, all of them
+   in one batch, each with the option you recommend first. Any other choice
+   where you can name the option you recommend and why is taken, and goes on
+   its brief's `Rulings:` line as
+   `taken on the recommendation, <date>: <choice>; not taken: <other>`.
 3. **Split a big row, never fold two**, and tell Nate what was split. More
    than two fixes that reproduce separately is two rows: the trial's four-fix
    row peaked at 197k against the worker's 200k stop.
@@ -76,7 +80,22 @@ other fact lives in a pull request. The measurement behind this is in
    shipping row as `NEXT:` and its own row as `PUSHED` (the incident is in
    `reference/why.md`).
 
-Rulings 2 and 3 are Nate's, 2026-10-12.
+Ruling 3 is Nate's, 2026-10-12. Ruling 2 is his of 2026-11-10; until then
+every choice was asked (2026-10-12), and the options he did not take were
+one batch with the recommendations preselected, and taking every
+recommendation.
+
+### The asked list
+
+Asked always, by the planner and by a driver mid-chain:
+
+- a production schema change: a table or column added, dropped or renamed
+- deleting or retiring data, rows or a table, in any D1
+- a Cloudflare Access, R2, permission, hook or settings change
+- dropping or narrowing something he asked for
+- a choice with no option you can recommend, or with options that are close
+
+**When unsure whether a choice is on the list, it is.**
 
 ## What a brief carries
 
@@ -245,9 +264,19 @@ worker's `checkout -b` finds the name taken.
 - the report and the state file disagree, other than a `READY` report over a
   state file that still names that row.
 
-A ruling a brief lacks is not a stop: ask it with `AskUserQuestion`, and the
-row waits for the answer. The driver does not guess a ruling, and does not
-end the session over one.
+A ruling a brief lacks is not a stop, and it arrives as a `BLOCKED` report
+naming the options and the one the worker recommends. **Off *The asked
+list*, with a recommendation in the report, the driver takes it** (Nate,
+2026-11-10; the option he did not take was the driver asking every one):
+append `From row <id>: taken on the recommendation, <date>: <choice>; not
+taken: <other>` to that row's brief, replace `state.md` whole with a `NEXT:`
+line naming the same row and any branch and commit the report gave to resume
+from, free that branch as for a split above, and spawn the row again. It is
+told to him in the closing message. On the list, or with no recommendation
+in the report: ask it with `AskUserQuestion`, and the row waits for the
+answer. The driver does not form a recommendation of its own, since it has
+read neither the brief nor the code, and does not end the session over a
+ruling.
 
 **The driver's own budget warning is a hand-off the driver makes itself, not
 a stop.** It arrives as the UserPromptSubmit line (`session-budget: context
