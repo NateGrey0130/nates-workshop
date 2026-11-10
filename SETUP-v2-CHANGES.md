@@ -32,6 +32,16 @@ One correction to it: change 3's rationale says `docs/` is cited twice in the
 body. It is cited once, in the second-Worker section. Everything else below was
 re-checked against the working tree during the rewrite and held.
 
+**Adjusted 2026-11-10: `apps/pick3cut5/AUDIT.md`, which this file cites, is no
+longer in the tree.** It was deleted with the rest of `apps/pick3cut5/` when the
+app was retired on 2026-10-28 (#2015, commit `e314d3f8`;
+`git show e314d3f8 --stat -- apps/pick3cut5/` lists what went). Read it with
+`git show e314d3f8^:apps/pick3cut5/AUDIT.md`; any other path under
+`apps/pick3cut5/` reads with the same `e314d3f8^:` prefix. What this file says
+about that menu, its items and its shape was written against that text and is
+left as written. It is a record, and none of it describes a file a scan of the
+tree will meet today.
+
 > After full review, create a fresh v2 incorporating all changes.
 > Do NOT edit SETUP.md inline from this document — start a fresh session with
 > SETUP.md, this file, and `CLAUDE.md` + `docs/pages-to-workers-migration.md`
@@ -223,6 +233,12 @@ Reviewed and correct as written — no change:
    `F11` (with `F12`) replaced the allowance with one assertion that the page
    fetches nothing from a third party, by tag or by `url()`:
    `apps/pick3cut5/test/smoke.mjs:87-98` explains it, line 157 holds it.
+   **Adjusted 2026-11-10.** Both files this answer names went with the app on
+   2026-10-28 (#2015, commit `e314d3f8`). The menu reads with
+   `git show e314d3f8^:apps/pick3cut5/AUDIT.md` and the test with
+   `git show e314d3f8^:apps/pick3cut5/test/smoke.mjs`, and the line numbers
+   above read against that same parent commit. Nothing is left in the tree for
+   the question to be about.
 2. **Scope of change 1.** Should the deploy-verification step be stated in
    SETUP.md as the rule, or does it belong in `ship-pr` (the skill that owns the
    merge loop) with SETUP.md only describing the failure? Written above as the

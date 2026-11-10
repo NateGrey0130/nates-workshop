@@ -9,6 +9,16 @@
 > no outcome. A line number this menu cites in the closed file reads against
 > that commit.
 
+> **Adjusted 2026-11-10: `apps/pick3cut5/AUDIT.md`, which this file cites, is no
+> longer in the tree.** It was deleted with the rest of `apps/pick3cut5/` when the
+> app was retired on 2026-10-28 (#2015, commit `e314d3f8`;
+> `git show e314d3f8 --stat -- apps/pick3cut5/` lists what went). Read it with
+> `git show e314d3f8^:apps/pick3cut5/AUDIT.md`; any other path under
+> `apps/pick3cut5/` reads with the same `e314d3f8^:` prefix. What this file says
+> about that menu, its items and its shape was written against that text and is
+> left as written. It is a record, and none of it describes a file a scan of the
+> tree will meet today.
+
 > **This menu carries no status header, and that is a decision rather than an
 > oversight.** It is the only one here without one — `F8`, filed in this file,
 > is what gave every other menu the line it now opens with, and PR #531 left this
