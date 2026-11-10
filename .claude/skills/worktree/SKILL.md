@@ -50,8 +50,11 @@ refusals. `groups.json` says which group a path is in, and `CLAUDE.md` →
 Anything else:
 
 ```bash
-git worktree add ../nates-apps-wt -b short-kebab-description origin/main
+git worktree add ../nates-apps-wt -b <group>/<type>/<slug> origin/main
 ```
+
+Name the branch by `CLAUDE.md` → *Naming* (`proc/skill/worktree-branch-name`),
+after its three commands say the name is free.
 
 Branch **off `origin/main`**, not off whatever the shared checkout has checked
 out. That is also the escape hatch when a session has already tangled with

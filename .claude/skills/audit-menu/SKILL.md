@@ -26,7 +26,9 @@ list from the tree (the command under *The headings are not uniform*), then add
    enough to implement from and a stated **posture**.
 2. **Nate names one**: "take F6". Nothing is taken until he does, and a menu is
    never worked top to bottom. **Taking is invoked by `/take <MENU> <ID>`** (the
-   `take` skill): the subject grep and the premise audit from *Taking a finding
+   `take` skill, `.claude/skills/take/SKILL.md`; when he says it in plain
+   words, read that file, because the Skill tool cannot load a slash
+   command): the subject grep and the premise audit from *Taking a finding
    is also AUDITING the finding*, in that order, and the branch last.
 3. **One PR per finding.** Not two in a PR, not one across two.
 4. A dated outcome note — `**Taken, <date> (branch <name>)**` — appended under
