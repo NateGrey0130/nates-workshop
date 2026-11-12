@@ -1,6 +1,6 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology and the 31 gear rows shipped; the comparison, creatures, NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology, the 31 gear rows and the Millennium Tree comparison shipped; creatures, NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
 **Rows citing this book:** gear 31, skills 1
 
@@ -153,6 +153,8 @@ Run against **production** on 2026-11-12: 0 rows cite this book in any table.
 - **gear, held and different: 3.** `millennium-vampire-slaying-javelin`,
   `millennium-throwing-stick` and `corrupted-millennium-wand-or-staff` (all
   citing Japan, 1995) carry figures this 1993 book prints differently.
+  Done: each row's `description` now gives England's figure and page
+  (`~275`); its figures and `source_book` still follow Japan.
 - **creatures: 16 kinds missing**, 1 held in another system
   (`chiang-ku-dragon`, Palladium Fantasy).
 - **notable_npcs: 12 missing.** `erin-tarn` is held from Coalition War
@@ -217,6 +219,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 |---|---|---|
 | 2026-11-12 | — | cache built (154 pp, text layer), offset +1 verified, inventory and production diff |
 | 2026-11-12 | `pal/data/england-skill-and-gear` | 1 skill (Mystic Herbology) and 31 gear rows (`~274`), written through `scripts/rows-sql.mjs`. Applied `--remote` first. Status to `importing`. |
+| 2026-11-12 | `pal/data/england-millennium-compare` | 3 held Millennium Tree gear rows (Japan) gained an England sentence in `description` (`~275`, hand-written). No figure or `source_book` changed. Applied `--remote` first. |
 
 ### What remains
 
