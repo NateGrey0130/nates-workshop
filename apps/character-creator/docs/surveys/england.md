@@ -1,8 +1,8 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and twelve NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere, Arr'thuu, Prrcyvel, Dred, Galahad, and the gods Balor II, Bres, Lugh and Dagda) shipped; the classes are next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and twelve NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere, Arr'thuu, Prrcyvel, Dred, Galahad, and the gods Balor II, Bres, Lugh and Dagda) and four classes (Herbalist, Filidh, Dryad, Scathach) shipped; the other classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** gear 31, skills 1, notable_npcs 12, creatures 17
+**Rows citing this book:** classes 4, gear 31, skills 1, notable_npcs 12, creatures 17
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
@@ -225,6 +225,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | 2026-11-12 | `pal/data/england-npcs-a` | 4 notable NPC rows, 85-91 (Zazshan, Mrrlyn, The Lady of the Lake, Lady Guinevere), with 6 `stat_attacks` (`~278`), written through `scripts/bestiary-sql.mjs`. Left: the major life essence (inside Mrrlyn's block, no row). Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-npcs-b` | 4 notable NPC rows, 104-110 (King Arr'thuu, Sir Prrcyvel, Sir Dred, Sir Galahad), with 30 `stat_attacks` (`~279`), written through `scripts/bestiary-sql.mjs`. Left: the 15 attribute-only people on 100-121 (Nate, 2026-11-12: D21 read as covering them), the level-only names (D21), the typical human Nexus Knight on 99 (D22) and Erin Tarn (a letter). Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-npcs-gods` | 4 notable NPC rows for the gods, 127-131 (Balor of the Poisonous Eye II, Bres the Beautiful, Lugh The Shining One, Dagda), with 14 `stat_attacks` (`~280`), written through `scripts/bestiary-sql.mjs`. Left: the faerie folk of Ireland on 132-134 (no block; the book refers to the Conversion Book) and the level-only names on 135-137 (D21). Applied `--remote` first. |
+| 2026-11-12 | `pal/data/england-classes-woodland` | 4 classes, 22-43 (Herbalist, Filidh, Dryad, Scathach), written through `class-check --emit-script`. Left: the Blood Druid (Nate, 2026-11-12: no row) and the medicinal herb lists on 26-27. Applied `--remote` first. |
 
 ### What remains
 
