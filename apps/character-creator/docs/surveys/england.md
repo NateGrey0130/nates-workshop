@@ -1,8 +1,8 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology, the 31 gear rows and the Millennium Tree comparison shipped; creatures, NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison and the first nine creatures shipped; the other creatures, NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** gear 31, skills 1
+**Rows citing this book:** gear 31, skills 1, creatures 9
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
@@ -220,6 +220,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | 2026-11-12 | — | cache built (154 pp, text layer), offset +1 verified, inventory and production diff |
 | 2026-11-12 | `pal/data/england-skill-and-gear` | 1 skill (Mystic Herbology) and 31 gear rows (`~274`), written through `scripts/rows-sql.mjs`. Applied `--remote` first. Status to `importing`. |
 | 2026-11-12 | `pal/data/england-millennium-compare` | 3 held Millennium Tree gear rows (Japan) gained an England sentence in `description` (`~275`, hand-written). No figure or `source_book` changed. Applied `--remote` first. |
+| 2026-11-12 | `pal/data/england-creatures-a` | 9 creature rows, 55-66 (Dabuggh, Mantaz Sectle and Cernun playable), with 20 `stat_attacks` (`~276`), written through `scripts/bestiary-sql.mjs`. Applied `--remote` first. |
 
 ### What remains
 
