@@ -1,8 +1,8 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison and all seventeen creatures shipped; the NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and the first four NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere) shipped; the other eight NPCs and the classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** gear 31, skills 1, creatures 17
+**Rows citing this book:** gear 31, skills 1, notable_npcs 4, creatures 17
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
@@ -222,6 +222,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | 2026-11-12 | `pal/data/england-millennium-compare` | 3 held Millennium Tree gear rows (Japan) gained an England sentence in `description` (`~275`, hand-written). No figure or `source_book` changed. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-creatures-a` | 9 creature rows, 55-66 (Dabuggh, Mantaz Sectle and Cernun playable), with 20 `stat_attacks` (`~276`), written through `scripts/bestiary-sql.mjs`. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-creatures-b` | 8 creature rows, 48-50, 71-73, 85-97, 125-126 and 142-144 (Temporal Raider, Zllyphan Energy Being, Supreme Nexus Knight, Ghost Knight, Fomorian, Ogeeyin and Ogeeyin Guardian, `chiang-ku-dragon-england`; Temporal Raider, Ogeeyin and the Chiang-Ku playable), with 7 `stat_attacks` (`~277`), written through `scripts/bestiary-sql.mjs`. No attack for the Fomorian or either Ogeeyin form: the book prints no damage dice for them. Left: the Millennium Tree and the Golden Table (Nate, 2026-11-12), the major life essence, the tectonic stone figures, the typical human Nexus Knight (D22) and the Blood Druid (Nate, 2026-11-12: no row). Applied `--remote` first. |
+| 2026-11-12 | `pal/data/england-npcs-a` | 4 notable NPC rows, 85-91 (Zazshan, Mrrlyn, The Lady of the Lake, Lady Guinevere), with 6 `stat_attacks` (`~278`), written through `scripts/bestiary-sql.mjs`. Left: the major life essence (inside Mrrlyn's block, no row). Applied `--remote` first. |
 
 ### What remains
 
