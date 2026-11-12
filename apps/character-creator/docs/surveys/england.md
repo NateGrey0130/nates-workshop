@@ -1,8 +1,8 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology and the 31 gear rows shipped; the comparison, creatures, NPCs and classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 31, skills 1
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
@@ -216,6 +216,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-12 | — | cache built (154 pp, text layer), offset +1 verified, inventory and production diff |
+| 2026-11-12 | `pal/data/england-skill-and-gear` | 1 skill (Mystic Herbology) and 31 gear rows (`~274`), written through `scripts/rows-sql.mjs`. Applied `--remote` first. Status to `importing`. |
 
 ### What remains
 
