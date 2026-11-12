@@ -96,7 +96,7 @@ skills:
     - { name: "Jet Aircraft", base: 50, per_level: 4, note: "Pilot jet aircraft (+10%)." }
     - { name: "Horsemanship: General", base: 50, per_level: 4, note: "+10%; often a robot horse." }
     - { name: "Language: Dragonese", base: 50, per_level: 5 }
-    - { choose: 3, from: ["Language: Other"], note: "Three other languages of choice. Taken once per language - the picker asks which." }
+    - { choose: 3, from: ["Language: Other"], bonus: 0, note: "Three other languages of choice, printed with no percentage (+0%). Taken once per language - the picker asks which." }
     - { name: "Climbing", base: 50, per_level: 5, note: "Climb (+10%)." }
     - { name: "W.P. Energy Pistol", base: 0, per_level: 0 }
     - { name: "W.P. Energy Rifle", base: 0, per_level: 0 }
