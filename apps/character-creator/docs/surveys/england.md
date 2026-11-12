@@ -2,7 +2,7 @@
 
 **Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** none yet
+**Rows citing this book:** none
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
