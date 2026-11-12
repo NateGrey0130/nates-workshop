@@ -61,7 +61,7 @@ skills:
     - { name: "Sing", base: 50, per_level: 5, note: "+15%" }
     - { name: "Lore: Faeries & Creatures of Magic", base: 35, per_level: 5, note: "Faerie Lore (+10%)." }
     - { name: "Language: Dragonese", base: 70, per_level: 5, note: "+20%" }
-    - { name: "Language: Other", base: 70, per_level: 5, note: "Faerie Speak (+20%). A named tongue with no catalog row rides Language: Other." }
+    - { name: "Language: Other", base: 70, per_level: 0, note: "Faerie Speak (+20%). Fixed at the printed figure, as a named tongue with no catalog row is." }
     - { choose: 2, from: ["Language: Other"], bonus: 20, note: "Two languages of choice (+20%). Taken once per language - the picker asks which." }
     - { name: "Climbing", base: 50, per_level: 5, note: "Climb (+10%). The natural climb of 90/80% is a natural ability." }
     - { choose: 5, categories: ["Weapon Proficiencies"], note: "W.P.: select three ancient and two modern." }
