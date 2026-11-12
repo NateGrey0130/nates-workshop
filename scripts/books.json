@@ -265,6 +265,22 @@
       "note": "Cached 2026-10-05 by OCR (a SCAN, no text layer; 300 dpi, psm 3), median 5,646 chars/page. Offset verified by folio at ten points - cache p014 reads 13, p030 reads 29, p050 reads 49, p075 reads 74, p100 reads 99, p120 reads 119, p140 reads 139, p150 reads 149, p153 reads 152, p161 reads 160 - one region. printed_pages is 160, the last folio, at cache p161; ocr-book.py measured 152 (the folio is not read on the last eight pages) and the registry outranks the manifest. p162 is an unnumbered catalogue page. See apps/character-creator/docs/surveys/dinosaur-swamp.md."
     },
 
+    "england": {
+      "title": "Rifts World Book 3: England",
+      "published": 1993,
+      "aliases": [
+        "England",
+        "Rifts England",
+        "Rifts World Book Three: England",
+        "Rifts World Book 3 England"
+      ],
+      "source_pdf": "Rifts - World Book 03 - England.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 152,
+      "page_offset": 1,
+      "note": "Cached 2026-11-12 from its TEXT LAYER (--probe median 5,301 chars/page), 154 PDF pages. Offset +1 read off the folios at cache p027 (26), p050 (49), p075 (74), p100 (99), p130 (129), p148 (147) and p152 (151); one region. printed_pages is 152 and NOT the 151 ocr-book.py measured: printed 152 is the O.C.C. & R.C.C. Experience Tables (cache p153, folio read off a render), the authority for every class ladder, and its folio does not surface in the text layer. Cache p154 is blank. published is the copyright year on cache p003 (1993; the copy is the fourth printing, August 1997). See apps/character-creator/docs/surveys/england.md."
+    },
+
     "fom": {
       "title": "Rifts World Book 16: Federation of Magic",
       "published": 1997,
