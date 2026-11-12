@@ -1,8 +1,8 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and twelve NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere, Arr'thuu, Prrcyvel, Dred, Galahad, and the gods Balor II, Bres, Lugh and Dagda) and ten classes (Herbalist, Filidh, Dryad, Scathach, Millennium Druid, Earth Child, Star Child, Dabuggh, Mantaz Sectle, Cernun) shipped; the other classes are next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and twelve NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere, Arr'thuu, Prrcyvel, Dred, Galahad, and the gods Balor II, Bres, Lugh and Dagda) and thirteen classes (Herbalist, Filidh, Dryad, Scathach, Millennium Druid, Earth Child, Star Child, Dabuggh, Mantaz Sectle, Cernun, Temporal Wizard, Temporal Warrior, Temporal Raider) shipped; the other classes are next. The plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** classes 10, gear 31, skills 1, notable_npcs 12, creatures 17
+**Rows citing this book:** classes 13, gear 31, skills 1, notable_npcs 12, creatures 17
 
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
@@ -228,6 +228,7 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | 2026-11-12 | `pal/data/england-classes-woodland` | 4 classes, 22-43 (Herbalist, Filidh, Dryad, Scathach), written through `class-check --emit-script`. Left: the Blood Druid (Nate, 2026-11-12: no row) and the medicinal herb lists on 26-27. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-classes-millennium-earth-star` | 3 classes, 44-54 (Millennium Druid, Earth Child, Star Child), written through `class-check --emit-script`. Left: the Millennium Tree (Nate, 2026-11-12: a creature row, not taken). The Earth Child's stone form and the Star Child's light form are in prose, not `mdc_base`. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-classes-dabuggh-mantaz-cernun` | 3 classes, 55-59 (Dabuggh, Mantaz Sectle, Cernun), written through `class-check --emit-script`. Ladders off 152: the Dabuggh on Dabugghs, Earth & Star Child; the Mantaz Sectle on its own; the Cernun on Temporal Wizard, Cernun Serpent & Ogeeyin (152 over the entry lines on 58 and 59, which name the Earth and Star Child's and the Mystic's; each entry's reading is in `extraction_notes`). The Dabuggh's metamorphosis is a `second_form`. Applied `--remote` first. |
+| 2026-11-12 | `pal/data/england-classes-temporal` | 3 classes, 66-72 (Temporal Wizard, Temporal Warrior, Temporal Raider), written through `class-check --emit-script`. The Temporal Raider is a class on Nate's answer (2026-11-12) though the book does not suggest it for players; it takes the player spell set, and the NPC set stays on its creature row. The Wizard's ten- and fourteen-year servitude tiers and the Random Insanity Table are prose. No spell row added or changed. Applied `--remote` first. |
 
 ### What remains
 
