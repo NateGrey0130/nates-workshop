@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 17, gear 31, skills 1, notable_npcs 12, creatures 17
 
+**MOS:** ogeeyin 10 choose 2
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build. Printed 142-144: each of the Ogeeyin's four minds selects two of ten areas of knowledge.*
+
 Slug `england`. Cached 2026-11-12 from `Rifts - World Book 03 - England.pdf`,
 154 PDF pages, **text layer** (`--probe` median 5,301 chars/page).
 
