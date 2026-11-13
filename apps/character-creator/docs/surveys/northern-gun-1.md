@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204) and the 15 new rail guns and non-energy weapons (204-212) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
+**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
 
-**Rows citing this book:** gear 43
+**Rows citing this book:** gear 80
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -201,6 +201,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-12 | `pal/docs/northern-gun-1-register-survey` | cache built (226 pp, text layer), offset +1 verified by folio at seven points, inventory and production diff; `northern-gun-1` registered in `books.json` |
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-energy` | 28 gear rows, the new laser, ion, particle beam and plasma weapons (191-204), `~281`, through `scripts/rows-sql.mjs` |
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-rail` | 15 gear rows, the new rail guns and non-energy weapons (204-212), `~282`, through `scripts/rows-sql.mjs` |
+| 2026-11-13 | `pal/data/northern-gun-1-weapons-other` | 37 gear rows, the other weapons, ammunition, explosives, mines, fuel cells and batteries (101-103, 213-218), `~283`, through `scripts/rows-sql.mjs`; left because production holds them: the NG smoke hand grenade (`smoke-grenade`) and the NG Vibro-Blades (held as `vibro-knife`, `vibro-saber`, `vibro-sword`, `vibro-claws`, `vibro-bayonet`, `giant-vibro-sword`) at the same damage and price; the vehicle mine detector (216) is held as `vehicle-mine-detector` at the same price, and the Solid Oxide conversion kits are carried in the two fuel cells' `cost_note` |
 
 ### What remains
 
