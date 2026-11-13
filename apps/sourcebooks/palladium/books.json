@@ -465,6 +465,36 @@
    "total": 213
   },
   {
+   "slug": "england",
+   "title": "Rifts World Book 3: England",
+   "code": "england",
+   "status": "imported",
+   "date": "2026-11-12",
+   "added": [
+    [
+     "Classes",
+     17
+    ],
+    [
+     "Creatures",
+     17
+    ],
+    [
+     "Gear",
+     31
+    ],
+    [
+     "Notable NPCs",
+     12
+    ],
+    [
+     "Skills",
+     1
+    ]
+   ],
+   "total": 78
+  },
+  {
    "slug": "africa",
    "title": "Rifts World Book 4: Africa",
    "code": "africa",
