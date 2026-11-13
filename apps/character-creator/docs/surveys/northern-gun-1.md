@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
+**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) and the first 4 robots (103-116) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
 
-**Rows citing this book:** gear 84
+**Rows citing this book:** gear 84, vehicles 4
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -208,6 +208,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-rail` | 15 gear rows, the new rail guns and non-energy weapons (204-212), `~282`, through `scripts/rows-sql.mjs` |
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-other` | 37 gear rows, the other weapons, ammunition, explosives, mines, fuel cells and batteries (101-103, 213-218), `~283`, through `scripts/rows-sql.mjs`; left because production holds them: the NG smoke hand grenade (`smoke-grenade`) and the NG Vibro-Blades (held as `vibro-knife`, `vibro-saber`, `vibro-sword`, `vibro-claws`, `vibro-bayonet`, `giant-vibro-sword`) at the same damage and price; the vehicle mine detector (216) is held as `vehicle-mine-detector` at the same price, and the Solid Oxide conversion kits are carried in the two fuel cells' `cost_note` |
 | 2026-11-13 | `pal/data/northern-gun-1-held-compare` | 4 of the 11 held weapons re-cited to this book where its figures differ (`ng-super-laser-pistol-and-grenade-launcher`, `ng-11s-sawed-off`, `ng-101-rail-gun`, `ng-202-rail-gun`), `~284`, hand-written; left as agreeing: `ng-33-northern-gun-laser-pistol`, `ng-45lp-long-pistol`, `ng-l5-northern-gun-laser-rifle`, `ng-h5-holdout-ion-pistol`, `ng-57-northern-gun-heavy-duty-ion-blaster`, `ng-ip7-ion-pulse-rifle`, `ng-p7-northern-gun-particle-beam-rifle` |
+| 2026-11-13 | `pal/data/northern-gun-1-robots-a` | 4 vehicle rows, the first four robots (103-116): `ng-v36-beachmaster` 11 locations and 7 weapons, `ng-ex5-behemoth-explorer` 12 and 1, `ng-ex9-behemoth-super-explorer` 20 and 3, `ng-v50-bigfoot` 11 and 4; 54 locations and 15 weapons in all, `~285`, through `scripts/vessel-sql.mjs` |
 
 ### What remains
 
