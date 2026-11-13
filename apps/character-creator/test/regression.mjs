@@ -6322,11 +6322,21 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 // An INVARIANT rather than a fix: a class whose I.S.P. and P.P.E. formulas are
 // the identical string is not proof of anything, but it is the shape this error
 // takes and it costs one comparison to ask. Zero across the corpus after F17.
+//
+// A class whose page was read and DOES print the same formula twice is named
+// here with the page, and only that class is excused.
+const POOL_TWINS_READ = {
+  // England printed 143 (cache p144): "Each of the four life nodes has 4D6x10
+  // P.P.E." and the same for I.S.P., each with its own all-four bonus; the
+  // stat summary on printed 144 repeats both. Read 2026-11-12.
+  ogeeyin: '4d6x10',
+};
 {
   const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
   const twins = classes.filter((c) => {
     const isp = c.psionics?.isp_base, ppe = c.ppe_base;
-    return isp && ppe && String(isp).trim().toLowerCase() === String(ppe).trim().toLowerCase();
+    const same = isp && ppe && String(isp).trim().toLowerCase() === String(ppe).trim().toLowerCase();
+    return same && POOL_TWINS_READ[c.id] !== String(ppe).trim().toLowerCase();
   });
   check('no class states the same formula for its I.S.P. and its P.P.E.',
     twins.length === 0,
