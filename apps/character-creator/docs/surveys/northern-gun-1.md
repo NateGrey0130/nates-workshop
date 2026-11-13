@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The proposal is under *Extraction plan*. (2026-11-12)
+**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The approved plan is under *Extraction plan*. (2026-11-12)
 
-**Rows citing this book:** none yet
+**Rows citing this book:** none
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -153,7 +153,7 @@ Six classes missing, none held. Philip Reeves is not held.
 
 ## Extraction plan
 
-**Proposed 2026-11-12; not yet approved.** One branch per line; gear and
+**Approved by Nate 2026-11-13, as written.** One branch per line; gear and
 vehicles go before the classes that name them.
 
 1. `pal/data/northern-gun-1-weapons-energy`: the new laser, ion, particle
@@ -175,15 +175,15 @@ vehicles go before the classes that name them.
    NG Sales Rep.
 9. `pal/docs/northern-gun-1-close-out`.
 
-Questions the plan needs answered before it runs:
+Rulings that govern it (Nate, 2026-11-13: all three taken as proposed):
 
 - **The 11 held weapons.** The 2026-10-04 ruling is that the newest printing
-  that states a figure wins, and this book is the newest. Proposed: where a
+  that states a figure wins, and this book is the newest. Where a
   figure differs, the row takes this book's figure and its citation, and the
   older figure goes in the description.
-- **The 66 quick-stat people.** Proposed: left, as England's 15
+- **The 66 quick-stat people.** Left, as England's 15
   attribute-only people were (D21 as Nate read it on 2026-11-12).
-- **Fuel cells and batteries (101-102).** Proposed: gear rows in batch 2.
+- **Fuel cells and batteries (101-102).** Gear rows in batch 2.
 
 What is deliberately left, with the reason for each:
 
