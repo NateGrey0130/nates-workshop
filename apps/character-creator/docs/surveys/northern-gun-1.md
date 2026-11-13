@@ -2,7 +2,7 @@
 
 **Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
 
-**Rows citing this book:** gear 80
+**Rows citing this book:** gear 84
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -141,6 +141,11 @@ The six matched outright: NG-45LP, NG-H5, NG-IP7 and NG-11S (Juicer Uprising),
 NG-101 and NG-202 Rail Gun (RUE). So **11 held, 53 new**. This book is the
 newest printing of all 11.
 
+**The comparison is done** (`~284`, 2026-11-13). Four of the 11 differed and
+now cite this book, with the older printing's figures in their description:
+the NG-Super, the NG-11S, the NG-101 and the NG-202. The other seven print
+no differing figure here and keep their older citation.
+
 Not diffed by name, because the book prints them as kinds under one heading
 rather than as named products: the rail-gun rounds, hand grenades, plastic
 explosives, mini-missiles, the two generic mine kinds, the Vibro-Blades and
@@ -202,6 +207,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-energy` | 28 gear rows, the new laser, ion, particle beam and plasma weapons (191-204), `~281`, through `scripts/rows-sql.mjs` |
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-rail` | 15 gear rows, the new rail guns and non-energy weapons (204-212), `~282`, through `scripts/rows-sql.mjs` |
 | 2026-11-13 | `pal/data/northern-gun-1-weapons-other` | 37 gear rows, the other weapons, ammunition, explosives, mines, fuel cells and batteries (101-103, 213-218), `~283`, through `scripts/rows-sql.mjs`; left because production holds them: the NG smoke hand grenade (`smoke-grenade`) and the NG Vibro-Blades (held as `vibro-knife`, `vibro-saber`, `vibro-sword`, `vibro-claws`, `vibro-bayonet`, `giant-vibro-sword`) at the same damage and price; the vehicle mine detector (216) is held as `vehicle-mine-detector` at the same price, and the Solid Oxide conversion kits are carried in the two fuel cells' `cost_note` |
+| 2026-11-13 | `pal/data/northern-gun-1-held-compare` | 4 of the 11 held weapons re-cited to this book where its figures differ (`ng-super-laser-pistol-and-grenade-launcher`, `ng-11s-sawed-off`, `ng-101-rail-gun`, `ng-202-rail-gun`), `~284`, hand-written; left as agreeing: `ng-33-northern-gun-laser-pistol`, `ng-45lp-long-pistol`, `ng-l5-northern-gun-laser-rifle`, `ng-h5-holdout-ion-pistol`, `ng-57-northern-gun-heavy-duty-ion-blaster`, `ng-ip7-ion-pulse-rifle`, `ng-p7-northern-gun-particle-beam-rifle` |
 
 ### What remains
 
