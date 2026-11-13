@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) and the first 9 robots (103-126) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
+**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) and the first 12 robots (103-141) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
 
-**Rows citing this book:** gear 84, vehicles 9
+**Rows citing this book:** gear 84, vehicles 12
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -210,6 +210,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-13 | `pal/data/northern-gun-1-held-compare` | 4 of the 11 held weapons re-cited to this book where its figures differ (`ng-super-laser-pistol-and-grenade-launcher`, `ng-11s-sawed-off`, `ng-101-rail-gun`, `ng-202-rail-gun`), `~284`, hand-written; left as agreeing: `ng-33-northern-gun-laser-pistol`, `ng-45lp-long-pistol`, `ng-l5-northern-gun-laser-rifle`, `ng-h5-holdout-ion-pistol`, `ng-57-northern-gun-heavy-duty-ion-blaster`, `ng-ip7-ion-pulse-rifle`, `ng-p7-northern-gun-particle-beam-rifle` |
 | 2026-11-13 | `pal/data/northern-gun-1-robots-a` | 4 vehicle rows, the first four robots (103-116): `ng-v36-beachmaster` 11 locations and 7 weapons, `ng-ex5-behemoth-explorer` 12 and 1, `ng-ex9-behemoth-super-explorer` 20 and 3, `ng-v50-bigfoot` 11 and 4; 54 locations and 15 weapons in all, `~285`, through `scripts/vessel-sql.mjs` |
 | 2026-11-13 | `pal/data/northern-gun-1-robots-b` | 5 vehicle rows, the next five robots (116-126): `ng-ax44-bison` 9 locations and 4 weapons, `ng-v19-blocker` 9 and 4, `ng-v32-bruiser` 8 and 4, `ng-v34-buffalo` 11 and 4, `ng-ex20-bulldog` 14 and 3 (it runs to printed 126); 51 locations and 19 weapons in all, `~286`, through `scripts/vessel-sql.mjs` |
+| 2026-11-13 | `pal/data/northern-gun-1-robots-c` | 3 vehicle rows, the next three robots (126-141): `ng-v47-gunbot` 13 locations and 4 weapons, `ng-v61-gunwolf` 18 and 8, `ng-v67-grizzly` 23 and 15; 54 locations and 27 weapons in all, `~287`, through `scripts/vessel-sql.mjs` |
 
 ### What remains
 
