@@ -404,6 +404,23 @@
       "note": "Cached 2026-09-12 from its TEXT LAYER, median 3,925 chars/page. Offset verified by folio at three points rather than taken from the vote - cache p005 reads 4, p121 reads 120, p241 reads 240. printed_pages is 240, the last NUMBERED folio, and the book's own content ends well before it: printed 233 is the Experience Tables and 234-240 are blank character record sheets and a trademark page. Cache p242-p248 are Palladium house ads the book does not number. THE FIRST BOOK HERE THAT IS NEITHER RIFTS NOR PALLADIUM FANTASY - Nightbane is its own game. THIS SENTENCE USED TO SAY no catalog row could cite it until `system` accepted a third value; that stopped being true with the 2026-09-16 gear import, and measured --remote on 2026-09-22 production holds 963 catalog rows - 663 gear, 173 morphus characteristics, 39 spells, 35 vehicles, 25 talents, 15 creatures, 6 skills, 4 psionic powers and 3 skill system bases - plus 19 published classes (BOOK-INGEST-AUDIT F104). See apps/character-creator/docs/surveys/nightbane-core.md. substituted_digits is 45 PAGES, the third fault class in book-survey 0 - a render does not fix it, the damage is in the ink - and it lands on cache p036-p193 - the Morphus tables and the Money: lines of the class entries - and on NONE of the equipment chapter. CORRECTED 2026-09-16 by the gear import: printed 204-232 carries a digit cipher in its TEXT LAYER (`$ 1 1 00.00`, `l 6lbs`, `I l Omph`) that this detector does not flag, and 150-220 dpi renders of every one of those pages read it clean. welded_pages is 8 and corrupt_pages 12 pages, four of them (205, 206, 209, 216) inside the weapons chapter. source_pdf_dir was Downloads and NOT the workshop books directory every OTHER entry here names; the PDF was MOVED there on 2026-09-12 in PR #992 and this field was repointed with it, so all twenty-three entries now name one directory and every recorded source_pdf resolves to a file on disk. A count is still deliberately not stated, because it moves with the next book."
     },
 
+    "northern-gun-1": {
+      "title": "Rifts World Book 33: Northern Gun One",
+      "published": 2013,
+      "aliases": [
+        "Northern Gun One",
+        "Northern Gun 1",
+        "Rifts Northern Gun One",
+        "Rifts World Book 33: Northern Gun 1",
+        "Rifts World Book 33 Northern Gun One"
+      ],
+      "source_pdf": "Rifts - World Book 33 - Northern Gun 1.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-11-12 from its TEXT LAYER (--probe median 5,766 chars/page), 226 PDF pages. Offset +1 read off the folios at cache p027 (26), p050 (49), p101 (100), p150 (149), p200 (199), p221 (220) and p225 (224); one region. Cache p226 is a back-cover advertisement and the only welded page. published is the first printing on cache p003 (October 2013). The Experience Tables on printed 220 lose their columns in the text layer: read them off a render. See apps/character-creator/docs/surveys/northern-gun-1.md."
+    },
+
     "old-ones": {
       "title": "The Palladium RPG Book II: Old Ones",
       "published": 1984,
