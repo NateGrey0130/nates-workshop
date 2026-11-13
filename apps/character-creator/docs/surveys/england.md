@@ -1,6 +1,6 @@
 # Rifts World Book 3: England — survey
 
-**Status:** `importing` — Mystic Herbology, the 31 gear rows, the Millennium Tree comparison all seventeen creatures and twelve NPCs (Zazshan, Mrrlyn, the Lady of the Lake, Guinevere, Arr'thuu, Prrcyvel, Dred, Galahad, and the gods Balor II, Bres, Lugh and Dagda) and seventeen classes (Herbalist, Filidh, Dryad, Scathach, Millennium Druid, Earth Child, Star Child, Dabuggh, Mantaz Sectle, Cernun, Temporal Wizard, Temporal Warrior, Temporal Raider, Knight, Royal Knight, Chiang-Ku Dragon, Ogeeyin) shipped; the close-out is next. The plan is under *Extraction plan*. (2026-11-12)
+**Status:** `imported` — the plan is done: Mystic Herbology, 31 gear rows, the Millennium Tree comparison, 17 creatures, 12 notable NPCs and 17 classes. What was left out on purpose is under *Extraction plan*. (2026-11-12)
 
 **Rows citing this book:** classes 17, gear 31, skills 1, notable_npcs 12, creatures 17
 
@@ -217,6 +217,16 @@ What is left, and why:
 Rulings that govern it: 2026-10-04, the newest printing that states a figure
 wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 
+The plan closed on 2026-11-12 with these left on purpose: the Blood Druid
+(145-147, no row of any kind), the Fomorian as a class (a creature row only)
+and the human Nexus Knight (98-99, this note only), on Nate's answer; the 15
+attribute-only people on 100-121, the Millennium Tree (14) and the Golden
+Table (144-145), on Nate's answer; the level-only names (D21); the typical
+human Nexus Knight block on 99 (D22); the major life essence, the tectonic
+stone figures, the medicinal herb lists on 26-27 and Erin Tarn's letter; no
+spell row and no language skill row; and cache 120 and 122-124 (printed 119,
+121-123), never rendered, on which no row rests.
+
 ## Ledger
 
 | date | branch | what went in |
@@ -236,10 +246,17 @@ wins; D21, no stat block, no NPC row; D22, typical-member blocks are left.
 | 2026-11-12 | `pal/data/england-classes-knights` | 2 classes, 100-104 (Knight as `rifts-knight`, Royal Knight), written through `class-check --emit-script`. Ladders off 152: the Knight on Knights (general), since its entry names none; the Royal Knight on Knights of Camelot, Royal Knights & Human Nexus Knights. The two free implants, the 3D6x100 gems and the Knight's background table are prose, not rows. Left: the human Nexus Knight (98-99; Nate, 2026-11-12: this note only) and its typical block (99, D22). The Palladium Fantasy `knight` is unchanged. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-class-chiang-ku` | 1 class, 46-50 (Chiang-Ku Dragon as `rifts-chiang-ku-dragon`), written through `class-check --emit-script`. Ladder off 152: levels 1-15 in `xp_table`; levels 16-26 (Ancient Chiang-ku, 800,001 to 7,000,000) do not fit the 15-entry table and are recorded in the class's `extraction_notes`. The tattoo master's weapon and per-level tattoos, the doubled P.P.E. recovery, the adult's 19-20 critical and spell magic learned from a mage are prose. The Palladium Fantasy `chiang-ku-dragon` and both creature rows are unchanged. Applied `--remote` first. |
 | 2026-11-12 | `pal/data/england-class-ogeeyin` | 1 class, 142-144 (Ogeeyin), written through `class-check --emit-script`. Ladder off 152: Temporal Wizard, Cernun Serpent & Ogeeyin. The class is one of the four minds; the pooled P.P.E. and I.S.P., the four lobes' attacks, the energy sphere, the Guardian form and stone magic are prose. Spell Magic's four spells per level is a pick. Left: the Golden Table (144-145; Nate, 2026-11-12). Both creature rows are unchanged. Applied `--remote` first. |
+| 2026-11-12 | `pal/docs/england-close-out` | Close-out, no D1 write. Production counted first: gear 31, skills 1, creatures 17, notable_npcs 12, and all 17 class ids in `imported_classes`, as planned. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-12. Its `caches:`
-line lists `england (154)`; its *BY BOOK* table prints no `england` line,
-because no row in any table cites this book yet. Everything in the plan
-remains.
+From `node scripts/source-coverage.mjs --remote`, 2026-11-12, its *BY BOOK*
+line for this book, as printed:
+
+```
+  england             78 / 0
+```
+
+All 78 rows are traceable to a cached page (31 + 1 + 17 + 12 + 17), and no
+England row appears under `unknown-book` or `not-cached`. Nothing remains in the plan; what was left on purpose is under
+*Extraction plan*.
