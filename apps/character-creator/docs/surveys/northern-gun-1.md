@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The approved plan is under *Extraction plan*. (2026-11-12)
+**Status:** `importing` — the 28 new energy weapons (191-204) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-13)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 28
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -199,6 +199,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-12 | `pal/docs/northern-gun-1-register-survey` | cache built (226 pp, text layer), offset +1 verified by folio at seven points, inventory and production diff; `northern-gun-1` registered in `books.json` |
+| 2026-11-13 | `pal/data/northern-gun-1-weapons-energy` | 28 gear rows, the new laser, ion, particle beam and plasma weapons (191-204), `~281`, through `scripts/rows-sql.mjs` |
 
 ### What remains
 
