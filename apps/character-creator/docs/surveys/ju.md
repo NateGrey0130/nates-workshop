@@ -2,7 +2,7 @@
 
 **Status:** `imported` — imported to completion before surveys existed; this file was written afterwards. (2026-09-24)
 
-**Rows citing this book:** classes 14, gear 42, vehicles 7, skills 5, notable_npcs 9, creatures 5
+**Rows citing this book:** classes 14, gear 41, vehicles 7, skills 5, notable_npcs 9, creatures 5
 
 Slug `ju`. Cached from `Rifts- World Book 10 Juicer Uprising.pdf`, 162 PDF
 pages, **text layer**.
