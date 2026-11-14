@@ -2,7 +2,7 @@
 
 **Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
 
-**Rows citing this book:** gear 84, vehicles 32
+**Rows citing this book:** gear 84, vehicles 32, notable_npcs 1
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -216,6 +216,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-14 | `pal/data/northern-gun-1-robots-f` | 4 vehicle rows, the next four robots (167-180): `ng-ex-v50-scorpion-battler` 16 locations and 9 weapons, `ng-se48-sunfire` 14 and 4, `ng-v10-super-labor-original` 7 and 4, `ng-8000-super-max` 24 and 10 (its add-on armor runs onto printed 180, so it cites 175-180); 61 locations and 27 weapons in all, `~290`, through `scripts/vessel-sql.mjs` |
 | 2026-11-14 | `pal/data/northern-gun-1-robots-g` | 3 vehicle rows, the next three robots (180-190): `ng-v58-thundercaster` 19 locations and 3 weapons, `ng-v41-viking` 17 and 6, `ng-v39-volcano` 12 and 3; 48 locations and 12 weapons in all, `~291`, through `scripts/vessel-sql.mjs` |
 | 2026-11-14 | `pal/data/northern-gun-1-vehicles-police-hovertrain` | 5 vehicle rows, the two police vehicles and the three hovertrain blocks (85-86, 95-98): `ng-rb-122-police-interceptor` 9 locations and 2 weapons, `ng-122-exo-police-power-armor` 4 and 0, `ng-hch-1228-hovertrain-locomotive` 9 and 1, `ng-hcb-1b-hovertrain-boxcar` 4 and 0, `ng-hcb-ad2-hovertrain-weapon-car` 10 and 13 (its weapon entries are the buyer's menu on 98, not one car's fit); 36 locations and 16 weapons in all, `~292`, through `scripts/vessel-sql.mjs` |
+| 2026-11-14 | `pal/data/northern-gun-1-npc-reeves` | 1 notable NPC row, `philip-reeves` (65), with 2 weapons of note in `stat_attacks`, `~293`, through `scripts/bestiary-sql.mjs` |
 
 ### What remains
 
