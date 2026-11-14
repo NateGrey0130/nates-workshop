@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98), Philip Reeves (65-66), and the Bush Pilot and LPO O.C.C.s (76-80) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
+**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98), Philip Reeves (65-66), and the Bush Pilot, LPO, Monster Responder and NG Police Officer O.C.C.s (76-86) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
 
-**Rows citing this book:** classes 2, gear 84, vehicles 32, notable_npcs 1
+**Rows citing this book:** classes 4, gear 84, vehicles 32, notable_npcs 1
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -218,6 +218,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-14 | `pal/data/northern-gun-1-vehicles-police-hovertrain` | 5 vehicle rows, the two police vehicles and the three hovertrain blocks (85-86, 95-98): `ng-rb-122-police-interceptor` 9 locations and 2 weapons, `ng-122-exo-police-power-armor` 4 and 0, `ng-hch-1228-hovertrain-locomotive` 9 and 1, `ng-hcb-1b-hovertrain-boxcar` 4 and 0, `ng-hcb-ad2-hovertrain-weapon-car` 10 and 13 (its weapon entries are the buyer's menu on 98, not one car's fit); 36 locations and 16 weapons in all, `~292`, through `scripts/vessel-sql.mjs` |
 | 2026-11-14 | `pal/data/northern-gun-1-npc-reeves` | 1 notable NPC row, `philip-reeves` (65), with 2 weapons of note in `stat_attacks`, `~293`, through `scripts/bestiary-sql.mjs` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-a` | 2 classes, `bush-pilot` (76-78) and `ng-loss-prevention-officer` (78-80), `add-bush-pilot-class.sql` and `add-ng-loss-prevention-officer-class.sql`, through `class-check --emit-script` |
+| 2026-11-14 | `pal/data/northern-gun-1-classes-b` | 2 classes, `monster-responder` (80-82) and `ng-police-officer` (82-86), `add-monster-responder-class.sql` and `add-ng-police-officer-class.sql`, through `class-check --emit-script` |
 
 ### What remains
 
