@@ -1,8 +1,8 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98), Philip Reeves (65-66), and the Bush Pilot, LPO, Monster Responder and NG Police Officer O.C.C.s (76-86) are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
+**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98), Philip Reeves (65-66), and all six O.C.C.s, the Bush Pilot, LPO, Monster Responder, NG Police Officer, NG Robot Control and NG Sales Rep (76-89), are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
 
-**Rows citing this book:** classes 4, gear 84, vehicles 32, notable_npcs 1
+**Rows citing this book:** classes 6, gear 84, vehicles 32, notable_npcs 1
 
 Slug `northern-gun-1`. Cached 2026-11-12 from
 `Rifts - World Book 33 - Northern Gun 1.pdf`, 226 PDF pages, **text layer**
@@ -219,6 +219,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-14 | `pal/data/northern-gun-1-npc-reeves` | 1 notable NPC row, `philip-reeves` (65), with 2 weapons of note in `stat_attacks`, `~293`, through `scripts/bestiary-sql.mjs` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-a` | 2 classes, `bush-pilot` (76-78) and `ng-loss-prevention-officer` (78-80), `add-bush-pilot-class.sql` and `add-ng-loss-prevention-officer-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-b` | 2 classes, `monster-responder` (80-82) and `ng-police-officer` (82-86), `add-monster-responder-class.sql` and `add-ng-police-officer-class.sql`, through `class-check --emit-script` |
+| 2026-11-14 | `pal/data/northern-gun-1-classes-c` | 2 classes, `ng-robot-control` (86-88) and `ng-sales-rep` (88-89), `add-ng-robot-control-class.sql` and `add-ng-sales-rep-class.sql`, through `class-check --emit-script` |
 
 ### What remains
 
