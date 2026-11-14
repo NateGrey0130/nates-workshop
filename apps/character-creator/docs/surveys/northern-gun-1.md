@@ -1,6 +1,6 @@
 # Rifts World Book 33: Northern Gun One — survey
 
-**Status:** `importing` — the 28 new energy weapons (191-204), the 15 new rail guns and non-energy weapons (204-212) and the 37 other weapons, ammunition, mines, fuel cells and batteries (101-103, 213-218) the 27 robots (103-190) and the two police vehicles and three hovertrain blocks (85-86, 95-98), Philip Reeves (65-66), and all six O.C.C.s, the Bush Pilot, LPO, Monster Responder, NG Police Officer, NG Robot Control and NG Sales Rep (76-89), are in; the rest of the approved plan under *Extraction plan* remains. (2026-11-14)
+**Status:** `imported` — the plan is done: 84 gear rows (80 new, 4 held weapons re-cited), 32 vehicles (27 robots, two police vehicles, three hovertrain blocks), Philip Reeves and all six O.C.C.s. What was left out on purpose is under *Extraction plan*. (2026-11-14)
 
 **Rows citing this book:** classes 6, gear 84, vehicles 32, notable_npcs 1
 
@@ -199,6 +199,12 @@ What is deliberately left, with the reason for each:
 - the gazetteer and the two maps;
 - the CS-equivalent hand grenades the book points to RUE for (213).
 
+The plan ran as 33 rows, ending with `pal/docs/northern-gun-1-close-out` on
+2026-11-14. Besides the list above it left, on purpose, the 66 quick-stat
+people, the smoke hand grenade, the Vibro-Blades and the vehicle mine detector
+that production already held at the same figures, and the seven held weapons
+whose figures agree with this printing (all named in the ledger).
+
 ## Ledger
 
 | date | branch | what went in |
@@ -220,9 +226,17 @@ What is deliberately left, with the reason for each:
 | 2026-11-14 | `pal/data/northern-gun-1-classes-a` | 2 classes, `bush-pilot` (76-78) and `ng-loss-prevention-officer` (78-80), `add-bush-pilot-class.sql` and `add-ng-loss-prevention-officer-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-b` | 2 classes, `monster-responder` (80-82) and `ng-police-officer` (82-86), `add-monster-responder-class.sql` and `add-ng-police-officer-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-c` | 2 classes, `ng-robot-control` (86-88) and `ng-sales-rep` (88-89), `add-ng-robot-control-class.sql` and `add-ng-sales-rep-class.sql`, through `class-check --emit-script` |
+| 2026-11-14 | `pal/docs/northern-gun-1-close-out` | Close-out, no D1 write. Production counted first: gear 84, vehicles 32, notable_npcs 1, and all six class ids in `imported_classes`, as planned. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-12: its *BY BOOK*
-table prints no `northern-gun-1` line, because no row in any table cites this
-book yet. Everything in the plan remains.
+From `node scripts/source-coverage.mjs --remote`, 2026-11-14, its *BY BOOK*
+line for this book, as printed:
+
+```
+  northern-gun-1     123 / 0
+```
+
+All 123 rows are traceable to a cached page (84 + 32 + 1 + 6), and no
+Northern Gun One row appears under `unknown-book` or `not-cached`. Nothing
+remains in the plan; what was left on purpose is under *Extraction plan*.
