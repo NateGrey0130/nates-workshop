@@ -227,6 +227,7 @@ whose figures agree with this printing (all named in the ledger).
 | 2026-11-14 | `pal/data/northern-gun-1-classes-b` | 2 classes, `monster-responder` (80-82) and `ng-police-officer` (82-86), `add-monster-responder-class.sql` and `add-ng-police-officer-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-c` | 2 classes, `ng-robot-control` (86-88) and `ng-sales-rep` (88-89), `add-ng-robot-control-class.sql` and `add-ng-sales-rep-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/docs/northern-gun-1-close-out` | Close-out, no D1 write. Production counted first: gear 84, vehicles 32, notable_npcs 1, and all six class ids in `imported_classes`, as planned. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
+| 2026-11-15 | `pal/fix/northern-gun-1-tear-gas-mini-missile` | `ng-smoke-tear-gas-mini-missile` no longer says the book prints its price only, `~295`, hand-written, applied `--remote` first. Its description now carries the tear gas effect (86: 30 foot radius, -3 initiative and -5 to strike, parry and dodge for 1D4+4 melee rounds, half mile) and the smoke effect (85: 40 foot radius, one mile), both from the police rocket bike's standard mix. Damage, range and price are kept. No row added or removed, so the counts stand. |
 
 ### What remains
 
