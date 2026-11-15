@@ -227,6 +227,7 @@ whose figures agree with this printing (all named in the ledger).
 | 2026-11-14 | `pal/data/northern-gun-1-classes-b` | 2 classes, `monster-responder` (80-82) and `ng-police-officer` (82-86), `add-monster-responder-class.sql` and `add-ng-police-officer-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/data/northern-gun-1-classes-c` | 2 classes, `ng-robot-control` (86-88) and `ng-sales-rep` (88-89), `add-ng-robot-control-class.sql` and `add-ng-sales-rep-class.sql`, through `class-check --emit-script` |
 | 2026-11-14 | `pal/docs/northern-gun-1-close-out` | Close-out, no D1 write. Production counted first: gear 84, vehicles 32, notable_npcs 1, and all six class ids in `imported_classes`, as planned. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
+| 2026-11-15 | `pal/fix/northern-gun-1-confirmed-readings` | Four of the fifteen judgement readings Nate confirmed on 2026-11-15 change stored data, `~294`, hand-written, applied `--remote` first; the other eleven keep what is stored. `bush-pilot` is an adventurer (`occ_group: optional`, `men_of_arms: false`); `ng-sales-rep` gains `Language: Native Tongue` at 98%, the book's missing line ruled an omission; `ng-fragmentation-mini-missile` and `ng-high-explosive-mini-missile` take 5D6 M.D. (107, 124, 149, 153; 86), with 126's 1D4x10 for high explosive in that row's description; the hovertrain weapon car's heavy turret keeps 220 and its note cites the 200 on the same page (97). No row added or removed, so the counts stand. |
 
 ### What remains
 
