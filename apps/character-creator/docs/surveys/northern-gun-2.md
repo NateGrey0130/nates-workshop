@@ -291,11 +291,13 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~317-northern-gun-2-hovercycles-b.sql` was applied (traceable / other):
+`~318-northern-gun-2-aquatic-a.sql` and its gear script were applied
+(traceable / other):
 
-    northern-gun-2     154 / 0
+    northern-gun-2     159 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`) and all
 of line 4 (`hovercycles-a`, printed 158-166, and `hovercycles-b`, printed
-167-176) have shipped: lines 5 to 10 follow.
+167-176) have shipped, and of line 5 `aquatic-a` (printed 177-186, four of
+the eight vessels): the rest of line 5 and lines 6 to 10 follow.
