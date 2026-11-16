@@ -1,6 +1,6 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The proposal is under *Extraction plan*. (2026-11-16)
+**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The approved plan is under *Extraction plan*. (2026-11-16)
 
 **Rows citing this book:** none yet
 
@@ -208,7 +208,7 @@ One class missing, none held. None of the nine gladiators is held.
 
 ## Extraction plan
 
-**Proposed 2026-11-16, not yet approved.** One branch per line; gear and
+**Approved by Nate 2026-11-16, as written.** One branch per line; gear and
 vehicles go before the class that names them.
 
 1. `pal/data/northern-gun-2-armor-a` and `-b`: the 23 new armours and the
@@ -234,7 +234,8 @@ vehicles go before the class that names them.
 9. `pal/data/northern-gun-2-class-robo-gladiator`.
 10. `pal/docs/northern-gun-2-close-out`.
 
-Rulings the plan needs from Nate before it runs:
+Rulings that govern it (Nate, 2026-11-16: the ladder ruled as stated, the
+other five taken as proposed):
 
 - **The Robo-Gladiator's experience ladder. RULED (Nate, 2026-11-16): it
   uses the Robot Pilot's.** The book prints none, so this is a ruling and
