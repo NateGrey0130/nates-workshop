@@ -277,6 +277,9 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-Everything: nothing is imported. `node scripts/source-coverage.mjs --remote`
-has no line for this book until its first row ships; paste its line here in
-the PR that ships one.
+`node scripts/source-coverage.mjs --remote`, 2026-11-16, after
+`~296-northern-gun-2-armor-a.sql` was applied (traceable / other):
+
+    northern-gun-2      28 / 0
+
+Everything in the *Extraction plan* past the first armour batch.
