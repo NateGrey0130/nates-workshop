@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar); the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and the first aquatic batch shipped (four of the eight vessels and the AquaWalker Tires); the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 116, vehicles 38
+**Rows citing this book:** gear 117, vehicles 42
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -286,15 +286,18 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-h` | 4 vehicles, `~313-northern-gun-2-power-armor-h.sql` (printed 146-156): NG-NX14 Sea Demon (11 locations, 3 weapons), NG-UELX49 Silent Shadow (7, 3), NG-X40 Storm Hammer (9, 4), NG-DX001 Thunder Hound (9, 4); 36 locations and 14 weapon entries in all. 3 gear rows, `~314-northern-gun-2-power-armor-h-gear.sql`: the Sea Demon's two separately priced silver platings (bayonet and blade) and the Silent Shadow's extra thigh UEL (printed 148 and 151) |
 | 2026-11-16 | `pal/data/northern-gun-2-hovercycles-a` | 4 vehicles, `~315-northern-gun-2-hovercycles-a.sql` (printed 161-166): NG-488 Cobra Turbo (11 locations, 1 weapon), NG-424 Hornet (8, 3), NG-277 Jouster (12, 3), NG-357 Magnum-Turbo (8, 0); 39 locations and 7 weapon entries in all. 21 gear rows, `~316-northern-gun-2-hovercycles-a-gear.sql`: every separately priced modular hovercycle item of printed 158-160, namely nine guns (NG-HM10 to NG-HPART), the OUE2 dual-weapon system and DH2 housing, five housings (HT01 to HT09), four missile launchers (MM62, MM64, MM68, WS604) and the radar and comms unit |
 | 2026-11-16 | `pal/data/northern-gun-2-hovercycles-b` | 5 vehicles, `~317-northern-gun-2-hovercycles-b.sql` (printed 167-176): NG-320 Rampage (12 locations, 2 weapons), NG-150 Streetrunner (7, 0), NG-500 Windfire (13, 3), NG-SU600-EX Wave Cutter (9, 2), NG-640 Windshark (12, 2); 53 locations and 9 weapon entries in all |
+| 2026-11-16 | `pal/data/northern-gun-2-aquatic-a` | 4 vehicles, `~318-northern-gun-2-aquatic-a.sql` (printed 177-186): NG-AMP-007 Alligator APC (8 locations, 3 weapons), NG-AQUA-212 Aquapod with its Geo-Explorer mini-sub (24 locations, 14 of them prefixed `Mini-Sub:`, 6 weapons), NG-AMP6 Beachcomber ATV (6, 3), NG-SU2 Bluestorm Submarine (6, 3); 44 locations and 15 weapon entries in all. 1 gear row, `~319-northern-gun-2-aquatic-a-gear.sql`: the separately priced AquaWalker Tires (printed 182-183) |
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~317-northern-gun-2-hovercycles-b.sql` was applied (traceable / other):
+`~318-northern-gun-2-aquatic-a.sql` and its gear script were applied
+(traceable / other):
 
-    northern-gun-2     154 / 0
+    northern-gun-2     159 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`) and all
 of line 4 (`hovercycles-a`, printed 158-166, and `hovercycles-b`, printed
-167-176) have shipped: lines 5 to 10 follow.
+167-176) have shipped, and of line 5 `aquatic-a` (printed 177-186, four of
+the eight vessels): the rest of line 5 and lines 6 to 10 follow.
