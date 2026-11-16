@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires); the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires), and the jet packs and aircraft shipped (three new jet packs and three new aircraft); the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 117, vehicles 46
+**Rows citing this book:** gear 120, vehicles 49
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -288,6 +288,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-hovercycles-b` | 5 vehicles, `~317-northern-gun-2-hovercycles-b.sql` (printed 167-176): NG-320 Rampage (12 locations, 2 weapons), NG-150 Streetrunner (7, 0), NG-500 Windfire (13, 3), NG-SU600-EX Wave Cutter (9, 2), NG-640 Windshark (12, 2); 53 locations and 9 weapon entries in all |
 | 2026-11-16 | `pal/data/northern-gun-2-aquatic-a` | 4 vehicles, `~318-northern-gun-2-aquatic-a.sql` (printed 177-186): NG-AMP-007 Alligator APC (8 locations, 3 weapons), NG-AQUA-212 Aquapod with its Geo-Explorer mini-sub (24 locations, 14 of them prefixed `Mini-Sub:`, 6 weapons), NG-AMP6 Beachcomber ATV (6, 3), NG-SU2 Bluestorm Submarine (6, 3); 44 locations and 15 weapon entries in all. 1 gear row, `~319-northern-gun-2-aquatic-a-gear.sql`: the separately priced AquaWalker Tires (printed 182-183) |
 | 2026-11-16 | `pal/data/northern-gun-2-aquatic-b` | 4 vehicles, `~320-northern-gun-2-aquatic-b.sql` (printed 186-192): NG-AMP8 Crocodile Amphibious Tank (10 locations, 4 weapons), NG-SU7 Crayfish Amphibious Submersible (12, 3), NG-S3 Harbormaster Missile Boat (7, 3), NG-S1 Sandfish Cargo Landing Craft (6, 2); 35 locations and 12 weapon entries in all. The Crayfish's laser prints "46 M.D." and is stored as 4D6 with that noted |
+| 2026-11-16 | `pal/data/northern-gun-2-jet-packs-aircraft` | 3 vehicles, `~321-northern-gun-2-jet-packs-aircraft.sql` (printed 194-200): NG-HC1000 Dragonfly (12 locations, 5 weapons), NG-HC2000 Skybunker (12, 2), NG-H500 Sky Wolf (7, 2); 31 locations and 9 weapon entries in all. 3 gear rows, `~322-northern-gun-2-jet-packs-aircraft-gear.sql`: the NG-AJ20 Attack Jet Pack, NG-WJ10 Speedpack and NG-J45 Wolf-Runner Jet Pack (printed 193-194). The Wild Coyote Jet Pack is held from p.77 (`ng-wild-coyote-jet-pack`) and was not rewritten, although printed 193 gives its electric/SO/nuclear costs as 85,000/375,000/890,000 against the held 70,000/290,000/910,000. The Sky King (printed 197) is a held gear row, left to the held-vehicle compare |
 
 ### What remains
 
