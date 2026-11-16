@@ -289,10 +289,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~314-northern-gun-2-power-armor-h-gear.sql` was applied (traceable / other):
+`~316-northern-gun-2-hovercycles-a-gear.sql` was applied (traceable / other):
 
-    northern-gun-2     124 / 0
+    northern-gun-2     149 / 0
 
 Everything in the *Extraction plan* past line 3 (the two new-armour batches,
-the held-armour compare and the eight power-armour batches `-a` to `-h`):
-the hovercycles of line 4 follow.
+the held-armour compare and the eight power-armour batches `-a` to `-h`), and
+of line 4 the first hovercycle batch (`hovercycles-a`, printed 158-166): the
+rest of the hovercycles of line 4 follow.
