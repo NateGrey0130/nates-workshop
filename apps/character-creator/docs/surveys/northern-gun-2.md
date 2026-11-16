@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and the first hovercycle batch shipped (four hovercycles and the 21 modular hovercycle weapons, housings and radar); the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar); the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 116, vehicles 33
+**Rows citing this book:** gear 116, vehicles 38
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -285,15 +285,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-g` | 4 vehicles, `~311-northern-gun-2-power-armor-g.sql` (pp.133-140, 144-146): NG-X209 Protege (14 locations, 3 weapons), NG-11F Red Hawk (14, 4), NG-UELX42 Sabre (5, 1), NG-X13 Samson Missileman (10, 6); 43 locations and 14 weapon entries in all. 2 gear rows, `~312-northern-gun-2-power-armor-g-gear.sql`: the Protege's silver plating and the Sabre's extra thigh UEL (pp.133-140) |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-h` | 4 vehicles, `~313-northern-gun-2-power-armor-h.sql` (printed 146-156): NG-NX14 Sea Demon (11 locations, 3 weapons), NG-UELX49 Silent Shadow (7, 3), NG-X40 Storm Hammer (9, 4), NG-DX001 Thunder Hound (9, 4); 36 locations and 14 weapon entries in all. 3 gear rows, `~314-northern-gun-2-power-armor-h-gear.sql`: the Sea Demon's two separately priced silver platings (bayonet and blade) and the Silent Shadow's extra thigh UEL (printed 148 and 151) |
 | 2026-11-16 | `pal/data/northern-gun-2-hovercycles-a` | 4 vehicles, `~315-northern-gun-2-hovercycles-a.sql` (printed 161-166): NG-488 Cobra Turbo (11 locations, 1 weapon), NG-424 Hornet (8, 3), NG-277 Jouster (12, 3), NG-357 Magnum-Turbo (8, 0); 39 locations and 7 weapon entries in all. 21 gear rows, `~316-northern-gun-2-hovercycles-a-gear.sql`: every separately priced modular hovercycle item of printed 158-160, namely nine guns (NG-HM10 to NG-HPART), the OUE2 dual-weapon system and DH2 housing, five housings (HT01 to HT09), four missile launchers (MM62, MM64, MM68, WS604) and the radar and comms unit |
+| 2026-11-16 | `pal/data/northern-gun-2-hovercycles-b` | 5 vehicles, `~317-northern-gun-2-hovercycles-b.sql` (printed 167-176): NG-320 Rampage (12 locations, 2 weapons), NG-150 Streetrunner (7, 0), NG-500 Windfire (13, 3), NG-SU600-EX Wave Cutter (9, 2), NG-640 Windshark (12, 2); 53 locations and 9 weapon entries in all |
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~316-northern-gun-2-hovercycles-a-gear.sql` was applied (traceable / other):
+`~317-northern-gun-2-hovercycles-b.sql` was applied (traceable / other):
 
-    northern-gun-2     149 / 0
+    northern-gun-2     154 / 0
 
-Everything in the *Extraction plan* past line 3 (the two new-armour batches,
-the held-armour compare and the eight power-armour batches `-a` to `-h`), and
-of line 4 the first hovercycle batch (`hovercycles-a`, printed 158-166): the
-rest of the hovercycles of line 4 follow.
+Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
+held-armour compare and the eight power-armour batches `-a` to `-h`) and all
+of line 4 (`hovercycles-a`, printed 158-166, and `hovercycles-b`, printed
+167-176) have shipped: lines 5 to 10 follow.
