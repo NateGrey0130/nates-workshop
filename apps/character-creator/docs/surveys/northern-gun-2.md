@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The approved plan is under *Extraction plan*. (2026-11-16)
+**Status:** `importing` — the first armour batch shipped (armored clothing, the EB-20 and the five Ride Armors); the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 28
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -273,6 +273,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-16 | `pal/docs/northern-gun-2-register-survey` | cache built (258 pp, text layer), offset +1 verified by folio at eight points, inventory and production diff; `northern-gun-2` registered in `books.json` |
+| 2026-11-16 | `pal/data/northern-gun-2-armor-a` | 28 gear rows, `~296-northern-gun-2-armor-a.sql`: the 22 Huntsman's Choice and Streetwolf clothing lines (pp.39-43; the survey's count of 6 named the lines, not the priced items), the EB-20 backpack and the five Ride Armors (pp.44-47) |
 
 ### What remains
 
