@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first four power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first five power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 69, vehicles 14
+**Rows citing this book:** gear 70, vehicles 17
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -280,14 +280,15 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-b` | 3 vehicles, `~301-northern-gun-2-power-armor-b.sql` (pp.72-77, 80-82): NG-X114 Cougar (15 locations, 7 weapons), NG-X32 Coyote (7, 3), NG-X11 Delilah and Del (13, 4); 35 locations and 14 weapon entries in all. 3 gear rows, `~302-northern-gun-2-power-armor-b-gear.sql`: the Cougar's separately priced forearm flamethrower, the Coyote's NG-X132 Deathmark Dual Sniper Rifle and the Wild Coyote Jet Pack (pp.75-77) |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-c` | 3 vehicles, `~303-northern-gun-2-power-armor-c.sql` (pp.83-94): NG-X44 Demon Slayer (18 locations, 7 weapons), NG-XP54 Enforcer Guardsman (16, 2), NG-XF103 Firefighter (10, 3); 44 locations and 12 weapon entries in all. 8 gear rows, `~304-northern-gun-2-power-armor-c-gear.sql`: the Demon Slayer's seven separately priced Techno-Wizard conversions (p.88) and the Enforcer Guardsman's Advanced Helmet Camera (p.92) |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-d` | 4 vehicles, `~305-northern-gun-2-power-armor-d.sql` (pp.94-106): NG-X33 Forester (11 locations, 5 weapons), NG-EX10 Gladius Light (5, 0), NG-MRU886 Grease Monkey (16, 3), NG-XF17 Ironwing (13, 5); 45 locations and 13 weapon entries in all. 8 gear rows, `~306-northern-gun-2-power-armor-d-gear.sql`: the Hex grenade, the Forester's smoke flares, replacement electronic trail markers and UV paint refills, and the Gladius Light's four priced helmet options (helmet light, head cam, language translator, voice modulation), pp.94-100 |
+| 2026-11-16 | `pal/data/northern-gun-2-power-armor-e` | 3 vehicles, `~307-northern-gun-2-power-armor-e.sql` (pp.110-123): NG-X112 Lynx (13 locations, 4 weapons), NG-X39 Mantis (13, 4), NG-MRU876 Med-Rec "White Knight" (17, 4); 43 locations and 12 weapon entries in all. 1 gear row, `~308-northern-gun-2-power-armor-e-gear.sql`: the White Knight's separately priced replacement Electronic Med-EVAC Marker (pp.119, 122); its six nano-robot systems are held RUE/Triax rows at the same prices and were left alone |
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~306-northern-gun-2-power-armor-d-gear.sql` was applied (traceable / other):
+`~308-northern-gun-2-power-armor-e-gear.sql` was applied (traceable / other):
 
-    northern-gun-2      83 / 0
+    northern-gun-2      87 / 0
 
 Everything in the *Extraction plan* past line 2 (the two new-armour batches
 and the held-armour compare), less `pal/data/northern-gun-2-power-armor-a`
-to `-d` from line 3: power-armour batches `-e` to `-h` follow.
+to `-e` from line 3: power-armour batches `-f` to `-h` follow.
