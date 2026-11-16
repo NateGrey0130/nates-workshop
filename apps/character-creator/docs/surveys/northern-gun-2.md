@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first two power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first three power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 53, vehicles 7
+**Rows citing this book:** gear 61, vehicles 10
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -278,14 +278,15 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-armor-held-compare` | 8 held gear rows re-cited to this book, `~298-northern-gun-2-armor-held-compare.sql`, each taking this printing's figures with the older figure in its description: Juicer Assassin, Maverick, Bushman Trooper, Explorer (first citation; the estimate retired), Gladiator, Mega-Juicer, Titan, Vibro-Spike. The other 9 held rows (Cavalry barding, both Huntsman rows, Range Rider, Buffalo, Bushman Composite, Crusader, Plastic-Man, Urban Warrior) agree with this printing and keep their older citation |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-a` | 4 vehicles, `~299-northern-gun-2-power-armor-a.sql` (pp.61-72): NG-X30 Aurora Blazer (10 locations, 2 weapons), NG-NX12 Beach-Stormer (9, 2), NG-X44 Blue Boy (8, 2), NG-AX19 Blue Hawk (14, 3); 41 locations and 9 weapon entries in all. 2 gear rows, `~300-northern-gun-2-power-armor-a-gear.sql`: the Beach-Stormer's separately priced NG-P67 Particle Beam Short-Gun and NG-M100 Multi-Weapon Underwater Rifle (pp.66-67) |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-b` | 3 vehicles, `~301-northern-gun-2-power-armor-b.sql` (pp.72-77, 80-82): NG-X114 Cougar (15 locations, 7 weapons), NG-X32 Coyote (7, 3), NG-X11 Delilah and Del (13, 4); 35 locations and 14 weapon entries in all. 3 gear rows, `~302-northern-gun-2-power-armor-b-gear.sql`: the Cougar's separately priced forearm flamethrower, the Coyote's NG-X132 Deathmark Dual Sniper Rifle and the Wild Coyote Jet Pack (pp.75-77) |
+| 2026-11-16 | `pal/data/northern-gun-2-power-armor-c` | 3 vehicles, `~303-northern-gun-2-power-armor-c.sql` (pp.83-94): NG-X44 Demon Slayer (18 locations, 7 weapons), NG-XP54 Enforcer Guardsman (16, 2), NG-XF103 Firefighter (10, 3); 44 locations and 12 weapon entries in all. 8 gear rows, `~304-northern-gun-2-power-armor-c-gear.sql`: the Demon Slayer's seven separately priced Techno-Wizard conversions (p.88) and the Enforcer Guardsman's Advanced Helmet Camera (p.92) |
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~302-northern-gun-2-power-armor-b-gear.sql` was applied (traceable / other):
+`~304-northern-gun-2-power-armor-c-gear.sql` was applied (traceable / other):
 
-    northern-gun-2      60 / 0
+    northern-gun-2      71 / 0
 
 Everything in the *Extraction plan* past line 2 (the two new-armour batches
 and the held-armour compare), less `pal/data/northern-gun-2-power-armor-a`
-and `-b` from line 3: power-armour batches `-c` to `-h` follow.
+to `-c` from line 3: power-armour batches `-d` to `-h` follow.
