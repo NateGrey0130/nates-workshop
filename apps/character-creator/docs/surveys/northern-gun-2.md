@@ -2,7 +2,7 @@
 
 **Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The approved plan is under *Extraction plan*. (2026-11-16)
 
-**Rows citing this book:** none yet
+**Rows citing this book:** none
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
