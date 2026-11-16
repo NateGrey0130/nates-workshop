@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours); the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing; the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 40
+**Rows citing this book:** gear 48
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -275,6 +275,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/docs/northern-gun-2-register-survey` | cache built (258 pp, text layer), offset +1 verified by folio at eight points, inventory and production diff; `northern-gun-2` registered in `books.json` |
 | 2026-11-16 | `pal/data/northern-gun-2-armor-a` | 28 gear rows, `~296-northern-gun-2-armor-a.sql`: the 22 Huntsman's Choice and Streetwolf clothing lines (pp.39-43; the survey's count of 6 named the lines, not the priced items), the EB-20 backpack and the five Ride Armors (pp.44-47) |
 | 2026-11-16 | `pal/data/northern-gun-2-armor-b` | 12 gear rows, `~297-northern-gun-2-armor-b.sql`: five non-environmental suits (Juicer Ultra-Armor, Patrol, Robot Command, NG-A8 Scout, NG-A10 Soldier) and seven environmental ones (NG-A12 Anti-Ballistic, A25 Bullfrog, Deep Zone Walker, Mud-Skipper, Peacekeeper, Stalker Suit, Trekker Pilot), pp.49-60; the JBA330 and JBA335 share one row, as printed under one heading |
+| 2026-11-16 | `pal/data/northern-gun-2-armor-held-compare` | 8 held gear rows re-cited to this book, `~298-northern-gun-2-armor-held-compare.sql`, each taking this printing's figures with the older figure in its description: Juicer Assassin, Maverick, Bushman Trooper, Explorer (first citation; the estimate retired), Gladiator, Mega-Juicer, Titan, Vibro-Spike. The other 9 held rows (Cavalry barding, both Huntsman rows, Range Rider, Buffalo, Bushman Composite, Crusader, Plastic-Man, Urban Warrior) agree with this printing and keep their older citation |
 
 ### What remains
 
@@ -283,4 +284,5 @@ What is deliberately left, with the reason for each:
 
     northern-gun-2      40 / 0
 
-Everything in the *Extraction plan* past line 1 (the two new-armour batches).
+Everything in the *Extraction plan* past line 2 (the two new-armour batches
+and the held-armour compare).
