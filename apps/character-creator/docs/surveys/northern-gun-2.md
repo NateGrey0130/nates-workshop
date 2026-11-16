@@ -280,9 +280,9 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~297-northern-gun-2-armor-b.sql` was applied (traceable / other):
+`~298-northern-gun-2-armor-held-compare.sql` was applied (traceable / other):
 
-    northern-gun-2      40 / 0
+    northern-gun-2      48 / 0
 
 Everything in the *Extraction plan* past line 2 (the two new-armour batches
 and the held-armour compare).
