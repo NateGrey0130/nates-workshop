@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first six power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and the first seven power-armour batches shipped; the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 90, vehicles 21
+**Rows citing this book:** gear 92, vehicles 25
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -282,6 +282,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-d` | 4 vehicles, `~305-northern-gun-2-power-armor-d.sql` (pp.94-106): NG-X33 Forester (11 locations, 5 weapons), NG-EX10 Gladius Light (5, 0), NG-MRU886 Grease Monkey (16, 3), NG-XF17 Ironwing (13, 5); 45 locations and 13 weapon entries in all. 8 gear rows, `~306-northern-gun-2-power-armor-d-gear.sql`: the Hex grenade, the Forester's smoke flares, replacement electronic trail markers and UV paint refills, and the Gladius Light's four priced helmet options (helmet light, head cam, language translator, voice modulation), pp.94-100 |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-e` | 3 vehicles, `~307-northern-gun-2-power-armor-e.sql` (pp.110-123): NG-X112 Lynx (13 locations, 4 weapons), NG-X39 Mantis (13, 4), NG-MRU876 Med-Rec "White Knight" (17, 4); 43 locations and 12 weapon entries in all. 1 gear row, `~308-northern-gun-2-power-armor-e-gear.sql`: the White Knight's separately priced replacement Electronic Med-EVAC Marker (pp.119, 122); its six nano-robot systems are held RUE/Triax rows at the same prices and were left alone |
 | 2026-11-16 | `pal/data/northern-gun-2-power-armor-f` | 4 vehicles, `~309-northern-gun-2-power-armor-f.sql` (pp.123-133): NG-X16 Midas (13 locations, 5 weapons), NG-UELX45 Night Reaper (6, 1), GCCPA-03 Pit Fighter (9, 13), NG-X67 Prophet (10, 3); 38 locations and 22 weapon entries in all. 20 gear rows, `~310-northern-gun-2-power-armor-f-gear.sql`: the Midas's separately sold giant Vibro-Blade, the Night Reaper's extra thigh UEL, the Prophet's silver plating and the Pit Fighter's seventeen priced options (jump jets, plasma breath, eye lasers, three forearm blasters, grenade launcher, grappling hook, vibro short sword and claws, vibro spikes, two whipping cables, two net launchers and a replacement net, vibro chainsaw sword), pp.123-132 |
+| 2026-11-16 | `pal/data/northern-gun-2-power-armor-g` | 4 vehicles, `~311-northern-gun-2-power-armor-g.sql` (pp.133-140, 144-146): NG-X209 Protege (14 locations, 3 weapons), NG-11F Red Hawk (14, 4), NG-UELX42 Sabre (5, 1), NG-X13 Samson Missileman (10, 6); 43 locations and 14 weapon entries in all. 2 gear rows, `~312-northern-gun-2-power-armor-g-gear.sql`: the Protege's silver plating and the Sabre's extra thigh UEL (pp.133-140) |
 
 ### What remains
 
@@ -292,4 +293,4 @@ What is deliberately left, with the reason for each:
 
 Everything in the *Extraction plan* past line 2 (the two new-armour batches
 and the held-armour compare), less `pal/data/northern-gun-2-power-armor-a`
-to `-f` from line 3: power-armour batches `-g` and `-h` follow.
+to `-g` from line 3: power-armour batch `-h` follows.
