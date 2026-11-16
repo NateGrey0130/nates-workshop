@@ -119,7 +119,7 @@ in the book are the NPC blocks' own.
 
 | class | pages | XP table |
 |---|---|---|
-| Robo-Gladiator | 20-22 | **none printed** |
+| Robo-Gladiator | 20-22 | **none printed**; the Robot Pilot's by ruling (see *Extraction plan*) |
 
 No id collides: production holds no class named Robo-Gladiator. It holds
 `Juicer Gladiator`, `Robot Pilot` and two NGR pilot classes, all different
@@ -236,9 +236,10 @@ vehicles go before the class that names them.
 
 Rulings the plan needs from Nate before it runs:
 
-- **The Robo-Gladiator's experience ladder.** The book prints none. The
-  class cannot ship without one, and choosing one is a judgement about the
-  game, not a reading of the page.
+- **The Robo-Gladiator's experience ladder. RULED (Nate, 2026-11-16): it
+  uses the Robot Pilot's.** The book prints none, so this is a ruling and
+  not a reading of the page; the class's `extraction_notes` say so, and the
+  ladder is copied from production's `Robot Pilot` class (RUE) at import.
 - **The 30 held rows.** Proposed as Northern Gun One's were: the newest
   printing that states a figure wins (the 2026-10-04 ruling); a row whose
   figures differ takes this book's figure and citation with the older figure
