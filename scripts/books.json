@@ -421,6 +421,23 @@
       "note": "Cached 2026-11-12 from its TEXT LAYER (--probe median 5,766 chars/page), 226 PDF pages. Offset +1 read off the folios at cache p027 (26), p050 (49), p101 (100), p150 (149), p200 (199), p221 (220) and p225 (224); one region. Cache p226 is a back-cover advertisement and the only welded page. published is the first printing on cache p003 (October 2013). The Experience Tables on printed 220 lose their columns in the text layer: read them off a render. See apps/character-creator/docs/surveys/northern-gun-1.md."
     },
 
+    "northern-gun-2": {
+      "title": "Rifts World Book 34: Northern Gun Two",
+      "published": 2014,
+      "aliases": [
+        "Northern Gun Two",
+        "Northern Gun 2",
+        "Rifts Northern Gun Two",
+        "Rifts World Book 34: Northern Gun 2",
+        "Rifts World Book 34 Northern Gun Two"
+      ],
+      "source_pdf": "Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 256,
+      "page_offset": 1,
+      "note": "Cached 2026-11-16 from its TEXT LAYER (--probe median 4,324 chars/page), 258 PDF pages. Offset +1 read off the folios at cache p009 (8), p030 (29), p081 (80), p100 (99), p150 (149), p200 (199), p225 (224) and p257 (256); one region. printed_pages is 256 BY HAND: the manifest says 79, because from printed 80 on the text layer sets each folio with a space between its digits (`8 0`, `1 4 9`) and ocr-book.py's folio reader stops matching; the offset it measured is still right. Cache p258 is a back-cover advertisement. welded_pages is 201, 225 and 258: printed 200 (Sky Wolf weapons and the Alley Cat) and 224 (Wolftrack and the Badger) are read off a render. published is the first printing on cache p003 (May 2014). The book prints NO Experience Table for its one class. See apps/character-creator/docs/surveys/northern-gun-2.md."
+    },
+
     "old-ones": {
       "title": "The Palladium RPG Book II: Old Ones",
       "published": 1984,
