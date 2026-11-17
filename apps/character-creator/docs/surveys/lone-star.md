@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all seven steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-10-01)
 
-**Rows citing this book:** classes 12, gear 14, vehicles 7, notable_npcs 28, creatures 12
+**Rows citing this book:** classes 12, gear 14, vehicles 3, notable_npcs 28, creatures 12
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
