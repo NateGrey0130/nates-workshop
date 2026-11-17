@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires), and the jet packs and aircraft shipped (three new jet packs and three new aircraft), and the six motorcycles shipped, and both truck batches shipped (the twelve trucks, trailers, cars and hover vehicles), and the first two combat-vehicle batches shipped (the Badger, Centipede and Echelon Hovertank, then the Mammoth, Road Buster and Sentinel), and both drone batches shipped (the MAU-500 Coffin, Robot Floater Camera, DX-202 Cargo Walker with its Combat Kit, DX-204 GRUB and BRV-10 Vulture, then the Fido, Mule, W9 and W10 Labor Drones and Robosistant with the Drone Control and Command Gauntlet); the rest of the *Extraction plan* follows. (2026-11-16)
+**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires), and the jet packs and aircraft shipped (three new jet packs and three new aircraft), and the six motorcycles shipped, and both truck batches shipped (the twelve trucks, trailers, cars and hover vehicles), and the first two combat-vehicle batches shipped (the Badger, Centipede and Echelon Hovertank, then the Mammoth, Road Buster and Sentinel), and both drone batches shipped (the MAU-500 Coffin, Robot Floater Camera, DX-202 Cargo Walker with its Combat Kit, DX-204 GRUB and BRV-10 Vulture, then the Fido, Mule, W9 and W10 Labor Drones and Robosistant with the Drone Control and Command Gauntlet), and the first held-vehicle compare shipped (the Defender, the Juicer Killer and the Sky King take this printing, the Sky King as a vehicle of its own); the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 124, vehicles 83
+**Rows citing this book:** gear 126, vehicles 86
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -296,14 +296,15 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-combat-vehicles-b` | 3 vehicles, `~327-northern-gun-2-combat-vehicles-b.sql` (printed 231-235): NG-AT46 Mammoth (16 locations, 4 weapons), NG-AT26 Road Buster (12, 0), NG-HC46 Sentinel (11, 3); 39 locations and 7 weapon entries in all |
 | 2026-11-16 | `pal/data/northern-gun-2-drones-a` | 5 vehicles, `~328-northern-gun-2-drones-a.sql` (printed 235-243): MAU-500 Coffin (2 locations, 0 weapons), Robot Floater Camera (3, 0), DX-202 Cargo Walker (12, 1), DX-204 GRUB (13, 2), BRV-10 Vulture (11, 1); 41 locations and 4 weapon entries in all. 3 gear rows, `~329-northern-gun-2-drones-a-gear.sql`: the Cargo Walker Combat Kit and its two separately priced options, the sensor package and the additional forward robot arms (printed 239) |
 | 2026-11-16 | `pal/data/northern-gun-2-drones-b` | 5 vehicles, `~330-northern-gun-2-drones-b.sql` (printed 244-251): NG-PD12 Fido (6 locations, 1 weapon), NG-CDH30 Mule (5, 0), NG-W9 Light Labor Drone (6, 3), NG-W10 Heavy Labor Drone (6, 3), NG-WD71 Robosistant (7, 0); 30 locations and 7 weapon entries in all. 1 gear row, `~331-northern-gun-2-drones-b-gear.sql`: the separately sold Drone Control and Command Gauntlet (printed 244-245) |
+| 2026-11-16 | `pal/data/northern-gun-2-vehicles-held-compare-a` | `~332-northern-gun-2-vehicles-held-compare-a.sql`: 4 held rows take this printing's figures and citation, the older figures in their descriptions: vehicles `bm-japeii-defender-exoskeleton` (printed 78-80) and `ng-jk1-juicer-killer-power-armor` (106-110), gear `ng-jk1-juicer-killer-power-armor` (106-110) and `northern-gun-sky-king` (197-198, main body 155, now naming the vehicle beside it); 1 vehicle inserted, `ng-a70-sky-king` (7 locations, 2 weapons). Left as agreeing in citation: `ng-x9-samson-power-armor`, because this book prints the Mk III, a later mark than the Mk I the row holds; whether the Mk III becomes its own row is Nate's |
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~330-northern-gun-2-drones-b.sql` and `~331-northern-gun-2-drones-b-gear.sql`
-were applied (traceable / other):
+`~332-northern-gun-2-vehicles-held-compare-a.sql` was applied (traceable /
+other):
 
-    northern-gun-2     207 / 0
+    northern-gun-2     212 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`), all
@@ -317,4 +318,7 @@ cars and hover vehicles), `combat-vehicles-a` (printed 224-231, three
 combat vehicles), `combat-vehicles-b` (printed 231-235, three more) and
 `drones-a` (printed 235-243, five drones and the Cargo Walker's combat kit)
 and `drones-b` (printed 244-251, five more drones and the command gauntlet)
-have shipped; the rest of line 5 and lines 6 to 10 follow.
+have shipped, and of line 6 `vehicles-held-compare-a` (the Defender, the
+Juicer Killer, the Samson and the Sky King); the rest of line 6 (the ten
+held hovercycles, motorcycles and ATVs and the Rolling Thunder) and lines 7
+to 10 follow.
