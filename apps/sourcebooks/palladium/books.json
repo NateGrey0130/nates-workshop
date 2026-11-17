@@ -1421,7 +1421,7 @@
    "title": "Rifts World Book 34: Northern Gun Two",
    "code": "northern-gun-2",
    "status": "imported",
-   "date": "2026-11-17",
+   "date": null,
    "added": [
     [
      "Classes",
@@ -1437,10 +1437,10 @@
     ],
     [
      "Vehicles",
-     96
+     97
     ]
    ],
-   "total": 261
+   "total": 262
   },
   {
    "slug": "old-ones",

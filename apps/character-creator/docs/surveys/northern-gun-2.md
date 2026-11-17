@@ -1,8 +1,8 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `imported` — the plan is done: 155 gear rows (armour, power-armour weapons and options, modular hovercycle weapons, jet packs, adventuring gear, upgrades and bionics, with 11 held rows re-cited), 96 vehicles (84 new, the Sky King among them, and 12 held rows re-cited), the nine notable gladiators and the Robo-Gladiator O.C.C. What was left out on purpose is under *Extraction plan*. (2026-11-17)
+**Status:** `imported` — the plan is done: 155 gear rows (armour, power-armour weapons and options, modular hovercycle weapons, jet packs, adventuring gear, upgrades and bionics, with 11 held rows re-cited), 97 vehicles (85 new, the Sky King and the Samson Mk III among them, and 12 held rows re-cited), the nine notable gladiators and the Robo-Gladiator O.C.C. What was left out on purpose is under *Extraction plan*. (2026-11-17; the Samson Mk III row added after)
 
-**Rows citing this book:** classes 1, gear 155, vehicles 96, notable_npcs 9
+**Rows citing this book:** classes 1, gear 155, vehicles 97, notable_npcs 9
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -143,7 +143,7 @@ under a longer or differently set name:
 |---|---|---|---|
 | Defender (JAPE II) | 78 | `bm-japeii-defender-exoskeleton` | Juicer Uprising p.80-81 |
 | Juicer Killer Power Armor | 106 | `ng-jk1-juicer-killer-power-armor` | Juicer Uprising p.77-79 |
-| Samson | 140 | `ng-x9-samson-power-armor` | RUE p.271-272 |
+| Samson | 140 | `ng-x9-samson-power-armor`, the Mk I; this book prints the Mk III, a row of its own, `ng-x9-samson-mk-iii-power-armor` | RUE p.271-272 |
 | NG-230 Prowler | 166 | `ng-230-prowler-hovercycle` | Lone Star p.58-59 |
 | NG-220 Rocket | 169 | `ng-220-rocket-hovercycle` | Lone Star p.57-58 |
 | NG-300 Speedster | 169 | `speedster-hovercycle` | RUE p.266 |
@@ -271,7 +271,7 @@ What is deliberately left, with the reason for each:
 The plan ran as 61 rows, ending with `pal/docs/northern-gun-2-close-out` on
 2026-11-17. Besides the list above it left, on purpose, the nine held armours
 whose figures agree with this printing, the held `ng-x9-samson-power-armor`
-(this book prints the later Mk III; a row of its own is Nate's to decide), the
+(the Mk I; the Mk III this book prints became a row of its own, `~338`), the
 five gear twins of re-cited vehicles that keep their older figures, unruled,
 the held `ng-wild-coyote-jet-pack`, whose printed 193 costs differ from its
 p.77 figures and were not rewritten, and the six adventuring items production
@@ -313,6 +313,7 @@ already held (all named in the ledger).
 | 2026-11-17 | `pal/data/northern-gun-2-npcs-c` | 3 notable NPCs, `~337-northern-gun-2-npcs-c.sql` (printed 29-31), with 3 stat_attacks: Maximilian "Black Knight" Schroeder, Antoine "Ripper" Leroj and Verlan "Omega" Jones |
 | 2026-11-17 | `pal/data/northern-gun-2-class-robo-gladiator` | 1 class, `add-robo-gladiator-class.sql` (printed 20-22): the Robo-Gladiator O.C.C., id `robo-gladiator`, 0 stub rows. The book prints no Experience Table, so its ladder is the Robot Pilot's by Nate's ruling of 2026-11-16, as its `extraction_notes` say |
 | 2026-11-17 | `pal/docs/northern-gun-2-close-out` | Close-out, no D1 write. Production counted first: vehicles 96, gear 155, notable_npcs 9, and `robo-gladiator` in `imported_classes`, as the ledger sums. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
+| 2026-11-17 | `pal/data/northern-gun-2-samson-mk-iii` | 1 vehicle, `~338-northern-gun-2-samson-mk-iii.sql` (printed 140-144): `ng-x9-samson-mk-iii-power-armor`, the NG-X9 Samson Mk III (16 locations, 6 weapons; main body 320, 1.7M nuclear / 1.3M Solid Oxide / 950,000 electric stored as 950,000, Robot P.S. 33). Digits read off the rendered pages: the printed "Robot P.S. 33 for the Mk 11 and Mk II" and "850,00" are misprints, recorded as printed in the row. The held Mk I `ng-x9-samson-power-armor` keeps its figures and gains one sentence naming this row. Applied `--remote` first; vehicles 96 -> 97, source-coverage 261 -> 262. |
 
 ### What remains
 
@@ -320,9 +321,9 @@ From `node scripts/source-coverage.mjs --remote`, 2026-11-17, its *BY BOOK*
 line for this book, as printed:
 
 ```
-  northern-gun-2     261 / 0
+  northern-gun-2     262 / 0
 ```
 
-All 261 rows are traceable to a cached page (155 + 96 + 9 + 1), and no
+All 262 rows are traceable to a cached page (155 + 97 + 9 + 1), and no
 Northern Gun Two row appears under `unknown-book` or `not-cached`. Nothing
 remains in the plan; what was left on purpose is under *Extraction plan*.
