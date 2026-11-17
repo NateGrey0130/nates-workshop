@@ -298,9 +298,9 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~326-northern-gun-2-combat-vehicles-a.sql` was applied (traceable / other):
+`~327-northern-gun-2-combat-vehicles-b.sql` was applied (traceable / other):
 
-    northern-gun-2     190 / 0
+    northern-gun-2     193 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`), all
