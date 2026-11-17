@@ -304,10 +304,10 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-17, after
-`~334-northern-gun-2-adventuring-gear.sql` was applied (traceable /
+`~335-northern-gun-2-npcs-a.sql` was applied (traceable /
 other):
 
-    northern-gun-2     251 / 0
+    northern-gun-2     255 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`), all
