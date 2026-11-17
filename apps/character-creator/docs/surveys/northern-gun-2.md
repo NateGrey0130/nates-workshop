@@ -2,7 +2,7 @@
 
 **Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires), and the jet packs and aircraft shipped (three new jet packs and three new aircraft), and the six motorcycles shipped; the rest of the *Extraction plan* follows. (2026-11-16)
 
-**Rows citing this book:** gear 120, vehicles 55
+**Rows citing this book:** gear 120, vehicles 61
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -290,6 +290,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-16 | `pal/data/northern-gun-2-aquatic-b` | 4 vehicles, `~320-northern-gun-2-aquatic-b.sql` (printed 186-192): NG-AMP8 Crocodile Amphibious Tank (10 locations, 4 weapons), NG-SU7 Crayfish Amphibious Submersible (12, 3), NG-S3 Harbormaster Missile Boat (7, 3), NG-S1 Sandfish Cargo Landing Craft (6, 2); 35 locations and 12 weapon entries in all. The Crayfish's laser prints "46 M.D." and is stored as 4D6 with that noted |
 | 2026-11-16 | `pal/data/northern-gun-2-jet-packs-aircraft` | 3 vehicles, `~321-northern-gun-2-jet-packs-aircraft.sql` (printed 194-200): NG-HC1000 Dragonfly (12 locations, 5 weapons), NG-HC2000 Skybunker (12, 2), NG-H500 Sky Wolf (7, 2); 31 locations and 9 weapon entries in all. 3 gear rows, `~322-northern-gun-2-jet-packs-aircraft-gear.sql`: the NG-AJ20 Attack Jet Pack, NG-WJ10 Speedpack and NG-J45 Wolf-Runner Jet Pack (printed 193-194). The Wild Coyote Jet Pack is held from p.77 (`ng-wild-coyote-jet-pack`) and was not rewritten, although printed 193 gives its electric/SO/nuclear costs as 85,000/375,000/890,000 against the held 70,000/290,000/910,000. The Sky King (printed 197) is a held gear row, left to the held-vehicle compare |
 | 2026-11-16 | `pal/data/northern-gun-2-motorcycles` | 6 vehicles, `~323-northern-gun-2-motorcycles.sql` (printed 200-206): NG-CM14 Alley Cat (7 locations, 0 weapons), MBT-300 Black Talon (6, 1), NG-EM3 Electric CityCycle (3, 0), Road Hog (3, 0), NG-CM12 Streetwolf (5, 0), NG-WM330 Wild Boar (5, 0); 29 locations and 1 weapon entry in all |
+| 2026-11-16 | `pal/data/northern-gun-2-trucks-a` | 6 vehicles, `~324-northern-gun-2-trucks-a.sql` (printed 206-215): APT All-Purpose Trailer (5 locations, 0 weapons), NG-HCH-2000 Big Bertha (12, 0), NG-C100 Cargonaut (8, 0), NG-CRV05 Crisis Response Vehicle (10, 3), NG-CW81 Ermine (10, 0), NG-EV-011 Pathmaker (12, 8); 57 locations and 11 weapon entries in all |
 
 ### What remains
 
@@ -303,6 +304,7 @@ held-armour compare and the eight power-armour batches `-a` to `-h`), all
 of line 4 (`hovercycles-a`, printed 158-166, and `hovercycles-b`, printed
 167-176) and of line 5 the two aquatic batches (`aquatic-a`, printed 177-186,
 and `aquatic-b`, printed 186-192, the eight vessels) and `jet-packs-aircraft`
-(printed 193-200, three jet packs and three aircraft) and `motorcycles`
-(printed 200-206, six motorcycles) have shipped; the rest of line 5 and
-lines 6 to 10 follow.
+(printed 193-200, three jet packs and three aircraft), `motorcycles`
+(printed 200-206, six motorcycles) and `trucks-a` (printed 206-215, six
+trucks, trailers and cars) have shipped; the rest of line 5 and lines 6 to
+10 follow.
