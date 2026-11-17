@@ -409,7 +409,7 @@
     ],
     [
      "Gear",
-     200
+     196
     ],
     [
      "Psionic powers",
@@ -428,7 +428,7 @@
      9
     ]
    ],
-   "total": 672
+   "total": 668
   },
   {
    "slug": "atlantis",
@@ -723,7 +723,7 @@
     ],
     [
      "Gear",
-     37
+     35
     ],
     [
      "Notable NPCs",
@@ -738,7 +738,7 @@
      4
     ]
    ],
-   "total": 74
+   "total": 72
   },
   {
    "slug": "cwc",
@@ -1227,7 +1227,7 @@
     ],
     [
      "Gear",
-     27
+     25
     ],
     [
      "Notable NPCs",
@@ -1238,7 +1238,7 @@
      1
     ]
    ],
-   "total": 52
+   "total": 50
   },
   {
    "slug": "arzno",
@@ -1429,7 +1429,7 @@
     ],
     [
      "Gear",
-     155
+     163
     ],
     [
      "Notable NPCs",
@@ -1440,7 +1440,7 @@
      97
     ]
    ],
-   "total": 262
+   "total": 270
   },
   {
    "slug": "old-ones",

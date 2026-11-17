@@ -2,7 +2,7 @@
 
 **Status:** `imported` — gear, the Lazlo Model Behemoth, all 19 creatures, both comparisons (New West, Horune) and the book's five full NPC stat blocks shipped; the Quick Stats and level-only people are left under D21. (2026-10-20)
 
-**Rows citing this book:** gear 27, vehicles 1, notable_npcs 5, creatures 19
+**Rows citing this book:** gear 25, vehicles 1, notable_npcs 5, creatures 19
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
