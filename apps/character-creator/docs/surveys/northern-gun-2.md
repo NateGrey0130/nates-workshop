@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the plan is done: 155 gear rows (armour, power-armour weapons and options, modular hovercycle weapons, jet packs, adventuring gear, upgrades and bionics, with 11 held rows re-cited), 97 vehicles (85 new, the Sky King and the Samson Mk III among them, and 12 held rows re-cited), the nine notable gladiators and the Robo-Gladiator O.C.C. What was left out on purpose is under *Extraction plan*. (2026-11-17; the Samson Mk III row added after)
 
-**Rows citing this book:** classes 1, gear 155, vehicles 97, notable_npcs 9
+**Rows citing this book:** classes 1, gear 163, vehicles 97, notable_npcs 9
 
 Slug `northern-gun-2`. Cached 2026-11-16 from
 `Rifts - World Book 34 - Northern Gun 2 - PAL888P.pdf`, 258 PDF pages,
@@ -272,10 +272,12 @@ The plan ran as 61 rows, ending with `pal/docs/northern-gun-2-close-out` on
 2026-11-17. Besides the list above it left, on purpose, the nine held armours
 whose figures agree with this printing, the held `ng-x9-samson-power-armor`
 (the Mk I; the Mk III this book prints became a row of its own, `~338`), the
-five gear twins of re-cited vehicles that keep their older figures, unruled,
-the held `ng-wild-coyote-jet-pack`, whose printed 193 costs differ from its
-p.77 figures and were not rewritten, and the six adventuring items production
-already held (all named in the ledger).
+and the six adventuring items production already held (all named in the
+ledger). The five gear twins of re-cited vehicles, the `ng-wild-coyote-jet-pack`
+costs (the pack's own entry, printed 193, wins over p.77) and three held rows
+this book prints again (`ng-icss-combat-and-survival-shelter`,
+`ng-ccs-command-and-control-shelter`, `rocket-boots`) were brought to this
+printing by `~339`.
 
 ## Ledger
 
@@ -314,6 +316,7 @@ already held (all named in the ledger).
 | 2026-11-17 | `pal/data/northern-gun-2-class-robo-gladiator` | 1 class, `add-robo-gladiator-class.sql` (printed 20-22): the Robo-Gladiator O.C.C., id `robo-gladiator`, 0 stub rows. The book prints no Experience Table, so its ladder is the Robot Pilot's by Nate's ruling of 2026-11-16, as its `extraction_notes` say |
 | 2026-11-17 | `pal/docs/northern-gun-2-close-out` | Close-out, no D1 write. Production counted first: vehicles 96, gear 155, notable_npcs 9, and `robo-gladiator` in `imported_classes`, as the ledger sums. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 | 2026-11-17 | `pal/data/northern-gun-2-samson-mk-iii` | 1 vehicle, `~338-northern-gun-2-samson-mk-iii.sql` (printed 140-144): `ng-x9-samson-mk-iii-power-armor`, the NG-X9 Samson Mk III (16 locations, 6 weapons; main body 320, 1.7M nuclear / 1.3M Solid Oxide / 950,000 electric stored as 950,000, Robot P.S. 33). Digits read off the rendered pages: the printed "Robot P.S. 33 for the Mk 11 and Mk II" and "850,00" are misprints, recorded as printed in the row. The held Mk I `ng-x9-samson-power-armor` keeps its figures and gains one sentence naming this row. Applied `--remote` first; vehicles 96 -> 97, source-coverage 261 -> 262. |
+| 2026-11-17 | `pal/data/northern-gun-2-held-price-fixes` | `~339-northern-gun-2-held-price-fixes.sql`: 9 held gear rows take this printing's figures and citation, the older figures in their descriptions: the five twins of ~333's vehicles (`the-wastelander-motorcycle`, `speedster-hovercycle`, `big-boss-atv`, `mountaineer-atv`, `rolling-thunder-apv`), `ng-wild-coyote-jet-pack` (printed 193), `ng-icss-combat-and-survival-shelter` and `ng-ccs-command-and-control-shelter` (p.254), `rocket-boots` (p.252) |
 
 ### What remains
 
