@@ -1,6 +1,6 @@
 # Rifts World Book 34: Northern Gun Two — survey
 
-**Status:** `importing` — both new-armour batches shipped (armored clothing, the EB-20, the five Ride Armors and twelve body armours) and the held armours compared against this printing, and all eight power-armour batches shipped (the 29 new power armours), and both hovercycle batches shipped (the nine new hovercycles and the 21 modular hovercycle weapons, housings and radar), and both aquatic batches shipped (the eight vessels and the AquaWalker Tires), and the jet packs and aircraft shipped (three new jet packs and three new aircraft), and the six motorcycles shipped, and both truck batches shipped (the twelve trucks, trailers, cars and hover vehicles), and the first two combat-vehicle batches shipped (the Badger, Centipede and Echelon Hovertank, then the Mammoth, Road Buster and Sentinel), and both drone batches shipped (the MAU-500 Coffin, Robot Floater Camera, DX-202 Cargo Walker with its Combat Kit, DX-204 GRUB and BRV-10 Vulture, then the Fido, Mule, W9 and W10 Labor Drones and Robosistant with the Drone Control and Command Gauntlet), and the first held-vehicle compare shipped (the Defender, the Juicer Killer and the Sky King take this printing, the Sky King as a vehicle of its own), and the second held-vehicle compare shipped (the five hovercycles, the Highwayman, the Wastelander, the Big Boss, the Mountaineer and the Rolling Thunder take this printing), and the adventuring gear shipped (the 28 gear, shelter, Bio-Brace, robot and vehicle upgrade and bionic rows), and the first notable-NPC batch shipped (Gerhardt Fulcon, Brandon Church, Shelaine Truman and Ernest Gomez), and the second notable-NPC batch shipped (Sarah Seymour and the Frankenstein Cyborg), and the third notable-NPC batch shipped (Maximilian Schroeder, Antoine Leroj and Verlan Jones), and the class shipped (the Robo-Gladiator O.C.C., on the Robot Pilot's ladder by ruling); the rest of the *Extraction plan* follows. (2026-11-17)
+**Status:** `imported` — the plan is done: 155 gear rows (armour, power-armour weapons and options, modular hovercycle weapons, jet packs, adventuring gear, upgrades and bionics, with 11 held rows re-cited), 96 vehicles (84 new, the Sky King among them, and 12 held rows re-cited), the nine notable gladiators and the Robo-Gladiator O.C.C. What was left out on purpose is under *Extraction plan*. (2026-11-17)
 
 **Rows citing this book:** classes 1, gear 155, vehicles 96, notable_npcs 9
 
@@ -268,6 +268,15 @@ What is deliberately left, with the reason for each:
 - the shared feature lists (44, 52, 61): they describe what every suit of a
   kind has, and go into the rows' descriptions rather than rows of their own.
 
+The plan ran as 61 rows, ending with `pal/docs/northern-gun-2-close-out` on
+2026-11-17. Besides the list above it left, on purpose, the nine held armours
+whose figures agree with this printing, the held `ng-x9-samson-power-armor`
+(this book prints the later Mk III; a row of its own is Nate's to decide), the
+five gear twins of re-cited vehicles that keep their older figures, unruled,
+the held `ng-wild-coyote-jet-pack`, whose printed 193 costs differ from its
+p.77 figures and were not rewritten, and the six adventuring items production
+already held (all named in the ledger).
+
 ## Ledger
 
 | date | branch | what went in |
@@ -303,33 +312,17 @@ What is deliberately left, with the reason for each:
 | 2026-11-17 | `pal/data/northern-gun-2-npcs-b` | 2 notable NPCs, `~336-northern-gun-2-npcs-b.sql` (printed 26-29), with 4 stat_attacks: Sarah "the Titan" Seymour and the Frankenstein Cyborg (FRA-KN1-003), the latter one row carrying its robot-body block by Nate's ruling of 2026-11-16 |
 | 2026-11-17 | `pal/data/northern-gun-2-npcs-c` | 3 notable NPCs, `~337-northern-gun-2-npcs-c.sql` (printed 29-31), with 3 stat_attacks: Maximilian "Black Knight" Schroeder, Antoine "Ripper" Leroj and Verlan "Omega" Jones |
 | 2026-11-17 | `pal/data/northern-gun-2-class-robo-gladiator` | 1 class, `add-robo-gladiator-class.sql` (printed 20-22): the Robo-Gladiator O.C.C., id `robo-gladiator`, 0 stub rows. The book prints no Experience Table, so its ladder is the Robot Pilot's by Nate's ruling of 2026-11-16, as its `extraction_notes` say |
+| 2026-11-17 | `pal/docs/northern-gun-2-close-out` | Close-out, no D1 write. Production counted first: vehicles 96, gear 155, notable_npcs 9, and `robo-gladiator` in `imported_classes`, as the ledger sums. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-11-17, after
-`add-robo-gladiator-class.sql` was applied (traceable /
-other):
+From `node scripts/source-coverage.mjs --remote`, 2026-11-17, its *BY BOOK*
+line for this book, as printed:
 
-    northern-gun-2     261 / 0
+```
+  northern-gun-2     261 / 0
+```
 
-Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
-held-armour compare and the eight power-armour batches `-a` to `-h`), all
-of line 4 (`hovercycles-a`, printed 158-166, and `hovercycles-b`, printed
-167-176) and of line 5 the two aquatic batches (`aquatic-a`, printed 177-186,
-and `aquatic-b`, printed 186-192, the eight vessels) and `jet-packs-aircraft`
-(printed 193-200, three jet packs and three aircraft), `motorcycles`
-(printed 200-206, six motorcycles), `trucks-a` (printed 206-215, six
-trucks, trailers and cars), `trucks-b` (printed 215-224, six trucks,
-cars and hover vehicles), `combat-vehicles-a` (printed 224-231, three
-combat vehicles), `combat-vehicles-b` (printed 231-235, three more) and
-`drones-a` (printed 235-243, five drones and the Cargo Walker's combat kit)
-and `drones-b` (printed 244-251, five more drones and the command gauntlet)
-have shipped, and all of line 6: `vehicles-held-compare-a` (the Defender,
-the Juicer Killer, the Samson and the Sky King) and `vehicles-held-compare-b`
-(the five hovercycles, the two motorcycles, the two ATVs and the Rolling
-Thunder), and line 7: `adventuring-gear` (printed 251-256, the 28 gear,
-Bio-Brace, upgrade and bionic rows). Of line 8, `npcs-a` (printed 23-26,
-four gladiators), `npcs-b` (printed 26-29, Sarah Seymour and the
-Frankenstein Cyborg) and `npcs-c` (printed 29-31, Maximilian Schroeder,
-Antoine Leroj and Verlan Jones) have shipped, and line 9:
-`class-robo-gladiator` (printed 20-22, the one class); line 10 follows.
+All 261 rows are traceable to a cached page (155 + 96 + 9 + 1), and no
+Northern Gun Two row appears under `unknown-book` or `not-cached`. Nothing
+remains in the plan; what was left on purpose is under *Extraction plan*.

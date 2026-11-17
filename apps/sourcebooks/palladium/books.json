@@ -1417,6 +1417,32 @@
    "total": 123
   },
   {
+   "slug": "northern-gun-2",
+   "title": "Rifts World Book 34: Northern Gun Two",
+   "code": "northern-gun-2",
+   "status": "imported",
+   "date": "2026-11-17",
+   "added": [
+    [
+     "Classes",
+     1
+    ],
+    [
+     "Gear",
+     155
+    ],
+    [
+     "Notable NPCs",
+     9
+    ],
+    [
+     "Vehicles",
+     96
+    ]
+   ],
+   "total": 261
+  },
+  {
    "slug": "old-ones",
    "title": "The Palladium RPG Book II: Old Ones",
    "code": "old-ones",
