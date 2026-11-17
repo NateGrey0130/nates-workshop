@@ -300,10 +300,10 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-16, after
-`~328-northern-gun-2-drones-a.sql` and `~329-northern-gun-2-drones-a-gear.sql`
+`~330-northern-gun-2-drones-b.sql` and `~331-northern-gun-2-drones-b-gear.sql`
 were applied (traceable / other):
 
-    northern-gun-2     201 / 0
+    northern-gun-2     207 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`), all
