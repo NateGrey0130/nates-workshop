@@ -303,10 +303,10 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 `node scripts/source-coverage.mjs --remote`, 2026-11-17, after
-`~333-northern-gun-2-vehicles-held-compare-b.sql` was applied (traceable /
+`~334-northern-gun-2-adventuring-gear.sql` was applied (traceable /
 other):
 
-    northern-gun-2     223 / 0
+    northern-gun-2     251 / 0
 
 Lines 1 to 3 of the *Extraction plan* (the two new-armour batches, the
 held-armour compare and the eight power-armour batches `-a` to `-h`), all
@@ -323,4 +323,5 @@ and `drones-b` (printed 244-251, five more drones and the command gauntlet)
 have shipped, and all of line 6: `vehicles-held-compare-a` (the Defender,
 the Juicer Killer, the Samson and the Sky King) and `vehicles-held-compare-b`
 (the five hovercycles, the two motorcycles, the two ATVs and the Rolling
-Thunder). Lines 7 to 10 follow.
+Thunder), and line 7: `adventuring-gear` (printed 251-256, the 28 gear,
+Bio-Brace, upgrade and bionic rows). Lines 8 to 10 follow.
