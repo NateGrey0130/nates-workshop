@@ -409,7 +409,7 @@
     ],
     [
      "Gear",
-     201
+     200
     ],
     [
      "Psionic powers",
@@ -425,10 +425,10 @@
     ],
     [
      "Vehicles",
-     14
+     9
     ]
    ],
-   "total": 678
+   "total": 672
   },
   {
    "slug": "atlantis",
@@ -735,10 +735,10 @@
     ],
     [
      "Vehicles",
-     5
+     4
     ]
    ],
-   "total": 75
+   "total": 74
   },
   {
    "slug": "cwc",
@@ -829,10 +829,10 @@
     ],
     [
      "Vehicles",
-     7
+     3
     ]
    ],
-   "total": 73
+   "total": 69
   },
   {
    "slug": "new-west",
