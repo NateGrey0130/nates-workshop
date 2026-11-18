@@ -265,11 +265,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`add-blood-warrior-class.sql` was applied: the book's *BY BOOK* line
-(traceable / other) is
+`~350-megaverse-in-flames-anti-monster.sql` was applied: the book's *BY BOOK*
+line (traceable / other) is
 
 ```
-  megaverse-in-flames 103 / 0
+  megaverse-in-flames 104 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
