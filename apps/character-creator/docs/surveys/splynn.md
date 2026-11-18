@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and the first 8 of the 30 organisms shipped; the other 22 organisms next. The plan is under *Extraction plan*. (2026-11-18)
+**Status:** `importing` — all 25 new magic tattoos and the 19 Bio-Wizard parasites of the 30 organisms shipped; the 11 symbiotes next. The plan is under *Extraction plan*. (2026-11-18)
 
-**Rows citing this book:** gear 8, spells 25
+**Rows citing this book:** gear 19, spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -340,15 +340,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/splynn-tattoos-a` | spells 12: the 2 magic weapon tattoos and 10 power tattoos of printed 102-104, tradition `tattoo` (`~356-splynn-tattoos-a.sql`) |
 | 2026-11-18 | `pal/data/splynn-tattoos-b` | spells 13: the bow-in-flames and four-winged-arrows tattoos of printed 104-105 and the 11 Power Arrows of 105-106, tradition `tattoo`; the bow tattoo prints no cost, so it is stored at 0 P.P.E. with a `ppe_note` (`~357-splynn-tattoos-b.sql`) |
 | 2026-11-18 | `pal/data/splynn-parasites-a` | gear 8: the first 8 of the 19 Bio-Wizard parasites, Beastifier to Living Armor, printed 112-119, category `magic` (`~358-splynn-parasites-a.sql`) |
+| 2026-11-18 | `pal/data/splynn-parasites-b` | gear 11: the last 11 of the 19 Bio-Wizard parasites, Locater to Temporal Link, printed 119-127, category `magic` (`~359-splynn-parasites-b.sql`) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~358-splynn-parasites-a.sql` was applied, the book's *BY BOOK* line
+`~359-splynn-parasites-b.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              33 / 0
+  splynn              44 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the parasites. The tattoos moved
@@ -365,5 +366,5 @@ it is stored at 0 with a note.
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* from line 2 on remains, less the 8 parasites
-`parasites-a` shipped.
+Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
+`parasites-a` and `parasites-b` shipped.
