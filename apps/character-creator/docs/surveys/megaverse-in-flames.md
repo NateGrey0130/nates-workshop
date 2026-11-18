@@ -260,11 +260,12 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after `~349`
-was applied: the book's *BY BOOK* line (traceable / other) is
+From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
+`add-soulmancer-class.sql` was applied: the book's *BY BOOK* line
+(traceable / other) is
 
 ```
-  megaverse-in-flames 101 / 0
+  megaverse-in-flames 102 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
