@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items and the Soulmancer shipped; the Blood Warrior next. (2026-11-18)
+**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped; the Anti-Monster comparison next. (2026-11-18)
 
-**Rows citing this book:** classes 1, gear 39, vehicles 7, spells 55
+**Rows citing this book:** classes 2, gear 39, vehicles 7, spells 55
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -257,15 +257,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/megaverse-in-flames-dyval-arms` | `~347`: 3 vehicles rows with 43 locations and 14 weapon entries, the Hell Galleon, Hell Schooner and Hell Battle Barge (131-136), each with three main-body sections as locations and `mdc_main_body` empty; the Barge's rear 8,600, the Schooner's "150-20" tons and the Galleon's 55 m stored as printed with a note; `~348`: 11 gear rows, the three Hell guns (130) and the eight Deevil artifacts (136-139) |
 | 2026-11-18 | `pal/data/megaverse-in-flames-rune-items` | `~349`: 2 gear rows, Hell Lord Rune's armor Soul Steel (69-70) and Overlord Sindel's Rune axe Deceiver (167-168); Soul Steel's `mdc` holds the chest plate's 1,000 (the book's main body) with every location in its description; neither prints a price, so `cost` is empty |
 | 2026-11-18 | `pal/data/megaverse-in-flames-class-soulmancer` | `add-soulmancer-class.sql`: 1 classes row, the Soulmancer O.C.C. (85-88), published, tagged `evil`, the book's NPC-villain note as its first restriction; nine starting spells and a named list of the 52 Soulmancy spells that are not Spells of Legend; the class page's Read Soul (30), Create Soul Crystal (30), Consume Soul (35) and Pseudo Life stored by their catalog names and costs; Literacy: Demongogian a Literacy: Other pick; Soul Crystals, the lesser magical knife, cauldron, ice pick and saw are prose, with no gear row |
+| 2026-11-18 | `pal/data/megaverse-in-flames-class-blood-warrior` | `add-blood-warrior-class.sql`: 1 classes row, the Blood Warrior O.C.C. (88-91), published, tagged `evil`, the book's NPC-villain note as its first restriction; occ_group magic off the *Magic Powers* heading; Soulmancy picks as two named lists (levels 1-3 and 1-7); `mdc_from_hp_sdc` with the level-one 1D6 M.D.C. as a bonus and the further 1D6 per level as prose, so `regression`'s converting-classes pin now names the Blood Warrior; Literacy: Demongogian a Literacy: Other pick; the demonic symbol is `holy-symbol`, the rest of the gear in restrictions |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`add-soulmancer-class.sql` was applied: the book's *BY BOOK* line
+`add-blood-warrior-class.sql` was applied: the book's *BY BOOK* line
 (traceable / other) is
 
 ```
-  megaverse-in-flames 102 / 0
+  megaverse-in-flames 103 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -280,10 +281,11 @@ That run's `BACKLOG` block, which this book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains except its first five lines and half
-of its sixth: the four spell batches (levels one to five, `-spells-a`; six to
-nine, `-spells-b`; ten to twelve, `-spells-c`; thirteen to fifteen and the
-Spells of Legend, `-spells-d`), Lord Kreelo's arms (`-kreelo-arms`), the arms
-race (`-arms-race`), the Dyval arms (`-dyval-arms`), the rune items
-(`-rune-items`) and the Soulmancer (`-class-soulmancer`). The Blood Warrior
-(`-class-blood-warrior`) is next.
+Everything in *Extraction plan* remains except its first six lines: the four
+spell batches (levels one to five, `-spells-a`; six to nine, `-spells-b`; ten
+to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
+`-spells-d`), Lord Kreelo's arms (`-kreelo-arms`), the arms race
+(`-arms-race`), the Dyval arms (`-dyval-arms`), the rune items
+(`-rune-items`), the Soulmancer (`-class-soulmancer`) and the Blood Warrior
+(`-class-blood-warrior`). The Anti-Monster comparison
+(`-class-anti-monster-compare`) is next.
