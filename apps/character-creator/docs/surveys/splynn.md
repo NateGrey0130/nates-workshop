@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — the first 12 of the 25 new magic tattoos shipped; the other 13 next. The plan is under *Extraction plan*. (2026-11-18)
+**Status:** `importing` — all 25 new magic tattoos shipped; the organisms next. The plan is under *Extraction plan*. (2026-11-18)
 
-**Rows citing this book:** spells 12
+**Rows citing this book:** spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -338,27 +338,29 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-11-18 | `pal/docs/splynn-register-survey` | cache built (194 pp, text layer), offset +1 verified by folio at four points, inventory by four readers over all 191 printed pages, production diff; `splynn` registered in `books.json` |
 | 2026-11-18 | `pal/data/splynn-tattoos-a` | spells 12: the 2 magic weapon tattoos and 10 power tattoos of printed 102-104, tradition `tattoo` (`~356-splynn-tattoos-a.sql`) |
+| 2026-11-18 | `pal/data/splynn-tattoos-b` | spells 13: the bow-in-flames and four-winged-arrows tattoos of printed 104-105 and the 11 Power Arrows of 105-106, tradition `tattoo`; the bow tattoo prints no cost, so it is stored at 0 P.P.E. with a `ppe_note` (`~357-splynn-tattoos-b.sql`) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~356-splynn-tattoos-a.sql` was applied, the book's *BY BOOK* line
+`~357-splynn-tattoos-b.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              12 / 0
+  splynn              25 / 0
 ```
 
-That run's `BACKLOG` block, which this book has not moved:
+That run's `BACKLOG` block. This book moved spell stubs from 56 to 57: the
+bow-in-flames tattoo prints no P.P.E. cost, so it is stored at 0 with a note.
 
 ```
   BACKLOG       rows an importer created and nobody finished
     gear stubs            13   description still says STUB — created by class import
     skill stubs            5   created by an import and never given a base %, a bonus or a note
-    spell stubs           56   level 0 and 0 P.P.E.
+    spell stubs           57   level 0 and 0 P.P.E.
     psionic stubs          1   0 I.S.P.
     spell text missing     0   nothing for the codex to show
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains.
+Everything in *Extraction plan* from line 2 on remains.
