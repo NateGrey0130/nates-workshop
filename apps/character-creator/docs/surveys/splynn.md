@@ -343,23 +343,24 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~356-splynn-tattoos-a.sql` was applied, the book's *BY BOOK* line
+`~357-splynn-tattoos-b.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              12 / 0
+  splynn              25 / 0
 ```
 
-That run's `BACKLOG` block, which this book has not moved:
+That run's `BACKLOG` block. This book moved spell stubs from 56 to 57: the
+bow-in-flames tattoo prints no P.P.E. cost, so it is stored at 0 with a note.
 
 ```
   BACKLOG       rows an importer created and nobody finished
     gear stubs            13   description still says STUB — created by class import
     skill stubs            5   created by an import and never given a base %, a bonus or a note
-    spell stubs           56   level 0 and 0 P.P.E.
+    spell stubs           57   level 0 and 0 P.P.E.
     psionic stubs          1   0 I.S.P.
     spell text missing     0   nothing for the codex to show
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains.
+Everything in *Extraction plan* from line 2 on remains.
