@@ -4880,9 +4880,13 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // natural and most comfortable one, and its totems add M.D.C. on top. It
   // reverts only when it chooses mortal form, so it is the Totem Warrior's case
   // and not the Psycho-Stalker's.
+  // The Blood Warrior (Megaverse in Flames, printed 88-91) is the third: his
+  // demonic link makes him a minor supernatural being whose hit points and
+  // S.D.C. become M.D.C., with no form or duration that reverts it. Losing his
+  // master halves that M.D.C.; it does not undo the conversion.
   const converting = classes.filter((c) => c.mdc_from_hp_sdc === true).map((c) => c.id).sort();
-  check('only the Totem Warrior and the Spirit Host turn S.D.C. and hit points into M.D.C.',
-    converting.join() === 'spirit-host,totem-warrior', 'classes with the flag: ' + converting.join(', '));
+  check('only the Totem Warrior, the Spirit Host and the Blood Warrior turn S.D.C. and hit points into M.D.C.',
+    converting.join() === 'blood-warrior,spirit-host,totem-warrior', 'classes with the flag: ' + converting.join(', '));
   // F64: the Spirit Warrior's rides on its Earth and Plant realms instead, and
   // arrives only when one is chosen. Asked of the real composer.
   {
