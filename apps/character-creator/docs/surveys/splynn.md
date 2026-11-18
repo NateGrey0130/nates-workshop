@@ -344,15 +344,16 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~357-splynn-tattoos-b.sql` was applied, the book's *BY BOOK* line
+`~358-splynn-parasites-a.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              25 / 0
+  splynn              33 / 0
 ```
 
-That run's `BACKLOG` block. This book moved spell stubs from 56 to 57: the
-bow-in-flames tattoo prints no P.P.E. cost, so it is stored at 0 with a note.
+That run's `BACKLOG` block, unchanged by the parasites. The tattoos moved
+spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
+it is stored at 0 with a note.
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -364,4 +365,5 @@ bow-in-flames tattoo prints no P.P.E. cost, so it is stored at 0 with a note.
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* from line 2 on remains.
+Everything in *Extraction plan* from line 2 on remains, less the 8 parasites
+`parasites-a` shipped.
