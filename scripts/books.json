@@ -371,6 +371,21 @@
       "note": "Cached 2026-09-24 from its TEXT LAYER, --probe median 4,786 chars/page and 36.8% stop words, so the words survive (not the F73 glyph-dropped kind). Offset verified by folio at four points rather than taken from the vote - cache p024 reads 23, p078 reads 77, p100 reads 99, p129 reads 128 - one region, no split. printed_pages is 128, the last numbered folio at cache p129; cache p130-p135 are Palladium house ads and an order form and p136 is the back cover. ocr-book.py measured printed_pages 99 and that is a max-folio misread; the registry outranks the manifest, as it does for bom and heroes-unlimited-core. welded_pages 4 (113, 130, 132, 133 - only 113 is content, the Beautiful/Harmful Ghost page), corrupt_pages 4 pages at one hit each, substituted_digits 26 pages. See apps/character-creator/docs/surveys/madhaven.md."
     },
 
+    "megaverse-in-flames": {
+      "title": "Rifts World Book 35: Megaverse in Flames",
+      "published": 2014,
+      "aliases": [
+        "Megaverse in Flames",
+        "Rifts Megaverse in Flames",
+        "Rifts World Book 35 Megaverse in Flames"
+      ],
+      "source_pdf": "Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 192,
+      "page_offset": 1,
+      "note": "Cached 2026-11-17 from its TEXT LAYER (--probe median 5,557 chars/page, 37.7% stop words), 194 PDF pages. Offset +1 read off the folios at cache p005 (4), p008 (7), p092 (91), p186 (185) and p193 (192); one region. printed_pages is 192, the last numbered folio, at cache p193; cache p194 is the back cover. welded_pages is 77 and 194: printed 76 (the Canadian Tundra Hell Pit and the Terror Army's troop table) is read off a render if anything on it is needed; 194 is the back cover. corrupt_pages and substituted_digits are both empty. published is the copyright year on cache p003. See apps/character-creator/docs/surveys/megaverse-in-flames.md."
+    },
+
     "mystic-russia": {
       "title": "Rifts World Book 18: Mystic Russia",
       "published": 1998,
