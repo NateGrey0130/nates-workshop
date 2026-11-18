@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms and the Minion War arms race shipped; the Dyval arms next. (2026-11-18)
+**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms and the Minion War arms race and the Dyval arms shipped; the rune items next. (2026-11-18)
 
-**Rows citing this book:** gear 26, vehicles 4, spells 55
+**Rows citing this book:** gear 37, vehicles 7, spells 55
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -254,14 +254,15 @@ What is deliberately left, with the reason for each:
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-d` | `~343`: 13 spells rows, Soulmancy levels thirteen to fifteen (105-110) and the three Spells of Legend (110-111), which take level 15 and a `ppe_note` opening "A Spell of Legend, beyond the fifteen levels"; no `same_spell_as` (`Soulmancy: Permanency (Ritual)` is not Nazca's); Summon Demon Planet costs 2,000 by its description, the list's 5,000 +35,600 in its `variant_note` |
 | 2026-11-17 | `pal/data/megaverse-in-flames-kreelo-arms` | `~344`: 4 vehicles rows with 36 locations and 19 weapon entries, the Chaos Trooper power armour and three war vehicles (116-124); `~345`: 6 gear rows, the four Blood Energy weapons and the Flesh and Bone Armors (114-116), the rolled main-body M.D.C. of each armour left out of `mdc` and stated in its description |
 | 2026-11-18 | `pal/data/megaverse-in-flames-arms-race` | `~346`: 20 gear rows, the Minion War arms race (125-129): three Demon Bows, the plain Bone Arrowhead and six Magic Bone Arrowheads, two TW Iron Bolt guns, three Bone Shard guns and five Demon Magic Artifacts; the Demon Bows' rolled 4D6+34 M.D.C. left out of `mdc` and stated in each description; the Demon Melee Weapons heading prints no weapon of its own, so it adds none |
+| 2026-11-18 | `pal/data/megaverse-in-flames-dyval-arms` | `~347`: 3 vehicles rows with 43 locations and 14 weapon entries, the Hell Galleon, Hell Schooner and Hell Battle Barge (131-136), each with three main-body sections as locations and `mdc_main_body` empty; the Barge's rear 8,600, the Schooner's "150-20" tons and the Galleon's 55 m stored as printed with a note; `~348`: 11 gear rows, the three Hell guns (130) and the eight Deevil artifacts (136-139) |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after `~346`
-was applied: the book's *BY BOOK* line (traceable / other) is
+From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after `~347`
+and `~348` were applied: the book's *BY BOOK* line (traceable / other) is
 
 ```
-  megaverse-in-flames  85 / 0
+  megaverse-in-flames  99 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -276,8 +277,8 @@ That run's `BACKLOG` block, which this book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains except its first three lines: the
+Everything in *Extraction plan* remains except its first four lines: the
 four spell batches (levels one to five, `-spells-a`; six to nine, `-spells-b`;
 ten to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
-`-spells-d`), Lord Kreelo's arms (`-kreelo-arms`) and the arms race
-(`-arms-race`).
+`-spells-d`), Lord Kreelo's arms (`-kreelo-arms`), the arms race
+(`-arms-race`) and the Dyval arms (`-dyval-arms`).
