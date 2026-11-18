@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells shipped; the Kreelo arms next. (2026-11-17)
+**Status:** `importing` — all 55 Soulmancy spells and Lord Kreelo's arms shipped; the arms race next. (2026-11-17)
 
-**Rows citing this book:** spells 55
+**Rows citing this book:** gear 6, vehicles 4, spells 55
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -252,6 +252,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-b` | `~341`: 14 spells rows, Soulmancy levels six to nine (96-100); `Soulmancy: Life Drain` joined to the RUE `Life Drain` by `same_spell_as` (same level, cost, range, duration and save) |
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-c` | `~342`: 10 spells rows, Soulmancy levels ten to twelve (100-105); `Soulmancy: Soultwist` joined to the Book of Magic `Soultwist` by `same_spell_as` (same level, cost, range, duration and save) |
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-d` | `~343`: 13 spells rows, Soulmancy levels thirteen to fifteen (105-110) and the three Spells of Legend (110-111), which take level 15 and a `ppe_note` opening "A Spell of Legend, beyond the fifteen levels"; no `same_spell_as` (`Soulmancy: Permanency (Ritual)` is not Nazca's); Summon Demon Planet costs 2,000 by its description, the list's 5,000 +35,600 in its `variant_note` |
+| 2026-11-17 | `pal/data/megaverse-in-flames-kreelo-arms` | `~344`: 4 vehicles rows with 36 locations and 19 weapon entries, the Chaos Trooper power armour and three war vehicles (116-124); `~345`: 6 gear rows, the four Blood Energy weapons and the Flesh and Bone Armors (114-116), the rolled main-body M.D.C. of each armour left out of `mdc` and stated in its description |
 
 ### What remains
 
@@ -274,7 +275,7 @@ That run's `BACKLOG` block, which this book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains except its first line: the four spell
-batches (levels one to five, `-spells-a`; six to nine, `-spells-b`; ten to
-twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
-`-spells-d`).
+Everything in *Extraction plan* remains except its first two lines: the four
+spell batches (levels one to five, `-spells-a`; six to nine, `-spells-b`; ten
+to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
+`-spells-d`) and Lord Kreelo's arms (`-kreelo-arms`).
