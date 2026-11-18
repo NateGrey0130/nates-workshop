@@ -269,11 +269,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~353-megaverse-in-flames-npcs-c.sql` was applied: the book's *BY BOOK*
+`~354-megaverse-in-flames-npcs-d.sql` was applied: the book's *BY BOOK*
 line (traceable / other) is
 
 ```
-  megaverse-in-flames 114 / 0
+  megaverse-in-flames 117 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
