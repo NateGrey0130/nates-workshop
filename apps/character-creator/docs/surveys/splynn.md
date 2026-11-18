@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The plan is under *Extraction plan*. (2026-11-18)
+**Status:** `importing` — the first 12 of the 25 new magic tattoos shipped; the other 13 next. The plan is under *Extraction plan*. (2026-11-18)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 12
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -337,6 +337,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-18 | `pal/docs/splynn-register-survey` | cache built (194 pp, text layer), offset +1 verified by folio at four points, inventory by four readers over all 191 printed pages, production diff; `splynn` registered in `books.json` |
+| 2026-11-18 | `pal/data/splynn-tattoos-a` | spells 12: the 2 magic weapon tattoos and 10 power tattoos of printed 102-104, tradition `tattoo` (`~356-splynn-tattoos-a.sql`) |
 
 ### What remains
 
