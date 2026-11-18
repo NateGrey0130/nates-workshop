@@ -620,6 +620,22 @@
       "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,468 chars/page. Offset verified by folio: 190 pages agree, the 2 that do not are contents pages. Surveyed 2026-09-10; apps/character-creator/docs/surveys/spirit-west.md is the record of what cites it."
     },
 
+    "splynn": {
+      "title": "Rifts World Book 21: Splynn Dimensional Market",
+      "published": 1999,
+      "aliases": [
+        "Splynn Dimensional Market",
+        "Rifts Splynn Dimensional Market",
+        "Rifts Atlantis Two",
+        "Rifts World Book 21 Splynn Dimensional Market"
+      ],
+      "source_pdf": "Rifts- World Book 21 Splynn Dimensional Market (Rifts Atlantis 2).pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 191,
+      "page_offset": 1,
+      "note": "Cached 2026-11-18 from its TEXT LAYER (--probe median 3,349 chars/page, 38.3% stop words), 194 PDF pages. Offset +1 read off the folios at cache p072 (71), p163 (162) and p192 (191), and off the Contents (the market opens on printed 7 at cache p008); one region. printed_pages is 191, the last numbered folio, at cache p192; cache p193 is an advertisement and p194 the back cover. welded_pages is empty. corrupt_pages is cache 103 (one glyph; printed 102, the first page of the new magic tattoos, read off a render). substituted_digits lists 63 cache pages: a figure there is read as the dice expression it can only be, and confirmed on a render. published is the first-printing year on cache p003. See apps/character-creator/docs/surveys/splynn.md."
+    },
+
     "triax": {
       "title": "Rifts World Book 5: Triax and the NGR",
       "published": 1994,
