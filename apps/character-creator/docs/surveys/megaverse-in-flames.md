@@ -257,11 +257,11 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-17, after `~344`
-and `~345` were applied: the book's *BY BOOK* line (traceable / other) is
+From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after `~346`
+was applied: the book's *BY BOOK* line (traceable / other) is
 
 ```
-  megaverse-in-flames  65 / 0
+  megaverse-in-flames  85 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
