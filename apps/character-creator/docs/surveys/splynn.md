@@ -253,14 +253,38 @@ before the NPCs levelled in them. Branch prefix `pal/data/splynn-`.
 8. `flying-ships-compare`: the four held Atlantis flying ships read against
    printed 190.
 9. `animals`: the Demonrunner and the Kryygorth Shellback (71-73, 79-80) as
-   creatures, with the Shellback armour tiers.
+   creatures, with the three Shellback armour tiers as gear; then
+   `creatures-a` to `-c`: each slave-stock race as a creatures row as well as
+   a class (the three Kryygorth and the Octoman; the Plant-People, Pythonan
+   and Rulian; the three Staphra and both Were-Dragon forms), through
+   `scripts/bestiary-sql.mjs`.
 10. `class-<id>`: one class per branch, fourteen of them.
 11. `npcs-a` to `-e`: the 15 full blocks and Crazy Al, through
     `scripts/bestiary-sql.mjs`.
 12. `pal/docs/splynn-close-out`.
 
-Standing rulings that govern it:
+Rulings that govern it:
 
+- **Each slave-stock race is a class and a creatures row. RULED (Nate,
+  2026-11-18).** The class is what a player picks; the creatures row is the
+  same block for the Game Master, as Lemuria and Baalgor did. Kryygorth's
+  Lesson's creatures row carries the full creature and its class the
+  emancipated form. Not taken: classes only (the recommendation), and
+  creatures only.
+- **The True Bio-Borg is imported with its creation tables in the class, and
+  the gap is filed. RULED (Nate, 2026-11-18).** The six orientations, the
+  determination table and the five augmentation tables go in as pick or roll
+  groups where the class frontmatter expresses them; what does not fit is
+  stated in the class and filed in `BOOK-INGEST-AUDIT.md`. No schema change
+  and no code. Not taken: the tables as prose only, and leaving the class
+  out.
+- **The market goods, the vehicle add-ons and the Shellback armour are gear
+  rows. RULED (Nate, 2026-11-18).** Sixteen, eleven and three rows. The slave
+  price table is left out. Not taken: leaving any of the three groups as
+  rules, and filing the price table as a gap.
+- **The Spd figure printed as 44 is stored as +4. RULED (Nate, 2026-11-18).**
+  On printed 109 and 160, with the printed digits in a note. Not taken: 44 as
+  printed.
 - **Newest printing wins (Nate, 2026-10-04).** The 46 gear and vehicles rows
   held from the Book of Magic (2001) are the newer printing of entries this
   book (1999) introduced, and are left as they are. The four flying ships held
@@ -271,8 +295,26 @@ Standing rulings that govern it:
   The arena champions, the other proprietors and Powerlord Reytan do not.
 - **A book-flagged class is imported with its flag (Nate, 2026-11-17, on
   Megaverse in Flames).** The Plant-People carry the book's advice against
-  playing them; Kryygorth's Lesson is imported in its emancipated, playable
-  form with the full creature's figures in its notes.
+  playing them; Kryygorth's Lesson is imported in its emancipated form.
+- **The Monster Were-Dragon is a class of its own; the Pythonan scholar is a
+  variant of the Pythonan.** Taken on the recommendation, 2026-11-18: the
+  Monster form has its own ladder, skill list and M.D.C., and the scholar
+  changes skills and equipment only. Not taken: one Were-Dragon class with
+  two forms, and a second Pythonan class.
+- **The bow and winged-arrow tattoos are rows.** Taken on the recommendation,
+  2026-11-18: the archer must hold both, so 25 tattoo rows, the two carrying
+  what 104-105 state. Not taken: leaving them as class prose.
+- **Racial psionic powers stay in their class.** Taken on the recommendation,
+  2026-11-18: the Pythonan's two powers and the Warlord's bolt are class
+  abilities, and the archer's bow proficiency a class ability beside the held
+  `W.P. Sharpshooting`. Not taken: psionic_powers and skills rows for them.
+- **Each vehicle size class is a row.** Taken on the recommendation,
+  2026-11-18, as the held flying ships are: four Sky-Flyers, four airships.
+  Not taken: one row per heading.
+- **Sergeant Beta is an NPC row.** Taken on the recommendation, 2026-11-18:
+  the book prints one robot, no model block. Not taken: a vehicles row.
+- **Staphra is the spelling**, off the headings; the ids are
+  `staphra-warrior`, `staphra-warlord` and `staphra-mystic`.
 
 What is deliberately left, with the reason for each:
 
@@ -290,14 +332,6 @@ What is deliberately left, with the reason for each:
   class, no row of their own;
 - the Gemini Demon sketch (30) and the Haardeon inside the jet pack
   (181-182): no block of their own.
-
-Open until Nate rules, each with the recommendation the plan above assumes:
-whether a slave-stock race is also a creatures row (assumed: no, a class
-only); how the True Bio-Borg's creation tables are carried (assumed: in the
-class, with a gap filed for what the frontmatter cannot roll); whether the
-market goods and vehicle add-ons are rows (assumed: yes); and how the Spd
-figure printed as 44 is stored (assumed: +4, with the printed digits in a
-note).
 
 ## Ledger
 
