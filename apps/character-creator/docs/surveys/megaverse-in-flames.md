@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The plan is under *Extraction plan*. (2026-11-17)
+**Status:** `importing` — Soulmancy spells levels one to five shipped; the rest of the spells next. (2026-11-17)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 18
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -248,13 +248,18 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-17 | `pal/docs/megaverse-in-flames-register-survey` | cache built (194 pp, text layer), offset +1 verified by folio at five points, inventory and production diff; `megaverse-in-flames` registered in `books.json` |
+| 2026-11-17 | `pal/data/megaverse-in-flames-spells-a` | `~340`: 18 spells rows, Soulmancy levels one to five (91-96), new tradition `soulmancy`; Death Trance not joined to the RUE row by `same_spell_as` (the duration differs; ruled 2026-11-17), the RUE figure in its `variant_note` |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-17: the book has no
-*BY BOOK* line yet, because no row cites it. Its cache is counted among the
-registered books present (194 pages). That run's `BACKLOG` block, which this
-book has not moved:
+From `node scripts/source-coverage.mjs --remote`, 2026-11-17, after `~340`
+was applied: the book's *BY BOOK* line (traceable / other) is
+
+```
+  megaverse-in-flames  18 / 0
+```
+
+That run's `BACKLOG` block, which this book has not moved:
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -266,4 +271,5 @@ book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains.
+Everything in *Extraction plan* remains except the first spell batch (levels
+one to five, `-spells-a`).
