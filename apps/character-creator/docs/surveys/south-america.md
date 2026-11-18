@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1375-#1400: gear, Biomancy spells, vehicles, 8 O.C.C.s, 16 R.C.C.s, creatures and notable NPCs. (2026-09-25)
 
-**Rows citing this book:** classes 23, gear 35, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 25
+**Rows citing this book:** classes 22, gear 35, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 25
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -312,6 +312,7 @@ What is deliberately left, with the reason:
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 1 classes of this book (`jungle-elf`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c1-draconid-felinoid-oni` | **The Felinoid's strain reductions and Horror Factor 10 are applied** (`~160`, close-out package C1; `BOOK-INGEST-AUDIT` F119). Printed 109 read off a render and checked again by `book-reconcile`: lion I.Q. -1D4, leopard M.E. -1D6, puma M.A. -1D4, tiger Spd -1D6, and the small cats M.E., P.S. and Spd -1D6 each, as signed dice on the Strain options; the four larger cats restate Horror Factor 10. No rows added. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c2-roll-tables` | **The Anti-Monster's obsession table is a pick** (`~161`, close-out package C2): five bands on printed 36, plus an unbanded `Obsession: None` for an Anti-Monster outside the 80% the page says develop one (the page prints no roll for the 80% itself). Read off a render and checked by `book-reconcile`. No rows added. Applied `--remote` before the merge. |
+| 2026-11-18 | `pal/data/megaverse-in-flames-class-anti-monster-compare` | **The Anti-Monster now cites Megaverse in Flames** (`~350`): that book reprints it, updated (printed 185-188), and the held class takes the reprint's figures and citation by the 2026-11-17 ruling (newest printing wins), so this book's class count drops by one. Each figure this book printed differently is kept in the class's `extraction_notes`; the Megaverse in Flames survey's ledger lists them. Applied `--remote` before the merge. |
 
 ### What remains
 
