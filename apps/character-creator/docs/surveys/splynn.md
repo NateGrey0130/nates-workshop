@@ -341,10 +341,15 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-18: the book has no
-*BY BOOK* line yet, because no row cites it. Its cache is counted among the
-registered books present (194 pages). That run's `BACKLOG` block, which this
-book has not moved:
+From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
+`~356-splynn-tattoos-a.sql` was applied, the book's *BY BOOK* line
+(traceable / other):
+
+```
+  splynn              12 / 0
+```
+
+That run's `BACKLOG` block, which this book has not moved:
 
 ```
   BACKLOG       rows an importer created and nobody finished
