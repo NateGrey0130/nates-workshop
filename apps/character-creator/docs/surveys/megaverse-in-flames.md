@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — Soulmancy spells levels one to twelve shipped; levels thirteen and up next. (2026-11-17)
+**Status:** `importing` — all 55 Soulmancy spells shipped; the Kreelo arms next. (2026-11-17)
 
-**Rows citing this book:** spells 42
+**Rows citing this book:** spells 55
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -251,6 +251,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-a` | `~340`: 18 spells rows, Soulmancy levels one to five (91-96), new tradition `soulmancy`; Death Trance not joined to the RUE row by `same_spell_as` (the duration differs; ruled 2026-11-17), the RUE figure in its `variant_note` |
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-b` | `~341`: 14 spells rows, Soulmancy levels six to nine (96-100); `Soulmancy: Life Drain` joined to the RUE `Life Drain` by `same_spell_as` (same level, cost, range, duration and save) |
 | 2026-11-17 | `pal/data/megaverse-in-flames-spells-c` | `~342`: 10 spells rows, Soulmancy levels ten to twelve (100-105); `Soulmancy: Soultwist` joined to the Book of Magic `Soultwist` by `same_spell_as` (same level, cost, range, duration and save) |
+| 2026-11-17 | `pal/data/megaverse-in-flames-spells-d` | `~343`: 13 spells rows, Soulmancy levels thirteen to fifteen (105-110) and the three Spells of Legend (110-111), which take level 15 and a `ppe_note` opening "A Spell of Legend, beyond the fifteen levels"; no `same_spell_as` (`Soulmancy: Permanency (Ritual)` is not Nazca's); Summon Demon Planet costs 2,000 by its description, the list's 5,000 +35,600 in its `variant_note` |
 
 ### What remains
 
@@ -273,6 +274,7 @@ That run's `BACKLOG` block, which this book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains except the first three spell batches
-(levels one to five, `-spells-a`; six to nine, `-spells-b`; ten to twelve,
-`-spells-c`).
+Everything in *Extraction plan* remains except its first line: the four spell
+batches (levels one to five, `-spells-a`; six to nine, `-spells-b`; ten to
+twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
+`-spells-d`).
