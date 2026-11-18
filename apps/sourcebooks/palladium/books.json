@@ -1443,6 +1443,36 @@
    "total": 270
   },
   {
+   "slug": "megaverse-in-flames",
+   "title": "Rifts World Book 35: Megaverse in Flames",
+   "code": "megaverse-in-flames",
+   "status": "imported",
+   "date": "2026-11-18",
+   "added": [
+    [
+     "Classes",
+     3
+    ],
+    [
+     "Gear",
+     39
+    ],
+    [
+     "Notable NPCs",
+     16
+    ],
+    [
+     "Spells",
+     55
+    ],
+    [
+     "Vehicles",
+     7
+    ]
+   ],
+   "total": 120
+  },
+  {
    "slug": "old-ones",
    "title": "The Palladium RPG Book II: Old Ones",
    "code": "old-ones",

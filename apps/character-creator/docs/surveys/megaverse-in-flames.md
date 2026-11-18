@@ -1,6 +1,6 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, the held Anti-Monster brought to this printing, all seven Hell Lords, Lord Kreelo, Overlords Shard, Necroskull, Shade, Dai, Sindel and Sthena with Dai's mount Spike, and Queen Marauder. (2026-11-18)
+**Status:** `imported` — the plan is done: the 55 Soulmancy spells, 39 gear rows (Lord Kreelo's arms, the Minion War arms race, the Dyval arms and the two rune items), 7 vehicles (the Chaos Trooper power armour, three war vehicles and three Hell ships), the Soulmancer and Blood Warrior O.C.C.s (flagged NPC villains, by ruling), the held Anti-Monster brought to this printing, and the 16 NPCs (the seven Hell Lords, Lord Kreelo, the six Deevil overlords, Spike and Queen Marauder). What was left out on purpose is under *Extraction plan*. (2026-11-18)
 
 **Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55, notable_npcs 16
 
@@ -245,6 +245,17 @@ What is deliberately left, with the reason for each:
   person;
 - the epilogue and outcomes (175-192), apart from the class it carries.
 
+The plan ran as 33 rows, ending with `pal/docs/megaverse-in-flames-close-out`
+on 2026-11-18. Besides the list above it left, on purpose, the held Atlantis
+`eylor-slave-barge` and South America `demon-black-ship` untouched; Death
+Trance unjoined to the RUE row (its duration differs); the rolled M.D.C. of
+the Flesh and Bone Armors and the Demon Bows in their descriptions rather
+than `mdc`; the Soulmancer's Soul Crystals and tools as class prose with no
+gear row; the armour, weapons and battle platform of Shade, Dai, Spike, Sthena and
+Queen Marauder carried in their NPC rows with no gear row; and the
+Anti-Monster's secondary-skill limit kept from South America, which this
+printing does not state (all named in the ledger).
+
 ## Ledger
 
 | date | branch | what went in |
@@ -266,21 +277,25 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-c` | `~353`: 3 notable_npcs rows with 13 stat_attacks, Lord Kreelo (111-113) and Overlords Shard (152-156) and Necroskull (156-158); Kreelo's Megaverse Armaments wares named in his row and held as their own gear and vehicles rows (`~344`, `~345`); Shard's Maggot Eye Amulet and Hell Rifle named in his row and held as gear (`~348`), his two personalities' figures in one row (Grim's combat figures, Shard's attributes, the other set in `bonuses_note`); S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-d` | `~354`: 3 notable_npcs rows with 20 stat_attacks, Overlords Shade (158-161) and Dai (162-163) and Spike the Hangdog Daemonix (163-164), Dai's mount and lieutenant; Shade's dragon-bone rune club and Dragon Hide armor, Dai's Dragon Rod and cloak and Spike's battle platform carried in their rows, and no gear row added for them; Spike's power kick and horn gore print no unit and are stored as M.D. with a note; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-e` | `~355`: 3 notable_npcs rows with 23 stat_attacks, Overlords Sindel (165-168) and Sthena (169-171) and Queen Marauder (172-173); Sindel's Rune axe Deceiver named in his row and held as its own gear row (`deceiver`, `~349`); Sthena's armor, bow and flail and Marauder's armor, shield and Spear of Fire carried in their rows, and no gear row added for them; Sindel's power punch prints no unit and is stored as M.D. with a note; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
+| 2026-11-18 | `pal/docs/megaverse-in-flames-close-out` | Close-out, no D1 write. Production counted first: spells (tradition `soulmancy`) 55, gear 39, vehicles 7, notable_npcs 16, and `soulmancer` and `blood-warrior` in `imported_classes`, as the ledger sums. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~355-megaverse-in-flames-npcs-e.sql` was applied: the book's *BY BOOK*
-line (traceable / other) is
+From `node scripts/source-coverage.mjs --remote`, 2026-11-18, on
+`pal/docs/megaverse-in-flames-close-out`, its *BY BOOK* line for this book
+(traceable / other), as printed:
 
 ```
   megaverse-in-flames 120 / 0
 ```
 
-That run's `BACKLOG` block, which this book has not moved:
+All 120 rows are traceable to a cached page (55 + 39 + 7 + 16 + 3), and no
+Megaverse in Flames row appears under `unknown-book` or `not-cached`. That
+run's `BACKLOG` block, unchanged from the survey's 2026-11-17 block, so this
+book left nothing unfinished:
 
 ```
-  BACKLOG       rows an importer created and nobody finished
+BACKLOG       rows an importer created and nobody finished
     gear stubs            13   description still says STUB — created by class import
     skill stubs            5   created by an import and never given a base %, a bonus or a note
     spell stubs           56   level 0 and 0 P.P.E.
