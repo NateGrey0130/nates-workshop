@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `surveyed` — cached, inventoried and diffed against production; nothing imported yet. The plan is under *Extraction plan*. (2026-11-17)
+**Status:** `importing` — Soulmancy spells levels one to five shipped; the rest of the spells next. (2026-11-17)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 18
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -248,6 +248,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-17 | `pal/docs/megaverse-in-flames-register-survey` | cache built (194 pp, text layer), offset +1 verified by folio at five points, inventory and production diff; `megaverse-in-flames` registered in `books.json` |
+| 2026-11-17 | `pal/data/megaverse-in-flames-spells-a` | `~340`: 18 spells rows, Soulmancy levels one to five (91-96), new tradition `soulmancy`; Death Trance not joined to the RUE row by `same_spell_as` (the duration differs; ruled 2026-11-17), the RUE figure in its `variant_note` |
 
 ### What remains
 
