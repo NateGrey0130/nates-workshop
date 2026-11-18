@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped; the Anti-Monster comparison next. (2026-11-18)
+**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, and the held Anti-Monster brought to this printing. (2026-11-18)
 
-**Rows citing this book:** classes 2, gear 39, vehicles 7, spells 55
+**Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -120,8 +120,10 @@ meant as player characters, and both restrict alignment to evil. They are
 imported anyway, flagged, by ruling (below).
 
 The Anti-Monster is held from South America as `anti-monster`, published.
-This book's entry says it is that class reprinted and updated; what changed
-is not known until the two are read side by side.
+This book's entry says it is that class reprinted and updated. Read side by
+side (2026-11-18), the two differ on eleven points, listed in the ledger, so
+the held class takes this printing's figures and citation (`~350`), with
+each South America figure kept in its notes.
 
 ## Catalog diff
 
@@ -258,15 +260,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/megaverse-in-flames-rune-items` | `~349`: 2 gear rows, Hell Lord Rune's armor Soul Steel (69-70) and Overlord Sindel's Rune axe Deceiver (167-168); Soul Steel's `mdc` holds the chest plate's 1,000 (the book's main body) with every location in its description; neither prints a price, so `cost` is empty |
 | 2026-11-18 | `pal/data/megaverse-in-flames-class-soulmancer` | `add-soulmancer-class.sql`: 1 classes row, the Soulmancer O.C.C. (85-88), published, tagged `evil`, the book's NPC-villain note as its first restriction; nine starting spells and a named list of the 52 Soulmancy spells that are not Spells of Legend; the class page's Read Soul (30), Create Soul Crystal (30), Consume Soul (35) and Pseudo Life stored by their catalog names and costs; Literacy: Demongogian a Literacy: Other pick; Soul Crystals, the lesser magical knife, cauldron, ice pick and saw are prose, with no gear row |
 | 2026-11-18 | `pal/data/megaverse-in-flames-class-blood-warrior` | `add-blood-warrior-class.sql`: 1 classes row, the Blood Warrior O.C.C. (88-91), published, tagged `evil`, the book's NPC-villain note as its first restriction; occ_group magic off the *Magic Powers* heading; Soulmancy picks as two named lists (levels 1-3 and 1-7); `mdc_from_hp_sdc` with the level-one 1D6 M.D.C. as a bonus and the further 1D6 per level as prose, so `regression`'s converting-classes pin now names the Blood Warrior; Literacy: Demongogian a Literacy: Other pick; the demonic symbol is `holy-symbol`, the rest of the gear in restrictions |
+| 2026-11-18 | `pal/data/megaverse-in-flames-class-anti-monster-compare` | `~350`: the held `anti-monster` class (South America 34-37) brought to the reprint (185-188) and re-cited to this book, so South America's class count drops by one; the markdown replaced whole, guarded on the old spell sentence and production's length 19884. What differed: spells four times a day at a 5th level Ley Line Walker (was three, at a 5th level wizard; `trackable_resources` max 3 to 4); weight 400-800 lbs; alignment percentages (Scrupulous 30%, Unprincipled 30%, Anarchist 15%, Aberrant 15%); Sense Psychic and Magic Energy tripled along ley lines; the identify list (demons, Deevils, vampires, Soulmancers, Blood Warriors); obsession 61-80 and the P.S. damage table pointed at Rifts Ultimate Edition (p.332, p.285); Cowboy (any) and Horsemanship (any +5%) among the related skills; the H2H upgrade paid with an O.C.C. Related skill; a silver cross, wooden cross, 20 wooden stakes, mallet and flashlight in the equipment; salves in the potion restriction. Secondary skills keep South America's list limit (this printing states none), recorded in the notes. Applied `--remote` before the merge |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`add-blood-warrior-class.sql` was applied: the book's *BY BOOK* line
-(traceable / other) is
+`~350-megaverse-in-flames-anti-monster.sql` was applied: the book's *BY BOOK*
+line (traceable / other) is
 
 ```
-  megaverse-in-flames 103 / 0
+  megaverse-in-flames 104 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -281,11 +284,11 @@ That run's `BACKLOG` block, which this book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains except its first six lines: the four
+Everything in *Extraction plan* remains except its first seven lines: the four
 spell batches (levels one to five, `-spells-a`; six to nine, `-spells-b`; ten
 to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
 `-spells-d`), Lord Kreelo's arms (`-kreelo-arms`), the arms race
 (`-arms-race`), the Dyval arms (`-dyval-arms`), the rune items
 (`-rune-items`), the Soulmancer (`-class-soulmancer`) and the Blood Warrior
-(`-class-blood-warrior`). The Anti-Monster comparison
-(`-class-anti-monster-compare`) is next.
+(`-class-blood-warrior`), and the Anti-Monster comparison
+(`-class-anti-monster-compare`).
