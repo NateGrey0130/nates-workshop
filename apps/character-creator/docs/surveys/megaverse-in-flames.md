@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, the held Anti-Monster brought to this printing, and the first three Hell Lords. (2026-11-18)
+**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, the held Anti-Monster brought to this printing, and all seven Hell Lords. (2026-11-18)
 
-**Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55, notable_npcs 3
+**Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55, notable_npcs 7
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -262,15 +262,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/megaverse-in-flames-class-blood-warrior` | `add-blood-warrior-class.sql`: 1 classes row, the Blood Warrior O.C.C. (88-91), published, tagged `evil`, the book's NPC-villain note as its first restriction; occ_group magic off the *Magic Powers* heading; Soulmancy picks as two named lists (levels 1-3 and 1-7); `mdc_from_hp_sdc` with the level-one 1D6 M.D.C. as a bonus and the further 1D6 per level as prose, so `regression`'s converting-classes pin now names the Blood Warrior; Literacy: Demongogian a Literacy: Other pick; the demonic symbol is `holy-symbol`, the rest of the gear in restrictions |
 | 2026-11-18 | `pal/data/megaverse-in-flames-class-anti-monster-compare` | `~350`: the held `anti-monster` class (South America 34-37) brought to the reprint (185-188) and re-cited to this book, so South America's class count drops by one; the markdown replaced whole, guarded on the old spell sentence and production's length 19884. What differed: spells four times a day at a 5th level Ley Line Walker (was three, at a 5th level wizard; `trackable_resources` max 3 to 4); weight 400-800 lbs; alignment percentages (Scrupulous 30%, Unprincipled 30%, Anarchist 15%, Aberrant 15%); Sense Psychic and Magic Energy tripled along ley lines; the identify list (demons, Deevils, vampires, Soulmancers, Blood Warriors); obsession 61-80 and the P.S. damage table pointed at Rifts Ultimate Edition (p.332, p.285); Cowboy (any) and Horsemanship (any +5%) among the related skills; the H2H upgrade paid with an O.C.C. Related skill; a silver cross, wooden cross, 20 wooden stakes, mallet and flashlight in the equipment; salves in the potion restriction. Secondary skills keep South America's list limit (this printing states none), recorded in the notes. Applied `--remote` before the merge |
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-a` | `~351`: 3 notable_npcs rows with 18 stat_attacks, Hell Lords Doom (51-54), Pain (56-60) and Heart Ripper (62-65); Pain's Eylor Slave Barge carried in his row by ruling, the held Atlantis barge untouched; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
+| 2026-11-18 | `pal/data/megaverse-in-flames-npcs-b` | `~352`: 4 notable_npcs rows with 17 stat_attacks, Hell Lords Rune (67-69), Zugard (72-75), Fury (77-80) and Siren (81-84); Rune's Soul Steel named in her row and held as its own gear row (`soul-steel`, `~349`); Fury's two printed kick figures both kept as attacks, each noting the other; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~351-megaverse-in-flames-npcs-a.sql` was applied: the book's *BY BOOK*
+`~352-megaverse-in-flames-npcs-b.sql` was applied: the book's *BY BOOK*
 line (traceable / other) is
 
 ```
-  megaverse-in-flames 107 / 0
+  megaverse-in-flames 111 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -293,4 +294,6 @@ to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
 (`-rune-items`), the Soulmancer (`-class-soulmancer`) and the Blood Warrior
 (`-class-blood-warrior`), and the Anti-Monster comparison
 (`-class-anti-monster-compare`). Of the eighth line, the first NPC batch
-(`-npcs-a`: Doom, Pain and Heart Ripper) is in; thirteen NPCs remain.
+(`-npcs-a`: Doom, Pain and Heart Ripper) and the second (`-npcs-b`: Rune,
+Zugard, Fury and Siren) are in, so all seven Hell Lords are; Lord Kreelo and
+the eight Deevil overlords, nine NPCs, remain.
