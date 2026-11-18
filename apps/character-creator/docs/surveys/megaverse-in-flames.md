@@ -1,8 +1,8 @@
 # Rifts World Book 35: Megaverse in Flames — survey
 
-**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, the held Anti-Monster brought to this printing, all seven Hell Lords, Lord Kreelo and Overlords Shard and Necroskull. (2026-11-18)
+**Status:** `importing` — all 55 Soulmancy spells, Lord Kreelo's arms, the Minion War arms race, the Dyval arms, the two rune items, the Soulmancer and the Blood Warrior shipped, the held Anti-Monster brought to this printing, all seven Hell Lords, Lord Kreelo and Overlords Shard, Necroskull, Shade and Dai with Dai's mount Spike. (2026-11-18)
 
-**Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55, notable_npcs 10
+**Rows citing this book:** classes 3, gear 39, vehicles 7, spells 55, notable_npcs 13
 
 Slug `megaverse-in-flames`. Cached 2026-11-17 from
 `Rifts - World Book 35 - Megaverse in Flames - PAL876P.pdf`, 194 PDF pages,
@@ -264,15 +264,16 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-a` | `~351`: 3 notable_npcs rows with 18 stat_attacks, Hell Lords Doom (51-54), Pain (56-60) and Heart Ripper (62-65); Pain's Eylor Slave Barge carried in his row by ruling, the held Atlantis barge untouched; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-b` | `~352`: 4 notable_npcs rows with 17 stat_attacks, Hell Lords Rune (67-69), Zugard (72-75), Fury (77-80) and Siren (81-84); Rune's Soul Steel named in her row and held as its own gear row (`soul-steel`, `~349`); Fury's two printed kick figures both kept as attacks, each noting the other; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 | 2026-11-18 | `pal/data/megaverse-in-flames-npcs-c` | `~353`: 3 notable_npcs rows with 13 stat_attacks, Lord Kreelo (111-113) and Overlords Shard (152-156) and Necroskull (156-158); Kreelo's Megaverse Armaments wares named in his row and held as their own gear and vehicles rows (`~344`, `~345`); Shard's Maggot Eye Amulet and Hell Rifle named in his row and held as gear (`~348`), his two personalities' figures in one row (Grim's combat figures, Shard's attributes, the other set in `bonuses_note`); S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
+| 2026-11-18 | `pal/data/megaverse-in-flames-npcs-d` | `~354`: 3 notable_npcs rows with 20 stat_attacks, Overlords Shade (158-161) and Dai (162-163) and Spike the Hangdog Daemonix (163-164), Dai's mount and lieutenant; Shade's dragon-bone rune club and Dragon Hide armor, Dai's Dragon Rod and cloak and Spike's battle platform carried in their rows, and no gear row added for them; Spike's power kick and horn gore print no unit and are stored as M.D. with a note; S.D.C.-setting Hit Points, S.D.C. and A.R. kept with a note. Applied `--remote` before the merge |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~353-megaverse-in-flames-npcs-c.sql` was applied: the book's *BY BOOK*
+`~354-megaverse-in-flames-npcs-d.sql` was applied: the book's *BY BOOK*
 line (traceable / other) is
 
 ```
-  megaverse-in-flames 114 / 0
+  megaverse-in-flames 117 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -297,5 +298,6 @@ to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
 (`-class-anti-monster-compare`). Of the eighth line, the first NPC batch
 (`-npcs-a`: Doom, Pain and Heart Ripper) and the second (`-npcs-b`: Rune,
 Zugard, Fury and Siren) are in, so all seven Hell Lords are, and the third
-(`-npcs-c`: Lord Kreelo and Overlords Shard and Necroskull). Six Deevil
-overlords remain: Shade, Dai, Spike, Sindel, Sthena and Queen Marauder.
+(`-npcs-c`: Lord Kreelo and Overlords Shard and Necroskull), and the fourth
+(`-npcs-d`: Overlords Shade and Dai, and Spike). Three Deevil overlords
+remain: Sindel, Sthena and Queen Marauder.
