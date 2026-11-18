@@ -270,11 +270,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~354-megaverse-in-flames-npcs-d.sql` was applied: the book's *BY BOOK*
+`~355-megaverse-in-flames-npcs-e.sql` was applied: the book's *BY BOOK*
 line (traceable / other) is
 
 ```
-  megaverse-in-flames 117 / 0
+  megaverse-in-flames 120 / 0
 ```
 
 That run's `BACKLOG` block, which this book has not moved:
@@ -300,5 +300,6 @@ to twelve, `-spells-c`; thirteen to fifteen and the Spells of Legend,
 (`-npcs-a`: Doom, Pain and Heart Ripper) and the second (`-npcs-b`: Rune,
 Zugard, Fury and Siren) are in, so all seven Hell Lords are, and the third
 (`-npcs-c`: Lord Kreelo and Overlords Shard and Necroskull), and the fourth
-(`-npcs-d`: Overlords Shade and Dai, and Spike). Three Deevil overlords
-remain: Sindel, Sthena and Queen Marauder.
+(`-npcs-d`: Overlords Shade and Dai, and Spike), and the fifth (`-npcs-e`:
+Overlords Sindel and Sthena, and Queen Marauder), so all 16 NPCs are in. The
+close-out (`pal/docs/megaverse-in-flames-close-out`) remains.
