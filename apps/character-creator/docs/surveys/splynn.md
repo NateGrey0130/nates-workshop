@@ -5,8 +5,7 @@
 **Rows citing this book:** none
 
 Slug `splynn`. Cached 2026-11-18 from
-`Rifts- World Book 21 Splynn Dimensional Market (Rifts Atlantis 2).pdf`,
-194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
+`Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
 words).
 
 *Facts about this book, not prose from it — see `book-survey` §7. Keep this
