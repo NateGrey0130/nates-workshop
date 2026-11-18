@@ -252,10 +252,14 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-17: the book has no
-*BY BOOK* line yet, because no row cites it. Its cache is counted among the
-registered books present (194 pages). That run's `BACKLOG` block, which this
-book has not moved:
+From `node scripts/source-coverage.mjs --remote`, 2026-11-17, after `~340`
+was applied: the book's *BY BOOK* line (traceable / other) is
+
+```
+  megaverse-in-flames  18 / 0
+```
+
+That run's `BACKLOG` block, which this book has not moved:
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -267,4 +271,5 @@ book has not moved:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* remains.
+Everything in *Extraction plan* remains except the first spell batch (levels
+one to five, `-spells-a`).
