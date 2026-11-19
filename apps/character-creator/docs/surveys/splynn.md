@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped. The plan is under *Extraction plan*. (2026-11-18)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, and all 12 new arms of printed 162-172. The plan is under *Extraction plan*. (2026-11-18)
 
-**Rows citing this book:** gear 30, spells 25
+**Rows citing this book:** gear 42, spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -342,18 +342,19 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/splynn-parasites-a` | gear 8: the first 8 of the 19 Bio-Wizard parasites, Beastifier to Living Armor, printed 112-119, category `magic` (`~358-splynn-parasites-a.sql`) |
 | 2026-11-18 | `pal/data/splynn-parasites-b` | gear 11: the last 11 of the 19 Bio-Wizard parasites, Locater to Temporal Link, printed 119-127, category `magic` (`~359-splynn-parasites-b.sql`) |
 | 2026-11-18 | `pal/data/splynn-symbiotes` | gear 11: the 11 Bio-Wizard symbiotes, Aqua-Mask to Zembahk Appendage, printed 128-137, category `magic` (`~360-splynn-symbiotes.sql`) |
+| 2026-11-18 | `pal/data/splynn-arms` | gear 12: the three D-Squad devices (Line Lockers, Time-Lock, Barrier Projectors) of printed 162, the four Kittani plasma weapons of 162-164, the two Octurill and two Kizh weapons of 170-171 and the Power Jaw Helmet of 172, category `weapon` (`~361-splynn-arms.sql`) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~360-splynn-symbiotes.sql` was applied, the book's *BY BOOK* line
+`~361-splynn-arms.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              55 / 0
+  splynn              67 / 0
 ```
 
-That run's `BACKLOG` block, unchanged by the organisms. The tattoos moved
+That run's `BACKLOG` block, unchanged by the organisms and the arms. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -368,5 +369,5 @@ it is stored at 0 with a note.
 ```
 
 Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
-`parasites-a` and `parasites-b` shipped and the 11 symbiotes `symbiotes`
-shipped.
+`parasites-a` and `parasites-b` shipped, the 11 symbiotes `symbiotes`
+shipped and the 12 arms of line 3 `arms` shipped.
