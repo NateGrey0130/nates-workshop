@@ -346,14 +346,14 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~359-splynn-parasites-b.sql` was applied, the book's *BY BOOK* line
+`~360-splynn-symbiotes.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              44 / 0
+  splynn              55 / 0
 ```
 
-That run's `BACKLOG` block, unchanged by the parasites. The tattoos moved
+That run's `BACKLOG` block, unchanged by the organisms. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
