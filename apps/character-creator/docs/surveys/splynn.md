@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111, the first of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, two of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** classes 1, gear 72, vehicles 17, skills 1, spells 25, creatures 14
+**Rows citing this book:** classes 2, gear 72, vehicles 17, skills 1, spells 25, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -353,20 +353,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-creatures-b` | creatures 3: the Nurilian Plant-People (printed 82-85, 0 attacks), Pythonan (85-87, 4 attacks) and Rulian Translator (87-90, 0 attacks) as `creatures` rows, category `humanoid`, all three playable; 4 attacks in all; their classes are not in this script (`~372-splynn-creatures-b.sql`) |
 | 2026-11-19 | `pal/data/splynn-creatures-c` | creatures 5: the Staphra Warrior (printed 90-93, 1 attack), Staphra Warlord (93-95, 3 attacks), Staphra Mystic (95-97, 0 attacks), Were-Dragon (97-101, 3 attacks) and Monster Were-Dragon (98-101, 6 attacks) as `creatures` rows, category `humanoid`, all five playable; 13 attacks in all; their classes are not in this script (`~373-splynn-creatures-c.sql`) |
 | 2026-11-19 | `pal/data/splynn-class-tattooed-archer` | classes 1: the Tattooed Archer O.C.C. (printed 108-111), `tattooed-archer`, published, with its own experience table, male and female variants at the book's 100 and 109 M.D.C., race restricted to `none` as the Tattooed Man family (`add-tattooed-archer-class.sql`, no `~NNN`: a class script keeps its name) |
+| 2026-11-19 | `pal/data/splynn-class-true-bio-borg` | classes 1: the True Bio-Borg R.C.C. (printed 154-161), `true-bio-borg`, published, with its own experience table, full and partial conversion variants, the six orientations, the Determination table and the five augmentation tables as pick groups; what the frontmatter could not hold is in its `extraction_notes` and filed as `BOOK-INGEST-AUDIT` F146 (`add-true-bio-borg-class.sql`, no `~NNN`: a class script keeps its name) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-tattooed-archer-class.sql` was applied, the book's *BY BOOK* line
+`add-true-bio-borg-class.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             130 / 0
+  splynn             131 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races and the Tattooed Archer. The tattoos moved
+animals, all twelve races, the Tattooed Archer and the True Bio-Borg. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -391,4 +392,5 @@ line 7 `skyborne` shipped, and the four flying ships line 8
 Shellback armours of line 9 `animals` shipped, and the four races of
 `creatures-a`, the three of `creatures-b` and the five of `creatures-c`
 shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
-`class-tattooed-archer` shipped.
+`class-tattooed-archer` shipped, and the True Bio-Borg, the second,
+`class-true-bio-borg` shipped.

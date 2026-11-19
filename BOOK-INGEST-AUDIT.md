@@ -7106,3 +7106,89 @@ desktop width (852px), not at tablet or phone width. The character and its
 campaign were then deleted. No class note cites this finding
 (`node scripts/audit-citations.mjs --remote F145`, 2026-11-09: 0 of 773 live
 classes).
+
+### F146 - low - the True Bio-Borg's creation tables are pick groups whose budgets, caps and per-level gains stay prose
+
+Splynn Dimensional Market builds the True Bio-Borg R.C.C. (printed 157-161)
+from a chosen orientation, a Determination table that says how many picks go
+to each of five augmentation tables, and those five tables. Nate ruled on
+2026-11-18 that the class is imported with the tables as groups where the
+frontmatter expresses them and the gap filed here, with no schema change and
+no code. `add-true-bio-borg-class.sql` (branch
+`pal/data/splynn-class-true-bio-borg`) is that import; this is the gap. What
+the frontmatter could not hold, each with its printed page, read from the
+script's own lines on this branch, 2026-11-19:
+
+1. **The six orientations (printed 158-159)** are a pick-one group (line 99),
+   but what each grants is description only (lines 93-98): A four
+   Espionage/Wilderness/Rogue skills at +10%, B and C three Physical or W.P.
+   skills at +10%, B Boxing or a free Hand to Hand upgrade, C Performance or
+   Dance, D Wrestling and -5% to other skills, F no secondary skills. An
+   ability option cannot grant a skill or a restricted related pick: `F131`
+   proposed that and was **declined by Nate on 2026-10-11** (its outcome note,
+   under `### F131`), keeping `F24`'s reason. This item is recorded as reach
+   for that decision, not a re-proposal of it.
+2. **The Determination table (printed 159)** is a pick-one band group with a
+   roll button (line 112), but each band says how many picks go to each of
+   the five tables ("once on each table", "two on Table 1, one on Table 3",
+   and so on), and nothing enforces it: each table is a separate group
+   (lines 127, 138, 146, 161, 180).
+3. **Each augmentation table (printed 159-160)** is `choose: 3`, the most any
+   band sends to one table. The cap of a dozen implants or features in all,
+   the G.M.'s 1-3 extra rolls, the roll-again rows and the incompatibilities
+   (Wings against Heaven's Wings) are notes. And the wizard holds every
+   group to its full count before it continues: driven 2026-11-19 on a
+   local server from this branch, the True Bio-Borg's race step read
+   `Choose 17 more powers to continue` (one orientation, one band, three on
+   each of five tables) before any pick, and was driven past it with all 17
+   made. Inferred, not driven: a band that sends one pick to a table still
+   asks for three, because the count is the group's and no band changes it.
+4. **The two M.D.C. Transformations (Table 1, printed 159-160)** store an
+   option `mdc_base` of 75 and 120 (lines 116-117), and the printed +1D6
+   M.D.C. per level is prose, added by hand. Measured 2026-11-19, the cause
+   is the pool grammar and not the option: an option base replaces the class
+   base whole (`applyAbilityPoolBases`, `apps/character-creator/js/abilities.js:457-474`),
+   and a scratch probe of `buildProposal` on a class so composed, with
+   `mdc_base: "75 + 1D6 per level"`, proposed an M.D.C. gain (80 to 89 over
+   two levels). But `poolFormulaBounds` and `rollPoolFormula`
+   (`apps/character-creator/js/dice.js:296`) return null for
+   `"75 + 1D6 per level"`, `"75 plus 1D6 per level"` and `"70+1d6 per level"`
+   while reading `"1D6x10 plus 1D6 per level"`, so `class-check --remote`
+   refuses a bare-number base with a per-level gain (2 errors, `is not a
+   formula the pools read`, on a trial edit of the two lines, reverted).
+5. **Caps and alternatives.** The Guardian's I.Q. maximum of 10 and its Spd
+   halved to a maximum of 12 (printed 158-159), and the Mega-Damage-creature
+   alternatives to the S.D.C. bonuses, +4D6+4 M.D.C. full and +2D6+2 partial
+   (printed 161), are prose: `bonuses:` apply unconditionally.
+6. **The Freak's three "other" skills (printed 158-159)** are read as three
+   more R.C.C. related skills (`related_skills_count` 7), an approximation.
+7. **The Para-Juicer (Orientation F, printed 158-159)** has no row in this
+   book or in production and stays prose.
+
+**Proposal:** one mechanism covers items 2 and 3 and nothing else here: let a
+pick-one option carry a `sends` map (`{ "Table 1": 2, "Table 3": 1 }`) that
+sets the `choose` count of the named groups for this character, with an
+overall cap (`max_total: 12`) on the class. Item 4 is a smaller, separate
+change: teach `dice.js`'s pool reader a bare number followed by a per-level
+gain (`75 + 1D6 per level` rolls 75 at level 1), which the class grammar
+then carries for a class and an option alike; the two lines become
+`"75 + 1D6 per level"` and `"120 + 1D6 per level"` by a `fix-` script once
+it lands. Items 1, 5, 6 and 7 are recorded and proposed
+nothing: 1 is `F131`'s declined subject, 5 is conditional and stays prose by
+the class-data rule, 6 is a reading, and 7 is a class the book does not
+print. **Posture:** proposal only; opt-in keys, no new gate; this PR changes
+no schema and no code. Recommend declining items 2-3 until a second class
+needs a table that budgets another table's picks, since one class carries
+the whole cost; item 4 is worth taking if another class or option prints a fixed
+base with a per-level gain. **Evidence:** the seven items are row 33's
+readings, recorded in the class's `extraction_notes` (line 183) and checked
+with `class-check --remote` (`ready - 0 errors, 0 warnings`, 2026-11-18);
+item 4's mechanism, the line numbers and the `dice.js` reading were run or
+read 2026-11-19. Whether another class needs `sends`, or prints a fixed base
+with a per-level gain, is **not measured**.
+
+**Confidence:** high on the seven gaps, which are the script's own notes;
+low on the reach of the proposal, until someone searches production's class
+markdown for a table that budgets another table. **Ongoing cost:** one more
+key the parser, the wizard and the sheet keep in step, for one class today,
+and one more shape the pool reader accepts.
