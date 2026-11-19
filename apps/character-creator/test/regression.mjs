@@ -5501,7 +5501,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // column (printed 215) for a race whose only occupation is the Vagabond
   // (printed 28), so the printed column is kept for that pairing. The
   // importer's reading, recorded in the survey. Added 2026-10-10.
-  const wantKeepers = ['baalizad', 'draconid'];
+  // Rifts World Book 21: Splynn Dimensional Market printed 85-87 tells the
+  // Pythonan to use the dragon's experience table "regardless of the chosen
+  // O.C.C. or R.C.C.". Added 2026-11-19.
+  const wantKeepers = ['baalizad', 'draconid', 'pythonan'];
   check('the races declaring keeps_xp_table are the pinned ones',
     JSON.stringify(keepers) === JSON.stringify(wantKeepers), `got ${JSON.stringify(keepers)}`);
   check('and each keeps its own ladder beside an occupation that states one',
@@ -6094,7 +6097,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // these are the Palladium Fantasy rows, not rifts-cyclops. Added 2026-10-10.
   // Rifts World Book 21: Splynn Dimensional Market printed 81 gives the
   // Octoman "P.P.E. Base: 4D6, unless a magic O.C.C. is selected". 2026-11-19.
-  const want = ['aardan-tek', 'amphib', 'arac', 'cyclops', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian', 'nimro', 'octoman'];
+  // Printed 85-87 gives the Pythonan 3D6+10, or the usual for a magic O.C.C. if
+  // one is selected. 2026-11-19.
+  const want = ['aardan-tek', 'amphib', 'arac', 'cyclops', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian', 'nimro', 'octoman', 'pythonan'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -6273,8 +6278,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 
   // PINNED BY NAME: the two classes whose book prints a cut (`~186`, D-Bees of
   // North America printed 144 and 145). A race added here should be a decision
-  // someone reads the book for.
-  const want = ['nmbyr-gorilla-man', 'noli-bushman'];
+  // someone reads the book for. Rifts World Book 21: Splynn Dimensional
+  // Market printed 85-87 halves the Pythonan's O.C.C. Related and Secondary
+  // skills. Added 2026-11-19.
+  const want = ['nmbyr-gorilla-man', 'noli-bushman', 'pythonan'];
   const got = trimmers.map((c) => c.id).sort();
   check('the races declaring pairing_counts are the pinned ones',
     races.length > 0 && JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);

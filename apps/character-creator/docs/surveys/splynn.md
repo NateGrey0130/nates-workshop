@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, seven of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, and the Pythonan R.C.C. of printed 85-87, eight of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** classes 7, gear 72, vehicles 17, skills 1, spells 25, creatures 14
+**Rows citing this book:** classes 8, gear 72, vehicles 17, skills 1, spells 25, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -359,20 +359,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-class-kryygorth-pegasus` | classes 1: the Kryygorth Pegasus R.C.C. (printed 77-79), `kryygorth-pegasus`, published, tagged `flyer`, XP table copied from the Psi-Stalker, M.D.C. P.E. + 2D4x10+28 +2D6/level, P.P.E. P.E. + 1D6x10 +1D6/level, six spells by name plus one level-one spell of choice, four attacks with +1 at levels 4, 7 and 14; 0 catalog stubs; the readings (P.P.E. per level, Astronomy +15%, both Cowboy lores, Parachuting not stored) are in its `extraction_notes` (`add-kryygorth-pegasus-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-octoman` | classes 1: the Octoman R.C.C. (printed 80-82), `octoman`, published, no XP table of its own, M.D.C. 1D6x10 + P.E. +1D6/level on Rifts Earth (Hit Points and S.D.C. on S.D.C. worlds), P.P.E. 4D6 yielding to a magic O.C.C. (`yields_to_occupation`, added to regression's pinned list), psionics none, power armor closed: the occupation list excepts psychic and clergy O.C.C.s and 70 more by id (cyborgs, CS and NGR military, power armor pilots, Juicers, Crazies); the readings are in its `extraction_notes` (`add-octoman-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-nurilian-plant-people` | classes 1: the Nurilian Plant-People R.C.C. (printed 82-85), `nurilian-plant-people`, published, XP table copied from the Dragon Hatchling, psionics in prose with `psionics_allowed: false`, Preserve Plants & Fruits as a special ability and Identify Plants and Animals stored as Identify Plants & Fruit; 0 catalog stubs; the readings are in its `extraction_notes` (`add-nurilian-plant-people-class.sql`, no `~NNN`: a class script keeps its name) |
+| 2026-11-19 | `pal/data/splynn-class-pythonan` | classes 1: the Pythonan R.C.C. (printed 85-87), `pythonan`, published, XP table copied from the Dragon Hatchling and kept whatever the occupation (`keeps_xp_table`), P.P.E. 3D6+10 yielding to a magic O.C.C. (`yields_to_occupation`), half the occupation's Related and Secondary skills (`pairing_counts` factor 0.5), all three added to regression's pinned lists; a plain `pythonan` variant and the Scholar/Philosopher or Artist as variant `scholar` with its 12 R.C.C. skill lines and 1D6x1,000; 0 catalog stubs; the readings are in its `extraction_notes` (`add-pythonan-class.sql`, no `~NNN`: a class script keeps its name) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-nurilian-plant-people-class.sql` was written, the book's *BY BOOK* line
+`add-pythonan-class.sql` was written, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             135 / 0
+  splynn             136 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman and the Nurilian Plant-People. The tattoos moved
+animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People and the Pythonan. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -403,4 +404,5 @@ shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
 `class-kryygorths-lesson` shipped, and the Kryygorth Pegasus, the fifth,
 `class-kryygorth-pegasus` shipped, and the Octoman, the sixth,
 `class-octoman` shipped, and the Nurilian Plant-People, the seventh,
-`class-nurilian-plant-people` shipped.
+`class-nurilian-plant-people` shipped, and the Pythonan, the eighth,
+`class-pythonan` shipped.
