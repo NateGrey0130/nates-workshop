@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the whole plan shipped: tattoos, 22 classes, gear, vehicles, creatures and notable NPCs. What was left out on purpose is under Extraction plan. (2026-09-26)
 
-**Rows citing this book:** classes 21, gear 99, vehicles 20, spells 32, notable_npcs 7, creatures 34
+**Rows citing this book:** classes 21, gear 99, vehicles 16, spells 32, notable_npcs 7, creatures 34
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -463,6 +463,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-04 | `pal/data/d-bees-of-north-america-last-updates` | **`blind-warrior-women` leaves this book's count for D-Bees of North America** (`~098`), which reprints and updates it (2007) under the heading Altara; by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`, keeping this book's figures in its `extraction_notes`: six attacks (D-Bees eight), kick 1D8, leap kick 2D8, punch 1D6, Hand to Hand: Martial Arts heading the skill list, about 25% runaways. The `creatures` row of the same name still cites this book and was not changed. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 2 classes of this book (`sunaj-assassin`, `undead-slayer`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c2-roll-tables` | **Four insanity tables are rolled** (`~161`, close-out package C2; `BOOK-INGEST-AUDIT` F120): the Tattooed Man's (printed 94, rolled twice), the T-Monster Man's (printed 95, three times), the Maxi-Man's (printed 97, once) and the Splugorth Conservator's (printed 46-47, twice) are band-named groups, `rolls` where the book rolls more than once; the extra roll per five or six additional tattoos is in each group's note. Read off renders and checked row by row by `book-reconcile`. No rows added. Applied `--remote` before the merge. |
+| 2026-11-19 | `pal/data/splynn-flying-ships-compare` | **The four Splugorth flying ships leave this book's count for Splynn Dimensional Market** (`~368`, vehicles 20 -> 16), which restates them on printed 190 (1999); by Nate's ruling of 2026-10-04 the newest printing wins. Splynn prints each M.D.C. as a range from this book's figure and the frigate at 75-100 mph and 100+ million; each row keeps this book's figure in its description. Applied `--remote` before the merge. |
 
 ### What remains
 
