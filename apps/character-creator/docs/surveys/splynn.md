@@ -354,16 +354,16 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~369-splynn-animals.sql` and `~370-splynn-animals-gear.sql` were
-applied, the book's *BY BOOK* line (traceable / other):
+`~371-splynn-creatures-a.sql` was applied, the book's *BY BOOK* line
+(traceable / other):
 
 ```
-  splynn             117 / 0
+  splynn             121 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
-market goods, the power armours, the hover pods, the Skyborne rows and the
-animals. The tattoos moved
+market goods, the power armours, the hover pods, the Skyborne rows, the
+animals and the first four races. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
