@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and the first seven slave-stock races of printed 73-90 as `creatures` rows. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** gear 72, vehicles 17, skills 1, spells 25, creatures 9
+**Rows citing this book:** gear 72, vehicles 17, skills 1, spells 25, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -351,20 +351,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-animals` | creatures 2, gear 3: the Demonrunner (printed 71-73, 5 attacks) and the Kryygorth Shellback (79-80, 3 attacks) as `creatures` rows, category `animal`, not playable, with no class (`~369-splynn-animals.sql`); the three Kryygorth Shellback armours, light, medium and heavy (printed 80, the low end of each M.D.C. range stored), category `armor` (`~370-splynn-animals-gear.sql`) |
 | 2026-11-19 | `pal/data/splynn-creatures-a` | creatures 4: the Kryygorth Hunter (printed 73-75, 5 attacks), Kryygorth's Lesson (75-77, 1 attack, the full enslaved creature, not playable), Kryygorth Pegasus (77-79, 2 attacks) and Octoman (80-82, 3 attacks) as `creatures` rows, category `humanoid`, the other three playable; 11 attacks in all; their classes are not in this script (`~371-splynn-creatures-a.sql`) |
 | 2026-11-19 | `pal/data/splynn-creatures-b` | creatures 3: the Nurilian Plant-People (printed 82-85, 0 attacks), Pythonan (85-87, 4 attacks) and Rulian Translator (87-90, 0 attacks) as `creatures` rows, category `humanoid`, all three playable; 4 attacks in all; their classes are not in this script (`~372-splynn-creatures-b.sql`) |
+| 2026-11-19 | `pal/data/splynn-creatures-c` | creatures 5: the Staphra Warrior (printed 90-93, 1 attack), Staphra Warlord (93-95, 3 attacks), Staphra Mystic (95-97, 0 attacks), Were-Dragon (97-101, 3 attacks) and Monster Were-Dragon (98-101, 6 attacks) as `creatures` rows, category `humanoid`, all five playable; 13 attacks in all; their classes are not in this script (`~373-splynn-creatures-c.sql`) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~372-splynn-creatures-b.sql` was applied, the book's *BY BOOK* line
+`~373-splynn-creatures-c.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             124 / 0
+  splynn             129 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals and the first seven races. The tattoos moved
+animals and all twelve races. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -387,5 +388,5 @@ line 6 `hover-pods` shipped, and the Sky-Flyers, airships and add-ons of
 line 7 `skyborne` shipped, and the four flying ships line 8
 `flying-ships-compare` read and re-cited, and the two animals and three
 Shellback armours of line 9 `animals` shipped, and the four races of
-`creatures-a` and the three of `creatures-b` shipped (`creatures-c`
-remains).
+`creatures-a`, the three of `creatures-b` and the five of `creatures-c`
+shipped.
