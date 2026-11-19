@@ -358,16 +358,16 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-tattooed-archer-class.sql` was applied, the book's *BY BOOK* line
+`add-true-bio-borg-class.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             130 / 0
+  splynn             131 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races and the Tattooed Archer. The tattoos moved
+animals, all twelve races, the Tattooed Archer and the True Bio-Borg. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -392,4 +392,5 @@ line 7 `skyborne` shipped, and the four flying ships line 8
 Shellback armours of line 9 `animals` shipped, and the four races of
 `creatures-a`, the three of `creatures-b` and the five of `creatures-c`
 shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
-`class-tattooed-archer` shipped.
+`class-tattooed-archer` shipped, and the True Bio-Borg, the second,
+`class-true-bio-borg` shipped.
