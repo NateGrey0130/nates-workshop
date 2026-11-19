@@ -349,15 +349,15 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~362-splynn-market-goods.sql` was applied, the book's *BY BOOK* line
+`~363-splynn-power-armor.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn              83 / 0
+  splynn              85 / 0
 ```
 
-That run's `BACKLOG` block, unchanged by the organisms, the arms and the
-market goods. The tattoos moved
+That run's `BACKLOG` block, unchanged by the organisms, the arms, the
+market goods and the power armours. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
