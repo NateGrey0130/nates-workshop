@@ -7136,7 +7136,13 @@ script's own lines on this branch, 2026-11-19:
 3. **Each augmentation table (printed 159-160)** is `choose: 3`, the most any
    band sends to one table. The cap of a dozen implants or features in all,
    the G.M.'s 1-3 extra rolls, the roll-again rows and the incompatibilities
-   (Wings against Heaven's Wings) are notes.
+   (Wings against Heaven's Wings) are notes. And the wizard holds every
+   group to its full count before it continues: driven 2026-11-19 on a
+   local server from this branch, the True Bio-Borg's race step read
+   `Choose 17 more powers to continue` (one orientation, one band, three on
+   each of five tables) before any pick, and was driven past it with all 17
+   made. Inferred, not driven: a band that sends one pick to a table still
+   asks for three, because the count is the group's and no band changes it.
 4. **The two M.D.C. Transformations (Table 1, printed 159-160)** store an
    option `mdc_base` of 75 and 120 (lines 116-117), and the printed +1D6
    M.D.C. per level is prose, added by hand. Measured 2026-11-19, the cause
