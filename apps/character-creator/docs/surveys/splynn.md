@@ -349,16 +349,16 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-18, after
-`~363-splynn-power-armor.sql` was applied, the book's *BY BOOK* line
-(traceable / other):
+From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
+`~364-splynn-hover-pods.sql` and `~365-splynn-hover-pods-skill.sql` were
+applied, the book's *BY BOOK* line (traceable / other):
 
 ```
-  splynn              85 / 0
+  splynn              89 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
-market goods and the power armours. The tattoos moved
+market goods, the power armours and the hover pods. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -375,5 +375,6 @@ it is stored at 0 with a note.
 Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
 `parasites-a` and `parasites-b` shipped, the 11 symbiotes `symbiotes`
 shipped, the 12 arms of line 3 `arms` shipped, the 16 market goods of
-line 4 `market-goods` shipped and the two power armours of line 5
-`power-armor` shipped.
+line 4 `market-goods` shipped, the two power armours of line 5
+`power-armor` shipped and the two pods, the patrol flyer and the skill of
+line 6 `hover-pods` shipped.
