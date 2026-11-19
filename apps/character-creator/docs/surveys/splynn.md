@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter and Kryygorth's Lesson R.C.C.s of printed 73-77, four of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79, five of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** classes 4, gear 72, vehicles 17, skills 1, spells 25, creatures 14
+**Rows citing this book:** classes 5, gear 72, vehicles 17, skills 1, spells 25, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -356,20 +356,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-class-true-bio-borg` | classes 1: the True Bio-Borg R.C.C. (printed 154-161), `true-bio-borg`, published, with its own experience table, full and partial conversion variants, the six orientations, the Determination table and the five augmentation tables as pick groups; what the frontmatter could not hold is in its `extraction_notes` and filed as `BOOK-INGEST-AUDIT` F146 (`add-true-bio-borg-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-kryygorth-hunter` | classes 1: the Kryygorth Hunter R.C.C. (printed 73-75), `kryygorth-hunter`, published, XP table copied from the Dog Boy, six attacks with +1 at levels 3, 5, 8 and 13 and no Hand to Hand style, the claw/tail strike and tail entangle as bonuses, its acrobatics, climb, prowl and scent tracking as prose natural abilities; the readings are in its `extraction_notes` (`add-kryygorth-hunter-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-kryygorths-lesson` | classes 1: Kryygorth's Lesson R.C.C. (printed 75-77), `kryygorths-lesson`, published, in its emancipated form, physical attributes halved to the nearest roll, M.D.C. 3D6x10 +1D6/level, P.P.E. 2D6x10 +2D6/level, the general Rifts invocations of levels 1-5 granted by name and a 28-spell pick at levels 6-12, the +1 attack at levels 6 and 12; 0 catalog stubs; the readings are in its `extraction_notes` (`add-kryygorths-lesson-class.sql`, no `~NNN`: a class script keeps its name) |
+| 2026-11-19 | `pal/data/splynn-class-kryygorth-pegasus` | classes 1: the Kryygorth Pegasus R.C.C. (printed 77-79), `kryygorth-pegasus`, published, tagged `flyer`, XP table copied from the Psi-Stalker, M.D.C. P.E. + 2D4x10+28 +2D6/level, P.P.E. P.E. + 1D6x10 +1D6/level, six spells by name plus one level-one spell of choice, four attacks with +1 at levels 4, 7 and 14; 0 catalog stubs; the readings (P.P.E. per level, Astronomy +15%, both Cowboy lores, Parachuting not stored) are in its `extraction_notes` (`add-kryygorth-pegasus-class.sql`, no `~NNN`: a class script keeps its name) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-kryygorths-lesson-class.sql` was written, the book's *BY BOOK* line
+`add-kryygorth-pegasus-class.sql` was written, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             132 / 0
+  splynn             133 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter and Kryygorth's Lesson. The tattoos moved
+animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson and the Kryygorth Pegasus. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -397,4 +398,5 @@ shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
 `class-tattooed-archer` shipped, and the True Bio-Borg, the second,
 `class-true-bio-borg` shipped, and the Kryygorth Hunter, the third,
 `class-kryygorth-hunter` shipped, and Kryygorth's Lesson, the fourth,
-`class-kryygorths-lesson` shipped.
+`class-kryygorths-lesson` shipped, and the Kryygorth Pegasus, the fifth,
+`class-kryygorth-pegasus` shipped.
