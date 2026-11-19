@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** gear 69, vehicles 13, skills 1, spells 25
+**Rows citing this book:** gear 69, vehicles 17, skills 1, spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -203,7 +203,7 @@ and `Scathach Magic Bow (pine)` are held from other books.
 |---|---|---|
 | the two flying platforms (178-180) | `tw-tech-flying-platform`, `tw-seaside-hover-platform`, Book of Magic p.337 | held; main body and price agree |
 | the three Eylor devices (180-184) | `splugorth-hover-platform`, `splugorth-eylor-jet-pack`, `splugorth-eylor-hovercycle`, Book of Magic p.316-317 | held; main body and price agree |
-| Splugorth flying ships, four sizes (190) | `splugorth-flying-ship-small`, `-medium`, `-large`, `-frigate`, Atlantis p.154-155 | held from the **older** book; M.D.C. floor and price agree, the rest unread |
+| Splugorth flying ships, four sizes (190) | `splugorth-flying-ship-small`, `-medium`, `-large`, `-frigate`, Atlantis p.154-155 | held from the **older** book; read against 190 on 2026-11-19 (line 8): each prints its M.D.C. as a range from the held floor, and the frigate flies 75-100 mph at 100+ million, so all four are re-cited here with the Atlantis figures in their notes |
 | two Kittani power armours (164-170) | none; `k-universal-light-power-armor`, `kittani-serpent-power-armor` and two more are Atlantis's and different suits | **new** |
 | two hover pods and the patrol flyer (184-188) | none | **new** |
 | Sky-Flyer in four sizes (188-189) | none; `TK-Flyer "Classic"` is another craft | **new** |
@@ -347,6 +347,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/splynn-power-armor` | vehicles 2: the Kittani Centipede (CPA-1, printed 164-167) and Flying Fox (FFPA, printed 167-170) power armours, class `power-armor`, with 25 locations and 16 weapon entries; cost NULL with the printed floor in `cost_note` (`~363-splynn-power-armor.sql`) |
 | 2026-11-19 | `pal/data/splynn-hover-pods` | vehicles 3, skills 1: the Kittani Hover Speed Pod (HVPC-099, printed 184-185), Hover War Pod (HV-MPC-216, with the one-man HV-MPC-113 inside its row, 185-187) and Patrol Flyer (K-PF 20, 187-188), class `vehicle`, with 22 locations and 13 weapon entries (`~364-splynn-hover-pods.sql`); the skill `Pilot: Hover Pod`, 50% +5% a level, systems `["rifts"]`, printed 184 and 187 (`~365-splynn-hover-pods-skill.sql`) |
 | 2026-11-19 | `pal/data/splynn-skyborne` | vehicles 8, gear 11: the TW Sky-Flyer Compact, Sedan/Taxi, Mini-Bus/Van and Bus (printed 188-189; the last three scaled from the Compact by the printed +20%, +30% and x2, rounded) and the Skyborne airships Small, Medium, Large and Luxury Linear (189-190, the low end of each printed range stored), class `vehicle` and `ship`, with 28 locations and no weapon entries (`~366-splynn-skyborne.sql`); the six Techno-Wizard vehicle weapons and five vehicle features of printed 177, categories `weapon` and `gear` (`~367-splynn-skyborne-gear.sql`) |
+| 2026-11-19 | `pal/data/splynn-flying-ships-compare` | vehicles 4 re-cited, none added: the four Splugorth flying ships held from Atlantis p.154-155, read against printed 190. Each Main Body's M.D.C. is printed here as a range from the held floor (small 250-350, medium 400-800, large 650-1,500, frigate 1,000-4,000), kept in the location's `mdc_note` with `mdc_main_body` unchanged; the frigate's speed is 75-100 mph (120-160 km) and its price 100+ million. Crew, altitude, the other speeds and prices, the Eylor eyes and the spells agree. All four now cite p.190, each keeping its Atlantis figure in its description (`~368-splynn-flying-ships.sql`) |
 
 ### What remains
 
@@ -379,4 +380,5 @@ shipped, the 12 arms of line 3 `arms` shipped, the 16 market goods of
 line 4 `market-goods` shipped, the two power armours of line 5
 `power-armor` shipped, the two pods, the patrol flyer and the skill of
 line 6 `hover-pods` shipped, and the Sky-Flyers, airships and add-ons of
-line 7 `skyborne` shipped.
+line 7 `skyborne` shipped, and the four flying ships line 8
+`flying-ships-compare` read and re-cited.
