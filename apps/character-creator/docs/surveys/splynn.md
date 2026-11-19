@@ -365,11 +365,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-pythonan-class.sql` was written, the book's *BY BOOK* line
+`add-rulian-translator-class.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             136 / 0
+  splynn             138 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
