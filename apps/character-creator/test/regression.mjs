@@ -6092,7 +6092,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Palladium Fantasy Book 9: The Baalgor Wastelands prints the Cyclops's
   // and the Nimro's P.P.E. with "or by magic O.C.C." (printed 40 and 43);
   // these are the Palladium Fantasy rows, not rifts-cyclops. Added 2026-10-10.
-  const want = ['aardan-tek', 'amphib', 'arac', 'cyclops', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian', 'nimro'];
+  // Rifts World Book 21: Splynn Dimensional Market printed 81 gives the
+  // Octoman "P.P.E. Base: 4D6, unless a magic O.C.C. is selected". 2026-11-19.
+  const want = ['aardan-tek', 'amphib', 'arac', 'cyclops', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian', 'nimro', 'octoman'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
