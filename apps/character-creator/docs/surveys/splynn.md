@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, and the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** gear 58, vehicles 5, skills 1, spells 25
+**Rows citing this book:** gear 69, vehicles 13, skills 1, spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -346,19 +346,20 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/splynn-market-goods` | gear 16: the priced market goods of printed 21-36, the Water Merchant's vial, Dionna's nectar, the Wardrobe Amulet, the Butterfly, the eight Tick Tock timepieces, the three M.D.C. leather suits and the Midgard Serpent's venom, categories `magic` and `armor` (`~362-splynn-market-goods.sql`) |
 | 2026-11-18 | `pal/data/splynn-power-armor` | vehicles 2: the Kittani Centipede (CPA-1, printed 164-167) and Flying Fox (FFPA, printed 167-170) power armours, class `power-armor`, with 25 locations and 16 weapon entries; cost NULL with the printed floor in `cost_note` (`~363-splynn-power-armor.sql`) |
 | 2026-11-19 | `pal/data/splynn-hover-pods` | vehicles 3, skills 1: the Kittani Hover Speed Pod (HVPC-099, printed 184-185), Hover War Pod (HV-MPC-216, with the one-man HV-MPC-113 inside its row, 185-187) and Patrol Flyer (K-PF 20, 187-188), class `vehicle`, with 22 locations and 13 weapon entries (`~364-splynn-hover-pods.sql`); the skill `Pilot: Hover Pod`, 50% +5% a level, systems `["rifts"]`, printed 184 and 187 (`~365-splynn-hover-pods-skill.sql`) |
+| 2026-11-19 | `pal/data/splynn-skyborne` | vehicles 8, gear 11: the TW Sky-Flyer Compact, Sedan/Taxi, Mini-Bus/Van and Bus (printed 188-189; the last three scaled from the Compact by the printed +20%, +30% and x2, rounded) and the Skyborne airships Small, Medium, Large and Luxury Linear (189-190, the low end of each printed range stored), class `vehicle` and `ship`, with 28 locations and no weapon entries (`~366-splynn-skyborne.sql`); the six Techno-Wizard vehicle weapons and five vehicle features of printed 177, categories `weapon` and `gear` (`~367-splynn-skyborne-gear.sql`) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~364-splynn-hover-pods.sql` and `~365-splynn-hover-pods-skill.sql` were
+`~366-splynn-skyborne.sql` and `~367-splynn-skyborne-gear.sql` were
 applied, the book's *BY BOOK* line (traceable / other):
 
 ```
-  splynn              89 / 0
+  splynn             108 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
-market goods, the power armours and the hover pods. The tattoos moved
+market goods, the power armours, the hover pods and the Skyborne rows. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -376,5 +377,6 @@ Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
 `parasites-a` and `parasites-b` shipped, the 11 symbiotes `symbiotes`
 shipped, the 12 arms of line 3 `arms` shipped, the 16 market goods of
 line 4 `market-goods` shipped, the two power armours of line 5
-`power-armor` shipped and the two pods, the patrol flyer and the skill of
-line 6 `hover-pods` shipped.
+`power-armor` shipped, the two pods, the patrol flyer and the skill of
+line 6 `hover-pods` shipped, and the Sky-Flyers, airships and add-ons of
+line 7 `skyborne` shipped.
