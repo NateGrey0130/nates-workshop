@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, and the 16 market goods of printed 21-36. The plan is under *Extraction plan*. (2026-11-18)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, and the two Kittani power armours of printed 164-170. The plan is under *Extraction plan*. (2026-11-18)
 
-**Rows citing this book:** gear 58, spells 25
+**Rows citing this book:** gear 58, vehicles 2, spells 25
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -344,6 +344,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-18 | `pal/data/splynn-symbiotes` | gear 11: the 11 Bio-Wizard symbiotes, Aqua-Mask to Zembahk Appendage, printed 128-137, category `magic` (`~360-splynn-symbiotes.sql`) |
 | 2026-11-18 | `pal/data/splynn-arms` | gear 12: the three D-Squad devices (Line Lockers, Time-Lock, Barrier Projectors) of printed 162, the four Kittani plasma weapons of 162-164, the two Octurill and two Kizh weapons of 170-171 and the Power Jaw Helmet of 172, category `weapon` (`~361-splynn-arms.sql`) |
 | 2026-11-18 | `pal/data/splynn-market-goods` | gear 16: the priced market goods of printed 21-36, the Water Merchant's vial, Dionna's nectar, the Wardrobe Amulet, the Butterfly, the eight Tick Tock timepieces, the three M.D.C. leather suits and the Midgard Serpent's venom, categories `magic` and `armor` (`~362-splynn-market-goods.sql`) |
+| 2026-11-18 | `pal/data/splynn-power-armor` | vehicles 2: the Kittani Centipede (CPA-1, printed 164-167) and Flying Fox (FFPA, printed 167-170) power armours, class `power-armor`, with 25 locations and 16 weapon entries; cost NULL with the printed floor in `cost_note` (`~363-splynn-power-armor.sql`) |
 
 ### What remains
 
@@ -372,5 +373,6 @@ it is stored at 0 with a note.
 
 Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
 `parasites-a` and `parasites-b` shipped, the 11 symbiotes `symbiotes`
-shipped, the 12 arms of line 3 `arms` shipped and the 16 market goods of
-line 4 `market-goods` shipped.
+shipped, the 12 arms of line 3 `arms` shipped, the 16 market goods of
+line 4 `market-goods` shipped and the two power armours of line 5
+`power-armor` shipped.
