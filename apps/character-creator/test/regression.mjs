@@ -6280,8 +6280,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // North America printed 144 and 145). A race added here should be a decision
   // someone reads the book for. Rifts World Book 21: Splynn Dimensional
   // Market printed 85-87 halves the Pythonan's O.C.C. Related and Secondary
-  // skills. Added 2026-11-19.
-  const want = ['nmbyr-gorilla-man', 'noli-bushman', 'pythonan'];
+  // skills. Added 2026-11-19. Printed 89-90 of the same book halves the
+  // Rulian Translator's for any scholar or adventurer O.C.C. Added 2026-11-19.
+  const want = ['nmbyr-gorilla-man', 'noli-bushman', 'pythonan', 'rulian-translator'];
   const got = trimmers.map((c) => c.id).sort();
   check('the races declaring pairing_counts are the pinned ones',
     races.length > 0 && JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
