@@ -351,15 +351,15 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~364-splynn-hover-pods.sql` and `~365-splynn-hover-pods-skill.sql` were
+`~366-splynn-skyborne.sql` and `~367-splynn-skyborne-gear.sql` were
 applied, the book's *BY BOOK* line (traceable / other):
 
 ```
-  splynn              89 / 0
+  splynn             108 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
-market goods, the power armours and the hover pods. The tattoos moved
+market goods, the power armours, the hover pods and the Skyborne rows. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
