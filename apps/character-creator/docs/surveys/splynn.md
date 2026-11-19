@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and the first four slave-stock races of printed 73-82 as `creatures` rows. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and the first seven slave-stock races of printed 73-90 as `creatures` rows. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** gear 72, vehicles 17, skills 1, spells 25, creatures 6
+**Rows citing this book:** gear 72, vehicles 17, skills 1, spells 25, creatures 9
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -350,6 +350,7 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-flying-ships-compare` | vehicles 4 re-cited, none added: the four Splugorth flying ships held from Atlantis p.154-155, read against printed 190. Each Main Body's M.D.C. is printed here as a range from the held floor (small 250-350, medium 400-800, large 650-1,500, frigate 1,000-4,000), kept in the location's `mdc_note` with `mdc_main_body` unchanged; the frigate's speed is 75-100 mph (120-160 km) and its price 100+ million. Crew, altitude, the other speeds and prices, the Eylor eyes and the spells agree. All four now cite p.190, each keeping its Atlantis figure in its description (`~368-splynn-flying-ships.sql`) |
 | 2026-11-19 | `pal/data/splynn-animals` | creatures 2, gear 3: the Demonrunner (printed 71-73, 5 attacks) and the Kryygorth Shellback (79-80, 3 attacks) as `creatures` rows, category `animal`, not playable, with no class (`~369-splynn-animals.sql`); the three Kryygorth Shellback armours, light, medium and heavy (printed 80, the low end of each M.D.C. range stored), category `armor` (`~370-splynn-animals-gear.sql`) |
 | 2026-11-19 | `pal/data/splynn-creatures-a` | creatures 4: the Kryygorth Hunter (printed 73-75, 5 attacks), Kryygorth's Lesson (75-77, 1 attack, the full enslaved creature, not playable), Kryygorth Pegasus (77-79, 2 attacks) and Octoman (80-82, 3 attacks) as `creatures` rows, category `humanoid`, the other three playable; 11 attacks in all; their classes are not in this script (`~371-splynn-creatures-a.sql`) |
+| 2026-11-19 | `pal/data/splynn-creatures-b` | creatures 3: the Nurilian Plant-People (printed 82-85, 0 attacks), Pythonan (85-87, 4 attacks) and Rulian Translator (87-90, 0 attacks) as `creatures` rows, category `humanoid`, all three playable; 4 attacks in all; their classes are not in this script (`~372-splynn-creatures-b.sql`) |
 
 ### What remains
 
@@ -386,4 +387,5 @@ line 6 `hover-pods` shipped, and the Sky-Flyers, airships and add-ons of
 line 7 `skyborne` shipped, and the four flying ships line 8
 `flying-ships-compare` read and re-cited, and the two animals and three
 Shellback armours of line 9 `animals` shipped, and the four races of
-`creatures-a` shipped (`creatures-b` and `-c` remain).
+`creatures-a` and the three of `creatures-b` shipped (`creatures-c`
+remains).
