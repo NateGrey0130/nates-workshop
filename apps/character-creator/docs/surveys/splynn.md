@@ -1,8 +1,8 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, and the Pythonan R.C.C. of printed 85-87, and the Rulian Translator R.C.C. of printed 87-90, and the Staphra Warrior, Staphra Warlord and Staphra Mystic R.C.C.s of printed 90-97, and the Were-Dragon R.C.C. of printed 97-101, thirteen of the fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, and the Pythonan R.C.C. of printed 85-87, and the Rulian Translator R.C.C. of printed 87-90, and the Staphra Warrior, Staphra Warlord and Staphra Mystic R.C.C.s of printed 90-97, and the Were-Dragon R.C.C. of printed 97-101 and the Monster Were-Dragon R.C.C. inside its block (printed 98-101), all fourteen classes. The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** classes 13, gear 72, vehicles 17, skills 1, spells 25, creatures 14
+**Rows citing this book:** classes 14, gear 72, vehicles 17, skills 1, spells 25, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -365,20 +365,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-class-staphra-warlord` | classes 1: the Staphra Warlord R.C.C. (printed 93-95), `staphra-warlord`, published, XP table copied from the True Bio-Borg (printed 190, the Full Conversion Bio-Borg table), M.D.C. 50+5D6, P.P.E. 4D6, Horror Factor 13, `psionics_allowed: false` (the Warrior's psionics are transformed into the Special R.C.C. Abilities; Psi-Channeling and Energy Bolt costs are prose), +2 save vs magic stored on both spell and ritual magic, the +1 save vs Horror Factor at levels 2, 3, 4, 6, 7, 8, 10, 11, 12 and 15, Hand to Hand Martial Arts with Assassin at cost 0; 0 catalog stubs; the readings are in its `extraction_notes` (`add-staphra-warlord-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-staphra-mystic` | classes 1: the Staphra Mystic R.C.C. (printed 95-97), `staphra-mystic`, published, tagged `healer` and `scholar`, XP table copied from production's Mystic (the page names the Mystic table), P.P.E. 1D6x10 + P.E. +2D6/level, S.D.C. 4D6 as a pool bonus, a major psionic written as production's Mystic block with items 3-5 changed (Empathy, Healing Touch, Psychic Diagnosis and Psychic Surgery, plus three Healing and three Sensitive picks, one Super at level 4 only), Mystic spell knowledge from within, Wilderness Survival under Electrical taken from Wilderness at +5%; 0 catalog stubs; the readings are in its `extraction_notes` (`add-staphra-mystic-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-class-were-dragon` | classes 1: the Were-Dragon R.C.C. (printed 97-101), `were-dragon`, published, XP table copied from the Psi-Stalker, the dragon form stored as `second_form` (+1D4+6 P.S., +1 attack for the tail, Horror Factor 9) with its doubled M.D.C., flight, in-flight bonuses, tail and claws as prose, the P.P.E. Base 1D6x10 + P.E. line stored of the two the ordinary form prints, Technical's +5% to languages and lore only as a restriction line, money 3D4x100; 0 catalog stubs; the readings are in its `extraction_notes` (`add-were-dragon-class.sql`, no `~NNN`: a class script keeps its name) |
+| 2026-11-19 | `pal/data/splynn-class-monster-were-dragon` | classes 1: the Monster Were-Dragon R.C.C. (printed 98-101, inside the Were-Dragon block), `monster-were-dragon`, published, XP table copied from production's True Bio-Borg (printed 190, the Full Conversion Bio-Borg table), the four percentage attribute penalties and the alignment change as `side_effects` prose, the craving table as a band-named pick-one group (91-00 carrying M.A. +1D4+2 and I.Q. +1), save vs magic +2 on spell and ritual magic in `second_form`, the heavy ancient weapons a pick of two from claymore, war-hammer, morning-star, flail, halberd and war-club; 0 catalog stubs; the readings are in its `extraction_notes` (`add-monster-were-dragon-class.sql`, no `~NNN`: a class script keeps its name) |
 
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-were-dragon-class.sql` was applied, the book's *BY BOOK* line
+`add-monster-were-dragon-class.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             142 / 0
+  splynn             143 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic and the Were-Dragon. The tattoos moved
+animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon and the Monster Were-Dragon. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -415,4 +416,5 @@ shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
 `class-staphra-warrior` shipped, and the Staphra Warlord, the eleventh,
 `class-staphra-warlord` shipped, and the Staphra Mystic, the twelfth,
 `class-staphra-mystic` shipped, and the Were-Dragon, the thirteenth,
-`class-were-dragon` shipped.
+`class-were-dragon` shipped, and the Monster Were-Dragon, the fourteenth
+and last, `class-monster-were-dragon` shipped.
