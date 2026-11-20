@@ -51,6 +51,10 @@ export function run() {
       normalizeBookTitle('Palladium-Fantasy_Core p.96-97') === 'palladium fantasy core'
       && normalizeBookTitle('  Rifts Ultimate Edition  ') === 'rifts ultimate edition');
 
+    check('every trailing page range falls out of a title, not only the first',
+      normalizeBookTitle('Palladium Fantasy Core p.72-73, 123-124') === 'palladium fantasy core'
+      && normalizeBookTitle('Palladium Fantasy Core p.149, 152') === 'palladium fantasy core'
+      && normalizeBookTitle('Palladium Fantasy Core p.9; 12-14 & 20') === 'palladium fantasy core');
     check('the canonical title names its book',
       registryBookSlug('Palladium Fantasy RPG Main Book p.288-289', fixture) === 'pf');
     check('and so does every alias',
@@ -66,6 +70,9 @@ export function run() {
     check('an alias reaches the cache no heuristic could reach',
       resolveBookSlug('Palladium RPG Main Book p.273', cached, fixture) === 'pf'
       && resolveBookSlug('Palladium RPG Main Book p.273', cached) === null);
+    check('a citation with several page ranges still names its book exactly, so no word overlap can tie',
+      resolveBookSlug('Rifts Ultimate Edition p.72-73, 123-124', cached, fixture) === 'rue'
+      && resolveBookSlug('Rifts Ultimate Edition p.149, 152', cached, fixture) === 'rue');
     check('a known book with no cache is null, not the nearest cache',
       resolveBookSlug('Rifts World Book 5: Triax and the NGR p.20', cached, fixture) === null);
     check('without a registry the two heuristic routes are unchanged',
