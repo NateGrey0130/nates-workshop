@@ -1077,6 +1077,44 @@
    "total": 102
   },
   {
+   "slug": "splynn",
+   "title": "Rifts World Book 21: Splynn Dimensional Market",
+   "code": "splynn",
+   "status": "imported",
+   "date": "2026-11-20",
+   "added": [
+    [
+     "Classes",
+     14
+    ],
+    [
+     "Creatures",
+     14
+    ],
+    [
+     "Gear",
+     72
+    ],
+    [
+     "Notable NPCs",
+     16
+    ],
+    [
+     "Skills",
+     1
+    ],
+    [
+     "Spells",
+     25
+    ],
+    [
+     "Vehicles",
+     17
+    ]
+   ],
+   "total": 159
+  },
+  {
    "slug": "free-quebec",
    "title": "Rifts World Book 22: Free Quebec",
    "code": "free-quebec",

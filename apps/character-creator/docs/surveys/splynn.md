@@ -1,6 +1,6 @@
 # Rifts World Book 21: Splynn Dimensional Market — survey
 
-**Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, and the Pythonan R.C.C. of printed 85-87, and the Rulian Translator R.C.C. of printed 87-90, and the Staphra Warrior, Staphra Warlord and Staphra Mystic R.C.C.s of printed 90-97, and the Were-Dragon R.C.C. of printed 97-101 and the Monster Were-Dragon R.C.C. inside its block (printed 98-101), all fourteen classes, and the first three notable NPCs of printed 20-25 (the Water Merchant, Old West and Rassa), and four more of printed 25-39 (K'Rynn Katar, Dionna, the Re-Animator and Crazy Al). The plan is under *Extraction plan*. (2026-11-19)
+**Status:** `imported` — the plan is done: 25 magic tattoos (spells), 72 gear rows (30 Bio-Wizard organisms, 12 arms, 16 market goods, 11 Techno-Wizard vehicle add-ons and 3 Shellback armours), 17 vehicles (13 new, and the four Splugorth flying ships held from Atlantis re-cited to printed 190), the skill `Pilot: Hover Pod`, 14 creatures (the two animals and the twelve slave-stock races), the 16 notable NPCs, and all fourteen classes, the Tattooed Archer O.C.C., the True Bio-Borg R.C.C. and the twelve slave-stock R.C.C.s. What was left out on purpose is under *Extraction plan*. (2026-11-20)
 
 **Rows citing this book:** classes 14, gear 72, vehicles 17, skills 1, spells 25, notable_npcs 16, creatures 14
 
@@ -332,6 +332,17 @@ What is deliberately left, with the reason for each:
 - the Gemini Demon sketch (30) and the Haardeon inside the jet pack
   (181-182): no block of their own.
 
+The plan ran as 69 rows, ending with `pal/docs/splynn-close-out` on
+2026-11-20. Besides the list above it left, on purpose, what the rows' ledger
+lines record: the bow-in-flames tattoo at 0 P.P.E. with a `ppe_note` (it
+prints no cost), the True Bio-Borg creation tables the class frontmatter could
+not hold (filed as `BOOK-INGEST-AUDIT` F146), the low end of each printed
+range on the airships and the Shellback armours, and each class's readings in
+its `extraction_notes`. The flying-ships compare added no row: it re-cited the
+four held Atlantis ships to printed 190 through `~368`, keeping each printed
+M.D.C. range in its location's `mdc_note`, `mdc_main_body` at the held floor
+and the Atlantis figures in each description.
+
 ## Ledger
 
 | date | branch | what went in |
@@ -371,61 +382,33 @@ What is deliberately left, with the reason for each:
 | 2026-11-20 | `pal/data/splynn-npcs-c` | notable NPCs 3: High Lord T'Lan (printed 54-55), Powerlord Cronus (55-56) and Ren the Hunter (56-58) as `notable_npcs` rows, 0 `stat_attacks` rows (none of the three prints attack damage); items held only by an NPC are carried in that NPC's row, so no gear row (`~376-splynn-npcs-c.sql`) |
 | 2026-11-20 | `pal/data/splynn-npcs-d` | notable NPCs 4: Max the Undead Slayer (printed 63-65), Sergeant Beta (65-67), Skippy (67-68) and White Raven (68-71) as `notable_npcs` rows, the four leaders of the Liberated Underground, with 11 `stat_attacks` rows (Max 2, Sergeant Beta 4, Skippy 4, White Raven 1); items held only by an NPC are carried in that NPC's row, so no gear row (`~377-splynn-npcs-d.sql`) |
 | 2026-11-20 | `pal/data/splynn-npcs-e` | notable NPCs 2: Miles Sky and Andruu Realm (printed 173-176), the two owners of Skyborne Excursions, as `notable_npcs` rows, with 3 `stat_attacks` rows (Miles Sky 2, Andruu Realm 1); items held only by an NPC are carried in that NPC's row, so no gear row (`~378-splynn-npcs-e.sql`) |
+| 2026-11-20 | `pal/docs/splynn-close-out` | Close-out, no D1 write. Production counted first (`--remote`): spells 25 (tradition `tattoo`, 57 tattoos in all), gear 72, vehicles 17 (13 new and the 4 re-cited flying ships), skills 1, creatures 14, notable_npcs 16, and all fourteen class ids in `imported_classes`, as the ledger sums. Status to `imported`; *What remains* repasted from `source-coverage --remote`. |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-20, after
-`~378-splynn-npcs-e.sql` was applied, the book's *BY BOOK* line
+From `node scripts/source-coverage.mjs --remote`, 2026-11-20, on
+`pal/docs/splynn-close-out`, its *BY BOOK* line for this book, as printed
 (traceable / other):
 
 ```
   splynn             159 / 0
 ```
 
-That run's `BACKLOG` block, unchanged by the organisms, the arms, the
-market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon, the Monster Were-Dragon and the first sixteen notable NPCs. The tattoos moved
-spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
-it is stored at 0 with a note.
+All 159 rows are traceable to a cached page (25 + 72 + 17 + 1 + 14 + 16 +
+14), and no Splynn Dimensional Market row appears under `unknown-book` or
+`not-cached`. That run's `BACKLOG` block, as printed:
 
 ```
-  BACKLOG       rows an importer created and nobody finished
-    gear stubs            13   description still says STUB — created by class import
-    skill stubs            5   created by an import and never given a base %, a bonus or a note
-    spell stubs           57   level 0 and 0 P.P.E.
-    psionic stubs          1   0 I.S.P.
-    spell text missing     0   nothing for the codex to show
-    psionic text missing   0   nothing for the codex to show
+BACKLOG       rows an importer created and nobody finished
+  gear stubs            13   description still says STUB — created by class import
+  skill stubs            5   created by an import and never given a base %, a bonus or a note
+  spell stubs           57   level 0 and 0 P.P.E.
+  psionic stubs          1   0 I.S.P.
+  spell text missing     0   nothing for the codex to show
+  psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in *Extraction plan* from line 2 on remains, less the 19 parasites
-`parasites-a` and `parasites-b` shipped, the 11 symbiotes `symbiotes`
-shipped, the 12 arms of line 3 `arms` shipped, the 16 market goods of
-line 4 `market-goods` shipped, the two power armours of line 5
-`power-armor` shipped, the two pods, the patrol flyer and the skill of
-line 6 `hover-pods` shipped, and the Sky-Flyers, airships and add-ons of
-line 7 `skyborne` shipped, and the four flying ships line 8
-`flying-ships-compare` read and re-cited, and the two animals and three
-Shellback armours of line 9 `animals` shipped, and the four races of
-`creatures-a`, the three of `creatures-b` and the five of `creatures-c`
-shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
-`class-tattooed-archer` shipped, and the True Bio-Borg, the second,
-`class-true-bio-borg` shipped, and the Kryygorth Hunter, the third,
-`class-kryygorth-hunter` shipped, and Kryygorth's Lesson, the fourth,
-`class-kryygorths-lesson` shipped, and the Kryygorth Pegasus, the fifth,
-`class-kryygorth-pegasus` shipped, and the Octoman, the sixth,
-`class-octoman` shipped, and the Nurilian Plant-People, the seventh,
-`class-nurilian-plant-people` shipped, and the Pythonan, the eighth,
-`class-pythonan` shipped, and the Rulian Translator, the ninth,
-`class-rulian-translator` shipped, and the Staphra Warrior, the tenth,
-`class-staphra-warrior` shipped, and the Staphra Warlord, the eleventh,
-`class-staphra-warlord` shipped, and the Staphra Mystic, the twelfth,
-`class-staphra-mystic` shipped, and the Were-Dragon, the thirteenth,
-`class-were-dragon` shipped, and the Monster Were-Dragon, the fourteenth
-and last, `class-monster-were-dragon` shipped, and the Water Merchant, Old
-West and Rassa, the first three of line 11's sixteen, `npcs-a` shipped,
-and K'Rynn Katar, Dionna, the Re-Animator and Crazy Al, the next four,
-`npcs-b` shipped, and High Lord T'Lan, Powerlord Cronus and Ren the
-Hunter, the next three, `npcs-c` shipped, and Max the Undead Slayer,
-Sergeant Beta, Skippy and White Raven, the next four, `npcs-d` shipped,
-and Miles Sky and Andruu Realm, the next two, `npcs-e` shipped.
+One number differs from the block of 2026-11-18 (13, 5, 56, 1, 0, 0): spell
+stubs 56 to 57, the bow-in-flames tattoo of `tattoos-b`, which prints no
+P.P.E. cost and is stored at 0 with a note. Nothing remains in the plan;
+what was left on purpose is under *Extraction plan*.
