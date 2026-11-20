@@ -2,7 +2,7 @@
 
 **Status:** `importing` — all 25 new magic tattoos and all 30 Bio-Wizard organisms (19 parasites, 11 symbiotes) shipped, all 12 new arms of printed 162-172, the 16 market goods of printed 21-36, the two Kittani power armours of printed 164-170, the two Kittani hover pods, the Patrol Flyer and `Pilot: Hover Pod` of printed 184-188, and the four TW Sky-Flyers, the four Skyborne airship classes and the 11 Techno-Wizard vehicle add-ons of printed 177 and 188-190, and the four Splugorth flying ships held from Atlantis were read against printed 190 and re-cited to it, and the two animals of printed 71-73 and 79-80 with the three Shellback armours of 80, and all twelve slave-stock races of printed 73-101 as `creatures` rows, and the Tattooed Archer O.C.C. of printed 108-111 and the True Bio-Borg R.C.C. of printed 154-161, and the Kryygorth Hunter, Kryygorth's Lesson and Kryygorth Pegasus R.C.C.s of printed 73-79 and the Octoman R.C.C. of printed 80-82, and the Nurilian Plant-People R.C.C. of printed 82-85, and the Pythonan R.C.C. of printed 85-87, and the Rulian Translator R.C.C. of printed 87-90, and the Staphra Warrior, Staphra Warlord and Staphra Mystic R.C.C.s of printed 90-97, and the Were-Dragon R.C.C. of printed 97-101 and the Monster Were-Dragon R.C.C. inside its block (printed 98-101), all fourteen classes, and the first three notable NPCs of printed 20-25 (the Water Merchant, Old West and Rassa), and four more of printed 25-39 (K'Rynn Katar, Dionna, the Re-Animator and Crazy Al). The plan is under *Extraction plan*. (2026-11-19)
 
-**Rows citing this book:** classes 14, gear 72, vehicles 17, skills 1, spells 25, notable_npcs 7, creatures 14
+**Rows citing this book:** classes 14, gear 72, vehicles 17, skills 1, spells 25, notable_npcs 10, creatures 14
 
 Slug `splynn`. Cached 2026-11-18 from
 `Rifts- World Book 21 Splynn Dimensional Market.pdf`, 194 PDF pages, **text layer** (`--probe` median 3,349 chars/page, 38.3% stop
@@ -368,20 +368,21 @@ What is deliberately left, with the reason for each:
 | 2026-11-19 | `pal/data/splynn-class-monster-were-dragon` | classes 1: the Monster Were-Dragon R.C.C. (printed 98-101, inside the Were-Dragon block), `monster-were-dragon`, published, XP table copied from production's True Bio-Borg (printed 190, the Full Conversion Bio-Borg table), the four percentage attribute penalties and the alignment change as `side_effects` prose, the craving table as a band-named pick-one group (91-00 carrying M.A. +1D4+2 and I.Q. +1), save vs magic +2 on spell and ritual magic in `second_form`, the heavy ancient weapons a pick of two from claymore, war-hammer, morning-star, flail, halberd and war-club; 0 catalog stubs; the readings are in its `extraction_notes` (`add-monster-were-dragon-class.sql`, no `~NNN`: a class script keeps its name) |
 | 2026-11-19 | `pal/data/splynn-npcs-a` | notable NPCs 3: the Water Merchant (printed 20-21), Old West (21-23) and Rassa (23-25) as `notable_npcs` rows, with Old West's invisible magic sword as 1 `stat_attacks` row; items held only by an NPC are carried in that NPC's row, so no gear row (`~374-splynn-npcs-a.sql`) |
 | 2026-11-19 | `pal/data/splynn-npcs-b` | notable NPCs 4: K'Rynn Katar the Bone Merchant (printed 25-27), Dionna (27-28), the Re-Animator (31-33) and Crazy Al (38-39, a sketch, not a stat block) as `notable_npcs` rows, with Dionna's eye flames and lesser rune dagger as 2 `stat_attacks` rows; items held only by an NPC are carried in that NPC's row, so no gear row (`~375-splynn-npcs-b.sql`) |
+| 2026-11-20 | `pal/data/splynn-npcs-c` | notable NPCs 3: High Lord T'Lan (printed 54-55), Powerlord Cronus (55-56) and Ren the Hunter (56-58) as `notable_npcs` rows, 0 `stat_attacks` rows (none of the three prints attack damage); items held only by an NPC are carried in that NPC's row, so no gear row (`~376-splynn-npcs-c.sql`) |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~375-splynn-npcs-b.sql` was applied, the book's *BY BOOK* line
+From `node scripts/source-coverage.mjs --remote`, 2026-11-20, after
+`~376-splynn-npcs-c.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             150 / 0
+  splynn             153 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon, the Monster Were-Dragon and the first seven notable NPCs. The tattoos moved
+animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon, the Monster Were-Dragon and the first ten notable NPCs. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -422,4 +423,5 @@ shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
 and last, `class-monster-were-dragon` shipped, and the Water Merchant, Old
 West and Rassa, the first three of line 11's sixteen, `npcs-a` shipped,
 and K'Rynn Katar, Dionna, the Re-Animator and Crazy Al, the next four,
-`npcs-b` shipped.
+`npcs-b` shipped, and High Lord T'Lan, Powerlord Cronus and Ren the
+Hunter, the next three, `npcs-c` shipped.
