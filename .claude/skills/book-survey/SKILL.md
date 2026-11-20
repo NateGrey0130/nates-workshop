@@ -328,6 +328,9 @@ PR, written in that PR before it opens and citing its branch (see
 
 **Read the offset from `scripts/books.json`**, and paste "what remains" from
 `node scripts/source-coverage.mjs --remote`, never a count you did yourself.
+With `WORKSHOP_OCR_CACHE` unset, a worktree reads `0 of 51 registered books
+present` and exits with nothing to report: set it to the main checkout's
+`.cache/books` first, and read that first line before the rest.
 
 ### It states facts about the book. It quotes no prose from it
 
