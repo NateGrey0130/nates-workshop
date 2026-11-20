@@ -35,6 +35,7 @@ attribute_dice:
 mdc_base: "5d6+50"
 ppe_base: "4d6"
 horror_factor: 13
+psionics_allowed: false
 xp_table: [0, 2201, 4401, 8801, 17601, 25001, 35001, 50501, 75501, 100501, 150501, 200501, 250501, 300001, 400001]
 bonuses:
   combat: { attacks: 1, initiative: 4, strike: 1, parry: 1, dodge: 1, pull_punch: 6, roll: 3, disarm: 2 }
