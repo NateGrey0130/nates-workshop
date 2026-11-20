@@ -151,7 +151,10 @@ command would be refused for you is beside the point. With every suite
 `ship-pr` lists green locally and the pull request open, one call:
 
 `gh pr checks <n> --watch --repo NateGrey0130/nates-workshop`, with the Bash
-timeout at its ten-minute maximum. This one call is the whole wait. **Green
+timeout at its ten-minute maximum. This one call is the whole wait, with one
+exception: straight after `gh pr create` it can exit 1 reporting no checks, or
+return before `smoke`, `menus` and `regression` are all listed. Re-run it until
+all three required checks appear, then let it run to the end. **Green
 ends the row as `READY`, at once.** Do not run `pr-landed.mjs --wait` or
 `drift-check.mjs` after it: both read a merge that has not happened.
 
