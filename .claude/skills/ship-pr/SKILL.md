@@ -42,11 +42,21 @@ second pair of eyes on a run you already did.
 3. **Apply schema and data FIRST**, if the change needs them. See
    [the ordering rule](#the-ordering-rule). This step is wrong by default.
 4. **Verify**, at the layer the change lives in:
-   - **always**, the four smoke suites:
-     `node apps/character-creator/test/smoke.mjs`,
-     `node apps/filament-forge/test/smoke.mjs`,
-     `node apps/media-vault/test/smoke.mjs`,
-     `node apps/marvel-heroes/test/smoke.mjs`.
+   - **always**, the character creator's smoke suite, whatever the change
+     touches, because it also pins every skill, agent, audit menu and app tile:
+     `node apps/character-creator/test/smoke.mjs`.
+   - **another group's smoke suite only when the change reaches that group.**
+     Stage the change first, naming each path to `git add`, so that a new file
+     counts. Then ask the question CI asks:
+     ```bash
+     node scripts/groups.mjs --affected --cached origin/main
+     ```
+     `tools=true` means `node apps/filament-forge/test/smoke.mjs` and
+     `node apps/media-vault/test/smoke.mjs`. `marvel=true` means
+     `node apps/marvel-heroes/test/smoke.mjs`. On `false` that suite is not
+     run: CI skips it for the same diff. A shared path turns every group on,
+     and so does a diff the script cannot read. Take the answer from the
+     script, never from reading the paths.
      `smoke.mjs --section <name>` is for iterating; **the merge gate is the
      flagless run**, and a partial run labels itself `PARTIAL SMOKE PASSED` so
      it cannot be quoted as this step.
