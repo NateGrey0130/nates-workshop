@@ -370,11 +370,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`add-were-dragon-class.sql` was applied, the book's *BY BOOK* line
+`add-monster-were-dragon-class.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             142 / 0
+  splynn             143 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
