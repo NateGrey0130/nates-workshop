@@ -372,16 +372,16 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 From `node scripts/source-coverage.mjs --remote`, 2026-11-19, after
-`~374-splynn-npcs-a.sql` was applied, the book's *BY BOOK* line
+`~375-splynn-npcs-b.sql` was applied, the book's *BY BOOK* line
 (traceable / other):
 
 ```
-  splynn             146 / 0
+  splynn             150 / 0
 ```
 
 That run's `BACKLOG` block, unchanged by the organisms, the arms, the
 market goods, the power armours, the hover pods, the Skyborne rows, the
-animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon, the Monster Were-Dragon and the first three notable NPCs. The tattoos moved
+animals, all twelve races, the Tattooed Archer, the True Bio-Borg, the Kryygorth Hunter, Kryygorth's Lesson, the Kryygorth Pegasus, the Octoman, the Nurilian Plant-People, the Pythonan, the Rulian Translator, the Staphra Warrior, the Staphra Warlord, the Staphra Mystic, the Were-Dragon, the Monster Were-Dragon and the first seven notable NPCs. The tattoos moved
 spell stubs from 56 to 57: the bow-in-flames tattoo prints no P.P.E. cost, so
 it is stored at 0 with a note.
 
@@ -420,4 +420,6 @@ shipped, and the Tattooed Archer, the first of line 10's fourteen classes,
 `class-staphra-mystic` shipped, and the Were-Dragon, the thirteenth,
 `class-were-dragon` shipped, and the Monster Were-Dragon, the fourteenth
 and last, `class-monster-were-dragon` shipped, and the Water Merchant, Old
-West and Rassa, the first three of line 11's sixteen, `npcs-a` shipped.
+West and Rassa, the first three of line 11's sixteen, `npcs-a` shipped,
+and K'Rynn Katar, Dionna, the Re-Animator and Crazy Al, the next four,
+`npcs-b` shipped.
