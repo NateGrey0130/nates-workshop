@@ -47,11 +47,13 @@ other fact lives in a pull request. The measurement behind this is in
    not queued; tell Nate which rows fell. One you could not check goes in the
    brief as `Not checked when written:`.
 2. **Settle every open choice before any brief exists**, because a worker
-   cannot ask. A choice on *The asked list* below goes to Nate, all of them
-   in one batch, each with the option you recommend first. Any other choice
-   where you can name the option you recommend and why is taken, and goes on
-   its brief's `Rulings:` line as
+   cannot ask. A choice is raised in `/go`'s interview, before Nate's "go",
+   or taken on the recommendation: name the option you recommend and why,
+   and put it on its brief's `Rulings:` line as
    `taken on the recommendation, <date>: <choice>; not taken: <other>`.
+   **After Nate's "go" nothing is asked**, by the planner, the driver or a
+   worker. Every choice taken that way keeps its line, and is told to him in
+   the closing message.
 3. **Split a big row, never fold two**, and tell Nate what was split. More
    than two fixes that reproduce separately is two rows: the trial's four-fix
    row peaked at 197k against the worker's 200k stop.
@@ -86,22 +88,10 @@ other fact lives in a pull request. The measurement behind this is in
    commit it names, then `git branch -D <branch>`, so the shipping row's
    `checkout -b` does not find the name taken.
 
-Ruling 3 is Nate's, 2026-10-12. Ruling 2 is his of 2026-11-10; until then
-every choice was asked (2026-10-12), and the options he did not take were
-one batch with the recommendations preselected, and taking every
-recommendation.
-
-### The asked list
-
-Asked always, by the planner and by a driver mid-chain:
-
-- a production schema change: a table or column added, dropped or renamed
-- deleting or retiring data, rows or a table, in any D1
-- a Cloudflare Access, R2, permission, hook or settings change
-- dropping or narrowing something he asked for
-- a choice with no option you can recommend, or with options that are close
-
-**When unsure whether a choice is on the list, it is.**
+Ruling 3 is Nate's, 2026-10-12. Ruling 2 is his of 2026-11-21, "Nothing is
+asked"; the options he did not take were asking only the irreversible
+choices (the planner's recommendation that day) and keeping the asked list
+of 2026-11-10. The history is in `reference/why.md`.
 
 ## What a brief carries
 
@@ -216,8 +206,9 @@ that did would skip the steps below. Four steps, each call on its own:
 
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
-request for Nate's word: if a call in steps 1 to 4 is refused or fails, other
-than a data script's local apply, stop.
+request for Nate's word: if a call in steps 1 to 3 is refused or fails, stop
+(*The five stops* below). A failure in step 4 is said in the closing message
+and is not a stop: each worker applies the migrations its copy lacks.
 
 **A capped row with only the CI wait left is the driver's to finish, not a
 split.** That is a `BLOCKED` report from the worker's cap that says its pull
@@ -262,29 +253,41 @@ a capped worker's worktree still has the branch checked out, so remove it
 through the `worktree` skill and delete the local branch, or the resuming
 worker's `checkout -b` finds the name taken.
 
-**The driver stops for Nate only at the first of these** (his ruling,
-2026-10-12: no row cap), and at nothing else:
+**The five stops.** The driver stops only at these, and at nothing else
+(Nate, 2026-11-21: stops "only on breaking items", with explicit reasoning;
+his ruling of 2026-10-12, no row cap, still holds):
 
-- the report or the state file says `BLOCKED`, other than the two cap cases
-  above.
-  Do not retry or fix the row.
-- the state file says `DONE`, or the next row has no brief.
-- the report and the state file disagree, other than a `READY` report over a
-  state file that still names that row.
+1. a required check red for a reason outside the row's diff;
+2. a merge, landing or drift step (steps 1 to 3 above) refused or failed;
+3. a `--remote` D1 apply refused or failed;
+4. a choice with no recommendable option, including one whose only option
+   breaks a `CLAUDE.md` never-rule, such as public access on the R2 bucket;
+5. the same row `BLOCKED` twice for the same cause.
 
-A ruling a brief lacks is not a stop, and it arrives as a `BLOCKED` report
-naming the options and the one the worker recommends. **Off *The asked
-list*, with a recommendation in the report, the driver takes it** (Nate,
-2026-11-10; the option he did not take was the driver asking every one):
-append `From row <id>: taken on the recommendation, <date>: <choice>; not
-taken: <other>` to that row's brief, replace `state.md` whole with a `NEXT:`
-line naming the same row and any branch and commit the report gave to resume
-from, free that branch as for a split above, and spawn the row again. It is
-told to him in the closing message. On the list, or with no recommendation
-in the report: ask it with `AskUserQuestion`, and the row waits for the
-answer. The driver does not form a recommendation of its own, since it has
-read neither the brief nor the code, and does not end the session over a
-ruling.
+Do not retry or fix a stopped row. `DONE` is the end of the chain, not a
+stop. **Every stop is written as `state.md`'s first line, one sentence in
+three clauses:**
+`BLOCKED: <the cause as a mechanism>; <what was tried>; <what unblocks it>`.
+When a row is spawned a second time, the last-row line carries `attempt 2`,
+so that the fifth stop can be read off `state.md`.
+
+**Any other disagreement** between a report, `state.md` and GitHub is not a
+stop. Go by `node .claude/scripts/plan-tick.mjs`: its verdict for the plan
+says what to do next, and only its `STOP` verdict is written as a `BLOCKED`
+line, carrying both readings that disagreed.
+
+**A `BLOCKED` report that carries a recommendation is taken**, whatever the
+choice (Nate, 2026-11-21, "Nothing is asked"; the options he did not take
+were asking the irreversible ones and keeping the asked list): append
+`From row <id>: taken on the recommendation, <date>: <choice>; not taken:
+<other>` to that row's brief, replace `state.md` whole with a `NEXT:` line
+naming the same row and any branch and commit the report gave to resume
+from, free that branch as for a split above, and spawn the row again with
+`attempt 2` on the last-row line. It is told to him in the closing message.
+Nothing in driving asks Nate a question, and there is no `AskUserQuestion`
+call anywhere in it. A report with no recommendation is stop 4. The driver
+does not form a recommendation of its own, since it has read neither the
+brief nor the code.
 
 **The driver's own budget warning is a hand-off the driver makes itself, not
 a stop.** It arrives as the UserPromptSubmit line (`session-budget: context
