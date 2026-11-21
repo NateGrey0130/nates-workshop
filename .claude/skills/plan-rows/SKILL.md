@@ -81,7 +81,10 @@ other fact lives in a pull request. The measurement behind this is in
    has its worker end by appending `From row <id>: resume <branch> at
    <commit>` to the shipping row's brief and writing `state.md` with the
    shipping row as `NEXT:` and its own row as `PUSHED` (the incident is in
-   `reference/why.md`).
+   `reference/why.md`). Before it ends, the extraction worker also frees its
+   local branch: confirm `git ls-remote --heads origin <branch>` shows the
+   commit it names, then `git branch -D <branch>`, so the shipping row's
+   `checkout -b` does not find the name taken.
 
 Ruling 3 is Nate's, 2026-10-12. Ruling 2 is his of 2026-11-10; until then
 every choice was asked (2026-10-12), and the options he did not take were
