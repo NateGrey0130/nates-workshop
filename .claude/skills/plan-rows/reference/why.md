@@ -44,6 +44,18 @@ outstanding-work plan planned ran as 107 briefs.
 Every book row's first worker capped in the 2026-10-20 book-imports plan (ten
 rows).
 
+## Starting the driver: the scheduled tick, not a session hand-off
+
+Measured 2026-11-21 on the Splynn plan: the app refused
+`mcp__ccd_session__start_session` nine times, because it refuses that call in
+any session another session started, and the refused hand-offs left the chain
+idle 1,097 of its 2,551 minutes. That refusal is an app guard, not a
+permission to route around. Against it, one scheduled run on 2026-11-18
+(`mif-plan-watchdog`) drove five workers and merged #2272 and #2274 with
+nobody at the keyboard. So the scheduled task is the driver, each run one
+tick under `plan-tick.mjs`'s lock (#2317), and a driver at its budget line
+releases the lock and ends rather than starting a successor.
+
 ## Starting the driver: the Sonnet trial's yardstick
 
 The trial is judged against the 0.72M per merge the Opus drivers measured on
