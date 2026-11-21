@@ -40,7 +40,8 @@ path and D1 table.
    `origin/main` into your branch and re-run the suites before you push.
 2. Name the branch and title by *Naming* below. Check that the name is free.
 3. D1 changes are applied **before** the merge (`ship-pr`). Nate merges, or a
-   plan driver merging a `READY` row (*Permissions* below).
+   plan driver merging a row reported `READY`, or one `plan-tick.mjs` reads
+   as `MERGE-FIRST` (*Permissions* below).
 
 ## Naming
 
@@ -89,8 +90,8 @@ next turn.
 | `windows-shell` | before an in-place edit, an inline script with backslashes, or a query you will act on |
 | `worktree` | a second concurrent session, and **before `git worktree remove`** |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
-| `plan-rows` | writing briefs for a multi-PR plan, or driving the `pr-worker` chain through one |
-| `go` | `/go <goal, findings or book>` plans, shows the plan and starts the driver on Nate's word; `/go resume [plan]` restarts a chain |
+| `plan-rows` | writing briefs for a multi-PR plan, arming one, or running a driver tick: the scheduled task `plan-driver` drives the `pr-worker` chain |
+| `go` | `/go <goal, findings or book>` interviews, plans, shows the plan and arms it on Nate's "go"; `/go resume [plan]` restarts a chain |
 
 Read the skill before the code.
 
@@ -135,7 +136,10 @@ driver session). `d1-apply.mjs`, `gh pr create`, `git push/commit/checkout` and
 widen the `gh api` entry. The allowed merge is still bound by the `ship-pr`
 skill's order (D1 applied first, every required check green, the merge as its
 own call) and by the `plan-rows` skill, which merges only a row a worker
-reported `READY`. Work that is not a plan row is still merged by Nate.
+reported `READY`, or one `plan-tick.mjs` reads as `MERGE-FIRST`. The plan
+driver is a run of the scheduled task `plan-driver`: nothing is asked after
+Nate's "go", and it stops only at the five stops `plan-rows` lists. Work that
+is not a plan row is still merged by Nate.
 `.claude/hooks/guard-bash.sh` refuses six command shapes. Every hook is
 registered once, in the repo's `.claude/settings.json` as
 `$CLAUDE_PROJECT_DIR/.claude/hooks/<script>`; the user-level
