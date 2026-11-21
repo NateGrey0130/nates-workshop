@@ -1,6 +1,6 @@
 ---
 name: plan-rows
-description: Turn an approved list of work into a chain the pr-worker agent can run - a state file and one brief per row in the memory store - and drive that chain. Use when Nate approves a multi-PR plan, when asked to "write the briefs", "queue the rows" or "get the chain ready", when a row is added to or split in an existing plan, and when starting or resuming a driver session.
+description: Turn an approved list of work into a chain the pr-worker agent can run - a state file and one brief per row in the memory store - and drive that chain. Use when Nate approves a multi-PR plan, when asked to "write the briefs", "queue the rows" or "get the chain ready", when a row is added to or split in an existing plan, and when arming a plan, running a driver tick or resuming a chain.
 ---
 
 # Planning rows, and driving them
@@ -124,35 +124,63 @@ late. Anything else goes in the pull request's *What this left*.
 
 ## Starting the driver
 
-The planning session starts the first driver itself, once the briefs and
-`state.md` are written and Nate has approved the plan, with
-`mcp__ccd_session__start_session` (load it with `ToolSearch` if it is
-deferred): initiation `user_asked` (his approval of the plan is the ask),
-context `fresh`, `use_worktree` false, `prompt` the one line
-`Load plan-rows and drive <plan> from its state.md.`, a `background` of one
-or two sentences naming the plan (the call requires one), and `model`
-`claude-sonnet-5-5` (the id on 2026-11-10, a dated value: re-check it at a
-model change). The Sonnet driver is a trial (Nate, 2026-10-22; the
-option he did not take was keeping the driver on Opus), judged against the
-Opus drivers' spend per merge measured that day (`reference/why.md`). Each driver of
-the first plan run this way says in its closing message its model and the
-number of rows it merged, so the next retrospective can read its spend per
-merge off the transcript against that figure. The hand-off at a driver's
-budget line (below) passes the same `model`. The worker's model is what
-`.claude/agents/pr-worker.md`'s frontmatter says; this changes nothing there.
-**A refusal of the `start_session` call is a stop**: say so to Nate. It is
-not a reason to type the prompt into a session by hand, or to drive the
-chain from the planning session. A session where `ToolSearch` finds no
-`mcp__ccd_session__start_session` at all (a CLI session) is the same stop.
+**The driver is a run of the scheduled task `plan-driver`**, whose whole
+prompt is `Load plan-rows and run one tick.` It fires every 30 minutes, and
+each run is one tick (*Driving the chain*). A session where Nate types that
+line is a driver too, under the same lock. No session starts another
+session: the app refuses that call in any session another session started,
+and that guard is not routed around (the Splynn figures are in
+`reference/why.md`). Nate, 2026-11-21: the scheduled task is the driver; the
+option he did not take was session hand-offs with the task as a fallback.
+
+The planning session arms the plan once the briefs and `state.md` are
+written and Nate has said "go":
+
+```
+node .claude/scripts/plan-tick.mjs --arm <plan>
+```
+
+The first tick comes within 30 minutes (taken on the recommendation,
+2026-11-21: a 30-minute tick; not taken: 45 or 15). To start at once, the
+planning session may call `mcp__scheduled-tasks__run_scheduled_task` on
+`plan-driver`; a refusal there is not a stop, since the next tick comes
+anyway. It is not a reason to type the tick's prompt into a session by hand
+either, or to drive the chain from the planning session. One plan is driven
+at a time (Nate, 2026-11-21; the option he did not take was one driver per
+group): a tick takes the first plan that needs it.
+
+The driver's model is whatever the task's edit form holds, and only Nate
+sets it. The Sonnet driver is a trial (Nate, 2026-10-22; the option he did
+not take was keeping the driver on Opus), judged against the Opus drivers'
+spend per merge measured that day (`reference/why.md`). Each tick's closing
+message says its model and the number of rows it merged, so the next
+retrospective can read its spend per merge off the transcript against that
+figure. The worker's model is what `.claude/agents/pr-worker.md`'s
+frontmatter says; this changes nothing there.
 
 ## Driving the chain
 
-The driver is a session, started from one line that the planning session
-(above), Nate or the driver before it sends (below):
-`Load plan-rows and drive <plan> from its state.md.`
-It reads `state.md` and each worker's report, never a brief or the code: a
-driver that opens a brief or a book cache is planning in the context every
-later row pays for. One row is one spawn, in the foreground:
+The driver is one tick (*Starting the driver*). It reads `plan-tick.mjs`,
+`state.md` and each worker's report, never a brief or the code: a driver
+that opens a brief or a book cache is planning in the context every later
+row pays for. **One tick:**
+
+1. `node .claude/scripts/plan-tick.mjs` prints one verdict per armed plan.
+   Take the first plan whose verdict is `MERGE-FIRST` or `DRIVE`. `LIVE`,
+   `BLOCKED`, `DONE`, `STOP` or nothing armed: end in one line and start
+   nothing. (`STOP` is written to that plan's `state.md` as a `BLOCKED`
+   line first; see *Any other disagreement* below.) `UNKNOWN` is a reading
+   that failed: end in one line, and the next tick reads again.
+2. `node .claude/scripts/plan-tick.mjs --claim <plan>`. Exit 1 means
+   another driver is live: end in one line.
+3. `MERGE-FIRST #<n>`: merge it by the four steps below, write `state.md`,
+   and carry on with the plan. `DRIVE row <id>`: spawn the row.
+4. `node .claude/scripts/plan-tick.mjs --heartbeat <plan>` before every
+   spawn and after every return, so a later tick reads the lock as live.
+5. `node .claude/scripts/plan-tick.mjs --release <plan>` at every stop, at
+   `DONE`, and at the budget line (below), before the closing message.
+
+One row is one spawn, in the foreground:
 
 ```
 Agent  subagent_type: pr-worker   run_in_background: false
@@ -163,6 +191,9 @@ prompt:
 
 **Nothing else goes in the prompt.** A correction to how workers work is a
 pull request against the agent file; a fact about a row belongs in its brief.
+
+**A worker return with no outcome line is not a stop**: run
+`plan-tick.mjs` again and go by its verdict for the plan.
 
 After each return, read `state.md` again and go by it. `MERGED`, `DROPPED`
 or `PUSHED` (an extraction row, *Before a brief is written* 6) with a
@@ -289,20 +320,17 @@ call anywhere in it. A report with no recommendation is stop 4. The driver
 does not form a recommendation of its own, since it has read neither the
 brief nor the code.
 
-**The driver's own budget warning is a hand-off the driver makes itself, not
-a stop.** It arrives as the UserPromptSubmit line (`session-budget: context
-is …, past 200k`), or as the post-merge line (`session-budget: a PR just
-merged and this session holds …`) once the figure it prints is 150k or more.
-Then the driver finishes the row in hand, replaces `state.md` whole, and
-starts the next driver with `mcp__ccd_session__start_session` (load it with
-`ToolSearch` if it is deferred): initiation `user_asked`, context `fresh`,
-`use_worktree` false, the one-line prompt above with the plan's name in it,
-and the same `model` it was started with (*Starting the driver*). Nate is
-not asked, and the new driver needs no word from him: the allow rule above
-is what lets it merge. Then the old driver's closing message. The post-merge
-line fires from 150k (`WARN_AT` in `.claude/hooks/session-budget.mjs`), so
-below that a merge prints nothing; continue to the 200k line. Why it is not
-100k is in `reference/why.md`.
+**The driver's own budget line ends the tick, and nothing is handed off.**
+It arrives as the UserPromptSubmit line (`session-budget: context is …,
+past 200k`), or as the post-merge line (`session-budget: a PR just merged
+and this session holds …`) once the figure it prints is 150k or more. Then
+the driver finishes the row in hand, replaces `state.md` whole, runs
+`--release <plan>`, writes its closing message and ends. It starts no
+session: the next tick picks the plan up, and needs no word from Nate,
+since the allow rule above is what lets it merge. The post-merge line fires
+from 150k (`WARN_AT` in `.claude/hooks/session-budget.mjs`), so below that a
+merge prints nothing; continue to the 200k line. Why it is not 100k is in
+`reference/why.md`.
 
 The closing message carries each row's outcome and pull request, every row
 that was split and into what, every line a worker marked as Nate's, and
