@@ -85,7 +85,9 @@ if (!Object.keys(caches).length) {
   console.log(`caches:       ${cacheStatus}`);
   console.log('no OCR caches under .cache/books — nothing to trace against.');
   console.log('Cache a book with scripts/ocr-book.py; the caches are gitignored.');
-  process.exit(0);
+  console.log(`Looked in ${cacheDir}. A worktree or a fresh shell needs WORKSHOP_OCR_CACHE set to the main checkout's .cache/books.`);
+  // Exit 1: a report that read nothing is not a clean report, and exit 0 let a worker read it as one.
+  process.exit(1);
 }
 
 const opts = { registry, caches, manifests, notBooks: loadNotBooks() };
