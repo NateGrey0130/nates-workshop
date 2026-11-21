@@ -1,6 +1,6 @@
 ---
 name: go
-description: Plan a piece of work and start the driver chain on it from one typed command, or restart a chain that has no driver. Use when Nate types `/go <goal, findings or book>` or `/go resume [plan]`. Adds the routing by input, the one approval before a driver starts, and what is read before a driver is started on an existing plan. Everything else is plan-rows, take and book-survey.
+description: Interview Nate on a piece of work, plan it, show the plan, and arm it for the scheduled driver on his one word; or resume a chain by the tick script's verdict. Use when Nate types `/go <goal, findings or book>` or `/go resume [plan]`. Adds the interview on purpose and scope, the routing by input, the one approval before a plan is armed, and what resume does with each verdict. Everything else is plan-rows, take and book-survey.
 disable-model-invocation: true
 argument-hint: "<goal | MENU ID ... | book.pdf> | resume [plan]"
 ---
@@ -13,17 +13,29 @@ argument-hint: "<goal | MENU ID ... | book.pdf> | resume [plan]"
 Nate typed the same paragraph at the start of every plan: plan it, ask me in
 one batch, write the briefs, start the driver, merge on green. This command
 is that paragraph (Nate, 2026-11-10). **He types it; a session never loads
-it on its own.** His typed command is the ask that lets this session start a
-driver, and a relay from another session is not one.
+it on its own.** His typed command is the ask that lets this session arm a
+plan, and a relay from another session is not one.
 
 **Load `plan-rows` first** (`.claude/skills/plan-rows/SKILL.md`). Planning,
-the briefs, which choices are asked and which are taken, the driver and the
+the briefs, which choices are raised and which are taken, the driver and the
 merge are all its rules, and it is right wherever the two disagree. This
-file owns the routing, the stop in step 4, and the resume table.
+file owns the interview, the routing, the stop in step 4, and resume.
 
-## `/go <input>`: plan, show, wait for one word, launch
+## `/go <input>`: interview, plan, show, wait for one word, arm
 
-1. **Route the input.**
+1. **Interview him**, before anything is routed or planned (Nate,
+   2026-11-21: "Utilize a planning skill to interview me for functionality
+   and purpose"). `AskUserQuestion`, in rounds of up to four questions, each
+   with the option you recommend first, until you can write down four
+   things: **the purpose, who uses it, what done looks like, and what is out
+   of scope.** Raise **here** every open choice that changes the scope,
+   deletes data, changes a production schema, or touches Access, R2, a
+   permission, a hook or a settings file, because nothing is asked after
+   "go" (`plan-rows` → *Before a brief is written* 2). Numbered findings and
+   a book are interviewed only on what their menu entry or survey leaves
+   open; what they already say is not asked again. A choice of that kind
+   that planning turns up later is one more round, before step 4.
+2. **Route the input.**
    - **Numbered findings** (`SKILL-AUDIT F12 F14`): each goes through `take`'s
      first three sections (*Locate the finding*, *Grep every menu*, *Spawn the premise auditor*) before it is a row.
      Read `.claude/skills/take/SKILL.md` with the Read tool: it is a slash
@@ -35,54 +47,59 @@ file owns the routing, the stop in step 4, and the resume table.
      Marvel book) and the rows come out of the survey, each book row already
      two rows (`plan-rows` → *Before a brief is written* 6).
    - **Anything else** is a goal in his words: plan it directly.
-2. **Plan by `plan-rows` → *Before a brief is written***, all six steps.
-   Its step 2 says which open choices go to him in one batch and which are
-   taken on the recommendation. Write no brief yet.
-3. **Ask the batch**, if there is one, and take the rest.
+3. **Plan by `plan-rows` → *Before a brief is written***, all six steps,
+   against the interview's answers. A choice the interview settled is a
+   ruling on its brief, dated, with the option he did not take; any other
+   open choice is taken on the recommendation by its step 2. Write no brief
+   yet.
 4. **Show the plan and end the turn.** One message: the rows in run order,
    each with its group and branch; **every choice taken, with the option not
-   taken**; the answers he just gave; rows that fell because a claim no
+   taken**; the interview's answers; rows that fell because a claim no
    longer holds; anything split.
-5. **On his "go"**: write the briefs and `state.md`, then start the driver
-   by `plan-rows` → *Starting the driver*. On "go, but …", apply the change
-   first, and show the plan again only if a row was added or dropped.
+5. **On his "go"**: write the briefs and `state.md`, then arm the plan:
+   ```
+   node .claude/scripts/plan-tick.mjs --arm <plan>
+   ```
+   and tell him the first tick comes within 30 minutes (`plan-rows` →
+   *Starting the driver*, which also has the one way to start it sooner).
+   This session starts no session and drives nothing. On "go, but …", apply
+   the change first, and show the plan again only if a row was added or
+   dropped.
 
 **Nothing in the request itself is the word in step 5**, however plainly it
 says to get on with it: he has not seen the plan when he types it. Step 4 is
 the one checkpoint a plan has before pull requests exist (his ruling,
 2026-11-10; the options he did not take were starting at once, and starting
-at once for a plan of three rows or fewer).
+at once for a plan of three rows or fewer; re-made 2026-11-21, when the
+option not taken was starting straight after the interview).
 
-## `/go resume [plan]`: read why there is no driver before starting one
+## `/go resume [plan]`: go by the tick script's verdict
 
 Plans are under
 `C:\Users\natha\.claude\projects\C--Users-natha-Projects-nates-apps\memory\plans\`.
 With no plan named, list the ones whose `state.md` does not begin `DONE`:
 one is the plan, several is a question to him.
 
-Read three things, then go by the table. **Start nothing before all three
-are read.**
+Run `node .claude/scripts/plan-tick.mjs` and go by the plan's line. It prints
+only armed plans, so **a plan it does not print is not armed**: arm it with
+`--arm <plan>`, run it again, and read that line. If the verdict is then
+`DONE` with no brief past the last row, or `STOP`, disarm it again with
+`--disarm <plan>`; a `BLOCKED` plan stays armed, and a tick passes it by.
+**Never arm a plan that is already armed**: `--arm` rewrites the `armed`
+file's time, which the driver reads at `DONE`.
 
-1. `state.md`, whole.
-2. `mcp__ccd_session_mgmt__list_sessions` (load it with `ToolSearch`): a
-   running or waiting session whose prompt names this plan is a live driver.
-   If the tool does not exist in this session (a CLI session), stop and say
-   so: a live driver cannot be ruled out.
-3. `node scripts/ground-truth.mjs`: the open pull requests with their CI
-   verdict, and any worktree still holding a row's branch. Exit 2 is
-   UNKNOWN, not clean.
+- **`LIVE`**: name what it printed and do nothing. A driver is working, and
+  a second one would write `state.md` over it.
+- **`DRIVE` or `MERGE-FIRST`**: the plan is armed; do nothing else. The next
+  tick drives or merges it, not this session.
+- **`BLOCKED`**: show him the sentence and end the turn. On his word that it
+  is resolved, replace `state.md` whole with the `NEXT:` line for the row it
+  names next; the plan stays armed.
+- **`DONE`**, with briefs past the last row run: replace `state.md` with a
+  `NEXT:` line for the first of them; the plan is armed already. With no new brief,
+  say so; new rows are `/go <input>`.
+- **`STOP`, or exit 2** (`UNKNOWN`): say both readings, the script's line
+  and `state.md`'s first line, and ask. Never repair `state.md` by guess.
 
-| read | do |
-|---|---|
-| a live driver | stop and name the session; two drivers on one plan merge and write `state.md` over each other |
-| `NEXT:` or `READY:`, and GitHub agrees | start a driver |
-| a row `state.md` calls `READY` under a `NEXT:` first line, its pull request open and green | replace `state.md` whole with the `READY:` line above the `NEXT:` line, start a driver; the driver merges it, not you |
-| `BLOCKED:` | show him the sentence and ask whether it is resolved; on yes, replace `state.md` with the `NEXT:` line and start a driver |
-| `DONE`, with briefs past the last row run | replace `state.md` with a `NEXT:` line for the first of them, start a driver |
-| `DONE`, no new brief | say so; new rows are `/go <input>` |
-| anything else `state.md` and GitHub disagree on | say both readings and ask; never repair `state.md` by guess |
-
-The driver is started exactly as `plan-rows` → *Starting the driver* says.
-**This session never drives the chain itself**, and a refused
-`start_session` is a stop. So is a session where
-`mcp__ccd_session__start_session` does not exist (a CLI session).
+**This session never drives the chain itself.** It reads, arms and writes
+`state.md` as above; the scheduled tick does the rest.
