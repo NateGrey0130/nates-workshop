@@ -235,11 +235,51 @@ that did would skip the steps below. Four steps, each call on its own:
    data scripts behind production, and a new one can need a row it never got.
    The incident behind this step is in `reference/why.md`.
 
+Two more steps follow the merge, and **neither is ever a stop**: a refusal, a
+failure or a missing tool is one line in the closing message, and the chain
+goes on.
+
+5. **Remove the merged row's worktree** through the `worktree` skill
+   (*Removing one*): kill a dev server the worker left on its port first, by
+   the `--port` in its command line, then unlink every junction the
+   reparse-point scan names, then `git worktree remove <its path>`, then
+   `git branch -D <the row's branch>` (capital `D`, since local `main` may be
+   behind). Its closing-message line is `worktree <path>: removed`, or
+   `refused: <the call and its message>`, or `failed: <what it printed>`.
+6. **Refresh the Plan Board**, https://claude.ai/artifact/RNdwDDxNnP9A7m9F5tNyfF.
+   `node .claude/scripts/plan-board.mjs --export <a scratchpad dir>` writes
+   `reading.json`, `plans.json` and `rows.json` there. Upload each with the
+   Artifact tool (`url` that link, `asset: true`, `file_path`), one call per
+   file. Then, with `ArtifactData`, `get` the docs `reading`, `plans` and
+   `rows` in collection `datasets` for their versions, and send one `batch` of
+   three `update` writes, each with `if_version`, setting `source.url` to the
+   file's new blob url and `updated.at` to now. The page itself is never
+   republished. Load each tool with `ToolSearch`. Its closing-message line is
+   `board: refreshed`, or `refused: <the call>`, or
+   `no tool: <the name ToolSearch did not find>`, or `failed: <what it printed>`.
+
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
 request for Nate's word: if a call in steps 1 to 3 is refused or fails, stop
 (*The five stops* below). A failure in step 4 is said in the closing message
 and is not a stop: each worker applies the migrations its copy lacks.
+
+**At `DONE`, before the closing message**, four things, in order, none of them
+a stop either:
+
+1. step 6 once more, so the board shows the plan finished;
+2. read the plan's `armed` file for the time it was armed, then
+   `node .claude/scripts/plan-tick.mjs --disarm <plan>` and
+   `node .claude/scripts/plan-tick.mjs --release <plan>`;
+3. the `worktree` skill's reparse-point scan over every worktree the plan's
+   rows left, removing each as in step 5;
+4. **archive this plan's finished driver sessions**:
+   `mcp__scheduled-tasks__list_task_runs` on `plan-driver`, and
+   `mcp__ccd_session_mgmt__archive_session` for each run since the armed time
+   that succeeded, never the run doing it. Load both with `ToolSearch`.
+
+Each has its line in the closing message, as worked, refused or no tool; for
+step 4, the runs archived and the runs left with the reason.
 
 **A capped row with only the CI wait left is the driver's to finish, not a
 split.** That is a `BLOCKED` report from the worker's cap that says its pull
@@ -337,5 +377,5 @@ that was split and into what, every line a worker marked as Nate's, and
 `node scripts/deploy-sweep.mjs`. It also carries each row's `Peak context:`
 line, copied from the worker's report beside the row's pull request; the
 planner of the next plan reads those lines before choosing its reading
-budget (*Before a brief is written*). Worktrees a run leaves behind are
-removed through the `worktree` skill's scan.
+budget (*Before a brief is written*). It carries the lines of steps 5 and 6
+for each merged row, and at `DONE` the lines of the four things above.
