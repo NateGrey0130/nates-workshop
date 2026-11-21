@@ -73,6 +73,22 @@ Measured 2026-10-19: rows 46a1, 46b and 46c1 applied migrations 091 to 093 to
 production and to their own copies only, and five of the next seven workers'
 copies failed smoke's *Migration state* and served the creator a 500.
 
+## Driving the chain, steps 5 and 6, and `DONE`: clean-up and the board
+
+Nate, 2026-11-21: clean up sessions and worktrees, archive sessions in a done
+state, and "update the plan board artifact after each row is complete". Step
+6 reverses the choice of 2026-11-18, when the Plan Board was refreshed on
+demand only. Taken on the recommendation the same day: a failed refresh,
+removal or archive is reported, not a stop; not taken: stopping the chain on
+it. Before step 5 only the closing message's one scan removed worktrees, and
+nothing archived a finished driver session.
+
+Not checked on 2026-11-21: whether an unattended scheduled run can call the
+Artifact tool, `ArtifactData` or `archive_session` without an approval prompt.
+The probe task that would have shown it was refused by the permission
+classifier that day, so each step names its line for worked, refused and no
+tool, and the closing message is where the answer will first be read.
+
 ## Driving the chain: a capped row with only the CI wait left
 
 Measured 2026-10-19: rows 48a and 48b each stopped at the cap with their work
