@@ -306,6 +306,14 @@ export function parseSourcePages(sourceBook) {
 }
 
 /**
+ * A page citation: `p.72-73`, and every further range after it in the same
+ * citation (`p.72-73, 123-124`, `p.149, 152`, `p.9; 12-14 & 20`). Stripping only
+ * the first range left the rest on the title, so an exact registry match failed
+ * and the word-overlap route took over and could tie.
+ */
+const PAGE_CITATION = /\bp\.?\s*\d+(?:\s*-\s*\d+)?(?:\s*[,;&]\s*\d+(?:\s*-\s*\d+)?)*/i;
+
+/**
  * A `source_book` string reduced to something comparable: page range gone,
  * case gone, punctuation gone, runs of space collapsed. `palladium-fantasy-
  * core`, `Palladium Fantasy Core` and `palladium fantasy core.` all land on
@@ -314,7 +322,7 @@ export function parseSourcePages(sourceBook) {
  */
 export function normalizeBookTitle(sourceBook) {
   return String(sourceBook ?? '')
-    .replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '')
+    .replace(PAGE_CITATION, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
@@ -398,7 +406,7 @@ export function resolveBookSlug(sourceBook, books, registry = null, notBooks = n
   const known = registryBookSlug(sourceBook, registry);
   if (known) return books.some((b) => b.slug === known) ? known : null;
 
-  const title = String(sourceBook ?? '').replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '');
+  const title = String(sourceBook ?? '').replace(PAGE_CITATION, '');
   const wordsOf = (s) => (String(s ?? '').toLowerCase().match(/[a-z0-9]+/g) || []);
   const titleWords = wordsOf(title);
   const titleSet = new Set(titleWords);
