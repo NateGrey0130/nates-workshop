@@ -139,8 +139,8 @@ Four more things that are refused or cost you the row:
   file with the same number, yours included, so a renamed `~NNN` script whose
   old name origin still holds stops as `NUMBER TAKEN`.
 - The pull request body ends with a section **What this left**: what was
-  dropped, what was read and not run, and anything that is Nate's to decide.
-  That section is the record. Nothing is added to the plan about it.
+  dropped, what was read and not run, and every choice you took, with the
+  option not taken. That section is the record. Nothing is added to the plan about it.
 
 ## Wait for green, and stop there
 
@@ -151,7 +151,10 @@ command would be refused for you is beside the point. With every suite
 `ship-pr` lists green locally and the pull request open, one call:
 
 `gh pr checks <n> --watch --repo NateGrey0130/nates-workshop`, with the Bash
-timeout at its ten-minute maximum. This one call is the whole wait, with one
+timeout at its ten-minute maximum, as a **foreground** call: never
+`run_in_background`, unlike the suites above. A watch in the background lets
+your turn end on it with nothing reported, and a green pull request then sits
+unmerged until someone looks (Splynn row 38, #2296: 302 minutes). This one call is the whole wait, with one
 exception: straight after `gh pr create` it can exit 1 reporting no checks, or
 return before `smoke`, `menus` and `regression` are all listed. Re-run it until
 all three required checks appear, then let it run to the end. **Green
@@ -182,8 +185,10 @@ finishes that row itself. More than that left is `BLOCKED` at the warning.
   goes in your report, because no pull request body will hold it.
 - **`BLOCKED`**, with the pull request left open if one exists: a check is red
   for a reason outside your diff, the fix needs a decision the brief does not
-  record (name the options, and the one you recommend with its reason, or
-  say you recommend none: the driver takes or asks by that line), the change is larger than the brief describes, or your context is
+  record (name the options, and the one you recommend with its reason: the
+  driver takes it, because nothing is asked mid-plan. "No option can be
+  recommended" is allowed only with the reason why, and the driver treats it
+  as a breaking stop), the change is larger than the brief describes, or your context is
   past 200k with more left than the pull request and its watch (above). If
   you stop with work committed, push it first and name the branch and commit,
   so the next worker can resume it.
@@ -209,8 +214,16 @@ and touch nothing else in it.
 
 ## What to return
 
-At most fifteen lines: the row, the outcome, the pull request and branch, what
-was dropped, what is Nate's, and any step here that was wrong or that you had
+**Every run ends with this report, and its first line is always exactly
+`READY: …`, `DROPPED: …` or `BLOCKED: …`**, whatever ended the run: the
+watch, the run-cap hook, `maxTurns` drawing near, or a refusal you cannot get
+past. A run stopped by anything but green is `BLOCKED`. **Never end your turn
+while a background task of your own is still running**, and never end it
+without the report: a return with no outcome line leaves the driver nothing
+to go by.
+
+At most fifteen lines: the outcome line, the row, the pull request and branch,
+what was dropped, every choice you took with the option not taken, and any step here that was wrong or that you had
 no tool for. **That line is how this file gets corrected**, so do not
 route around a broken step quietly. **Then one more line, always the last:**
 `Peak context: <n>k (hook)` when the run-cap hook's warning fired, with the
