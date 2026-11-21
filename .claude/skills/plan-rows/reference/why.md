@@ -14,6 +14,26 @@ undated claim as true on the day it was written.
 Measured 2026-10-18: the file had grown to 16KB in five lines, and every
 worker and every driver re-read it.
 
+## Before a brief is written, 2, and the five stops: nothing is asked
+
+Nate, 2026-11-21: "Nothing is asked" after his "go", by planner, driver or
+worker, and stops happen "only on breaking items", with explicit reasoning
+why. The options he did not take: asking only the irreversible choices (the
+planner's recommendation that day), and keeping the asked list of
+2026-11-10, which sent five kinds of choice to him at plan time and
+mid-chain (a production schema change, deleting data, an Access, R2,
+permission, hook or settings change, dropping something he asked for, and a
+choice with no clear recommendation) and had the driver ask them with
+`AskUserQuestion` while the row waited. Until 2026-11-10 every choice was
+asked (2026-10-12).
+
+The five stops were taken on the recommendation the same day; the option not
+taken was keeping the stop at "the report and the state file disagree".
+On the Splynn plan that reading stalled a green pull request 302 minutes
+(measured 2026-11-21), behind a `BLOCKED` line that carried no required
+content. `plan-tick.mjs` (#2317) now gives a disagreement a verdict, and a
+stop line names its mechanism, what was tried and what unblocks it.
+
 ## Before a brief is written, 5: the 400 KB reading set
 
 Measured 2026-10-22: 60 of 204 workers hit the cap, and the 48 rows the
