@@ -576,6 +576,7 @@ import { run as sequenceNumberChecks } from './checks/sequence-numbers.mjs';
 import { run as groundTruthChecks } from './checks/ground-truth-report.mjs';
 import { run as deploySweepChecks } from './checks/deploy-sweep-verdicts.mjs';
 import { run as planBoardChecks } from './checks/plan-board-status.mjs';
+import { run as planTickChecks } from './checks/plan-tick-verdict.mjs';
 import { run as sourcebookChecks } from './checks/sourcebooks-list.mjs';
 import { run as catalogEditorChecks } from './checks/catalog-editor.mjs';
 import { run as catalogDuplicateChecks } from './checks/catalog-duplicates.mjs';
@@ -8487,6 +8488,7 @@ sequenceNumberChecks();
 groundTruthChecks();
 deploySweepChecks();
 planBoardChecks();
+planTickChecks();
 sourcebookChecks();
 
 // slow one - it shells out to wrangler.
