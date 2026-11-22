@@ -298,11 +298,11 @@ all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
 ten cyborg bodies (pp.128-155), the four D-Bees (pp.64-78) and the Cold
 Born (pp.90-95): the other eight O.C.C.s (extraction plan step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~401-sovietski-dbees-c.sql` and the Yaganar class script were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`add-sovietski-cold-born-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          150 / 0
+  sovietski          151 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
