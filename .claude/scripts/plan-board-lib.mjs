@@ -47,15 +47,19 @@ export function parseState(text) {
 }
 
 // Line 1 is the title; the branch is the first backticked name after the word.
+// `Next row: 5.` gives nextRow '5'; a `Next row:` naming no row (`none`, `DONE`,
+// the plan's last row) gives 'DONE'; no `Next row:` at all gives null.
 export function parseBrief(id, text) {
   const lines = String(text ?? '').split(/\r?\n/);
   const head = (lines.find((l) => l.trim()) ?? '').trim();
   const title = (/^#\s*Row\s+\S+?:\s*(.*)$/i.exec(head)?.[1] ?? head.replace(/^#\s*/, '')).trim();
   const top = lines.slice(0, 12).join('\n');
+  const next = /\bNext row:\s*(?:row\s+)?([^\s.,;]*)/i.exec(top);
   return {
     id: String(id),
     title,
     branch: /\bbranch\s+`([^`\s]+)`/i.exec(top)?.[1] ?? null,
+    nextRow: !next ? null : (/^\d+[a-z]*$/.test(next[1]) ? next[1] : 'DONE'),
   };
 }
 

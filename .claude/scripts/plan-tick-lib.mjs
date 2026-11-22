@@ -1,9 +1,9 @@
 // plan-tick-lib.mjs - the decisions behind plan-tick.mjs, with no file, clock
 // or network access, so the smoke suite can drive them with text.
 //
-// One verdict per armed plan, read from four things: state.md's first line,
-// the next row's brief, the plan's driver.lock, and the open pull requests.
-// The verdicts, in the order they are tried:
+// One verdict per armed plan, read from five things: state.md's first line,
+// the next row's brief, the plan's driver.lock, the open pull requests and the
+// recently merged ones. The verdicts, in the order they are tried:
 //
 //   DONE                  state.md says so
 //   BLOCKED <sentence>    state.md says so; a person reads it, nothing drives it
@@ -12,11 +12,20 @@
 //                         transcript was written recently (with no transcript
 //                         found, a longer fallback on the heartbeat), or the
 //                         row's pull request has a required check pending
+//   ADVANCE ...           the pull request the plan is waiting on has already
+//                         merged: a driver died between the merge and the
+//                         state.md write. `ADVANCE row <id> merged #<n> (next row
+//                         <m>|next DONE)` for a NEXT row, from its brief's
+//                         `Next row:`; `ADVANCE #<n> merged (READY; next ...)`
+//                         for READY, from state.md's own NEXT line. The driver
+//                         writes that state.md; it never merges or drives again
 //   MERGE-FIRST #<n>      READY names a pull request, or the next row's branch
 //                         has an open pull request with every required check passing
 //   DRIVE row <id>        the next row has a brief; a red check on its open pull
-//                         request is still DRIVE, with the number in the detail
-//   STOP <reason>         a missing brief or a first line nothing here can parse
+//                         request is still DRIVE, with the number and its head
+//                         commit in the detail, so the worker resumes that commit
+//   STOP <reason>         a missing brief, a merged row whose brief names no
+//                         `Next row:`, or a first line nothing here can parse
 //
 // A reading that failed (gh, a file, a lock that does not parse) is never a
 // verdict: the script prints UNKNOWN for it and exits 2.
@@ -37,8 +46,9 @@ export const STALE_MS = 30 * 60 * 1000;
 export const FALLBACK_MS = 90 * 60 * 1000;
 
 // Only these verdicts can be claimed: a plan that is DONE, BLOCKED, STOP, LIVE
-// or UNKNOWN has nothing for a new driver to do.
-export const CLAIMABLE = ['DRIVE', 'MERGE-FIRST'];
+// or UNKNOWN has nothing for a new driver to do. ADVANCE is claimed because its
+// driver writes state.md, and two drivers must not both write it.
+export const CLAIMABLE = ['DRIVE', 'MERGE-FIRST', 'ADVANCE'];
 
 // main's ruleset 22209348 requires these three.
 export const REQUIRED_CHECKS = ['smoke', 'menus', 'regression'];
@@ -176,10 +186,13 @@ const ago = (ms) => `${Math.max(0, Math.floor(ms / 60000))}m`;
 //                 JSONL or a subagent's under it), in ms, or null when none was
 //                 found, which falls back to FALLBACK_MS on the heartbeat
 //   pulls         the open pull requests from gh, or null when gh was not needed
+//   merged        the recently merged pull requests from gh (number,
+//                 headRefName, mergedAt), or null when not read
 //   now           ms
 // Returns { verdict, detail, state }. UNKNOWN only when the answer turned on
-// pull requests that were not given; a fresh lock answers LIVE without them.
-export function decide({ stateText, brief = null, lock = null, gitMovedMs = null, transcriptMs = null, pulls = null, now }) {
+// pull requests, open or merged, that were not given; a fresh lock answers
+// LIVE without them.
+export function decide({ stateText, brief = null, lock = null, gitMovedMs = null, transcriptMs = null, pulls = null, merged = null, now }) {
   const state = parseState(stateText);
   const first = state.first;
   const out = (verdict, detail = '') => ({ verdict, detail, state });
@@ -212,11 +225,29 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
   const wantedBranch = state.kind === 'NEXT' ? briefInfo?.branch ?? null : null;
   const needsPulls = wantedNumber !== null || wantedBranch !== null;
   if (needsPulls && pulls === null) return out('UNKNOWN', 'pull requests not read');
-  const pr = !needsPulls ? null : (pulls.find((p) => (wantedNumber !== null ? p.number === wantedNumber : p.headRefName === wantedBranch)) ?? null);
+  if (needsPulls && merged === null) return out('UNKNOWN', 'merged pull requests not read');
+  const wanted = (p) => (wantedNumber !== null ? p.number === wantedNumber : p.headRefName === wantedBranch);
+  const pr = !needsPulls ? null : (pulls.find(wanted) ?? null);
   const checks = pr ? requiredChecks(pr.statusCheckRollup) : null;
+  const staleLock = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})` : '';
+
+  // Merged already: the driver that merged it died before writing state.md.
+  // The newest merge on the branch counts. Never a second merge, never a re-drive.
+  const done = !needsPulls ? null
+    : (merged.filter(wanted).sort((a, b) => (Date.parse(b.mergedAt ?? '') || 0) - (Date.parse(a.mergedAt ?? '') || 0))[0] ?? null);
+  if (done && state.kind === 'READY') {
+    const then = state.nextId !== null ? `next row ${state.nextId}` : 'next DONE';
+    return out('ADVANCE', `#${done.number} merged (READY; ${then})${staleLock}`);
+  }
+  if (done && state.kind === 'NEXT' && brief?.exists) {
+    if (briefInfo.nextRow === null) {
+      return out('STOP', `row ${state.nextId} merged #${done.number}, and rows/${state.nextId}.md names no Next row: to advance to`);
+    }
+    const then = briefInfo.nextRow === 'DONE' ? 'next DONE' : `next row ${briefInfo.nextRow}`;
+    return out('ADVANCE', `row ${state.nextId} merged #${done.number} (${then})${staleLock}`);
+  }
 
   if (checks?.pending.length) return out('LIVE', `#${pr.number} has ${checks.pending.join(', ')} pending`);
-  const staleLock = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})` : '';
 
   if (state.kind === 'READY') {
     if (wantedNumber === null) {
@@ -231,7 +262,7 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
     }
     if (checks?.green) return out('MERGE-FIRST', `#${pr.number} (row ${state.nextId}, ${pr.headRefName}, every required check passing)${staleLock}`);
     let detail = briefInfo.branch ? `branch ${briefInfo.branch}` : 'its brief names no branch';
-    if (pr) detail += `, #${pr.number} open with ${checks.failing.join(', ')} failing`;
+    if (pr) detail += `, #${pr.number} open with ${checks.failing.join(', ')} failing, resume ${pr.headRefOid ?? 'head commit not read'}`;
     return out('DRIVE', `row ${state.nextId} (${detail}${staleLock})`);
   }
 

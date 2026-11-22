@@ -25,12 +25,14 @@
 // it names next, driver.lock, and only when a lock exists the newest write to
 // any .git/worktrees/*/index or logs/HEAD and to the lock's session transcript
 // (<transcripts>/*/<session>.jsonl and <transcripts>/*/<session>/subagents/*.jsonl),
-// and one `gh pr list --state open --json number,headRefName,statusCheckRollup`.
+// and one `gh pr list --state open --json number,headRefName,headRefOid,statusCheckRollup`
+// and one `gh pr list --state merged --limit 30 --json number,headRefName,mergedAt`,
+// so a row merged by a driver that died before writing state.md is ADVANCE.
 //
 // Exit 0 is every armed plan given a verdict. Exit 2 is a reading that failed:
 // that plan's line says UNKNOWN and why, and no verdict is guessed for it.
 // --claim exits 1 when the plan is not armed or its verdict is anything but
-// DRIVE or MERGE-FIRST, and 2 on UNKNOWN.
+// DRIVE, MERGE-FIRST or ADVANCE, and 2 on UNKNOWN.
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -119,21 +121,27 @@ function newestTranscriptWrite(session) {
   return newest;
 }
 
-let pulls;
-let pullsError = null;
-function openPulls() {
-  if (pulls !== undefined) return pulls;
-  try {
-    pulls = JSON.parse(execFileSync('gh',
-      ['pr', 'list', '--repo', REPO, '--state', 'open', '--limit', '200', '--json', 'number,headRefName,statusCheckRollup'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 }));
-    if (!Array.isArray(pulls)) throw new Error('gh pr list did not return a list');
-  } catch (err) {
-    pulls = null;
-    pullsError = `gh pr list failed: ${String(err.message).split('\n')[0]}`;
+// One gh read per state per run, cached; a failure is null and its reason,
+// which the plan's line prints as UNKNOWN.
+const pullReads = new Map();
+function readPulls(state, limit, fields) {
+  if (!pullReads.has(state)) {
+    let list = null, error = null;
+    try {
+      list = JSON.parse(execFileSync('gh',
+        ['pr', 'list', '--repo', REPO, '--state', state, '--limit', String(limit), '--json', fields],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 }));
+      if (!Array.isArray(list)) throw new Error('gh pr list did not return a list');
+    } catch (err) {
+      list = null;
+      error = `gh pr list --state ${state} failed: ${String(err.message).split('\n')[0]}`;
+    }
+    pullReads.set(state, { list, error });
   }
-  return pulls;
+  return pullReads.get(state);
 }
+const openPulls = () => readPulls('open', 200, 'number,headRefName,headRefOid,statusCheckRollup');
+const mergedPulls = () => readPulls('merged', 30, 'number,headRefName,mergedAt');
 
 // One plan's verdict, or UNKNOWN with the reading that failed.
 function tick(plan) {
@@ -157,8 +165,10 @@ function tick(plan) {
     const gitMovedMs = lock ? newestWorktreeWrite() : null;
     const transcriptMs = lock ? newestTranscriptWrite(lock.session) : null;
     const live = state.kind === 'READY' || state.kind === 'NEXT';
-    const result = decide({ stateText, brief, lock, gitMovedMs, transcriptMs, pulls: live ? openPulls() : null, now: Date.now() });
-    if (result.verdict === 'UNKNOWN') return { verdict: 'UNKNOWN', detail: pullsError ?? result.detail };
+    const open = live ? openPulls() : null;
+    const merged = live ? mergedPulls() : null;
+    const result = decide({ stateText, brief, lock, gitMovedMs, transcriptMs, pulls: open?.list ?? null, merged: merged?.list ?? null, now: Date.now() });
+    if (result.verdict === 'UNKNOWN') return { verdict: 'UNKNOWN', detail: open?.error ?? merged?.error ?? result.detail };
     return { ...result, lockRaw };
   } catch (err) {
     return { verdict: 'UNKNOWN', detail: err instanceof ReadFailure ? err.message : `read failed: ${String(err.message).split('\n')[0]}` };

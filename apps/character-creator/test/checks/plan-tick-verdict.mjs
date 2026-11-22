@@ -25,8 +25,8 @@ export function run() {
     const next = 'NEXT: row 4 (brief: rows/4.md), then row 5.\r\nLast row: 3 MERGED, #20.\r\nIn flight: nothing.\r\n';
     const run = (name, status, conclusion = null) => ({ __typename: 'CheckRun', name, status, conclusion, startedAt: '2026-11-21T11:50:00Z' });
     const green = ['smoke', 'menus', 'regression'].map((n) => run(n, 'COMPLETED', 'SUCCESS'));
-    const pr = (number, rollup, headRefName = 'shared/feat/thing') => ({ number, headRefName, statusCheckRollup: rollup });
-    const tick = (input) => decide({ now, pulls: [], ...input });
+    const pr = (number, rollup, headRefName = 'shared/feat/thing') => ({ number, headRefName, headRefOid: `${number}`.repeat(4) + 'c0ffee', statusCheckRollup: rollup });
+    const tick = (input) => decide({ now, pulls: [], merged: [], ...input });
     const line = (input) => verdictLine('p', tick(input));
 
     const L = (ageMin, owner = 'a77') => ({ timeMs: now - ageMin * min, owner, session: 's1' });
@@ -84,8 +84,35 @@ export function run() {
     check('NEXT with a brief and no pull request is DRIVE row <id>',
       drive === 'p: DRIVE row 4 (branch shared/feat/thing)', drive);
     const red = line({ stateText: next, brief, pulls: [pr(31, [green[0], green[1], run('regression', 'COMPLETED', 'FAILURE')])] });
-    check('a red required check is still DRIVE, with the number in the detail',
-      red === 'p: DRIVE row 4 (branch shared/feat/thing, #31 open with regression failing)', red);
+    check('a red required check is still DRIVE, with the number and the head commit to resume in the detail',
+      red === 'p: DRIVE row 4 (branch shared/feat/thing, #31 open with regression failing, resume 31313131c0ffee)', red);
+
+    // A driver that died between `gh pr merge` and the state.md write leaves
+    // NEXT (or READY) naming a row that has merged. Re-driving it, or merging
+    // it again, is the wrong answer; the plan advances.
+    const mergedPr = (number, headRefName = 'shared/feat/thing', mergedAt = '2026-11-21T11:00:00Z') => ({ number, headRefName, mergedAt });
+    const advance = line({ stateText: next, brief, merged: [mergedPr(29, 'other/branch'), mergedPr(31)] });
+    check('NEXT whose brief\'s branch has a merged pull request is ADVANCE, to the brief\'s Next row:, never DRIVE',
+      advance === 'p: ADVANCE row 4 merged #31 (next row 5)', advance);
+    const lastBrief = { exists: true, text: brief.text.replace('Next row: 5.', 'Next row: none (the last row).') };
+    check('a merged last row advances to DONE',
+      line({ stateText: next, brief: lastBrief, merged: [mergedPr(31)] }) === 'p: ADVANCE row 4 merged #31 (next DONE)');
+    const noNext = tick({ stateText: next, brief: { exists: true, text: brief.text.replace(' Next row: 5.', '') }, merged: [mergedPr(31)] });
+    check('a merged row whose brief names no Next row: is STOP, not a guessed next row',
+      noNext.verdict === 'STOP' && /merged #31/.test(noNext.detail) && /names no Next row:/.test(noNext.detail), `${noNext.verdict} ${noNext.detail}`);
+    check('a merged row beats an open pull request on the same branch, and the newest merge is named',
+      line({ stateText: next, brief, pulls: [pr(33, green)], merged: [mergedPr(30, undefined, '2026-11-20T10:00:00Z'), mergedPr(31)] })
+        === 'p: ADVANCE row 4 merged #31 (next row 5)');
+    const readyMerged = line({ stateText: 'READY: #31 is open and green.\nNEXT: row 5 (brief: rows/5.md).', merged: [mergedPr(31)] });
+    check('READY whose number has merged is ADVANCE to state.md\'s own NEXT line, never a second merge',
+      readyMerged === 'p: ADVANCE #31 merged (READY; next row 5)', readyMerged);
+    check('READY merged with no NEXT line under it advances to DONE',
+      line({ stateText: 'READY: #31 is open and green.', merged: [mergedPr(31)] }) === 'p: ADVANCE #31 merged (READY; next DONE)');
+    const staleAdvance = tick({ stateText: next, brief, lock: L(45), transcriptMs: tquiet, merged: [mergedPr(31)] });
+    check('a stale lock over a merged row is ADVANCE with the stale lock named',
+      staleAdvance.verdict === 'ADVANCE' && /stale \(45m, owner a77\)/.test(staleAdvance.detail), `${staleAdvance.verdict} ${staleAdvance.detail}`);
+    check('a fresh lock over a merged row is still LIVE: its driver is writing state.md',
+      tick({ stateText: next, brief, lock: L(5), merged: [mergedPr(31)] }).verdict === 'LIVE');
 
     const missing = tick({ stateText: next, brief: { exists: false, text: '' } });
     check('a missing brief is STOP, with both readings',
@@ -98,8 +125,12 @@ export function run() {
     check('READY naming no pull request is STOP', tick({ stateText: 'READY: the row is done' }).verdict === 'STOP');
 
     check('pull requests unread are UNKNOWN, never a verdict',
-      decide({ now, stateText: next, brief, pulls: null }).verdict === 'UNKNOWN'
-        && decide({ now, stateText: 'READY: #5 is open', pulls: null }).verdict === 'UNKNOWN');
+      decide({ now, stateText: next, brief, pulls: null, merged: [] }).verdict === 'UNKNOWN'
+        && decide({ now, stateText: 'READY: #5 is open', pulls: null, merged: [] }).verdict === 'UNKNOWN');
+    const mergedUnread = [decide({ now, stateText: next, brief, pulls: [], merged: null }),
+      decide({ now, stateText: 'READY: #5 is open', pulls: [], merged: null })];
+    check('merged pull requests unread are UNKNOWN too, never DRIVE or MERGE-FIRST',
+      mergedUnread.every((r) => r.verdict === 'UNKNOWN' && /merged pull requests not read/.test(r.detail)), JSON.stringify(mergedUnread.map((r) => r.verdict)));
     check('a fresh lock is LIVE with the pull requests unread: it needs no gh reading',
       decide({ now, stateText: next, brief, pulls: null, lock: L(1) }).verdict === 'LIVE');
 
@@ -128,8 +159,8 @@ export function run() {
       const read = () => (fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : null);
       const t0 = Date.parse('2026-11-21T12:00:00Z');
 
-      check('only DRIVE and MERGE-FIRST can be claimed; DONE, BLOCKED, STOP, LIVE and UNKNOWN cannot',
-        CLAIMABLE.join() === 'DRIVE,MERGE-FIRST');
+      check('only DRIVE, MERGE-FIRST and ADVANCE can be claimed; DONE, BLOCKED, STOP, LIVE and UNKNOWN cannot',
+        CLAIMABLE.join() === 'DRIVE,MERGE-FIRST,ADVANCE');
 
       const a = lockText(t0, 'aaaa', 's1');
       const first = claimLock(fs, path, { seen: null, text: a, owner: 'aaaa' });
