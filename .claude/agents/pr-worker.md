@@ -17,17 +17,20 @@ two files, the skills the brief names and the code are everything you read.
 **Do not open the plan's other briefs, the memory directory or an audit menu
 the brief does not name.** This agent exists because every session of a chain
 was re-reading the same material; a brief that is missing something is a
-`BLOCKED` report, not a reason to go looking.
+`STOPPED` report, not a reason to go looking.
 
 ## Before anything else
 
 1. **Read the state file.** If it does not name your row as next, or it begins
-   `BLOCKED`, `READY` or `DONE`, return at once and say what it said.
+   `BLOCKED`, `READY` or `DONE`, return at once and say what it said. One that
+   begins `STOPPED` and names your row on its `NEXT:` line is a resume (next
+   section).
 2. If it names a pull request as still merging, run
-   `node .claude/scripts/pr-landed.mjs <n>`. Anything but exit 0 is `BLOCKED`:
+   `node .claude/scripts/pr-landed.mjs <n>`. Anything but exit 0 is `STOPPED`:
    you do not build on a row that has not landed.
 3. `git fetch origin`, and start your branch from `origin/main`, unless the
-   state file or the brief names a commit to resume from (next section).
+   state file's `Resume:` line or the brief names a commit to resume from
+   (next section).
 
 ## Resuming a row that stopped
 
@@ -38,7 +41,7 @@ share one object store. So, each its own call:
 
 1. `git checkout -b <the branch the brief names> origin/main`
 2. `git merge --ff-only <the commit the state file or brief names>`. If it
-   will not fast-forward, that is `BLOCKED`: do not rebase someone's work.
+   will not fast-forward, that is `STOPPED`: do not rebase someone's work.
 3. `git push origin HEAD:refs/heads/<the branch>`
 
 The *Naming* check then shows that branch as taken: by `git branch --list`
@@ -145,7 +148,7 @@ Four more things that are refused or cost you the row:
 ## Wait for green, and stop there
 
 **You do not merge, and you do not try.** `gh pr merge` in any form, `--auto`
-included, is the driver's: it merges a `READY` row with three calls that a
+included, is the driver's: it merges a `READY` row by four steps that a
 worker's merge would skip (`plan-rows` → *Driving the chain*). Whether the
 command would be refused for you is beside the point. With every suite
 `ship-pr` lists green locally and the pull request open, one call:
@@ -161,7 +164,7 @@ all three required checks appear, then let it run to the end. **Green
 ends the row as `READY`, at once.** Do not run `pr-landed.mjs --wait` or
 `drift-check.mjs` after it: both read a merge that has not happened.
 
-A red required check is `BLOCKED` unless your own diff caused it, in which case
+A red required check is `STOPPED` unless your own diff caused it, in which case
 fix it, push and run the watch again.
 
 **Past 200k, finish if only the pull request is left.** The run-cap hook's
@@ -170,20 +173,30 @@ warning at 200k says stop, but it refuses calls only from 250k
 every suite `ship-pr` lists green locally, push, open the pull request (or use
 the one already open) and run the one watch anyway: a stop there cost rows 48a
 and 48b a split agent and a fresh worker each (2026-10-19). If the watch cannot
-finish, refused at 250k or still pending at its timeout, stop `BLOCKED` with
+finish, refused at 250k or still pending at its timeout, stop `STOPPED` with
 the pull request open, say `#<n> is open; only the CI watch is left.` and put
 the `NEXT:` line from your brief's `Next row:` in the report: the driver
-finishes that row itself. More than that left is `BLOCKED` at the warning.
+finishes that row itself. More than that left is `STOPPED` at the warning.
 
-## Three outcomes
+## Four outcomes
+
+**`BLOCKED` is not one of them.** Only the driver writes `BLOCKED:`, because
+`plan-tick.mjs` reads it as a stop for a person on every tick, so a worker's
+`BLOCKED:` parks the plan for good. A worker's stop is `STOPPED`, which the
+next tick resumes once (Nate, 2026-11-21; the option not taken was the worker
+writing nothing).
+
 
 - **`READY`**: the watch ended green and the pull request is open with nothing
   else owed but the merge. The driver merges it, and the driver writes the
   state file.
+- **`PUSHED`**: an extraction row (its brief ends at a pushed branch and no
+  pull request) whose branch is pushed. Its brief says what it appends to the
+  shipping row's brief; the state file names the shipping row on `NEXT:`.
 - **`DROPPED`**: every claim in the brief failed to reproduce, so there is
   nothing to fix. No branch, no pull request. What you ran and what it showed
   goes in your report, because no pull request body will hold it.
-- **`BLOCKED`**, with the pull request left open if one exists: a check is red
+- **`STOPPED`**, with the pull request left open if one exists: a check is red
   for a reason outside your diff, the fix needs a decision the brief does not
   record (name the options, and the one you recommend with its reason: the
   driver takes it, because nothing is asked mid-plan. "No option can be
@@ -202,10 +215,25 @@ driver will write at the top of your report instead, first line
 `READY: #<n> is open and green.`, then the `NEXT:` line from your brief's
 `Next row:`, then the row with its pull request.
 
-A `DROPPED` or `BLOCKED` row **replaces it whole, six lines at most**: the row
-that is next and its brief, the row you did with its outcome in one line, what
-is in flight. Write `BLOCKED: <one sentence>` as its first line if you stopped,
-and for a stopped row with work pushed, the branch and commit to resume from.
+A `PUSHED`, `DROPPED` or `STOPPED` row **replaces it whole, six lines at
+most**: the row that is next and its brief, the row you did with its outcome in
+one line, what is in flight. A stopped row writes this shape, which
+`plan-tick.mjs` parses (`plan-board-lib.mjs` → `parseState`):
+
+```
+STOPPED: <the cause in one sentence, and the option you recommend>
+Resume: <branch> <commit>
+NEXT: row <your own row> (brief: rows/<your own row>.md).
+In flight: <the open pull request, or nothing>.
+```
+
+- **`NEXT:` names your own row**, not the brief's `Next row:`: it is the row
+  the next tick resumes.
+- **`Resume:` only when work is pushed**, with the full branch name and the
+  commit on origin. Without it the next worker starts from `origin/main`.
+- **The cause carries the recommendation.** A cause that is empty, or says no
+  option can be recommended, is read as `BLOCKED` and waits for Nate; that is
+  the breaking stop, and the only way a worker reaches it.
 
 Detail belongs in the pull request body, or for a dropped row in your report,
 never here: the next worker reads this file before anything else. If a
@@ -215,9 +243,10 @@ and touch nothing else in it.
 ## What to return
 
 **Every run ends with this report, and its first line is always exactly
-`READY: …`, `DROPPED: …` or `BLOCKED: …`**, whatever ended the run: the
-watch, the run-cap hook, `maxTurns` drawing near, or a refusal you cannot get
-past. A run stopped by anything but green is `BLOCKED`. **Never end your turn
+`READY: …`, `PUSHED: <branch> <commit>`, `DROPPED: …` or `STOPPED: …`**,
+whatever ended the run: the watch, the run-cap hook, `maxTurns` drawing near,
+or a refusal you cannot get past. A run stopped by anything but green, a
+pushed extraction branch or a drop is `STOPPED`. **Never end your turn
 while a background task of your own is still running**, and never end it
 without the report: a return with no outcome line leaves the driver nothing
 to go by.

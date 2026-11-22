@@ -152,7 +152,24 @@ export function run() {
       tick({ stateText: stopped, brief, lock: L(5) }).verdict === 'LIVE');
     check('a STOPPED row needs no gh reading',
       decide({ now, stateText: stopped, brief, pulls: null, merged: null }).verdict === 'RESUME');
-    check('attemptsOf takes the highest attempt line for its row', attemptsOf('4', 'From row 4: attempt 2\nFrom row 4: attempt 3\nFrom row 44: attempt 9') === 3
+    // The worker writes that state.md from the shape its agent file teaches, so
+    // the shape is read back through decide() here: a worker that writes what
+    // pr-worker.md shows is resumed, never parked under BLOCKED.
+    const agentPath = join(repoRoot, '.claude', 'agents', 'pr-worker.md');
+    const agent = fs.existsSync(agentPath) ? fs.readFileSync(agentPath, 'utf8') : '';
+    const fence = /```\r?\n(STOPPED:[^]*?)```/.exec(agent)?.[1] ?? '';
+    const taught = fence.replace(/<branch>/g, 'shared/feat/thing').replace(/<commit>/g, 'abc1234').replace(/<your own row>/g, '4');
+    const taughtTick = tick({ stateText: taught, brief });
+    check('pr-worker.md teaches a stopped state.md that plan-tick resumes from its Resume: line, on its own row',
+      taughtTick.verdict === 'RESUME' && /^row 4 \(shared\/feat\/thing abc1234, /.test(taughtTick.detail),
+      fence ? `${taughtTick.verdict} ${taughtTick.detail}` : 'no ``` fence opening STOPPED: in .claude/agents/pr-worker.md');
+    check('pr-worker.md never has the worker write BLOCKED:, and its report may open PUSHED: <branch> <commit>',
+      agent !== '' && !/`BLOCKED: </.test(agent) && !/`READY: …`, `DROPPED: …` or `BLOCKED: …`/.test(agent)
+        && /`PUSHED: <branch> <commit>`/.test(agent));
+    check('pr-worker.md counts the driver\'s merge in the four steps plan-rows gives it, not three calls',
+      /four steps/.test(agent) && !/three calls/.test(agent)
+        && /merge it by the four steps/.test(fs.readFileSync(join(repoRoot, '.claude', 'skills', 'plan-rows', 'SKILL.md'), 'utf8')));
+    check('attemptsOf takes the highest attempt line for its row',attemptsOf('4', 'From row 4: attempt 2\nFrom row 4: attempt 3\nFrom row 44: attempt 9') === 3
       && attemptsOf('4', '') === 0);
 
     const missing = tick({ stateText: next, brief: { exists: false, text: '' } });
