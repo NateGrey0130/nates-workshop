@@ -141,6 +141,16 @@ Four more things that are refused or cost you the row:
   Push the branch before `--remote`: it reads every branch on origin for a
   file with the same number, yours included, so a renamed `~NNN` script whose
   old name origin still holds stops as `NUMBER TAKEN`.
+- **A choice the brief leaves open is yours to take when both of these hold, and
+  `STOPPED` when either fails.** (1) It keeps the row inside the brief: its
+  files and its scope, and nothing the brief marks as Nate's. (2) One more
+  commit to the open pull request undoes it: nothing applied to D1, merged,
+  numbered at merge or sent outside the pull request. The test: if the driver
+  found you chose wrong, would pushing one more commit fix it? If yes, take the
+  option you would recommend, finish the row, and list the choice under *What
+  this left*. Do not stop to hand the driver your recommendation: it only takes
+  a worker's recommendation, so a stop for a choice you could take costs a
+  resume and the row's one retry. "It is late" changes neither answer.
 - The pull request body ends with a section **What this left**: what was
   dropped, what was read and not run, and every choice you took, with the
   option not taken. That section is the record. Nothing is added to the plan about it.
@@ -198,7 +208,8 @@ writing nothing).
   goes in your report, because no pull request body will hold it.
 - **`STOPPED`**, with the pull request left open if one exists: a check is red
   for a reason outside your diff, the fix needs a decision the brief does not
-  record (name the options, and the one you recommend with its reason: the
+  record and that fails the test in *The row* → *A choice the brief leaves open*
+  (name the options, and the one you recommend with its reason: the
   driver takes it, because nothing is asked mid-plan. "No option can be
   recommended" is allowed only with the reason why, and the driver treats it
   as a breaking stop), the change is larger than the brief describes, or your context is
