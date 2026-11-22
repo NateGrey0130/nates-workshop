@@ -280,12 +280,12 @@ Everything but the skills, weapons, armor, the bionics chapter (pp.155-168)
 and the first five vehicles (pp.169-182): the other thirteen vehicles, cyborg
 bodies, D-Bees and classes (extraction plan steps 5-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~385-sovietski-v1.sql` was applied to production, with
+`~386-sovietski-v2.sql` was applied to production, with
 `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the book's
 line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          105 / 0
+  sovietski          107 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
