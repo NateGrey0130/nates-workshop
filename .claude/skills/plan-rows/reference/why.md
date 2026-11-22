@@ -89,6 +89,27 @@ The probe task that would have shown it was refused by the permission
 classifier that day, so each step names its line for worked, refused and no
 tool, and the closing message is where the answer will first be read.
 
+## Driving the chain, the tick: the verdicts, the owner and `DONE`
+
+Read 2026-11-22 against `origin/main` at `6840b897`: `plan-tick-lib.mjs`
+prints `ADVANCE`, `RESUME` and `WAIT`, and turns a fourth consecutive
+`UNKNOWN` into `STOP`, and `plan-tick.mjs --claim` prints an owner id that
+`--heartbeat` and `--release` take as `--owner`, refusing another. The skill
+named none of the three verdicts and no owner, so a driver reading one had
+no step for it, and a release without the id worked only through a fallback
+kept for one row of the tick-fix plan. A bare `plan-tick.mjs` run by the
+driver holding the lock reads that lock as `LIVE`, so "run it again and go
+by its verdict" told the driver nothing until it released first.
+
+The skill had a tick that reads `DONE` end in one line, and ran the clean-up
+only in the tick that wrote `DONE`. So a plan whose last driver died between
+the two stayed armed, printed `DONE` on every tick, and kept its worktrees and
+driver sessions (reasoned from the text, not measured). So any tick that reads `DONE` runs it, and
+`--disarm` comes first, so a second tick does not run it too. The
+`plan-driver` task is disabled between plans, Nate's ruling of 2026-11-21
+(not taken: keeping it enabled with a slim prompt, or no change), so it does
+not fire every 30 minutes on nothing armed.
+
 ## Driving the chain: a capped row with only the CI wait left
 
 Measured 2026-10-19: rows 48a and 48b each stopped at the cap with their work

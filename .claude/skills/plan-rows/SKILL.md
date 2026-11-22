@@ -140,6 +140,14 @@ written and Nate has said "go":
 node .claude/scripts/plan-tick.mjs --arm <plan>
 ```
 
+The `plan-driver` task is disabled between plans (Nate, 2026-11-21; the
+options he did not take were keeping it enabled with a slim prompt, and no
+change), so arming also enables it: `mcp__scheduled-tasks__update_scheduled_task`
+on `plan-driver` with it enabled, loaded with `ToolSearch`. A refusal there is
+said to Nate in the planning session's closing message, since no tick comes
+until the task is enabled. The last tick of a plan disables it again (`DONE`
+under *Driving the chain*).
+
 The first tick comes within 30 minutes (taken on the recommendation,
 2026-11-21: a 30-minute tick; not taken: 45 or 15). To start at once, the
 planning session may call `mcp__scheduled-tasks__run_scheduled_task` on
@@ -165,20 +173,67 @@ The driver is one tick (*Starting the driver*). It reads `plan-tick.mjs`,
 that opens a brief or a book cache is planning in the context every later
 row pays for. **One tick:**
 
-1. `node .claude/scripts/plan-tick.mjs` prints one verdict per armed plan.
-   Take the first plan whose verdict is `MERGE-FIRST` or `DRIVE`. `LIVE`,
-   `BLOCKED`, `DONE`, `STOP` or nothing armed: end in one line and start
-   nothing. (`STOP` is written to that plan's `state.md` as a `BLOCKED`
-   line first; see *Any other disagreement* below.) `UNKNOWN` is a reading
-   that failed: end in one line, and the next tick reads again.
+1. `node .claude/scripts/plan-tick.mjs` prints one line per armed plan,
+   `<plan>: <VERDICT> <detail>`; the verdicts and their order are in
+   `.claude/scripts/plan-tick-lib.mjs`. Only an armed plan is printed, so
+   every verdict below is on an armed plan. Take the first plan whose
+   verdict is `MERGE-FIRST`, `DRIVE`, `ADVANCE` or `RESUME`, the four that
+   can be claimed. If none is, and a plan reads `DONE`, run the `DONE`
+   clean-up for it (below): a driver died between writing `DONE` and
+   disarming the plan. Otherwise end in one line and start nothing:
+   - `LIVE`: a driver is working that plan (its lock, a worktree, its
+     transcript, or a required check pending).
+   - `WAIT <plan> is live`: another plan's driver is working, and one plan is
+     driven at a time.
+   - `BLOCKED`: a person reads it. When that plan's `state.md` still begins
+     `STOPPED:` (a row stopped a second time, or with no recommendation),
+     write the `BLOCKED` line first, in the three clauses of *The five
+     stops*.
+   - `STOP`: written to that plan's `state.md` as a `BLOCKED` line first;
+     see *Any other disagreement* below.
+   - `UNKNOWN`: a reading failed, and the next tick reads again. On the
+     fourth consecutive tick it prints `STOP UNKNOWN on 4 consecutive ticks`
+     instead, the count kept in `unknown.count` beside `armed`, and that
+     `STOP` is written like any other.
+   - nothing armed (`plan-tick: no plan is armed`).
 2. `node .claude/scripts/plan-tick.mjs --claim <plan>`. Exit 1 means
-   another driver is live: end in one line.
-3. `MERGE-FIRST #<n>`: merge it by the four steps below, write `state.md`,
-   and carry on with the plan. `DRIVE row <id>`: spawn the row.
-4. `node .claude/scripts/plan-tick.mjs --heartbeat <plan>` before every
-   spawn and after every return, so a later tick reads the lock as live.
-5. `node .claude/scripts/plan-tick.mjs --release <plan>` at every stop, at
-   `DONE`, and at the budget line (below), before the closing message.
+   another driver got there first, or the verdict moved: end in one line.
+   Exit 0 prints `pass --owner <id> to --heartbeat and --release`: **keep
+   that id**, since every later lock call in this tick passes it, and one
+   with another id, or none, is refused.
+3. Act on the verdict the claim printed:
+   - `MERGE-FIRST #<n>`: merge it by the four steps below, write `state.md`,
+     and carry on with the plan.
+   - `DRIVE row <id>`: spawn the row. A detail naming an open pull request
+     with a red check and a head commit is the same spawn: the worker
+     resumes that commit from its brief's branch.
+   - `ADVANCE row <id> merged #<n> (next row <m>)`, or `ADVANCE #<n> merged
+     (READY; next row <m>)`, or either with `next DONE`: the pull request
+     already merged, and the driver that merged it died before writing
+     `state.md`. **Never merge it again and never drive the row again.** Run
+     the merge's steps 2 to 6 for `#<n>` (step 1 is done), replace
+     `state.md` whole with `NEXT: row <m>` (or `DONE`) and the row as
+     `MERGED #<n>` by an earlier driver, and carry on with the plan.
+   - `RESUME row <id> (<branch> <commit>, <cause>) as attempt <n>`, or
+     `(nothing pushed, <cause>)`: a worker stopped and wrote `STOPPED:`, and
+     this is its one resume. Append `From row <id>: attempt <n>` to the
+     row's brief (the script counts attempts there, never on `state.md`,
+     which a worker replaces whole), and the cause's recommendation as in
+     *A stopped row is resumed once* below. Free the branch as for a split
+     below, leave `state.md` as the worker wrote it (its `Resume:` line is
+     what the new worker merges from), and spawn the row.
+4. `node .claude/scripts/plan-tick.mjs --heartbeat <plan> --owner <id>`
+   before every spawn and after every return, so a later tick reads the lock
+   as live.
+5. `node .claude/scripts/plan-tick.mjs --release <plan> --owner <id>` at
+   every stop, at `DONE`, and at the budget line (below), before the closing
+   message.
+
+**Reading the plan again mid-tick.** A bare `plan-tick.mjs` run while this
+tick holds the lock prints `LIVE` for its own lock, so it says nothing new.
+When a step below says to go by the script, it is three calls:
+`--release <plan> --owner <id>`, the bare run, then step 1 again on what it
+prints, a fresh `--claim` included (a new owner id, kept as before).
 
 One row is one spawn, in the foreground:
 
@@ -192,12 +247,16 @@ prompt:
 **Nothing else goes in the prompt.** A correction to how workers work is a
 pull request against the agent file; a fact about a row belongs in its brief.
 
-**A worker return with no outcome line is not a stop**: run
-`plan-tick.mjs` again and go by its verdict for the plan.
+**A worker return with no outcome line is not a stop**: read the plan again
+(above) and go by its verdict for the plan.
 
 After each return, read `state.md` again and go by it. `MERGED`, `DROPPED`
 or `PUSHED` (an extraction row, *Before a brief is written* 6) with a
-`NEXT:` line: spawn that row. A report that begins `READY` leaves
+`NEXT:` line: spawn that row. A report that begins `STOPPED`, unless it is
+one of the two below that the driver handles from the report (a capped row
+with only the CI wait left, and a row that outgrew its brief): read the plan
+again, which prints `RESUME` for a first stop and `BLOCKED` for a second
+one or one with no recommendation, and go by that verdict. A report that begins `READY` leaves
 `state.md` still naming the worker's own row: a `READY` worker does not write
 it, because the classifier refused that write on three of five rows on
 2026-10-14 (Nate's ruling that day; the option he did not take was leaving
@@ -264,25 +323,36 @@ request for Nate's word: if a call in steps 1 to 3 is refused or fails, stop
 (*The five stops* below). A failure in step 4 is said in the closing message
 and is not a stop: each worker applies the migrations its copy lacks.
 
-**At `DONE`, before the closing message**, four things, in order, none of them
-a stop either:
+**The `DONE` clean-up**, run by the tick that writes `DONE` and by any later
+tick that reads `DONE` on a plan still armed (step 1), before the closing
+message. Five things, in order, none of them a stop either:
 
-1. step 6 once more, so the board shows the plan finished;
-2. read the plan's `armed` file for the time it was armed, then
-   `node .claude/scripts/plan-tick.mjs --disarm <plan>` and
-   `node .claude/scripts/plan-tick.mjs --release <plan>`;
+1. read the plan's `armed` file for the time it was armed (it holds
+   `armed <ISO time>`), then `node .claude/scripts/plan-tick.mjs --disarm <plan>`
+   at once, so no later tick reads this plan at all, then
+   `node .claude/scripts/plan-tick.mjs --release <plan> --owner <id>`. A tick
+   that only read `DONE` claimed nothing (`DONE` cannot be claimed): if a
+   `driver.lock` is left, it is the dead driver's, and its `owner` field is
+   the id to pass. A refused release is one line;
+2. step 6 once more, so the board shows the plan finished;
 3. the `worktree` skill's reparse-point scan over every worktree the plan's
    rows left, removing each as in step 5;
 4. **archive this plan's finished driver sessions**:
    `mcp__scheduled-tasks__list_task_runs` on `plan-driver`, and
    `mcp__ccd_session_mgmt__archive_session` for each run since the armed time
-   that succeeded, never the run doing it. Load both with `ToolSearch`.
+   that succeeded, never the run doing it. Load both with `ToolSearch`;
+5. **if no plan is still armed** (a bare `plan-tick.mjs` prints
+   `plan-tick: no plan is armed`), leave the `plan-driver` task disabled:
+   `mcp__scheduled-tasks__update_scheduled_task` on `plan-driver` with it
+   disabled, loaded with `ToolSearch`. The next plan's arming enables it
+   (*Starting the driver*). A refused or missing call is one line, never a
+   stop: the task then fires on nothing armed and ends in one line.
 
 Each has its line in the closing message, as worked, refused or no tool; for
 step 4, the runs archived and the runs left with the reason.
 
 **A capped row with only the CI wait left is the driver's to finish, not a
-split.** That is a `BLOCKED` report from the worker's cap that says its pull
+split.** That is a `STOPPED` report from the worker's cap that says its pull
 request is open, every suite was green locally and the watch is all that is
 left. One call:
 `gh pr checks <n> --repo NateGrey0130/nates-workshop`. Every required check
@@ -294,7 +364,7 @@ names any other work left, goes to the split below. What this saves is
 measured in `reference/why.md`.
 
 **A row that outgrew its brief is split by an agent, not by the driver.** Two
-reports mean that: a `BLOCKED` that stopped at the worker's cap with work
+reports mean that: a `STOPPED` that stopped at the worker's cap with work
 pushed (it names a branch and a commit) and more than the CI wait above left,
 and one that says the row is larger
 than its brief describes. Neither is a stop, and neither is a reason to open
@@ -339,33 +409,36 @@ Do not retry or fix a stopped row. `DONE` is the end of the chain, not a
 stop. **Every stop is written as `state.md`'s first line, one sentence in
 three clauses:**
 `BLOCKED: <the cause as a mechanism>; <what was tried>; <what unblocks it>`.
-When a row is spawned a second time, the last-row line carries `attempt 2`,
-so that the fifth stop can be read off `state.md`.
+When a row is spawned a second time, its brief carries
+`From row <id>: attempt 2` (step 3, `RESUME`), so that the fifth stop is read
+off the brief by `plan-tick.mjs`, which prints `BLOCKED` for the row's next
+stop. It is never counted on `state.md`, which the worker replaces whole.
 
 **Any other disagreement** between a report, `state.md` and GitHub is not a
-stop. Go by `node .claude/scripts/plan-tick.mjs`: its verdict for the plan
-says what to do next, and only its `STOP` verdict is written as a `BLOCKED`
-line, carrying both readings that disagreed.
+stop. Read the plan again (*Reading the plan again mid-tick*): its verdict
+for the plan says what to do next, and only its `STOP` verdict is written as
+a `BLOCKED` line, carrying both readings that disagreed.
 
-**A `BLOCKED` report that carries a recommendation is taken**, whatever the
-choice (Nate, 2026-11-21, "Nothing is asked"; the options he did not take
-were asking the irreversible ones and keeping the asked list): append
+**A stopped row is resumed once, and its recommendation is taken**, whatever
+the choice (Nate, 2026-11-21, "Nothing is asked"; the options he did not take
+were asking the irreversible ones and keeping the asked list). A worker
+stops by writing `STOPPED: <cause and the option it recommends>` with a
+`Resume: <branch> <commit>` line, and the next reading prints `RESUME`
+(step 3). Beside the attempt line, append
 `From row <id>: taken on the recommendation, <date>: <choice>; not taken:
-<other>` to that row's brief, replace `state.md` whole with a `NEXT:` line
-naming the same row and any branch and commit the report gave to resume
-from, free that branch as for a split above, and spawn the row again with
-`attempt 2` on the last-row line. It is told to him in the closing message.
-Nothing in driving asks Nate a question, and there is no `AskUserQuestion`
-call anywhere in it. A report with no recommendation is stop 4. The driver
-does not form a recommendation of its own, since it has read neither the
-brief nor the code.
+<other>` to that row's brief, from the cause. It is told to him in the
+closing message. Nothing in driving asks Nate a question, and there is no
+`AskUserQuestion` call anywhere in it. A cause with no recommendation reads
+as `BLOCKED` (stop 4), and so does a second stop of the same row (stop 5).
+The driver does not form a recommendation of its own, since it has read
+neither the brief nor the code.
 
 **The driver's own budget line ends the tick, and nothing is handed off.**
 It arrives as the UserPromptSubmit line (`session-budget: context is …,
 past 200k`), or as the post-merge line (`session-budget: a PR just merged
 and this session holds …`) once the figure it prints is 150k or more. Then
 the driver finishes the row in hand, replaces `state.md` whole, runs
-`--release <plan>`, writes its closing message and ends. It starts no
+`--release <plan> --owner <id>`, writes its closing message and ends. It starts no
 session: the next tick picks the plan up, and needs no word from Nate,
 since the allow rule above is what lets it merge. The post-merge line fires
 from 150k (`WARN_AT` in `.claude/hooks/session-budget.mjs`), so below that a
@@ -378,4 +451,5 @@ that was split and into what, every line a worker marked as Nate's, and
 line, copied from the worker's report beside the row's pull request; the
 planner of the next plan reads those lines before choosing its reading
 budget (*Before a brief is written*). It carries the lines of steps 5 and 6
-for each merged row, and at `DONE` the lines of the four things above.
+for each merged row, and at `DONE` the lines of the five things of the
+`DONE` clean-up.
