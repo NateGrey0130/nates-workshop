@@ -31,6 +31,14 @@
 // and one `gh pr list --state merged --limit 30 --json number,headRefName,mergedAt`,
 // so a row merged by a driver that died before writing state.md is ADVANCE.
 //
+// One driver across every plan: while any armed plan is LIVE, another plan's
+// DRIVE, MERGE-FIRST, ADVANCE or RESUME prints as `WAIT <plan> is live`, and
+// --claim on it exits 1. A driver.lock that does not parse is a stale lock,
+// named in the detail. An UNKNOWN on the same plan on 4 consecutive bare ticks
+// prints STOP, so the driver writes a BLOCKED line: the run is counted in an
+// `unknown.count` file beside `armed`, which any verdict deletes. --claim
+// neither reads nor writes that count.
+//
 // Exit 0 is every armed plan given a verdict. Exit 2 is a reading that failed:
 // that plan's line says UNKNOWN and why, and no verdict is guessed for it.
 // --claim exits 1 when the plan is not armed or its verdict is anything but
@@ -41,8 +49,8 @@ import * as fs from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CLAIMABLE, beatLock, claimLock, decide, lockText, parseLock, parseState, releaseLock, validId, verdictLine }
-  from './plan-tick-lib.mjs';
+import { CLAIMABLE, beatLock, claimLock, countUnknown, decide, lockText, oneDriver, parseLock, parseState, releaseLock,
+  validId, verdictLine } from './plan-tick-lib.mjs';
 
 const { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } = fs;
 const REPO = 'NateGrey0130/nates-workshop';
@@ -75,6 +83,11 @@ if (!existsSync(root)) {
 const planDir = (plan) => join(root, plan);
 const lockPath = (plan) => join(planDir(plan), 'driver.lock');
 const armedPath = (plan) => join(planDir(plan), 'armed');
+const unknownPath = (plan) => join(planDir(plan), 'unknown.count');
+const armedPlans = () => readdirSync(root, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && existsSync(armedPath(d.name)))
+  .map((d) => d.name)
+  .sort();
 
 class ReadFailure extends Error {}
 
@@ -161,16 +174,18 @@ function tick(plan) {
     let lock = null;
     let lockRaw = null;
     if (existsSync(lockPath(plan))) {
+      // A lock that does not parse names no owner and no time: stale. lockRaw
+      // keeps its text, so a claim renames exactly that text aside.
       lockRaw = readFileSync(lockPath(plan), 'utf8');
       lock = parseLock(lockRaw);
-      if (!lock) throw new ReadFailure('driver.lock does not parse as {"time", "owner", "session"}');
     }
+    const badLock = lockRaw !== null && !lock;
     const gitMovedMs = lock ? newestWorktreeWrite() : null;
     const transcriptMs = lock ? newestTranscriptWrite(lock.session) : null;
     const live = state.kind === 'READY' || state.kind === 'NEXT';
     const open = live ? openPulls() : null;
     const merged = live ? mergedPulls() : null;
-    const result = decide({ stateText, brief, lock, gitMovedMs, transcriptMs, pulls: open?.list ?? null, merged: merged?.list ?? null, now: Date.now() });
+    const result = decide({ stateText, brief, lock, badLock, gitMovedMs, transcriptMs, pulls: open?.list ?? null, merged: merged?.list ?? null, now: Date.now() });
     if (result.verdict === 'UNKNOWN') return { verdict: 'UNKNOWN', detail: open?.error ?? merged?.error ?? result.detail };
     return { ...result, lockRaw };
   } catch (err) {
@@ -209,7 +224,9 @@ if (action) {
       console.error(`plan-tick: session "${session}" is not a session id`);
       process.exit(2);
     }
-    const result = tick(plan);
+    // The other armed plans are read too: one of them LIVE makes this one WAIT.
+    const all = [{ plan, result: tick(plan) }, ...armedPlans().filter((p) => p !== plan).map((p) => ({ plan: p, result: tick(p) }))];
+    const { result } = oneDriver(all)[0];
     console.log(verdictLine(plan, result));
     if (result.verdict === 'UNKNOWN') process.exit(2);
     if (!CLAIMABLE.includes(result.verdict)) {
@@ -228,14 +245,17 @@ if (action) {
   process.exit(0);
 }
 
-const armed = readdirSync(root, { withFileTypes: true })
-  .filter((d) => d.isDirectory() && existsSync(armedPath(d.name)))
-  .map((d) => d.name)
-  .sort();
+const armed = armedPlans();
 if (!armed.length) console.error('plan-tick: no plan is armed');
+const counted = armed.map((plan) => {
+  const path = unknownPath(plan);
+  const { count, result } = countUnknown(existsSync(path) ? readFileSync(path, 'utf8') : null, tick(plan));
+  if (count) writeFileSync(path, `${count}\n`, 'utf8');
+  else if (existsSync(path)) unlinkSync(path);
+  return { plan, result };
+});
 let unknown = false;
-for (const plan of armed) {
-  const result = tick(plan);
+for (const { plan, result } of oneDriver(counted)) {
   if (result.verdict === 'UNKNOWN') unknown = true;
   console.log(verdictLine(plan, result));
 }
