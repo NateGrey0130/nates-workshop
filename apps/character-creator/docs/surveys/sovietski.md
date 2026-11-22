@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first sixteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge and the Torrent, pp.169-207) and the 11 tank rounds (pp.190-192) shipped, the other two vehicles next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped, the cyborg bodies next. (2026-11-22)
 
-**Rows citing this book:** gear 106, vehicles 16, skills 7
+**Rows citing this book:** gear 106, vehicles 18, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -278,13 +278,13 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-v5` | 2 vehicles rows from pp.192-197 in `~390-sovietski-v5.sql`: the SU-40 Thunderspear anti-aircraft tank and the SU-45 Earthquake medium battle tank (its SU-45b EarthARK bridge-layer variant described in the row, not a row of its own), with 28 `vehicle_locations` and 9 `vehicle_weapons` rows |
 | 2026-11-22 | `pal/data/sovietski-v6` | 2 vehicles rows from pp.197-203 in `~391-sovietski-v6.sql`: the SU-56 Shockwave heavy tank and the SU-58 Tunguska super-tank and mobile command center, with 41 `vehicle_locations` and 12 `vehicle_weapons` rows |
 | 2026-11-22 | `pal/data/sovietski-v7` | 2 vehicles rows from pp.204-207 in `~392-sovietski-v7.sql`: the SU-90 Iron Forge mobile cyborg hospital and the SN-247 Torrent fast-attack gunboat (its medium torpedoes a weapon row, not gear), with 25 `vehicle_locations` and 8 `vehicle_weapons` rows |
+| 2026-11-22 | `pal/data/sovietski-v8` | 2 vehicles rows from pp.207-212 in `~393-sovietski-v8.sql`: the SN-357 Storm Swell submarine and transport and the SN-686 Typhoon II ballistic missile submarine, with 29 `vehicle_locations` and 7 `vehicle_weapons` rows. The sonar, decoy and stealth systems print no cost, so they are features in each description, not gear rows |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
-the first sixteen vehicles (pp.169-207) and the tank rounds (pp.190-192): the
-other two vehicles, cyborg bodies, D-Bees and classes (extraction plan
-steps 5-8).
+all eighteen vehicles (pp.169-212) and the tank rounds (pp.190-192): the
+cyborg bodies, D-Bees and classes (extraction plan steps 6-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
 `~392-sovietski-v7.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
