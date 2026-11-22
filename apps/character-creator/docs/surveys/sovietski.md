@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; the first two cyborg bodies (the Proletariat Light Machine and the Sovietski Heavy Machine, pp.128-133) shipped, the other eight next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; the first four cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird and the Whirlwind, pp.128-138) shipped, the other six next. (2026-11-22)
 
-**Rows citing this book:** gear 106, vehicles 20, skills 7
+**Rows citing this book:** gear 106, vehicles 22, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -280,12 +280,13 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-v7` | 2 vehicles rows from pp.204-207 in `~392-sovietski-v7.sql`: the SU-90 Iron Forge mobile cyborg hospital and the SN-247 Torrent fast-attack gunboat (its medium torpedoes a weapon row, not gear), with 25 `vehicle_locations` and 8 `vehicle_weapons` rows |
 | 2026-11-22 | `pal/data/sovietski-v8` | 2 vehicles rows from pp.207-212 in `~393-sovietski-v8.sql`: the SN-357 Storm Swell submarine and transport and the SN-686 Typhoon II ballistic missile submarine, with 29 `vehicle_locations` and 7 `vehicle_weapons` rows. The sonar, decoy and stealth systems print no cost, so they are features in each description, not gear rows |
 | 2026-11-22 | `pal/data/sovietski-cyborgs-a` | 2 vehicles rows (class `borg`) from pp.128-133 in `~394-sovietski-cyborgs-a.sql`: the Proletariat Light Machine and the Sovietski Heavy Machine Combat Cyborg, with 17 `vehicle_locations` and 4 `vehicle_weapons` rows. They are new rows beside the held WB17 `sovietski-light-machine-cyborg` and `sovietski-heavy-machine-cyborg`, which print different figures and stay untouched |
+| 2026-11-22 | `pal/data/sovietski-cyborgs-b` | 2 vehicles rows (class `borg`) from pp.134-138 in `~395-sovietski-cyborgs-b.sql`: the Firebird and the Whirlwind Heavy Machines, with 20 `vehicle_locations` and 9 `vehicle_weapons` rows. Neither has a held WB17 counterpart |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
-first two cyborg bodies (pp.128-133): the other eight cyborg bodies, the
+first four cyborg bodies (pp.128-138): the other six cyborg bodies, the
 D-Bees and the classes (extraction plan steps 6-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
 `~394-sovietski-cyborgs-a.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
