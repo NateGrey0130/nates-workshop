@@ -182,6 +182,20 @@ export function run() {
       `${verdicts.length} verdicts read; not named: ${unnamed.join(', ') || 'none'}`);
     check('plan-rows runs the DONE clean-up on a still-armed plan, ending with the plan-driver task disabled',
       /--disarm <plan>/.test(skill) && /disable[sd]? the `plan-driver` task|`plan-driver` task disabled/i.test(skill));
+    // /go arms a plan and resumes one by the same words. Until 2026-11-22 its
+    // step 5 armed without enabling the task the DONE clean-up disables, and its
+    // resume list had no ADVANCE, RESUME or WAIT.
+    const go = fs.readFileSync(join(repoRoot, '.claude', 'skills', 'go', 'SKILL.md'), 'utf8');
+    const resumeAt = go.indexOf('## `/go resume');
+    const goArm = resumeAt < 0 ? '' : go.slice(0, resumeAt);
+    const goResume = resumeAt < 0 ? '' : go.slice(resumeAt);
+    const goUnnamed = verdicts.filter((v) => !goResume.includes(`\`${v}\``));
+    check('/go resume says what to do on every verdict plan-tick-lib can print',
+      resumeAt >= 0 && verdicts.length >= 10 && !goUnnamed.length,
+      `${verdicts.length} verdicts read; not named under /go resume: ${goUnnamed.join(', ') || 'none'}`);
+    check('/go enables the plan-driver task when it arms, and skips --arm on a plan whose armed file exists',
+      /--arm <plan>/.test(goArm) && /`mcp__scheduled-tasks__update_scheduled_task` on `plan-driver` with it\s+enabled/.test(goArm)
+        && /file named `armed`/.test(goArm) && /never a stop/.test(goArm));
     // One closed stop list, and one stop shape. Until 2026-11-22 the skill
     // listed five stops while STOP was written as a BLOCKED line in another
     // section, taught `BLOCKED: <one sentence>` beside the three-clause rule,
