@@ -5,14 +5,16 @@
 // .claude/scripts/plan-tick-lib.mjs and are driven here with text shaped like a
 // real state.md, a real brief, a driver.lock and `gh pr list` rows.
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { check, section, wantSection } from '../harness.mjs';
-import { CLAIMABLE, FALLBACK_MS, STALE_MS, attemptsOf, beatLock, claimLock, decide, lockText, parseLock, readyNumber, releaseLock,
-  requiredChecks, verdictLine } from '../../../../.claude/scripts/plan-tick-lib.mjs';
+import { check, repoRoot, section, wantSection } from '../harness.mjs';
+import { CLAIMABLE, FALLBACK_MS, STALE_MS, UNKNOWN_TICKS, attemptsOf, beatLock, claimLock, countUnknown, decide, lockText, oneDriver,
+  parseLock, readyNumber, releaseLock, requiredChecks, verdictLine } from '../../../../.claude/scripts/plan-tick-lib.mjs';
 
-const SECTIONS = ['plan-tick.mjs: one verdict per plan, never guessed', 'plan-tick.mjs: the driver lock has one owner'];
+const SECTIONS = ['plan-tick.mjs: one verdict per plan, never guessed', 'plan-tick.mjs: the driver lock has one owner',
+  'plan-tick.mjs: one driver across plans, and an UNKNOWN that repeats stops'];
 
 export function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -174,7 +176,7 @@ export function run() {
     const lock = parseLock(lockText(now, '4242abcd', 'b34ff7ce-ddea'));
     check('a lock written is a lock read', lock?.timeMs === now && lock.owner === '4242abcd' && lock.session === 'b34ff7ce-ddea', JSON.stringify(lock));
     check('a lock with no session reads as session null', parseLock(lockText(now, 'ab12'))?.session === null);
-    check('a lock that does not parse is null, which the script reports UNKNOWN',
+    check('a lock that does not parse is null, which the script hands decide() as badLock',
       parseLock('') === null && parseLock('{"time":"soon","owner":"ab"}') === null && parseLock('{"time":"2026-11-21T00:00:00Z"}') === null
         && parseLock('{"time":"2026-11-21T00:00:00Z","owner":"ab","session":"../x"}') === null);
     check('the old pid-only lock does not parse: a pid named the caller\'s shell, a new one per call',
@@ -246,6 +248,98 @@ export function run() {
         !releaseLock(fs, path, 'cccc').ok && read() !== null && releaseLock(fs, path, null).ok && read() === null);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  section('plan-tick.mjs: one driver across plans, and an UNKNOWN that repeats stops');
+  {
+    const now = Date.parse('2026-11-21T12:00:00Z');
+    const brief = { exists: true, text: '# Row 4: x\n\nGroup `shared`, branch `shared/feat/thing`. Skills: `ship-pr`. Next row: 5.\n' };
+    const next = 'NEXT: row 4 (brief: rows/4.md).\n';
+    const r = (verdict, detail = '') => ({ verdict, detail });
+
+    // Each plan used to be decided alone: A LIVE and B DRIVE both printed.
+    const held = oneDriver([{ plan: 'a', result: r('LIVE', 'driver.lock heartbeat 1m old') }, { plan: 'b', result: r('DRIVE', 'row 4') },
+      { plan: 'c', result: r('MERGE-FIRST', '#9') }, { plan: 'd', result: r('ADVANCE', '#8 merged') }, { plan: 'e', result: r('RESUME', 'row 2') },
+      { plan: 'f', result: r('BLOCKED', 'x') }, { plan: 'g', result: r('UNKNOWN', 'gh failed') }]);
+    const lines = held.map(({ plan, result }) => verdictLine(plan, result));
+    check('while one plan is LIVE, every other plan\'s DRIVE, MERGE-FIRST, ADVANCE or RESUME is WAIT <plan> is live',
+      lines[0] === 'a: LIVE driver.lock heartbeat 1m old' && lines[1] === 'b: WAIT a is live (held back: DRIVE row 4)'
+        && ['c', 'd', 'e'].every((p, i) => held[i + 2].result.verdict === 'WAIT' && lines[i + 2].startsWith(`${p}: WAIT a is live (held back: `)),
+      lines.join(' | '));
+    check('WAIT cannot be claimed', !CLAIMABLE.includes('WAIT'));
+    check('BLOCKED and UNKNOWN beside a LIVE plan are left as they are', lines[5] === 'f: BLOCKED x' && lines[6] === 'g: UNKNOWN gh failed');
+    check('with no plan LIVE, nothing waits',
+      oneDriver([{ plan: 'a', result: r('DRIVE') }, { plan: 'b', result: r('DRIVE') }]).every(({ result }) => result.verdict === 'DRIVE'));
+    check('a plan does not wait on its own LIVE',
+      oneDriver([{ plan: 'a', result: r('LIVE') }])[0].result.verdict === 'LIVE');
+
+    // A corrupt lock was UNKNOWN on every tick, forever, with nothing written.
+    const bad = tick2({ stateText: next, brief, badLock: true });
+    check('a lock that does not parse is stale: the row is driven and the lock named in the detail',
+      bad.verdict === 'DRIVE' && /driver\.lock does not parse, so it is treated as stale/.test(bad.detail), `${bad.verdict} ${bad.detail}`);
+    const badStopped = tick2({ stateText: 'STOPPED: the cap.\nNEXT: row 4 (brief: rows/4.md).', brief, badLock: true });
+    check('a STOPPED row under a lock that does not parse is RESUME, the lock named',
+      badStopped.verdict === 'RESUME' && /does not parse/.test(badStopped.detail), `${badStopped.verdict} ${badStopped.detail}`);
+    function tick2(input) { return decide({ now, pulls: [], merged: [], ...input }); }
+
+    check('four UNKNOWN ticks become STOP (taken 2026-11-21; not two or eight)', UNKNOWN_TICKS === 4);
+    let text = null;
+    const seen = [];
+    for (let i = 0; i < 5; i++) {
+      const { count, result } = countUnknown(text, r('UNKNOWN', 'gh pr list failed'));
+      seen.push(result.verdict);
+      text = `${count}\n`;
+    }
+    check('an UNKNOWN on four consecutive ticks prints STOP, and stays STOP while it repeats',
+      seen.join() === 'UNKNOWN,UNKNOWN,UNKNOWN,STOP,STOP', seen.join());
+    const stopped = countUnknown('3\n', r('UNKNOWN', 'gh pr list failed'));
+    check('the STOP names the count and the last reading',
+      stopped.result.detail === 'UNKNOWN on 4 consecutive ticks, the last: gh pr list failed', stopped.result.detail);
+    const cleared = countUnknown('3\n', r('DRIVE', 'row 4'));
+    check('any verdict clears the count', cleared.count === 0 && cleared.result.verdict === 'DRIVE');
+    check('an unreadable count starts again at one', countUnknown('garbage', r('UNKNOWN')).count === 1);
+
+    // The script end to end, on scratch plans that need no gh reading: a LIVE
+    // lock on a, a STOPPED row on b, a corrupt lock on c, no state.md on d.
+    const root = fs.mkdtempSync(join(tmpdir(), 'plan-tick-plans-'));
+    try {
+      const script = join(repoRoot, '.claude', 'scripts', 'plan-tick.mjs');
+      const plan = (name, state, lock) => {
+        fs.mkdirSync(join(root, name, 'rows'), { recursive: true });
+        fs.writeFileSync(join(root, name, 'armed'), 'armed\n');
+        if (state !== null) fs.writeFileSync(join(root, name, 'state.md'), state);
+        fs.writeFileSync(join(root, name, 'rows', '4.md'), brief.text);
+        if (lock !== null) fs.writeFileSync(join(root, name, 'driver.lock'), lock);
+      };
+      const stop = 'STOPPED: the cap.\nResume: shared/feat/thing abc1234\nNEXT: row 4 (brief: rows/4.md).\n';
+      plan('a', stop, lockText(Date.now(), 'aaaa', null));
+      plan('b', stop, null);
+      plan('c', stop, 'garbage\n');
+      plan('d', null, null);
+      const runTick = (...extra) => spawnSync(process.execPath, [script, '--root', root, ...extra], { encoding: 'utf8' });
+      const ticks = [1, 2, 3, 4].map(() => runTick());
+      const out = (t, p) => t.stdout.split('\n').find((l) => l.startsWith(`${p}: `)) ?? '';
+      check('the script: a LIVE plan makes another plan\'s RESUME print WAIT',
+        /^b: WAIT a is live \(held back: RESUME row 4/.test(out(ticks[0], 'b')), ticks[0].stdout + ticks[0].stderr);
+      check('the script: a corrupt lock is stale, named, and the plan waits like any other',
+        /^c: WAIT a is live \(held back: RESUME row 4 .*driver\.lock does not parse/.test(out(ticks[0], 'c')), out(ticks[0], 'c'));
+      check('the script: UNKNOWN on three ticks exits 2, the fourth prints STOP and exits 0',
+        ticks.slice(0, 3).every((t) => t.status === 2 && out(t, 'd') === 'd: UNKNOWN no state.md')
+          && ticks[3].status === 0 && out(ticks[3], 'd') === 'd: STOP UNKNOWN on 4 consecutive ticks, the last: no state.md',
+        ticks.map((t) => `${t.status} ${out(t, 'd')}`).join(' | '));
+      const claim = runTick('--claim', 'b');
+      check('the script: --claim on a plan that waits exits 1 and writes no lock',
+        claim.status === 1 && !fs.existsSync(join(root, 'b', 'driver.lock')), claim.stdout + claim.stderr);
+      fs.writeFileSync(join(root, 'd', 'state.md'), 'DONE\n');
+      runTick();
+      check('the script: a verdict deletes unknown.count', !fs.existsSync(join(root, 'd', 'unknown.count')));
+      fs.unlinkSync(join(root, 'a', 'driver.lock'));
+      const take = runTick('--claim', 'c', '--session', 'scratch-1');
+      check('the script: --claim takes over a lock that does not parse',
+        take.status === 0 && parseLock(fs.readFileSync(join(root, 'c', 'driver.lock'), 'utf8'))?.session === 'scratch-1', take.stdout + take.stderr);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
     }
   }
 }

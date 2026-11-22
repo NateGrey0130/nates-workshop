@@ -38,8 +38,19 @@
 //                         `Next row:`, a STOPPED naming no row, or a first line
 //                         nothing here can parse
 //
-// A reading that failed (gh, a file, a lock that does not parse) is never a
-// verdict: the script prints UNKNOWN for it and exits 2.
+// Two more are taken across ticks and plans, by the script, after the above:
+//
+//   WAIT <plan> is live   another armed plan is LIVE, so this plan's DRIVE,
+//                         MERGE-FIRST, ADVANCE or RESUME waits: one driver at a
+//                         time across every plan (oneDriver)
+//   STOP UNKNOWN on <n> consecutive ticks
+//                         the same plan was UNKNOWN on UNKNOWN_TICKS ticks in a
+//                         row, counted in its unknown.count (countUnknown)
+//
+// A reading that failed (gh, a file) is never a verdict: the script prints
+// UNKNOWN for it and exits 2. A driver.lock that does not parse is not a failed
+// reading: it names no owner and no time, so it is a stale lock, named in the
+// detail, and a claim takes it over.
 
 import { parseBrief, parseState } from './plan-board-lib.mjs';
 
@@ -84,8 +95,9 @@ const PASSING = new Set(['SUCCESS', 'NEUTRAL', 'SKIPPED']);
 // `owner` is a random id the claim prints and every later call passes back as
 // --owner; `session` is the claiming Claude session, whose transcript writes
 // count as the owner being alive. Anything else is null, which the script
-// reports as UNKNOWN rather than as no lock. (A pid used to stand where the
-// owner is: it was the caller's shell, a new one per call, so it named no one.)
+// hands decide() as `badLock`: a stale lock (it was UNKNOWN on every tick
+// until 2026-11-21). (A pid used to stand where the owner is: it was the
+// caller's shell, a new one per call, so it named no one.)
 const ID = /^[A-Za-z0-9-]{1,80}$/;
 export function parseLock(text) {
   try {
@@ -206,7 +218,8 @@ const ago = (ms) => `${Math.max(0, Math.floor(ms / 60000))}m`;
 //   stateText     state.md as read
 //   brief         { exists, text } for the row state.md names next (NEXT, or the
 //                 stopped row under STOPPED), or null when it names none
-//   lock          null (no driver.lock) or parseLock's answer
+//   lock          null (no driver.lock, or one that does not parse) or parseLock's answer
+//   badLock       true when a driver.lock exists and does not parse: stale, named
 //   gitMovedMs    the newest worktree index or logs/HEAD write, in ms, or null
 //   transcriptMs  the newest write to the lock owner's session transcript (its
 //                 JSONL or a subagent's under it), in ms, or null when none was
@@ -218,7 +231,7 @@ const ago = (ms) => `${Math.max(0, Math.floor(ms / 60000))}m`;
 // Returns { verdict, detail, state }. UNKNOWN only when the answer turned on
 // pull requests, open or merged, that were not given; a fresh lock answers
 // LIVE without them.
-export function decide({ stateText, brief = null, lock = null, gitMovedMs = null, transcriptMs = null, pulls = null, merged = null, now }) {
+export function decide({ stateText, brief = null, lock = null, badLock = false, gitMovedMs = null, transcriptMs = null, pulls = null, merged = null, now }) {
   const state = parseState(stateText);
   const first = state.first;
   const out = (verdict, detail = '') => ({ verdict, detail, state });
@@ -247,9 +260,13 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
 
   // A worker's stop. Resumed once from the commit it pushed; a second stop, or
   // one with nothing a driver could take, waits for a person.
+  // A lock that got this far is stale; one that does not parse is stale too.
+  const staleLock = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})`
+    : badLock ? '; driver.lock does not parse, so it is treated as stale' : '';
+
   if (state.kind === 'STOPPED') {
     const id = state.nextId;
-    const lockNote = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})` : '';
+    const lockNote = staleLock;
     if (id === null) return out('STOP', `state.md says STOPPED but names no row to resume: no NEXT: row <id> line under "${first}"`);
     if (!brief?.exists) return out('STOP', `state.md names row ${id} stopped, and rows/${id}.md does not exist`);
     const cause = state.cause || '(no cause given)';
@@ -274,7 +291,6 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
   const wanted = (p) => (wantedNumber !== null ? p.number === wantedNumber : p.headRefName === wantedBranch);
   const pr = !needsPulls ? null : (pulls.find(wanted) ?? null);
   const checks = pr ? requiredChecks(pr.statusCheckRollup) : null;
-  const staleLock = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})` : '';
 
   // Merged already: the driver that merged it died before writing state.md.
   // The newest merge on the branch counts. Never a second merge, never a re-drive.
@@ -312,6 +328,37 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
   }
 
   return out('STOP', `state.md begins "${first || '(nothing)'}", which is none of DONE, BLOCKED:, STOPPED:, READY: or NEXT: row <id>; plan-board reads it as UNKNOWN too`);
+}
+
+// One driver at a time across every armed plan ("one plan at a time"). Each
+// plan's verdict is decided alone, so plan A LIVE and plan B DRIVE both used to
+// print and two drivers ran. While any plan is LIVE, every other plan whose
+// verdict would start a driver (CLAIMABLE) is WAIT, which cannot be claimed.
+// results: [{ plan, result }], result as decide() returns it; same shape back.
+export function oneDriver(results) {
+  const live = results.filter((r) => r.result.verdict === 'LIVE').map((r) => r.plan);
+  return results.map(({ plan, result }) => {
+    const other = live.find((p) => p !== plan);
+    if (other === undefined || !CLAIMABLE.includes(result.verdict)) return { plan, result };
+    const held = `${result.verdict}${result.detail ? ` ${result.detail}` : ''}`;
+    return { plan, result: { ...result, verdict: 'WAIT', detail: `${other} is live (held back: ${held})` } };
+  });
+}
+
+// An UNKNOWN that repeats becomes a STOP, so the driver writes a BLOCKED line
+// instead of ticking on it forever with nothing written anywhere. Counted per
+// plan in an `unknown.count` file beside `armed`; any verdict clears it. Four
+// ticks taken on the recommendation, 2026-11-21 (not taken: two or eight).
+export const UNKNOWN_TICKS = 4;
+
+// countText: the plan's unknown.count as read, or null. Returns the count to
+// write (0: delete the file) and the result to print.
+export function countUnknown(countText, result) {
+  if (result.verdict !== 'UNKNOWN') return { count: 0, result };
+  const prev = /^\s*(\d+)\s*$/.exec(String(countText ?? ''));
+  const count = (prev ? Number(prev[1]) : 0) + 1;
+  if (count < UNKNOWN_TICKS) return { count, result };
+  return { count, result: { ...result, verdict: 'STOP', detail: `UNKNOWN on ${count} consecutive ticks, the last: ${result.detail}` } };
 }
 
 // The printed line: `<plan>: <VERDICT> <detail>`.
