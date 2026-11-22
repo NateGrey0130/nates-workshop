@@ -56,11 +56,23 @@ file owns the interview, the routing, the stop in step 4, and resume.
    each with its group and branch; **every choice taken, with the option not
    taken**; the interview's answers; rows that fell because a claim no
    longer holds; anything split.
-5. **On his "go"**: write the briefs and `state.md`, then arm the plan:
-   ```
-   node .claude/scripts/plan-tick.mjs --arm <plan>
-   ```
-   and tell him the first tick comes within 30 minutes (`plan-rows` →
+5. **On his "go"**: write the briefs and `state.md`, then arm the plan, in
+   two calls:
+   1. **Arm it, unless it is armed already.** Look for a file named `armed`
+      in the plan's folder first (the Read tool, or `ls` on the folder). A
+      new plan has none; one that has it is armed, and `--arm` would rewrite
+      the time the driver reads at `DONE`, so skip the call. Otherwise:
+      ```
+      node .claude/scripts/plan-tick.mjs --arm <plan>
+      ```
+   2. **Enable the `plan-driver` task**, which is disabled between plans:
+      `mcp__scheduled-tasks__update_scheduled_task` on `plan-driver` with it
+      enabled, loaded with `ToolSearch` (`plan-rows` → *Starting the
+      driver*). No tick comes while it is disabled. A refusal or a missing
+      tool is one line in the closing message, telling Nate to enable the
+      task in its edit form; it is never a stop for this session.
+
+   Then tell him the first tick comes within 30 minutes (`plan-rows` →
    *Starting the driver*, which also has the one way to start it sooner).
    This session starts no session and drives nothing. On "go, but …", apply
    the change first, and show the plan again only if a row was added or
@@ -86,12 +98,32 @@ only armed plans, so **a plan it does not print is not armed**: arm it with
 `DONE` with no brief past the last row, or `STOP`, disarm it again with
 `--disarm <plan>`; a `BLOCKED` plan stays armed, and a tick passes it by.
 **Never arm a plan that is already armed**: `--arm` rewrites the `armed`
-file's time, which the driver reads at `DONE`.
+file's time, which the driver reads at `DONE`. So `--arm` is run only for a
+plan the bare run did not print, and only once its folder holds no `armed`
+file (step 5 above).
+
+**A verdict a tick acts on needs the `plan-driver` task enabled**, and the
+`DONE` clean-up of the last plan disabled it. On `DRIVE`, `MERGE-FIRST`,
+`ADVANCE`, `RESUME` or `WAIT`, enable it as in step 5 above
+(`mcp__scheduled-tasks__update_scheduled_task`, loaded with `ToolSearch`).
+Enabling a task that is already enabled changes nothing. A refusal or a
+missing tool is one line to Nate, asking him to enable it in the task's
+edit form, and never a stop.
 
 - **`LIVE`**: name what it printed and do nothing. A driver is working, and
   a second one would write `state.md` over it.
+- **`WAIT`**: another plan's driver is working, and one plan is driven at a
+  time. Name the plan it printed and do nothing else; a later tick takes
+  this one.
 - **`DRIVE` or `MERGE-FIRST`**: the plan is armed; do nothing else. The next
   tick drives or merges it, not this session.
+- **`ADVANCE`**: the row's pull request has merged, and the driver that
+  merged it ended before writing `state.md`. Do nothing else: the next tick
+  finishes the merge's steps and writes `state.md`. **Never merge it, and
+  never write `state.md` for it here.**
+- **`RESUME`**: a worker stopped with a recommendation, and this is its one
+  resume. Do nothing else: the next tick appends the attempt line to the
+  brief and spawns the row. Leave `state.md` and the brief as they are.
 - **`BLOCKED`**: show him the sentence and end the turn. On his word that it
   is resolved, replace `state.md` whole with the `NEXT:` line for the row it
   names next; the plan stays armed.
