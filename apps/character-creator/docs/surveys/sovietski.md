@@ -1,10 +1,10 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s, the O.C.C.s next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) shipped, the other eight O.C.C.s next. (2026-11-22)
 
-**Rows citing this book:** classes 4, gear 106, vehicles 29, skills 7, creatures 4
+**Rows citing this book:** classes 5, gear 106, vehicles 29, skills 7, creatures 4
 
-**MOS:** sovietski-wolverine-people 3 choose 1
+**MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -289,13 +289,14 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-dbees-a` | 4 rows in three scripts. `~399-sovietski-dbees-a.sql`: 2 creatures rows from pp.64-68, the Gridgitz and the Shu-Shuum. `add-sovietski-gridgitz-class.sql` and `add-sovietski-shu-shuum-class.sql`: their R.C.C.s, `sovietski-gridgitz` (ladder 5) and `sovietski-shu-shuum` (ladder 11, with `pairing_counts` cutting a paired O.C.C.'s Related and Secondary skills to zero, so regression's pinned `pairing_counts` list gains it) |
 | 2026-11-22 | `pal/data/sovietski-dbees-b` | 2 rows in two scripts. `~400-sovietski-dbees-b.sql`: 1 creatures row from pp.68-73, the Wolverine People, with 5 `stat_attacks` rows. `add-sovietski-wolverine-people-class.sql`: its R.C.C., `sovietski-wolverine-people` (ladder 1), with the Military Training block (pp.71-72) as an M.O.S. of 3 packages, choose 1, pinned on the `**MOS:**` line above |
 | 2026-11-22 | `pal/data/sovietski-dbees-c` | 2 rows in two scripts. `~401-sovietski-dbees-c.sql`: 1 creatures row from pp.73-78, the Yaganar, with 5 `stat_attacks` rows (its four level-5 elemental blasts and its level-9 elemental fists). `add-sovietski-yaganar-class.sql`: its R.C.C., `sovietski-yaganar` (ladder 12), with its four elements and their Elemental Warlock spell picks from level 7 |
+| 2026-11-22 | `pal/data/sovietski-cold-born` | 1 class row from pp.90-95 in `add-sovietski-cold-born-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`): the Cold Born O.C.C., `sovietski-cold-born` (ladder 1), a Master Psychic whose nine exclusive cold powers are natural abilities, not `psionic_powers` rows, with its five M.O.S. packages as an M.O.S. of 5, choose 1 (pinned on the `**MOS:**` line above), and the matching Training bonuses as a pick-one group |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
-ten cyborg bodies (pp.128-155) and the four D-Bees (pp.64-78): the nine
-O.C.C.s (extraction plan step 8).
+ten cyborg bodies (pp.128-155), the four D-Bees (pp.64-78) and the Cold
+Born (pp.90-95): the other eight O.C.C.s (extraction plan step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
 `~401-sovietski-dbees-c.sql` and the Yaganar class script were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
