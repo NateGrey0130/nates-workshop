@@ -270,14 +270,14 @@ PR's **branch**, which exists before the PR does.
 
 ### What remains
 
-Everything but the skills: weapons, armor, bionics, vehicles, cyborg bodies,
-D-Bees and classes (extraction plan steps 2-8). `node scripts/source-coverage.mjs --remote`
-on 2026-11-22, after `~379-sovietski-skills.sql` was applied to production,
+Everything but the skills and weapons: armor, bionics, vehicles, cyborg bodies,
+D-Bees and classes (extraction plan steps 3-8). `node scripts/source-coverage.mjs --remote`
+on 2026-11-22, after `~380-sovietski-weapons.sql` was applied to production,
 with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the
 book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski            7 / 0
+  sovietski           41 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
