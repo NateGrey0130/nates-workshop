@@ -32,7 +32,12 @@ export function run() {
         && parseState('READY: https://github.com/o/r/pull/9').nextId === null);
     check('BLOCKED is read, and names no row by itself',
       parseState('BLOCKED: the survey pull request is not merged.').kind === 'BLOCKED');
-    check('a first line that is none of the four is UNKNOWN, not guessed at',
+    const stopped = parseState('STOPPED: the 200k cap.\r\nResume: pal/fix/x 0a1b2c3d\r\nNEXT: row 7 (brief: rows/7.md).');
+    check('STOPPED is a worker\'s stop, read with its cause, its Resume: branch and commit, and its row',
+      stopped.kind === 'STOPPED' && stopped.cause === 'the 200k cap.' && stopped.nextId === '7'
+        && stopped.resume?.branch === 'pal/fix/x' && stopped.resume?.commit === '0a1b2c3d'
+        && parseState('STOPPED: the cap.').resume === null, JSON.stringify(stopped));
+    check('a first line that is none of the five is UNKNOWN, not guessed at',
       parseState('Row 3 is nearly there').kind === 'UNKNOWN' && parseState('').kind === 'UNKNOWN'
         && parseState('NEXT: see the plan').kind === 'UNKNOWN');
 

@@ -194,7 +194,7 @@ for (const p of board) {
   console.log('');
   const bar = p.total ? `${p.done}/${p.total} rows done` : 'no briefs';
   console.log(`${p.name}   ${bar}   ${headline(p.state)}   moved ${p.movedAgo} ago`);
-  if (p.state.kind === 'BLOCKED' || p.state.kind === 'READY') console.log(`  ${clip(p.state.first, width - 2)}`);
+  if (['BLOCKED', 'STOPPED', 'READY'].includes(p.state.kind)) console.log(`  ${clip(p.state.first, width - 2)}`);
   if (p.stale) console.log(`  ${p.stale}`);
   if (p.state.lastRow) console.log(`  last row: ${clip(p.state.lastRow, width - 12)}`);
   if (p.state.inFlight && !/^nothing\.?$/i.test(p.state.inFlight)) console.log(`  in flight: ${clip(p.state.inFlight, width - 13)}`);

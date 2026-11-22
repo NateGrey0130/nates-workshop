@@ -17,16 +17,25 @@ export function compareIds(a, b) {
 }
 
 // The first line decides the kind. A NEXT line is looked for on every line,
-// because READY sits above one and a BLOCKED file may carry one too.
+// because READY sits above one and a BLOCKED or STOPPED file may carry one too.
+// STOPPED is a worker's stop (`STOPPED: <cause>`, with an optional
+// `Resume: <branch> <commit>` line); BLOCKED is the driver's, and a person's.
 export function parseState(text) {
   const lines = String(text ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const first = lines[0] ?? '';
-  const out = { kind: 'UNKNOWN', first, nextId: null, thenId: null, lastRow: null, lastRowId: null, inFlight: null };
+  const out = { kind: 'UNKNOWN', first, nextId: null, thenId: null, lastRow: null, lastRowId: null, inFlight: null,
+    cause: null, resume: null };
   if (/^DONE\b/.test(first)) out.kind = 'DONE';
   else if (/^NEXT:/.test(first)) out.kind = 'NEXT';
   else if (/^READY:/.test(first)) out.kind = 'READY';
   else if (/^BLOCKED:/.test(first)) out.kind = 'BLOCKED';
+  else if (/^STOPPED:/.test(first)) {
+    out.kind = 'STOPPED';
+    out.cause = first.replace(/^STOPPED:\s*/, '');
+  }
   for (const line of lines) {
+    const resume = /^Resume:\s*(\S+)\s+([0-9a-f]{7,40})\b/i.exec(line);
+    if (resume && out.resume === null) out.resume = { branch: resume[1], commit: resume[2] };
     const next = /^NEXT:\s*row\s+(\d+[a-z]*)/i.exec(line);
     if (next && out.nextId === null) {
       out.nextId = next[1];
@@ -42,6 +51,7 @@ export function parseState(text) {
   }
   // A NEXT line that names no row cannot be placed: say so. READY alone can be
   // (a plan's last row has no NEXT under it), and its rows are read off GitHub.
+  // A STOPPED with no NEXT line keeps its kind: plan-tick says it names no row.
   if (out.kind === 'NEXT' && out.nextId === null) out.kind = 'UNKNOWN';
   return out;
 }

@@ -3,7 +3,8 @@
 //
 //   node .claude/scripts/plan-tick.mjs                    one line per armed plan: <plan>: <VERDICT> <detail>
 //   node .claude/scripts/plan-tick.mjs --claim <plan>     write driver.lock and print its owner id; exit 1 without
-//                                                         writing unless the verdict is DRIVE or MERGE-FIRST
+//                                                         writing unless the verdict is DRIVE, MERGE-FIRST,
+//                                                         ADVANCE or RESUME
 //   node .claude/scripts/plan-tick.mjs --heartbeat <plan> --owner <id>   rewrite the lock's time
 //   node .claude/scripts/plan-tick.mjs --release <plan> --owner <id>     delete driver.lock
 //   node .claude/scripts/plan-tick.mjs --arm <plan>       write the plan's `armed` file
@@ -22,7 +23,8 @@
 // in plan-tick-lib.mjs beside this file, which opens nothing itself.
 //
 // What it reads: each armed plan's state.md first line, the brief of the row
-// it names next, driver.lock, and only when a lock exists the newest write to
+// it names next (or the stopped row's, for its `From row <id>: attempt <n>`
+// lines), driver.lock, and only when a lock exists the newest write to
 // any .git/worktrees/*/index or logs/HEAD and to the lock's session transcript
 // (<transcripts>/*/<session>.jsonl and <transcripts>/*/<session>/subagents/*.jsonl),
 // and one `gh pr list --state open --json number,headRefName,headRefOid,statusCheckRollup`
@@ -32,7 +34,7 @@
 // Exit 0 is every armed plan given a verdict. Exit 2 is a reading that failed:
 // that plan's line says UNKNOWN and why, and no verdict is guessed for it.
 // --claim exits 1 when the plan is not armed or its verdict is anything but
-// DRIVE, MERGE-FIRST or ADVANCE, and 2 on UNKNOWN.
+// DRIVE, MERGE-FIRST, ADVANCE or RESUME, and 2 on UNKNOWN.
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -151,7 +153,8 @@ function tick(plan) {
     const stateText = readFileSync(statePath, 'utf8');
     const state = parseState(stateText);
     let brief = null;
-    if (state.nextId !== null && state.kind === 'NEXT') {
+    // NEXT's row, or a STOPPED row, whose brief carries its attempt lines.
+    if (state.nextId !== null && (state.kind === 'NEXT' || state.kind === 'STOPPED')) {
       const path = join(planDir(plan), 'rows', `${state.nextId}.md`);
       brief = existsSync(path) ? { exists: true, text: readFileSync(path, 'utf8') } : { exists: false, text: '' };
     }
