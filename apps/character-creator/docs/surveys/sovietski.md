@@ -2,7 +2,7 @@
 
 **Status:** `surveyed` — nothing imported yet; Nate said go on the plan below on 2026-11-22. (2026-11-22)
 
-**Rows citing this book:** none yet
+**Rows citing this book:** none
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
