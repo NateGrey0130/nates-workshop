@@ -286,11 +286,11 @@ Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212) and the tank rounds (pp.190-192): the
 cyborg bodies, D-Bees and classes (extraction plan steps 6-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~392-sovietski-v7.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~393-sovietski-v8.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          129 / 0
+  sovietski          131 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
