@@ -282,7 +282,7 @@ vehicles, cyborg bodies, D-Bees and classes (extraction plan steps 5-8).
 line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski           81 / 0
+  sovietski          102 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
