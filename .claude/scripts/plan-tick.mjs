@@ -2,32 +2,45 @@
 // plan-tick.mjs - one verdict per armed plan, and the driver lock.
 //
 //   node .claude/scripts/plan-tick.mjs                    one line per armed plan: <plan>: <VERDICT> <detail>
-//   node .claude/scripts/plan-tick.mjs --claim <plan>     write driver.lock (time, the caller's pid); exit 1 without writing on LIVE
-//   node .claude/scripts/plan-tick.mjs --heartbeat <plan> rewrite the lock's time
-//   node .claude/scripts/plan-tick.mjs --release <plan>   delete driver.lock
+//   node .claude/scripts/plan-tick.mjs --claim <plan>     write driver.lock and print its owner id; exit 1 without
+//                                                         writing unless the verdict is DRIVE or MERGE-FIRST
+//   node .claude/scripts/plan-tick.mjs --heartbeat <plan> --owner <id>   rewrite the lock's time
+//   node .claude/scripts/plan-tick.mjs --release <plan> --owner <id>     delete driver.lock
 //   node .claude/scripts/plan-tick.mjs --arm <plan>       write the plan's `armed` file
 //   node .claude/scripts/plan-tick.mjs --disarm <plan>    delete it
 //   node .claude/scripts/plan-tick.mjs --root <dir>       another plans directory
+//   --session <id>      with --claim: the Claude session to watch (default $CLAUDE_CODE_SESSION_ID)
+//   --transcripts <dir> where session transcripts live (default ~/.claude/projects)
+//
+// The lock names an owner, a random id the claim prints. --heartbeat and
+// --release with another owner's id exit 1 and change nothing. Without
+// --owner they still act, for one row of the tick-fix plan (Nate, 2026-11-21)
+// while the plan-rows skill learns to pass it.
 //
 // A plan is armed only while a file named `armed` sits in its folder. Unarmed
 // plans are never printed, claimed or driven. The verdicts and their order are
-// in plan-tick-lib.mjs beside this file, which reads nothing itself.
+// in plan-tick-lib.mjs beside this file, which opens nothing itself.
 //
 // What it reads: each armed plan's state.md first line, the brief of the row
-// it names next, driver.lock, the newest write to any .git/worktrees/*/index
-// or logs/HEAD (only when a lock exists), and one
-// `gh pr list --state open --json number,headRefName,statusCheckRollup`.
+// it names next, driver.lock, and only when a lock exists the newest write to
+// any .git/worktrees/*/index or logs/HEAD and to the lock's session transcript
+// (<transcripts>/*/<session>.jsonl and <transcripts>/*/<session>/subagents/*.jsonl),
+// and one `gh pr list --state open --json number,headRefName,statusCheckRollup`.
 //
 // Exit 0 is every armed plan given a verdict. Exit 2 is a reading that failed:
 // that plan's line says UNKNOWN and why, and no verdict is guessed for it.
-// --claim exits 1 when the plan is LIVE or not armed, and 2 on UNKNOWN.
+// --claim exits 1 when the plan is not armed or its verdict is anything but
+// DRIVE or MERGE-FIRST, and 2 on UNKNOWN.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import * as fs from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { decide, lockText, parseLock, parseState, verdictLine } from './plan-tick-lib.mjs';
+import { CLAIMABLE, beatLock, claimLock, decide, lockText, parseLock, parseState, releaseLock, validId, verdictLine }
+  from './plan-tick-lib.mjs';
 
+const { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } = fs;
 const REPO = 'NateGrey0130/nates-workshop';
 const DEFAULT_ROOT = join(homedir(), '.claude', 'projects', 'C--Users-natha-Projects-nates-apps', 'memory', 'plans');
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -37,11 +50,17 @@ const valueOf = (name) => { const i = args.indexOf(name); return i === -1 ? null
 const ACTIONS = ['--claim', '--heartbeat', '--release', '--arm', '--disarm'];
 const actions = ACTIONS.filter((a) => args.includes(a));
 const root = valueOf('--root') ?? DEFAULT_ROOT;
-const known = new Set([...ACTIONS, '--root']);
+const transcripts = valueOf('--transcripts') ?? join(homedir(), '.claude', 'projects');
+const owner = valueOf('--owner');
+const known = new Set([...ACTIONS, '--root', '--owner', '--session', '--transcripts']);
 const stray = args.filter((a, i) => a.startsWith('--') ? !known.has(a) : !known.has(args[i - 1]));
 
 if (args.includes('--help') || actions.length > 1 || stray.length) {
-  console.error('usage: node .claude/scripts/plan-tick.mjs [--claim|--heartbeat|--release|--arm|--disarm <plan>] [--root <dir>]');
+  console.error('usage: node .claude/scripts/plan-tick.mjs [--claim <plan> [--session <id>] | --heartbeat|--release <plan> --owner <id> | --arm|--disarm <plan>] [--root <dir>] [--transcripts <dir>]');
+  process.exit(2);
+}
+if (owner !== null && !validId(owner)) {
+  console.error(`plan-tick: --owner "${owner}" is not an owner id`);
   process.exit(2);
 }
 if (!existsSync(root)) {
@@ -79,6 +98,27 @@ function newestWorktreeWrite() {
   return newest;
 }
 
+// The newest write to the session's transcript, or null when none is found:
+// the session's own JSONL in any project folder (a worktree session has a
+// folder of its own), or a subagent's JSONL under it, which is where a worker
+// the driver is waiting on writes.
+function newestTranscriptWrite(session) {
+  if (!session || !existsSync(transcripts)) return null;
+  let newest = null;
+  const consider = (file) => {
+    try { newest = Math.max(newest ?? 0, statSync(file).mtimeMs); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+  };
+  for (const project of readdirSync(transcripts, { withFileTypes: true })) {
+    if (!project.isDirectory()) continue;
+    consider(join(transcripts, project.name, `${session}.jsonl`));
+    const subagents = join(transcripts, project.name, session, 'subagents');
+    if (existsSync(subagents)) {
+      for (const f of readdirSync(subagents)) if (f.endsWith('.jsonl')) consider(join(subagents, f));
+    }
+  }
+  return newest;
+}
+
 let pulls;
 let pullsError = null;
 function openPulls() {
@@ -108,15 +148,18 @@ function tick(plan) {
       brief = existsSync(path) ? { exists: true, text: readFileSync(path, 'utf8') } : { exists: false, text: '' };
     }
     let lock = null;
+    let lockRaw = null;
     if (existsSync(lockPath(plan))) {
-      lock = parseLock(readFileSync(lockPath(plan), 'utf8'));
-      if (!lock) throw new ReadFailure('driver.lock does not parse as {"time", "pid"}');
+      lockRaw = readFileSync(lockPath(plan), 'utf8');
+      lock = parseLock(lockRaw);
+      if (!lock) throw new ReadFailure('driver.lock does not parse as {"time", "owner", "session"}');
     }
     const gitMovedMs = lock ? newestWorktreeWrite() : null;
+    const transcriptMs = lock ? newestTranscriptWrite(lock.session) : null;
     const live = state.kind === 'READY' || state.kind === 'NEXT';
-    const result = decide({ stateText, brief, lock, gitMovedMs, pulls: live ? openPulls() : null, now: Date.now() });
+    const result = decide({ stateText, brief, lock, gitMovedMs, transcriptMs, pulls: live ? openPulls() : null, now: Date.now() });
     if (result.verdict === 'UNKNOWN') return { verdict: 'UNKNOWN', detail: pullsError ?? result.detail };
-    return result;
+    return { ...result, lockRaw };
   } catch (err) {
     return { verdict: 'UNKNOWN', detail: err instanceof ReadFailure ? err.message : `read failed: ${String(err.message).split('\n')[0]}` };
   }
@@ -135,41 +178,39 @@ if (action) {
   } else if (action === '--disarm') {
     if (existsSync(armedPath(plan))) unlinkSync(armedPath(plan));
     console.log(`${plan}: disarmed`);
-  } else if (action === '--release') {
-    if (existsSync(lockPath(plan))) unlinkSync(lockPath(plan));
-    console.log(`${plan}: driver.lock released`);
-  } else if (action === '--heartbeat') {
-    const lock = existsSync(lockPath(plan)) ? parseLock(readFileSync(lockPath(plan), 'utf8')) : null;
-    if (!lock) {
-      console.error(`${plan}: no driver.lock to beat (claim it first)`);
+  } else if (action === '--release' || action === '--heartbeat') {
+    const r = action === '--release' ? releaseLock(fs, lockPath(plan), owner) : beatLock(fs, lockPath(plan), owner, Date.now());
+    if (!r.ok) {
+      console.error(`${plan}: ${r.why}; nothing changed`);
       process.exit(1);
     }
-    writeFileSync(lockPath(plan), lockText(Date.now(), lock.pid), 'utf8');
-    console.log(`${plan}: heartbeat`);
+    const legacy = owner === null ? ' (no --owner given: accepted for now, pass the id --claim printed)' : '';
+    console.log(`${plan}: ${action === '--release' ? (r.why || 'driver.lock released') : 'heartbeat'}${legacy}`);
   } else {
     if (!existsSync(armedPath(plan))) {
       console.log(`${plan}: not armed; not claimed`);
       process.exit(1);
     }
+    const session = valueOf('--session') ?? process.env.CLAUDE_CODE_SESSION_ID ?? null;
+    if (session !== null && !validId(session)) {
+      console.error(`plan-tick: session "${session}" is not a session id`);
+      process.exit(2);
+    }
     const result = tick(plan);
     console.log(verdictLine(plan, result));
     if (result.verdict === 'UNKNOWN') process.exit(2);
-    if (result.verdict === 'LIVE') {
-      console.log(`${plan}: not claimed`);
+    if (!CLAIMABLE.includes(result.verdict)) {
+      console.log(`${plan}: not claimed (only ${CLAIMABLE.join(' or ')} is claimed)`);
       process.exit(1);
     }
-    // The pid is the caller's (the driver's shell), since this process ends now.
-    // With no lock on disk the write is exclusive, so two ticks racing on a
-    // free plan cannot both claim it; a stale lock is overwritten.
-    const hadLock = existsSync(lockPath(plan));
-    try {
-      writeFileSync(lockPath(plan), lockText(Date.now(), process.ppid), { encoding: 'utf8', flag: hadLock ? 'w' : 'wx' });
-    } catch (err) {
-      if (err.code !== 'EEXIST') throw err;
-      console.log(`${plan}: another claim wrote driver.lock first; not claimed`);
+    const id = randomBytes(8).toString('hex');
+    const r = claimLock(fs, lockPath(plan), { seen: result.lockRaw, text: lockText(Date.now(), id, session), owner: id });
+    if (!r.ok) {
+      console.log(`${plan}: ${r.why}; not claimed`);
       process.exit(1);
     }
-    console.log(`${plan}: claimed (pid ${process.ppid})`);
+    console.log(`${plan}: claimed (owner ${id}${session ? `, session ${session}` : ', no session: liveness falls back to the heartbeat'})`);
+    console.log(`${plan}: pass --owner ${id} to --heartbeat and --release`);
   }
   process.exit(0);
 }
