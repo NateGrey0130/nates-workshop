@@ -4,7 +4,7 @@
 
 **Rows citing this book:** classes 22, gear 230, vehicles 35, skills 7, notable_npcs 8, creatures 5
 
-**MOS:** soldati 5, sovietski-police-officer 7, warlord-heavy-machine 4, cyborg-shocktrooper 4
+**MOS:** soldati 5, sovietski-police-officer 2 choose 1, warlord-heavy-machine 4, cyborg-shocktrooper 4
 
 Slug `warlords-of-russia`. Cached 2026-10-01 from
 `Rifts - World Book 17 - Warlords of Russia.pdf`, 226 PDF pages, **text layer**

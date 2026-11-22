@@ -4,7 +4,7 @@
 
 **Rows citing this book:** classes 5, gear 106, vehicles 29, skills 7, creatures 4
 
-**MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1
+**MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1, sovietski-cyborg-soldier 3 choose 1
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
