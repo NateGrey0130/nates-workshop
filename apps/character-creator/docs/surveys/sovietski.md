@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills and weapons shipped; armor next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped; bionics next. (2026-11-22)
 
-**Rows citing this book:** gear 34, skills 7
+**Rows citing this book:** gear 43, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -267,17 +267,18 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4 with five `page_offset_exceptions`, the map also in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
 | 2026-11-22 | `pal/data/sovietski-skills` | 7 skills rows from pp.87-90 in `~379-sovietski-skills.sql`: Contacts - Social Connections, Ballet, Biathlon, Ice Skating (Sovietski), Skiing and Snowboarding, Kremlinology, Law: Loopholes. The pages print 8 skills, not the 4 the inventory counted; Falconry matches the held row and adds nothing |
 | 2026-11-22 | `pal/data/sovietski-weapons` | 34 gear rows from pp.217-223 in `~380-sovietski-weapons.sql`: 5 special rounds, 4 grenades and a parachute flare, 8 attachments, 8 rifles and 8 unusual weapons. 39 items printed; the plasma, stun/flash, tear gas and smoke grenades and the handheld flare are left out as held with the same figures. Where a held row of the same name prints different figures (fragmentation grenade, parachute flare, Vibro-Bayonet, Dragunov SVD, silencer, flash suppressor) this book's item is its own row |
+| 2026-11-22 | `pal/data/sovietski-armor` | 9 gear rows from pp.212-216 in `~381-sovietski-armor.sql`: the 7 body armors, SA-110 Red Nova as its three printed grades (HMA, HMB, HMC). SA-109LMM is a new row beside the held WB17 Red Star Medium Body Armor, which prints different figures |
 
 ### What remains
 
-Everything but the skills and weapons: armor, bionics, vehicles, cyborg bodies,
-D-Bees and classes (extraction plan steps 3-8). `node scripts/source-coverage.mjs --remote`
-on 2026-11-22, after `~380-sovietski-weapons.sql` was applied to production,
+Everything but the skills, weapons and armor: bionics, vehicles, cyborg bodies,
+D-Bees and classes (extraction plan steps 4-8). `node scripts/source-coverage.mjs --remote`
+on 2026-11-22, after `~381-sovietski-armor.sql` was applied to production,
 with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the
 book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski           41 / 0
+  sovietski           50 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
