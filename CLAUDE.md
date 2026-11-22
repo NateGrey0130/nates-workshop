@@ -91,7 +91,7 @@ next turn.
 | `worktree` | a second concurrent session, and **before `git worktree remove`** |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
 | `plan-rows` | writing briefs for a multi-PR plan, arming one, or running a driver tick: the scheduled task `plan-driver` drives the `pr-worker` chain |
-| `go` | `/go <goal, findings or book>` interviews, plans, shows the plan and arms it on Nate's "go"; `/go resume [plan]` restarts a chain |
+| `go` | `/go <goal, findings or book>` interviews, plans, shows the plan and arms it on Nate's "go"; `/go resume [plan]` goes by the tick's verdict |
 
 Read the skill before the code.
 
@@ -138,7 +138,7 @@ skill's order (D1 applied first, every required check green, the merge as its
 own call) and by the `plan-rows` skill, which merges only a row a worker
 reported `READY`, or one `plan-tick.mjs` reads as `MERGE-FIRST`. The plan
 driver is a run of the scheduled task `plan-driver`: nothing is asked after
-Nate's "go", and it stops only at the five stops `plan-rows` lists. Work that
+Nate's "go", and it stops only at the seven stops `plan-rows` lists. Work that
 is not a plan row is still merged by Nate. The tick's own commands are allowed
 too: `node .claude/scripts/plan-tick.mjs`, `node .claude/scripts/pr-landed.mjs *`
 and `git pull --ff-only origin main` (Nate, 2026-11-21: every `plan-driver` run
