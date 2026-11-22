@@ -272,14 +272,16 @@ PR's **branch**, which exists before the PR does.
 
 ### What remains
 
-Everything but the skills, weapons and armor: bionics, vehicles, cyborg bodies,
-D-Bees and classes (extraction plan steps 4-8). `node scripts/source-coverage.mjs --remote`
-on 2026-11-22, after `~381-sovietski-armor.sql` was applied to production,
-with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the
-book's line under `BY BOOK` (traceable / other) as:
+Everything but the skills, weapons, armor and the first bionics: the rest of
+the bionics (Cyberlink, Cyber-Skates and the bionic weapons and tools from
+p.159 on), vehicles, cyborg bodies, D-Bees and classes (extraction plan steps
+4-8). `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
+`~382-sovietski-bionics-a.sql` was applied to production, with
+`WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the book's
+line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski           50 / 0
+  sovietski           59 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
