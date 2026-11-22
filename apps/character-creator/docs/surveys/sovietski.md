@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first five vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer and the Firefang, pp.169-182) shipped, the other thirteen next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first eight vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning and the Street Sickle, pp.169-187) shipped, the other ten next. (2026-11-22)
 
-**Rows citing this book:** gear 95, vehicles 5, skills 7
+**Rows citing this book:** gear 95, vehicles 8, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -273,19 +273,20 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-bionic-weapons` | 21 gear rows (category cybernetics) from pp.163-168 in `~384-sovietski-bionic-weapons.sql`, the Bionic Weapons and Tools section from its heading to the Weapon to Cyborg Energy Link: three forearm blasters, Bulletdusters, the M.D. Chainsaw, the Chemical Spray (named `Chemical Spray (Sovietski)` beside the held New West mining tool), Clawed Feet, Crab Claw hands, the Cyber-Bow and Cyber-Quiver, the E-Clip Port, Extendible Legs, three ammo drums, Legs of Leaping, the Net Launcher, Quick Draw Holsters (Triax Tech), the Shoulder Turret and its Auto-Attack Program, and Tentacles. Seven reprints of held rows with the same figures are left out (named in the script header) |
 | 2026-11-22 | `pal/data/sovietski-v1` | 3 vehicles rows from pp.169-176 in `~385-sovietski-v1.sql`: the Novyet N-1051 Volkhov and N-1082 Sadko ekranoplans and the SUMi-185 Red Squall, with 28 `vehicle_locations` and 10 `vehicle_weapons` rows |
 | 2026-11-22 | `pal/data/sovietski-v2` | 2 vehicles rows from pp.176-182 in `~386-sovietski-v2.sql`: the SUMi-224 Stormbringer gunship and the SUT-93 Firefang fighter, with 24 `vehicle_locations` and 13 `vehicle_weapons` rows. The Sunburst bays and the Chaff Dispenser are weapon rows on the Firefang, not vehicles |
+| 2026-11-22 | `pal/data/sovietski-v3` | 3 vehicles rows from pp.182-187 in `~387-sovietski-v3.sql`: the SM-150 Snow Leopard combat snowmobile, the SM-212 Red Lightning fast-attack motorcycle (its three sidecars as locations and weapon rows) and the SM-349 Street Sickle cyborg trike, with 23 `vehicle_locations` and 9 `vehicle_weapons` rows |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168)
-and the first five vehicles (pp.169-182): the other thirteen vehicles, cyborg
+and the first eight vehicles (pp.169-187): the other ten vehicles, cyborg
 bodies, D-Bees and classes (extraction plan steps 5-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~386-sovietski-v2.sql` was applied to production, with
+`~387-sovietski-v3.sql` was applied to production, with
 `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the book's
 line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          107 / 0
+  sovietski          110 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
