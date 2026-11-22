@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `surveyed` — nothing imported yet; Nate said go on the plan below on 2026-11-22. (2026-11-22)
+**Status:** `importing` — skills shipped; weapons and armor next. (2026-11-22)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -265,15 +265,22 @@ PR's **branch**, which exists before the PR does.
 |---|---|---|
 | 2026-11-22 | — | cache built (221 pp, text layer), five spread pages and the offset map found, survey drafted |
 | 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4 with five `page_offset_exceptions`, the map also in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
+| 2026-11-22 | `pal/data/sovietski-skills` | 7 skills rows from pp.87-90 in `~379-sovietski-skills.sql`: Contacts - Social Connections, Ballet, Biathlon, Ice Skating (Sovietski), Skiing and Snowboarding, Kremlinology, Law: Loopholes. The pages print 8 skills, not the 4 the inventory counted; Falconry matches the held row and adds nothing |
 
 ### What remains
 
-Everything: no row cites the book yet. `node scripts/source-coverage.mjs --remote`
-on 2026-11-22, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`:
-its first line reads `caches: 50 of 52 registered books present` and lists
-`sovietski (221)`; the book has **no line under `BY BOOK`**, which lists only
-books that rows cite. Its `BACKLOG` block is catalog-wide, not per book, and
-none of it is this book's:
+Everything but the skills: weapons, armor, bionics, vehicles, cyborg bodies,
+D-Bees and classes (extraction plan steps 2-8). `node scripts/source-coverage.mjs --remote`
+on 2026-11-22, after `~379-sovietski-skills.sql` was applied to production,
+with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the
+book's line under `BY BOOK` (traceable / other) as:
+
+```
+  sovietski            7 / 0
+```
+
+Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
+book's. As it read before this book had rows:
 
 ```
 BACKLOG       rows an importer created and nobody finished
