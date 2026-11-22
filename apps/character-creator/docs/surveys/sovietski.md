@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the vehicles next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first three vehicles (the Volkhov and Sadko ekranoplans and the Red Squall, pp.169-176) shipped, the other fifteen next. (2026-11-22)
 
-**Rows citing this book:** gear 95, skills 7
+**Rows citing this book:** gear 95, vehicles 3, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -271,6 +271,7 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-bionics-a` | 9 gear rows (category cybernetics) from pp.157-159 in `~382-sovietski-bionics-a.sql`: Advanced Remote Hand, Built-In Loudspeaker, Video Finger Camera, Climb Cord, the pirated-Triax Combat Computer with its CCREP and CCMEP programs, Cyber-Crampons and CNRRS. Camera Finger is left out as a reprint of the held Universal Finger Camera; the pirated Combat Computer is its own row beside the held New West one, which prints different figures. The section opening's salvage rule and Unauthorized Vendors table (pp.155-157) are not rows; Cyberlink and Cyber-Skates are a later row's |
 | 2026-11-22 | `pal/data/sovietski-cyberlink` | 22 gear rows (category cybernetics) from pp.159-163 in `~383-sovietski-cyberlink.sql`, the Cyberlink entry through Stabilizing Anchors: the revised Cyberlink Vehicle Interface, Cyber-Skates, -Skis and -Snowshoes, two finger systems, four eye systems, Hardened Circuits, Internal Energy Supply, four medical systems, the NAMC, the Oxygen Storage Cell, Secret Compartments, the standard Sensor Hand, the Speedometer and the Stabilizing Anchors. Six of them (the Cyberlink, Wide-Angle Vision, Epidermic Analyzer, Internal Energy Supply, Medical Sensor Hand, Stabilizing Anchors) print figures a held row does not and are their own rows beside it; 17 reprints of held rows with the same figures are left out (named in the script header). Bionic Weapons and Tools (p.163 on) is a later row's |
 | 2026-11-22 | `pal/data/sovietski-bionic-weapons` | 21 gear rows (category cybernetics) from pp.163-168 in `~384-sovietski-bionic-weapons.sql`, the Bionic Weapons and Tools section from its heading to the Weapon to Cyborg Energy Link: three forearm blasters, Bulletdusters, the M.D. Chainsaw, the Chemical Spray (named `Chemical Spray (Sovietski)` beside the held New West mining tool), Clawed Feet, Crab Claw hands, the Cyber-Bow and Cyber-Quiver, the E-Clip Port, Extendible Legs, three ammo drums, Legs of Leaping, the Net Launcher, Quick Draw Holsters (Triax Tech), the Shoulder Turret and its Auto-Attack Program, and Tentacles. Seven reprints of held rows with the same figures are left out (named in the script header) |
+| 2026-11-22 | `pal/data/sovietski-v1` | 3 vehicles rows from pp.169-176 in `~385-sovietski-v1.sql`: the Novyet N-1051 Volkhov and N-1082 Sadko ekranoplans and the SUMi-185 Red Squall, with 28 `vehicle_locations` and 10 `vehicle_weapons` rows |
 
 ### What remains
 
