@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first ten vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer and the Black Water, pp.169-189) and the 11 tank rounds (pp.190-192) shipped, the other eight vehicles next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); the first twelve vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear and the Earthquake, pp.169-197) and the 11 tank rounds (pp.190-192) shipped, the other six vehicles next. (2026-11-22)
 
-**Rows citing this book:** gear 106, vehicles 10, skills 7
+**Rows citing this book:** gear 106, vehicles 12, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -275,16 +275,16 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-v2` | 2 vehicles rows from pp.176-182 in `~386-sovietski-v2.sql`: the SUMi-224 Stormbringer gunship and the SUT-93 Firefang fighter, with 24 `vehicle_locations` and 13 `vehicle_weapons` rows. The Sunburst bays and the Chaff Dispenser are weapon rows on the Firefang, not vehicles |
 | 2026-11-22 | `pal/data/sovietski-v3` | 3 vehicles rows from pp.182-187 in `~387-sovietski-v3.sql`: the SM-150 Snow Leopard combat snowmobile, the SM-212 Red Lightning fast-attack motorcycle (its three sidecars as locations and weapon rows) and the SM-349 Street Sickle cyborg trike, with 23 `vehicle_locations` and 9 `vehicle_weapons` rows |
 | 2026-11-22 | `pal/data/sovietski-v4` | 13 rows in two scripts. `~388-sovietski-v4.sql`: 2 vehicles rows from pp.187-189, the SM-420 Road Hammer assault squad vehicle and the SM-451 Black Water amphibious APC, with 26 `vehicle_locations` and 7 `vehicle_weapons` rows. `~389-sovietski-v4-rounds.sql`: 11 gear rows from pp.190-192, the 11 kinds of tank round |
+| 2026-11-22 | `pal/data/sovietski-v5` | 2 vehicles rows from pp.192-197 in `~390-sovietski-v5.sql`: the SU-40 Thunderspear anti-aircraft tank and the SU-45 Earthquake medium battle tank (its SU-45b EarthARK bridge-layer variant described in the row, not a row of its own), with 28 `vehicle_locations` and 9 `vehicle_weapons` rows |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
-the first ten vehicles (pp.169-189) and the tank rounds (pp.190-192): the
-other eight vehicles, cyborg bodies, D-Bees and classes (extraction plan
+the first twelve vehicles (pp.169-197) and the tank rounds (pp.190-192): the
+other six vehicles, cyborg bodies, D-Bees and classes (extraction plan
 steps 5-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~388-sovietski-v4.sql` and `~389-sovietski-v4-rounds.sql` were applied to
-production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~390-sovietski-v5.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
