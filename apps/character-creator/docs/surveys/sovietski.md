@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills shipped; weapons and armor next. (2026-11-22)
+**Status:** `importing` — skills and weapons shipped; armor next. (2026-11-22)
 
-**Rows citing this book:** skills 7
+**Rows citing this book:** gear 34, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -266,6 +266,7 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | — | cache built (221 pp, text layer), five spread pages and the offset map found, survey drafted |
 | 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4 with five `page_offset_exceptions`, the map also in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
 | 2026-11-22 | `pal/data/sovietski-skills` | 7 skills rows from pp.87-90 in `~379-sovietski-skills.sql`: Contacts - Social Connections, Ballet, Biathlon, Ice Skating (Sovietski), Skiing and Snowboarding, Kremlinology, Law: Loopholes. The pages print 8 skills, not the 4 the inventory counted; Falconry matches the held row and adds nothing |
+| 2026-11-22 | `pal/data/sovietski-weapons` | 34 gear rows from pp.217-223 in `~380-sovietski-weapons.sql`: 5 special rounds, 4 grenades and a parachute flare, 8 attachments, 8 rifles and 8 unusual weapons. 39 items printed; the plasma, stun/flash, tear gas and smoke grenades and the handheld flare are left out as held with the same figures. Where a held row of the same name prints different figures (fragmentation grenade, parachute flare, Vibro-Bayonet, Dragunov SVD, silencer, flash suppressor) this book's item is its own row |
 
 ### What remains
 
