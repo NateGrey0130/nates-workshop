@@ -44,7 +44,7 @@ skills:
   occ_skills:
     - { name: "Language: Russian", base: 99, per_level: 0, note: "Russian at 99%." }
     - { name: "Language: Euro", base: 99, per_level: 0, note: "Euro at 99%." }
-    - { choose: 4, from: ["Language: Other"], base: 50, per_level: 12, note: "Four languages of choice to start, learned at 50% and improving +12% per level (the Language natural ability). Taken once per language." }
+    - { choose: 4, from: ["Language: Other"], bonus: 0, per_level: 12, note: "Four languages of choice to start, learned at 50% and improving +12% per level (the Language natural ability). The catalog row is 50% +5%/level, so a bonus of 0 keeps the base at 50 and per_level carries the +12. Taken once per language." }
     - { name: "Literacy: Russian", base: 90, per_level: 0, note: "Literacy: Russian at 90%." }
     - { name: "Computer Operation", base: 60, per_level: 5, note: "+20%" }
     - { name: "Law", base: 55, per_level: 5, note: "Law (Russian, General) +20%." }
