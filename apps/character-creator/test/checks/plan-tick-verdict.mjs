@@ -12,9 +12,11 @@ import { join } from 'node:path';
 import { check, repoRoot, section, wantSection } from '../harness.mjs';
 import { CLAIMABLE, FALLBACK_MS, STALE_MS, UNKNOWN_TICKS, attemptsOf, beatLock, claimLock, countUnknown, decide, lockText, oneDriver,
   parseLock, readyNumber, releaseLock, requiredChecks, verdictLine } from '../../../../.claude/scripts/plan-tick-lib.mjs';
+import { d1FilesByDb, parseCheck, verdict as d1Verdict } from '../../../../.claude/scripts/pr-d1-lib.mjs';
 
 const SECTIONS = ['plan-tick.mjs: one verdict per plan, never guessed', 'plan-tick.mjs: the driver lock has one owner',
-  'plan-tick.mjs: one driver across plans, and an UNKNOWN that repeats stops'];
+  'plan-tick.mjs: one driver across plans, and an UNKNOWN that repeats stops',
+  'pr-d1-applied.mjs: a pull request\'s D1 files are read from production, never assumed'];
 
 export function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -341,5 +343,60 @@ export function run() {
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
+  }
+
+  section('pr-d1-applied.mjs: a pull request\'s D1 files are read from production, never assumed');
+  {
+    // A MERGE-FIRST merged a green pull request with nothing reading whether its
+    // migrations were applied (`ship-pr` -> *The ordering rule*). The script asks
+    // `d1-apply.mjs --check --remote`; its output here is shaped on a real run of
+    // 2026-11-22 (one recorded migration, one scratch file production lacks).
+    const byDb = d1FilesByDb(['db/migrations/094-x.sql', 'db/migrations/marvel/095-m.sql', 'db/migrations/tools/096-t.sql',
+      'apps/character-creator/db/~400-y.sql', 'db/schema.sql', 'db/schema-marvel.sql', 'db/seed-catalogs.sql',
+      '.claude/skills/class-import/reference/data-script.sql', 'apps/character-creator/db/sub/z.sql', 'apps/character-creator/js/a.js',
+      'db\\migrations\\097-win.sql', '']);
+    check('the D1 files are migrations (palladium, marvel, tools) and data scripts directly in apps/character-creator/db, by database',
+      JSON.stringify([...byDb]) === JSON.stringify([['palladium', ['db/migrations/094-x.sql', 'apps/character-creator/db/~400-y.sql', 'db/migrations/097-win.sql']],
+        ['marvel', ['db/migrations/marvel/095-m.sql']], ['tools', ['db/migrations/tools/096-t.sql']]]), JSON.stringify([...byDb]));
+    check('a diff with no migration or data script has no D1 files',
+      d1FilesByDb(['db/schema.sql', 'README.md', '.claude/scripts/plan-tick.mjs']).size === 0);
+
+    const T = 'C:\\Users\\x\\AppData\\Local\\Temp\\pr-d1-9-abc\\db\\migrations\\';
+    const files = [`${T}093-gear-slug-check.sql`, `${T}999-nothing-here.sql`];
+    const plan = (rows) => '\n!! --skip-preflight: read-back assertions will NOT be checked before applying. !!\n\n'
+      + `--check: ${rows.length} file(s) would be applied to --remote (palladium: DB), in this order:\n${rows.map((r) => `  ${r}\n`).join('')}\nNothing was applied.\n`;
+    const mixed = parseCheck({ status: 0, stdout: plan([`${files[0]}   <- ALREADY RECORDED on this target`, files[1]]) }, files);
+    check('--check output reads as recorded and unrecorded basenames',
+      JSON.stringify(mixed) === JSON.stringify({ recorded: ['093-gear-slug-check.sql'], unrecorded: ['999-nothing-here.sql'], localOnly: [] }), JSON.stringify(mixed));
+    check('one unrecorded file is D1 NOT APPLIED, exit 1, naming only it',
+      JSON.stringify(d1Verdict([{ db: 'palladium', files, parsed: mixed }])) === JSON.stringify({ code: 1, line: 'D1 NOT APPLIED 999-nothing-here.sql' }));
+    const all = parseCheck({ status: 0, stdout: plan(files.map((f) => `${f}   <- ALREADY RECORDED on this target`)) }, files);
+    check('every file recorded is D1 APPLIED, exit 0',
+      JSON.stringify(d1Verdict([{ db: 'palladium', files, parsed: all }])) === JSON.stringify({ code: 0, line: 'D1 APPLIED 093-gear-slug-check.sql 999-nothing-here.sql' }));
+    check('another database is named beside its file',
+      d1Verdict([{ db: 'palladium', files, parsed: all }, { db: 'marvel', files: ['095-m.sql'], parsed: { recorded: [], unrecorded: ['095-m.sql'], localOnly: [] } }]).line
+        === 'D1 NOT APPLIED 095-m.sql (marvel)');
+    check('no D1 files is NO D1 FILES, exit 0', JSON.stringify(d1Verdict([])) === JSON.stringify({ code: 0, line: 'NO D1 FILES' }));
+
+    const unread = [
+      ['a ledger it could not read', { status: 0, stdout: plan(files) + '  (could not read which files this target has recorded)\n' }],
+      ['a non-zero exit', { status: 1, stdout: '', stderr: '\nd1-apply: x.sql: contains CR\n' }],
+      ['no plan printed', { status: 0, stdout: 'Nothing was applied.\n' }],
+      ['a file the plan does not list', { status: 0, stdout: plan([files[0]]) }],
+    ].map(([why, r]) => [why, d1Verdict([{ db: 'palladium', files, parsed: parseCheck(r, files) }])]);
+    check('an answer that cannot be read is D1 UNREADABLE, exit 2, never a pass: ' + unread.map(([w]) => w).join(', '),
+      unread.every(([, v]) => v.code === 2 && v.line.startsWith('D1 UNREADABLE palladium: ')), unread.map(([w, v]) => `${w}: ${v.code} ${v.line}`).join(' | '));
+    check('a non-zero exit carries d1-apply\'s own reason', /contains CR/.test(unread[1][1].line), unread[1][1].line);
+
+    const seed = `${T}seed-dev.sql`;
+    const skipped = parseCheck({ status: 0, stdout: `skipping ${seed} \u2014 marked local-only; apply it on its own.\n` + plan([files[1]]) }, [seed, files[1]]);
+    check('a local-only file is left out, not called unapplied', JSON.stringify(skipped.unrecorded) === '["999-nothing-here.sql"]' && skipped.localOnly[0] === 'seed-dev.sql', JSON.stringify(skipped));
+    const onlySeed = parseCheck({ status: 1, stdout: `skipping ${seed} \u2014 marked local-only; apply it on its own.\n`,
+      stderr: '\nd1-apply: nothing left to apply: every file given is local-only\n' }, [seed]);
+    check('a diff whose only D1 file is local-only is not a failure',
+      d1Verdict([{ db: 'palladium', files: [seed], parsed: onlySeed }]).code === 0, JSON.stringify(onlySeed));
+
+    const usage = spawnSync(process.execPath, [join(repoRoot, '.claude', 'scripts', 'pr-d1-applied.mjs')], { encoding: 'utf8' });
+    check('the script with no pull request number exits 2', usage.status === 2, `${usage.status} ${usage.stderr}`);
   }
 }
