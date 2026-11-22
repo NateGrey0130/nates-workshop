@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `surveyed` — nothing imported yet; Nate said go on the plan below on 2026-11-22. (2026-11-22)
+**Status:** `importing` — skills shipped; weapons and armor next. (2026-11-22)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -265,6 +265,7 @@ PR's **branch**, which exists before the PR does.
 |---|---|---|
 | 2026-11-22 | — | cache built (221 pp, text layer), five spread pages and the offset map found, survey drafted |
 | 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4 with five `page_offset_exceptions`, the map also in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
+| 2026-11-22 | `pal/data/sovietski-skills` | 7 skills rows from pp.87-90 in `~379-sovietski-skills.sql`: Contacts - Social Connections, Ballet, Biathlon, Ice Skating (Sovietski), Skiing and Snowboarding, Kremlinology, Law: Loopholes. The pages print 8 skills, not the 4 the inventory counted; Falconry matches the held row and adds nothing |
 
 ### What remains
 
