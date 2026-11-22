@@ -11,6 +11,11 @@
 //                         driver reached the line before its first merge,
 //                         obeyed it, and handed off after one PR, each hand-off
 //                         costing a fresh 95k start and a typed merge word.
+//                         Also after `plan-tick.mjs --heartbeat`, from the same
+//                         150k: an unattended driver tick heartbeats before every
+//                         step and may never merge, so without this it never
+//                         heard the line at all (Nate, 2026-11-21: this hook,
+//                         not a new settings.json registration).
 //
 // Why it exists. One week's usage, read 2026-10-11: 1,268 of 1,489 main-thread
 // calls ran with more than 200k tokens already in context (24.2% of the week,
@@ -86,13 +91,20 @@ const k = (n) => `${Math.round(n / 1000)}k`;
 // The warning for one envelope, or null when there is nothing to say.
 export function warningFor(envelope, now = Date.now()) {
   const event = envelope?.hook_event_name;
-  const isMerge = event === 'PostToolUse'
-    && /\bgh\s+pr\s+merge\b/.test(String(envelope?.tool_input?.command ?? ''));
-  if (event !== 'UserPromptSubmit' && !isMerge) return null;
+  const command = event === 'PostToolUse' ? String(envelope?.tool_input?.command ?? '') : '';
+  const isMerge = /\bgh\s+pr\s+merge\b/.test(command);
+  const isHeartbeat = !isMerge && /\bplan-tick\.mjs\b.*\s--heartbeat\b/.test(command);
+  if (event !== 'UserPromptSubmit' && !isMerge && !isHeartbeat) return null;
 
   const call = lastCall(envelope?.transcript_path ?? '');
   if (!call) return null;
   const { ctx, at } = call;
+
+  if (isHeartbeat) {
+    if (ctx < WARN_AT) return null;
+    return `session-budget: this session holds ${k(ctx)}; end the tick. `
+      + 'Finish the step in hand, release the lock, and leave the next row to a fresh tick.';
+  }
 
   if (isMerge) {
     if (ctx < WARN_AT) return null;

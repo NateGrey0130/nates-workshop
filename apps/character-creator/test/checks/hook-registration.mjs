@@ -166,6 +166,22 @@ function sessionBudgetChecks() {
     const earlyMerge = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: driver, tool_input: { command: 'gh pr merge 12 --merge --delete-branch' } });
     check('a merge in a 120k session names no boundary', earlyMerge.code === 0 && earlyMerge.out === '', JSON.stringify(earlyMerge));
 
+    // An unattended plan-driver tick that never merges still heartbeats its lock
+    // before every step, so the heartbeat is where it hears the budget line.
+    const heartbeat = (path) => runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: path,
+      tool_input: { command: 'node .claude/scripts/plan-tick.mjs --heartbeat tick-fix --owner ab12' } });
+    const lateBeat = heartbeat(big);
+    check('a heartbeat in a 240k session tells the tick to end',
+      lateBeat.code === 0 && /this session holds 240k; end the tick/.test(said(lateBeat))
+        && !/a PR just merged/.test(said(lateBeat)), JSON.stringify(lateBeat));
+    const midBeat = heartbeat(transcript('beat-160.jsonl', [assistantLine(160_000, now)]));
+    check('a heartbeat in a 160k session does too', midBeat.code === 0 && /holds 160k; end the tick/.test(said(midBeat)), JSON.stringify(midBeat));
+    const earlyBeat = heartbeat(driver);
+    check('a heartbeat in a 120k session says nothing', earlyBeat.code === 0 && earlyBeat.out === '', JSON.stringify(earlyBeat));
+    const claim = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: big,
+      tool_input: { command: 'node .claude/scripts/plan-tick.mjs --claim tick-fix' } });
+    check('another plan-tick action in the same session says nothing', claim.code === 0 && claim.out === '', JSON.stringify(claim));
+
     const unreadable = [
       runHook(BUDGET, 'not json'),
       prompt(join(dir, 'no-such-file.jsonl')),
