@@ -30,7 +30,8 @@ catalog's existing lists (the book prints no new spell for it).
 
 **Read from `scripts/books.json`**, which records `page_offset` **-4** (the last
 region's, so that printed 224 + offset = cache 220 fits the 221 cached files) and
-carries the whole map below in its `note`. The measured reading, so nobody
+`page_offset_exceptions` that resolve every printed page below to its cache
+page, both halves of each spread included. The measured reading, so nobody
 re-derives it:
 
 `page_offset` is **not constant**: five cache pages are **double-page spreads**
@@ -263,7 +264,7 @@ PR's **branch**, which exists before the PR does.
 | date | branch | what went in |
 |---|---|---|
 | 2026-11-22 | — | cache built (221 pp, text layer), five spread pages and the offset map found, survey drafted |
-| 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4, the map in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
+| 2026-11-22 | `pal/docs/sovietski-register-survey` | book registered in `scripts/books.json` (`page_offset` -4 with five `page_offset_exceptions`, the map also in its `note`; `cacheCoverage` reads 221 cached against 220 needed, complete); this survey committed; no rows |
 
 ### What remains
 
