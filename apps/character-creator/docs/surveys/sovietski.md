@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; the first six cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka and the Thunderfist, pp.128-145) shipped, the other four next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; the first eight cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan" and the Bionic Birds of Prey, pp.128-150) shipped, the canine and bear cyborgs next. (2026-11-22)
 
-**Rows citing this book:** gear 106, vehicles 24, skills 7
+**Rows citing this book:** gear 106, vehicles 27, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -282,19 +282,20 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-cyborgs-a` | 2 vehicles rows (class `borg`) from pp.128-133 in `~394-sovietski-cyborgs-a.sql`: the Proletariat Light Machine and the Sovietski Heavy Machine Combat Cyborg, with 17 `vehicle_locations` and 4 `vehicle_weapons` rows. They are new rows beside the held WB17 `sovietski-light-machine-cyborg` and `sovietski-heavy-machine-cyborg`, which print different figures and stay untouched |
 | 2026-11-22 | `pal/data/sovietski-cyborgs-b` | 2 vehicles rows (class `borg`) from pp.134-138 in `~395-sovietski-cyborgs-b.sql`: the Firebird and the Whirlwind Heavy Machines, with 20 `vehicle_locations` and 9 `vehicle_weapons` rows. Neither has a held WB17 counterpart |
 | 2026-11-22 | `pal/data/sovietski-cyborgs-c` | 2 vehicles rows (class `borg`) from pp.139-145 in `~396-sovietski-cyborgs-c.sql`: the Rusalka and the Thunderfist Superheavy Machines, with 21 `vehicle_locations` and 9 `vehicle_weapons` rows. Neither matches a held WB17 body by M.D.C. The Thunderfist's M.D.C. table prints `Arms (4)` twice (150 and 210), stored as two locations with the doubling noted |
+| 2026-11-22 | `pal/data/sovietski-cyborgs-d` | 3 vehicles rows (class `borg`) from pp.145-150 in `~397-sovietski-cyborgs-d.sql`: the Tsar "Big Ivan" Superheavy Machine and the Bionic Birds of Prey as two rows (falcon or hawk, and steppe eagle), because every figure differs between them, with 21 `vehicle_locations` and 8 `vehicle_weapons` rows. The 70,000-credit partial cyborg bird has no M.D.C. and is a cost note, not a row |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
-first six cyborg bodies (pp.128-145): the other four cyborg bodies, the
+first eight cyborg bodies (pp.128-150): the canine and bear cyborgs, the
 D-Bees and the classes (extraction plan steps 6-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~396-sovietski-cyborgs-c.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~397-sovietski-cyborgs-d.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          137 / 0
+  sovietski          140 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
