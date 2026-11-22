@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics begun (pp.157-159); the rest of the bionics next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics and the Cyberlink section shipped (pp.157-163); the bionic weapons and tools next. (2026-11-22)
 
-**Rows citing this book:** gear 52, skills 7
+**Rows citing this book:** gear 74, skills 7
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -269,13 +269,13 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-weapons` | 34 gear rows from pp.217-223 in `~380-sovietski-weapons.sql`: 5 special rounds, 4 grenades and a parachute flare, 8 attachments, 8 rifles and 8 unusual weapons. 39 items printed; the plasma, stun/flash, tear gas and smoke grenades and the handheld flare are left out as held with the same figures. Where a held row of the same name prints different figures (fragmentation grenade, parachute flare, Vibro-Bayonet, Dragunov SVD, silencer, flash suppressor) this book's item is its own row |
 | 2026-11-22 | `pal/data/sovietski-armor` | 9 gear rows from pp.212-216 in `~381-sovietski-armor.sql`: the 7 body armors, SA-110 Red Nova as its three printed grades (HMA, HMB, HMC). SA-109LMM is a new row beside the held WB17 Red Star Medium Body Armor, which prints different figures |
 | 2026-11-22 | `pal/data/sovietski-bionics-a` | 9 gear rows (category cybernetics) from pp.157-159 in `~382-sovietski-bionics-a.sql`: Advanced Remote Hand, Built-In Loudspeaker, Video Finger Camera, Climb Cord, the pirated-Triax Combat Computer with its CCREP and CCMEP programs, Cyber-Crampons and CNRRS. Camera Finger is left out as a reprint of the held Universal Finger Camera; the pirated Combat Computer is its own row beside the held New West one, which prints different figures. The section opening's salvage rule and Unauthorized Vendors table (pp.155-157) are not rows; Cyberlink and Cyber-Skates are a later row's |
+| 2026-11-22 | `pal/data/sovietski-cyberlink` | 22 gear rows (category cybernetics) from pp.159-163 in `~383-sovietski-cyberlink.sql`, the Cyberlink entry through Stabilizing Anchors: the revised Cyberlink Vehicle Interface, Cyber-Skates, -Skis and -Snowshoes, two finger systems, four eye systems, Hardened Circuits, Internal Energy Supply, four medical systems, the NAMC, the Oxygen Storage Cell, Secret Compartments, the standard Sensor Hand, the Speedometer and the Stabilizing Anchors. Six of them (the Cyberlink, Wide-Angle Vision, Epidermic Analyzer, Internal Energy Supply, Medical Sensor Hand, Stabilizing Anchors) print figures a held row does not and are their own rows beside it; 17 reprints of held rows with the same figures are left out (named in the script header). Bionic Weapons and Tools (p.163 on) is a later row's |
 
 ### What remains
 
-Everything but the skills, weapons, armor and the first bionics: the rest of
-the bionics (Cyberlink, Cyber-Skates and the bionic weapons and tools from
-p.159 on), vehicles, cyborg bodies, D-Bees and classes (extraction plan steps
-4-8). `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
+Everything but the skills, weapons, armor, the first bionics and the
+Cyberlink section: the bionic weapons and tools (p.163 on), vehicles, cyborg
+bodies, D-Bees and classes (extraction plan steps 4-8). `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
 `~382-sovietski-bionics-a.sql` was applied to production, with
 `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the book's
 line under `BY BOOK` (traceable / other) as:
