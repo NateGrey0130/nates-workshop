@@ -269,12 +269,18 @@ PR's **branch**, which exists before the PR does.
 
 ### What remains
 
-Everything: no row cites the book yet. `node scripts/source-coverage.mjs --remote`
-on 2026-11-22, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`:
-its first line reads `caches: 50 of 52 registered books present` and lists
-`sovietski (221)`; the book has **no line under `BY BOOK`**, which lists only
-books that rows cite. Its `BACKLOG` block is catalog-wide, not per book, and
-none of it is this book's:
+Everything but the skills: weapons, armor, bionics, vehicles, cyborg bodies,
+D-Bees and classes (extraction plan steps 2-8). `node scripts/source-coverage.mjs --remote`
+on 2026-11-22, after `~379-sovietski-skills.sql` was applied to production,
+with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`, prints the
+book's line under `BY BOOK` (traceable / other) as:
+
+```
+  sovietski            7 / 0
+```
+
+Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
+book's. As it read before this book had rows:
 
 ```
 BACKLOG       rows an importer created and nobody finished
