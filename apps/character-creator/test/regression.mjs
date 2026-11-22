@@ -6282,7 +6282,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Market printed 85-87 halves the Pythonan's O.C.C. Related and Secondary
   // skills. Added 2026-11-19. Printed 89-90 of the same book halves the
   // Rulian Translator's for any scholar or adventurer O.C.C. Added 2026-11-19.
-  const want = ['nmbyr-gorilla-man', 'noli-bushman', 'pythonan', 'rulian-translator'];
+  // Rifts World Book 36: Sovietski printed 66-68 cuts the Shu-Shuum's O.C.C.
+  // Related and Secondary skills to zero with any O.C.C. Added 2026-11-22.
+  const want = ['nmbyr-gorilla-man', 'noli-bushman', 'pythonan', 'rulian-translator', 'sovietski-shu-shuum'];
   const got = trimmers.map((c) => c.id).sort();
   check('the races declaring pairing_counts are the pinned ones',
     races.length > 0 && JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);

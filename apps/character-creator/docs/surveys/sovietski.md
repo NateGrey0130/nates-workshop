@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped, the D-Bees next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; the Gridgitz and the Shu-Shuum D-Bees (pp.64-68) shipped as creatures rows and R.C.C.s, the Wolverine People and the Yaganar next. (2026-11-22)
 
-**Rows citing this book:** gear 106, vehicles 29, skills 7
+**Rows citing this book:** classes 2, gear 106, vehicles 29, skills 7, creatures 2
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -284,19 +284,20 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-cyborgs-c` | 2 vehicles rows (class `borg`) from pp.139-145 in `~396-sovietski-cyborgs-c.sql`: the Rusalka and the Thunderfist Superheavy Machines, with 21 `vehicle_locations` and 9 `vehicle_weapons` rows. Neither matches a held WB17 body by M.D.C. The Thunderfist's M.D.C. table prints `Arms (4)` twice (150 and 210), stored as two locations with the doubling noted |
 | 2026-11-22 | `pal/data/sovietski-cyborgs-d` | 3 vehicles rows (class `borg`) from pp.145-150 in `~397-sovietski-cyborgs-d.sql`: the Tsar "Big Ivan" Superheavy Machine and the Bionic Birds of Prey as two rows (falcon or hawk, and steppe eagle), because every figure differs between them, with 21 `vehicle_locations` and 8 `vehicle_weapons` rows. The 70,000-credit partial cyborg bird has no M.D.C. and is a cost note, not a row |
 | 2026-11-22 | `pal/data/sovietski-cyborgs-e` | 2 vehicles rows (class `borg`) from pp.150-155 in `~398-sovietski-cyborgs-e.sql`: the Canine Cyborg and the Bear Cyborg full conversions, with 10 `vehicle_locations` and 6 `vehicle_weapons` rows. Neither matches a held WB17 body; each partial conversion is a cost note, not a row |
+| 2026-11-22 | `pal/data/sovietski-dbees-a` | 4 rows in three scripts. `~399-sovietski-dbees-a.sql`: 2 creatures rows from pp.64-68, the Gridgitz and the Shu-Shuum. `add-sovietski-gridgitz-class.sql` and `add-sovietski-shu-shuum-class.sql`: their R.C.C.s, `sovietski-gridgitz` (ladder 5) and `sovietski-shu-shuum` (ladder 11, with `pairing_counts` cutting a paired O.C.C.'s Related and Secondary skills to zero, so regression's pinned `pairing_counts` list gains it) |
 
 ### What remains
 
 Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
-ten cyborg bodies (pp.128-155): the D-Bees and the classes (extraction plan
-steps 7-8).
+ten cyborg bodies (pp.128-155) and the Gridgitz and Shu-Shuum (pp.64-68): the
+Wolverine People and the Yaganar, and the classes (extraction plan steps 7-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~398-sovietski-cyborgs-e.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~399-sovietski-dbees-a.sql` and the Gridgitz and Shu-Shuum class scripts were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          142 / 0
+  sovietski          146 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
