@@ -288,7 +288,7 @@ steps 5-8).
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          123 / 0
+  sovietski          125 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
