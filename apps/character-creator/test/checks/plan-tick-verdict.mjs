@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { check, section, wantSection } from '../harness.mjs';
-import { CLAIMABLE, FALLBACK_MS, STALE_MS, beatLock, claimLock, decide, lockText, parseLock, readyNumber, releaseLock,
+import { CLAIMABLE, FALLBACK_MS, STALE_MS, attemptsOf, beatLock, claimLock, decide, lockText, parseLock, readyNumber, releaseLock,
   requiredChecks, verdictLine } from '../../../../.claude/scripts/plan-tick-lib.mjs';
 
 const SECTIONS = ['plan-tick.mjs: one verdict per plan, never guessed', 'plan-tick.mjs: the driver lock has one owner'];
@@ -114,6 +114,43 @@ export function run() {
     check('a fresh lock over a merged row is still LIVE: its driver is writing state.md',
       tick({ stateText: next, brief, lock: L(5), merged: [mergedPr(31)] }).verdict === 'LIVE');
 
+    // A worker's stop is STOPPED, which a later tick resumes once; BLOCKED is the
+    // driver's. Before this, a worker wrote BLOCKED: and the plan parked for good.
+    const capped = 'BLOCKED: stopped at the 200k cap with work pushed on shared/feat/thing at abc1234.\nNEXT: row 4 (brief: rows/4.md).';
+    check('a BLOCKED: line is still BLOCKED, on every tick: only the driver writes it',
+      [0, 1, 2].every((i) => tick({ stateText: capped, brief, now: now + i * 10 * min }).verdict === 'BLOCKED'));
+    const stopped = 'STOPPED: stopped at the 200k cap with work pushed.\r\nResume: shared/feat/thing abc1234\r\nNEXT: row 4 (brief: rows/4.md).\r\n';
+    const resumed = line({ stateText: stopped, brief });
+    check('STOPPED with a Resume: line is RESUME row <id> (<branch> <commit>, <cause>) as attempt 2',
+      resumed === 'p: RESUME row 4 (shared/feat/thing abc1234, stopped at the 200k cap with work pushed.) as attempt 2', resumed);
+    const bare = line({ stateText: 'STOPPED: the row is larger than the brief.\nNEXT: row 4 (brief: rows/4.md).', brief });
+    check('STOPPED with no Resume: line resumes from nothing pushed',
+      bare === 'p: RESUME row 4 (nothing pushed, the row is larger than the brief.) as attempt 2', bare);
+    const once = { exists: true, text: `${brief.text}From row 4: attempt 2\r\n` };
+    const again = tick({ stateText: stopped, brief: once });
+    check('a row stopped again with attempt 2 already on its brief is BLOCKED, never a third run',
+      again.verdict === 'BLOCKED' && /stopped again after attempt 2/.test(again.detail), `${again.verdict} ${again.detail}`);
+    check('attempts are read off the brief, never state.md: an attempt line in state.md does not count',
+      tick({ stateText: `${stopped}From row 4: attempt 2\n`, brief }).verdict === 'RESUME');
+    check('another row\'s attempt line on the brief does not count',
+      tick({ stateText: stopped, brief: { exists: true, text: `${brief.text}From row 3: attempt 2\n` } }).verdict === 'RESUME');
+    const noRec = tick({ stateText: 'STOPPED: two options; no option can be recommended, because both lose data.\nNEXT: row 4 (brief: rows/4.md).', brief });
+    check('a STOPPED cause that carries no recommendation is BLOCKED',
+      noRec.verdict === 'BLOCKED' && /no recommendation/.test(noRec.detail), `${noRec.verdict} ${noRec.detail}`);
+    check('a STOPPED with no cause is BLOCKED',
+      tick({ stateText: 'STOPPED:\nNEXT: row 4 (brief: rows/4.md).', brief }).verdict === 'BLOCKED');
+    const nowhere = tick({ stateText: 'STOPPED: the cap.\nResume: shared/feat/thing abc1234', brief: null });
+    check('a STOPPED naming no row is STOP, not a guessed row',
+      nowhere.verdict === 'STOP' && /names no row to resume/.test(nowhere.detail), `${nowhere.verdict} ${nowhere.detail}`);
+    check('a STOPPED row whose brief is missing is STOP',
+      tick({ stateText: stopped, brief: { exists: false, text: '' } }).verdict === 'STOP');
+    check('a fresh lock over a STOPPED row is LIVE: a driver is acting on it',
+      tick({ stateText: stopped, brief, lock: L(5) }).verdict === 'LIVE');
+    check('a STOPPED row needs no gh reading',
+      decide({ now, stateText: stopped, brief, pulls: null, merged: null }).verdict === 'RESUME');
+    check('attemptsOf takes the highest attempt line for its row', attemptsOf('4', 'From row 4: attempt 2\nFrom row 4: attempt 3\nFrom row 44: attempt 9') === 3
+      && attemptsOf('4', '') === 0);
+
     const missing = tick({ stateText: next, brief: { exists: false, text: '' } });
     check('a missing brief is STOP, with both readings',
       missing.verdict === 'STOP' && /names row 4 next/.test(missing.detail) && /rows\/4\.md does not exist/.test(missing.detail), missing.detail);
@@ -159,8 +196,8 @@ export function run() {
       const read = () => (fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : null);
       const t0 = Date.parse('2026-11-21T12:00:00Z');
 
-      check('only DRIVE, MERGE-FIRST and ADVANCE can be claimed; DONE, BLOCKED, STOP, LIVE and UNKNOWN cannot',
-        CLAIMABLE.join() === 'DRIVE,MERGE-FIRST,ADVANCE');
+      check('only DRIVE, MERGE-FIRST, ADVANCE and RESUME can be claimed; DONE, BLOCKED, STOP, LIVE and UNKNOWN cannot',
+        CLAIMABLE.join() === 'DRIVE,MERGE-FIRST,ADVANCE,RESUME');
 
       const a = lockText(t0, 'aaaa', 's1');
       const first = claimLock(fs, path, { seen: null, text: a, owner: 'aaaa' });

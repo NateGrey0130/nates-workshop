@@ -6,7 +6,10 @@
 // recently merged ones. The verdicts, in the order they are tried:
 //
 //   DONE                  state.md says so
-//   BLOCKED <sentence>    state.md says so; a person reads it, nothing drives it
+//   BLOCKED <sentence>    state.md says so (only a driver writes BLOCKED:), or a
+//                         worker's STOPPED row that a resume would not help:
+//                         stopped a second time, or with no recommendation.
+//                         A person reads it, nothing drives it
 //   LIVE <why>            a driver is working: the lock's heartbeat is fresh, or
 //                         the lock exists and a worktree moved or the owner's
 //                         transcript was written recently (with no transcript
@@ -19,13 +22,21 @@
 //                         `Next row:`; `ADVANCE #<n> merged (READY; next ...)`
 //                         for READY, from state.md's own NEXT line. The driver
 //                         writes that state.md; it never merges or drives again
+//   RESUME row <id> (<branch> <commit>, <cause>) as attempt <n>
+//                         a worker stopped: state.md begins `STOPPED: <cause>`,
+//                         names the row on a NEXT line and the commit on an
+//                         optional `Resume: <branch> <commit>` line ("nothing
+//                         pushed" without one). Attempts are counted from
+//                         `From row <id>: attempt <n>` lines on the row's brief,
+//                         never on state.md, which a worker replaces whole
 //   MERGE-FIRST #<n>      READY names a pull request, or the next row's branch
 //                         has an open pull request with every required check passing
 //   DRIVE row <id>        the next row has a brief; a red check on its open pull
 //                         request is still DRIVE, with the number and its head
 //                         commit in the detail, so the worker resumes that commit
 //   STOP <reason>         a missing brief, a merged row whose brief names no
-//                         `Next row:`, or a first line nothing here can parse
+//                         `Next row:`, a STOPPED naming no row, or a first line
+//                         nothing here can parse
 //
 // A reading that failed (gh, a file, a lock that does not parse) is never a
 // verdict: the script prints UNKNOWN for it and exits 2.
@@ -48,7 +59,21 @@ export const FALLBACK_MS = 90 * 60 * 1000;
 // Only these verdicts can be claimed: a plan that is DONE, BLOCKED, STOP, LIVE
 // or UNKNOWN has nothing for a new driver to do. ADVANCE is claimed because its
 // driver writes state.md, and two drivers must not both write it.
-export const CLAIMABLE = ['DRIVE', 'MERGE-FIRST', 'ADVANCE'];
+export const CLAIMABLE = ['DRIVE', 'MERGE-FIRST', 'ADVANCE', 'RESUME'];
+
+// A stopped row is resumed once. Its second stop, or a stop whose cause says
+// no option can be recommended (pr-worker's breaking stop), is BLOCKED.
+export const MAX_ATTEMPTS = 2;
+const NO_RECOMMENDATION = /\bno (?:option can be recommended|recommendation)\b/i;
+
+// The highest `From row <id>: attempt <n>` on the row's brief, or 0 for none.
+export function attemptsOf(id, briefText) {
+  if (!/^\d+[a-z]*$/.test(String(id ?? ''))) return 0;
+  const line = new RegExp(`^\\s*From row ${id}:\\s*attempt\\s+(\\d+)\\b`, 'gim');
+  let most = 0;
+  for (const m of String(briefText ?? '').matchAll(line)) most = Math.max(most, Number(m[1]));
+  return most;
+}
 
 // main's ruleset 22209348 requires these three.
 export const REQUIRED_CHECKS = ['smoke', 'menus', 'regression'];
@@ -179,7 +204,8 @@ const ago = (ms) => `${Math.max(0, Math.floor(ms / 60000))}m`;
 
 // input:
 //   stateText     state.md as read
-//   brief         { exists, text } for the row state.md names next, or null when it names none
+//   brief         { exists, text } for the row state.md names next (NEXT, or the
+//                 stopped row under STOPPED), or null when it names none
 //   lock          null (no driver.lock) or parseLock's answer
 //   gitMovedMs    the newest worktree index or logs/HEAD write, in ms, or null
 //   transcriptMs  the newest write to the lock owner's session transcript (its
@@ -217,6 +243,25 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
     if (transcriptMs === null && lockAge < FALLBACK_MS) {
       return out('LIVE', `${beat}, no transcript found for the owner, inside the ${ago(FALLBACK_MS)} fallback`);
     }
+  }
+
+  // A worker's stop. Resumed once from the commit it pushed; a second stop, or
+  // one with nothing a driver could take, waits for a person.
+  if (state.kind === 'STOPPED') {
+    const id = state.nextId;
+    const lockNote = lock ? `; driver.lock is stale (${ago(now - lock.timeMs)}, owner ${lock.owner})` : '';
+    if (id === null) return out('STOP', `state.md says STOPPED but names no row to resume: no NEXT: row <id> line under "${first}"`);
+    if (!brief?.exists) return out('STOP', `state.md names row ${id} stopped, and rows/${id}.md does not exist`);
+    const cause = state.cause || '(no cause given)';
+    if (!state.cause || NO_RECOMMENDATION.test(state.cause)) {
+      return out('BLOCKED', `row ${id} stopped with no recommendation a driver could take: ${cause}`);
+    }
+    const attempts = attemptsOf(id, brief.text);
+    if (attempts >= MAX_ATTEMPTS) {
+      return out('BLOCKED', `row ${id} stopped again after attempt ${attempts} (rows/${id}.md): ${cause}`);
+    }
+    const from = state.resume ? `${state.resume.branch} ${state.resume.commit}` : 'nothing pushed';
+    return out('RESUME', `row ${id} (${from}, ${cause}) as attempt ${Math.max(attempts, 1) + 1}${lockNote}`);
   }
 
   // The pull request the plan is waiting on: READY's, or the next row's branch's.
@@ -266,7 +311,7 @@ export function decide({ stateText, brief = null, lock = null, gitMovedMs = null
     return out('DRIVE', `row ${state.nextId} (${detail}${staleLock})`);
   }
 
-  return out('STOP', `state.md begins "${first || '(nothing)'}", which is none of DONE, BLOCKED:, READY: or NEXT: row <id>; plan-board reads it as UNKNOWN too`);
+  return out('STOP', `state.md begins "${first || '(nothing)'}", which is none of DONE, BLOCKED:, STOPPED:, READY: or NEXT: row <id>; plan-board reads it as UNKNOWN too`);
 }
 
 // The printed line: `<plan>: <VERDICT> <detail>`.
