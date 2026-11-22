@@ -169,6 +169,19 @@ export function run() {
     check('pr-worker.md counts the driver\'s merge in the four steps plan-rows gives it, not three calls',
       /four steps/.test(agent) && !/three calls/.test(agent)
         && /merge it by the four steps/.test(fs.readFileSync(join(repoRoot, '.claude', 'skills', 'plan-rows', 'SKILL.md'), 'utf8')));
+    // The driver acts on the word plan-tick prints, and plan-rows is all it
+    // reads: a verdict the skill never names is one the driver has no step for
+    // (ADVANCE, RESUME and WAIT, 2026-11-21). The words are read off the lib's
+    // own out('...') and verdict: '...' calls, so a new verdict fails here.
+    const libSrc = fs.readFileSync(join(repoRoot, '.claude', 'scripts', 'plan-tick-lib.mjs'), 'utf8');
+    const verdicts = [...new Set([...libSrc.matchAll(/\b(?:out\(|verdict: )'([A-Z-]+)'/g)].map((m) => m[1]))];
+    const skill = fs.readFileSync(join(repoRoot, '.claude', 'skills', 'plan-rows', 'SKILL.md'), 'utf8');
+    const unnamed = verdicts.filter((v) => !skill.includes(`\`${v}\``) && !skill.includes(`\`${v} `));
+    check('plan-rows names every verdict plan-tick-lib can print, and passes --owner to --heartbeat and --release',
+      verdicts.length >= 10 && !unnamed.length && /--heartbeat <plan> --owner <id>/.test(skill) && /--release <plan> --owner <id>/.test(skill),
+      `${verdicts.length} verdicts read; not named: ${unnamed.join(', ') || 'none'}`);
+    check('plan-rows runs the DONE clean-up on a still-armed plan, ending with the plan-driver task disabled',
+      /--disarm <plan>/.test(skill) && /disable[sd]? the `plan-driver` task|`plan-driver` task disabled/i.test(skill));
     check('attemptsOf takes the highest attempt line for its row',attemptsOf('4', 'From row 4: attempt 2\nFrom row 4: attempt 3\nFrom row 44: attempt 9') === 3
       && attemptsOf('4', '') === 0);
 
