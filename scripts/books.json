@@ -609,6 +609,29 @@
       "note": "Cached 2026-09-25 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Not World Book 6 (slug south-america). Offset 0 verified by render at printed 4, 30, 190 and 192 (d[3], d[29], d[189], d[191]); ocr-book.py measured +0 over the whole book. printed_pages is 192, the Experience Tables; the manifest says 184 because the OCR lost the folios of 185-192. Cache p193 is the back cover. p085 is EMPTY in the cache (render it); p074, p082 and p192 have merged or reordered columns. See apps/character-creator/docs/surveys/south-america-2.md."
     },
 
+    "sovietski": {
+      "title": "Rifts World Book 36: Sovietski",
+      "published": 2018,
+      "aliases": [
+        "Sovietski",
+        "Rifts Sovietski",
+        "Rifts World Book 36: Sovietski",
+        "Rifts World Book 36 Sovietski"
+      ],
+      "source_pdf": "Rifts - World Book 36 - Sovietski.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 224,
+      "page_offset": -4,
+      "page_offset_exceptions": [
+        { "printed_through": 36, "offset": 1 },
+        { "printed_through": 178, "offset": 0 },
+        { "printed_through": 194, "offset": -1 },
+        { "printed_through": 196, "offset": -2 },
+        { "printed_through": 200, "offset": -3 }
+      ],
+      "note": "Cached 2026-11-22 from its TEXT LAYER (--probe median 5,849 chars/page), 221 PDF pages, slug sovietski, cache C:\\Users\\natha\\Projects\\nates-apps\\.cache\\books\\sovietski (from a worktree by that absolute path or WORKSHOP_OCR_CACHE). page_offset is NOT constant: -4 is the last region's, so that printed + offset = 220 fits the 221 cached files, and page_offset_exceptions resolves every printed page to its cache page, both halves of each spread included (printed 195 and 196 are the only pages at -2). Five cache pages are double-page spreads (PDF width 1,166 pt against 605 pt), each holding two printed pages. Offset map, cache = printed + k: printed 1-35 k=+1; 36-37 spread p037; 38-177 k=0; 178-179 spread p178; 180-193 k=-1; 194-195 spread p193; 196-197 spread p194; 198-199 k=-3; 200-201 spread p197; 202-224 k=-4. Folios checked 2026-11-22: p087 reads 87, p180 reads 181, p196 reads 199, p208 reads 212, p213 reads 217. source_book is 'Rifts World Book 36: Sovietski p.N-M' in printed pages. welded_pages is p009 and p024 (history prose); corrupt_pages is 0; substituted_digits lists 46 cache pages, worst in the vehicles chapter: read a figure there as the dice expression it can only be. Cache p001 is the cover and p221 a back-cover advertisement. See apps/character-creator/docs/surveys/sovietski.md."
+    },
+
     "spirit-west": {
       "title": "Rifts World Book 15: Spirit West",
       "published": 1997,
