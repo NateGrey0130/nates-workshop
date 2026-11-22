@@ -182,6 +182,27 @@ export function run() {
       `${verdicts.length} verdicts read; not named: ${unnamed.join(', ') || 'none'}`);
     check('plan-rows runs the DONE clean-up on a still-armed plan, ending with the plan-driver task disabled',
       /--disarm <plan>/.test(skill) && /disable[sd]? the `plan-driver` task|`plan-driver` task disabled/i.test(skill));
+    // One closed stop list, and one stop shape. Until 2026-11-22 the skill
+    // listed five stops while STOP was written as a BLOCKED line in another
+    // section, taught `BLOCKED: <one sentence>` beside the three-clause rule,
+    // merged MERGE-FIRST rows while saying it merged READY "and nothing else",
+    // and made a failed local migration a closing-message line only.
+    const templates = [...skill.matchAll(/`BLOCKED: (<[^`]*)`/g)].map((m) => m[1]);
+    const badShape = templates.filter((t) => (t.match(/; </g) || []).length !== 2);
+    check('plan-rows teaches one BLOCKED shape, the three clauses, everywhere it shows one',
+      templates.length >= 2 && !badShape.length, `${templates.length} shapes; not three clauses: ${badShape.join(' | ') || 'none'}`);
+    const stopsBlock = /\*\*The stops\.\*\*[^]*?\n\n((?:\d+\. [^]*?\n)+)\n/.exec(skill.replace(/\r\n/g, '\n'))?.[1] ?? '';
+    const stopItems = stopsBlock.split(/\n(?=\d+\. )/).filter((s) => /^\d+\. /.test(s));
+    check('plan-rows closes its stop list: a failed local migration and plan-tick\'s STOP are on it',
+      stopItems.length === 7 && /migration/.test(stopItems[5] || '') && /`STOP`/.test(stopItems[6] || '')
+        && /`pr-d1-applied\.mjs`/.test(stopItems[2] || '') && /budget line/.test(skill.slice(skill.indexOf('The list is closed'))),
+      `${stopItems.length} stops read`);
+    check('plan-rows merges READY and MERGE-FIRST rows, MERGE-FIRST only after pr-d1-applied.mjs exits 0',
+      !/merges a\s+`READY` row and nothing else/.test(skill)
+        && /`READY` row and a `MERGE-FIRST` row are the rows the driver merges/.test(skill)
+        && /`MERGE-FIRST #<n>`[^]*?pr-d1-applied\.mjs <n>[^]*?`NO D1 FILES`[^]*?merge it by the four steps/.test(skill));
+    check('plan-rows makes a failed local migration a stop and a failed local data script a line',
+      /migration that fails here\s+is stop 6/.test(skill) && /data script that fails is a closing-message line/.test(skill));
     check('attemptsOf takes the highest attempt line for its row',attemptsOf('4', 'From row 4: attempt 2\nFrom row 4: attempt 3\nFrom row 44: attempt 9') === 3
       && attemptsOf('4', '') === 0);
 

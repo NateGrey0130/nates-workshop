@@ -33,7 +33,9 @@ A row id is a number in run order; a row split from row 9 is `9a`, `9b`.
 most, each one sentence, replaced whole by whoever writes it; nothing is
 ever appended to it. Its first line is
 `NEXT: row <id> (brief: rows/<id>.md), then row <id>.`, or
-`BLOCKED: <one sentence>`, or `READY: <the open pull request>` above a
+`BLOCKED: <the cause as a mechanism>; <what was tried>; <what unblocks it>`
+(one sentence, *The stops*), or `STOPPED:` above a `NEXT:` line (a worker's,
+`pr-worker`), or `READY: <the open pull request>` above a
 `NEXT:` line, or `DONE`. Then the last row with its pull request and
 outcome in one line, and `In flight:`. Nothing else: a ruling a later row
 needs goes on that row's brief as a `From row` line (below), and every
@@ -186,11 +188,11 @@ row pays for. **One tick:**
    - `WAIT <plan> is live`: another plan's driver is working, and one plan is
      driven at a time.
    - `BLOCKED`: a person reads it. When that plan's `state.md` still begins
-     `STOPPED:` (a row stopped a second time, or with no recommendation),
-     write the `BLOCKED` line first, in the three clauses of *The five
-     stops*.
-   - `STOP`: written to that plan's `state.md` as a `BLOCKED` line first;
-     see *Any other disagreement* below.
+     `STOPPED:` (a row stopped a second time, or with no recommendation:
+     stops 4 and 5 of *The stops*), write the `BLOCKED` line first, in its
+     three clauses.
+   - `STOP`: stop 7 of *The stops*, written to that plan's `state.md` as a
+     `BLOCKED` line first; see *Any other disagreement* below.
    - `UNKNOWN`: a reading failed, and the next tick reads again. On the
      fourth consecutive tick it prints `STOP UNKNOWN on 4 consecutive ticks`
      instead, the count kept in `unknown.count` beside `armed`, and that
@@ -202,8 +204,11 @@ row pays for. **One tick:**
    that id**, since every later lock call in this tick passes it, and one
    with another id, or none, is refused.
 3. Act on the verdict the claim printed:
-   - `MERGE-FIRST #<n>`: merge it by the four steps below, write `state.md`,
-     and carry on with the plan.
+   - `MERGE-FIRST #<n>`: a green pull request no worker reported to this
+     tick. First `node .claude/scripts/pr-d1-applied.mjs <n>`, on its own:
+     exit 0 (it prints `D1 APPLIED` or `NO D1 FILES`) and only then merge it
+     by the four steps below, write `state.md`, and carry on with the plan.
+     Any other exit is stop 3 of *The stops*.
    - `DRIVE row <id>`: spawn the row. A detail naming an open pull request
      with a red check and a head commit is the same spawn: the worker
      resumes that commit from its brief's branch.
@@ -263,14 +268,19 @@ it, because the classifier refused that write on three of five rows on
 the worker to try). Its report carries the lines instead, and the driver
 writes them.
 
-**`READY` is a row the driver merges.** No word from Nate is needed in the
-session: `.claude/settings.json` allows `Bash(gh pr merge *)` (PR #1853,
-2026-10-18; the option he did not take was typing the word once per driver
-session), and the `ship-pr` order still binds the call: every required check
-green, D1 applied first, the merge as its own command. The driver merges a
-`READY` row and nothing else (his ruling, 2026-10-12; the option he did not
-take was the driver merging every row). The worker still never merges: one
-that did would skip the steps below. Four steps, each call on its own:
+**A `READY` row and a `MERGE-FIRST` row are the rows the driver merges, and
+nothing else.** No word from Nate is needed in the session:
+`.claude/settings.json` allows `Bash(gh pr merge *)` (PR #1853, 2026-10-18;
+the option he did not take was typing the word once per driver session), and
+the `ship-pr` order still binds the call: every required check green, D1
+applied first, the merge as its own command. A `READY` row's worker applied
+its D1 and says so; a `MERGE-FIRST` row reached this tick with no report, so
+its D1 is read from production first (step 3 above, `pr-d1-applied.mjs`).
+Nate's ruling of 2026-10-12 is that the driver merges only a row a worker
+reported `READY` (the option he did not take was the driver merging every
+row); `MERGE-FIRST` is that row again, or a green row whose worker's report
+was lost, found by `plan-tick.mjs` on GitHub. The worker still never merges:
+one that did would skip the steps below. Four steps, each call on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
    `--delete-branch` while a worker's worktree still holds the branch, which
@@ -288,11 +298,14 @@ that did would skip the steps below. Four steps, each call on its own:
    every migration; each one it does not mark `ALREADY RECORDED` goes in one
    call, in its order: `node scripts/d1-apply.mjs --local <those files>`. A
    Marvel or tools row does the same with `--db marvel db/migrations/marvel/*.sql`
-   or `--db tools db/migrations/tools/*.sql`. A data script the merge added is
-   applied the same way, `--local` with its path, but a failure there is said
-   in the closing message and is not a stop: this database is hundreds of
-   data scripts behind production, and a new one can need a row it never got.
-   The incident behind this step is in `reference/why.md`.
+   or `--db tools db/migrations/tools/*.sql`. **A migration that fails here
+   is stop 6** of *The stops*: every later worker copies this database, and
+   one missing a migration fails smoke's *Migration state*. A data script the
+   merge added is applied the same way, `--local` with its path, but a
+   failure there is said in the closing message and is not a stop: this
+   database is hundreds of data scripts behind production, and a new one can
+   need a row it never got. The incident behind this step is in
+   `reference/why.md`.
 
 Two more steps follow the merge, and **neither is ever a stop**: a refusal, a
 failure or a missing tool is one line in the closing message, and the chain
@@ -320,8 +333,8 @@ goes on.
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
 request for Nate's word: if a call in steps 1 to 3 is refused or fails, stop
-(*The five stops* below). A failure in step 4 is said in the closing message
-and is not a stop: each worker applies the migrations its copy lacks.
+(*The stops* below, stop 2). In step 4 a migration that fails is stop 6, and
+a data script that fails is a closing-message line.
 
 **The `DONE` clean-up**, run by the tick that writes `DONE` and by any later
 tick that reads `DONE` on a plan still armed (step 1), before the closing
@@ -394,21 +407,39 @@ a capped worker's worktree still has the branch checked out, so remove it
 through the `worktree` skill and delete the local branch, or the resuming
 worker's `checkout -b` finds the name taken.
 
-**The five stops.** The driver stops only at these, and at nothing else
+**The stops.** The driver stops only at these seven, and at nothing else
 (Nate, 2026-11-21: stops "only on breaking items", with explicit reasoning;
 his ruling of 2026-10-12, no row cap, still holds):
 
 1. a required check red for a reason outside the row's diff;
 2. a merge, landing or drift step (steps 1 to 3 above) refused or failed;
-3. a `--remote` D1 apply refused or failed;
+3. a `--remote` D1 apply refused or failed, or, for a `MERGE-FIRST` row,
+   `pr-d1-applied.mjs` exiting other than 0 (`D1 NOT APPLIED` or
+   `D1 UNREADABLE`);
 4. a choice with no recommendable option, including one whose only option
-   breaks a `CLAUDE.md` never-rule, such as public access on the R2 bucket;
-5. the same row `BLOCKED` twice for the same cause.
+   breaks a `CLAUDE.md` never-rule, such as public access on the R2 bucket:
+   `plan-tick.mjs` prints `BLOCKED` for a `STOPPED:` cause with no
+   recommendation;
+5. the same row stopped a second time: `plan-tick.mjs` reads the attempt
+   line off the row's brief (below) and prints `BLOCKED`;
+6. a merged migration that fails to apply to this checkout's local D1
+   (step 4 of the merge). A data script that fails there is not a stop
+   (Nate, 2026-11-21; not taken: both as closing-message lines, or a stop on
+   both);
+7. `plan-tick.mjs` printing `STOP`: readings that disagree with no verdict
+   to settle them, a `state.md` it cannot parse, a missing brief, or
+   `UNKNOWN` on four consecutive ticks (*Any other disagreement* below).
 
-Do not retry or fix a stopped row. `DONE` is the end of the chain, not a
-stop. **Every stop is written as `state.md`'s first line, one sentence in
-three clauses:**
+The list is closed. Two other ends are not stops and write no `BLOCKED`
+line: `DONE`, the end of the chain, and the driver's own budget line (below),
+which hands the plan to the next tick. A plan whose `state.md` already
+begins `BLOCKED:` is a stop a person has not cleared yet; nothing is written
+over it. Do not retry or fix a stopped row. **Every stop is written as
+`state.md`'s first line, one sentence in three clauses**, whichever of the
+seven it is:
 `BLOCKED: <the cause as a mechanism>; <what was tried>; <what unblocks it>`.
+A stop after a merge has landed (stop 6, or step 2 or 3 of the merge) names
+the row that is next in its last clause, since the merged row is done.
 When a row is spawned a second time, its brief carries
 `From row <id>: attempt 2` (step 3, `RESUME`), so that the fifth stop is read
 off the brief by `plan-tick.mjs`, which prints `BLOCKED` for the row's next
