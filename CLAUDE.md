@@ -139,7 +139,12 @@ own call) and by the `plan-rows` skill, which merges only a row a worker
 reported `READY`, or one `plan-tick.mjs` reads as `MERGE-FIRST`. The plan
 driver is a run of the scheduled task `plan-driver`: nothing is asked after
 Nate's "go", and it stops only at the five stops `plan-rows` lists. Work that
-is not a plan row is still merged by Nate.
+is not a plan row is still merged by Nate. The tick's own commands are allowed
+too: `node .claude/scripts/plan-tick.mjs`, `node .claude/scripts/pr-landed.mjs *`
+and `git pull --ff-only origin main` (Nate, 2026-11-21: every `plan-driver` run
+recorded permissionMode default and stalled about 49 minutes on its first Bash
+call; the options he did not take were fixing the task's mode alone, and adding
+`git worktree remove` / `git branch -D` rules).
 `.claude/hooks/guard-bash.sh` refuses six command shapes. Every hook is
 registered once, in the repo's `.claude/settings.json` as
 `$CLAUDE_PROJECT_DIR/.claude/hooks/<script>`; the user-level

@@ -40,7 +40,11 @@
       "Bash(gh pr view *)",
       "Bash(gh pr checks *)",
       "Bash(gh pr merge *)",
-      "Bash(gh api repos/NateGrey0130/nates-workshop/commits/*)"
+      "Bash(gh api repos/NateGrey0130/nates-workshop/commits/*)",
+      "Bash(node .claude/scripts/plan-tick.mjs)",
+      "Bash(node .claude/scripts/plan-tick.mjs *)",
+      "Bash(node .claude/scripts/pr-landed.mjs *)",
+      "Bash(git pull --ff-only origin main)"
     ]
   },
   "hooks": {
