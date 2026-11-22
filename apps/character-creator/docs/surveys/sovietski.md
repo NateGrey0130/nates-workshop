@@ -296,11 +296,11 @@ all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
 ten cyborg bodies (pp.128-155), the Gridgitz and Shu-Shuum (pp.64-68) and the
 Wolverine People (pp.68-73): the Yaganar, and the classes (extraction plan steps 7-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~399-sovietski-dbees-a.sql` and the Gridgitz and Shu-Shuum class scripts were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~400-sovietski-dbees-b.sql` and the Wolverine People class script were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          146 / 0
+  sovietski          148 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
