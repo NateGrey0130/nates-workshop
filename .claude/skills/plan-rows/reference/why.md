@@ -14,7 +14,7 @@ undated claim as true on the day it was written.
 Measured 2026-10-18: the file had grown to 16KB in five lines, and every
 worker and every driver re-read it.
 
-## Before a brief is written, 2, and the five stops: nothing is asked
+## Before a brief is written, 2, and the stops: nothing is asked
 
 Nate, 2026-11-21: "Nothing is asked" after his "go", by planner, driver or
 worker, and stops happen "only on breaking items", with explicit reasoning
@@ -33,6 +33,21 @@ On the Splynn plan that reading stalled a green pull request 302 minutes
 (measured 2026-11-21), behind a `BLOCKED` line that carried no required
 content. `plan-tick.mjs` (#2317) now gives a disagreement a verdict, and a
 stop line names its mechanism, what was tried and what unblocks it.
+
+Note, 2026-11-22, read against `origin/main` at `183e0588`: the list of five
+was not the whole set of ways a tick stopped. `plan-tick.mjs`'s `STOP`
+verdict was a sixth, told to be written as a `BLOCKED` line in a section of
+its own, and the budget line ended a tick without saying whether it was a
+stop. `state.md`'s shape still taught `BLOCKED: <one sentence>` beside the
+three-clause rule, the merge paragraph said the driver merges "a `READY` row
+and nothing else" while step 3 merged `MERGE-FIRST` too with no read of its
+D1, and a failed local migration apply was a closing-message line only. So
+the list is closed at seven: the five, a failed local migration (Nate,
+2026-11-21: a migration stops, a data script stays a line; not taken: both
+as lines, or a stop on both), and `STOP`; `DONE` and the budget line are
+named as ends that are not stops; and a `MERGE-FIRST` merge waits on
+`pr-d1-applied.mjs` (#2329), since no worker's report says its D1
+was applied. Read from the text, not measured on a run.
 
 ## Before a brief is written, 5: the 400 KB reading set
 
