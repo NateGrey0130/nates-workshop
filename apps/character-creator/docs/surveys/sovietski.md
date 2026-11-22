@@ -288,11 +288,11 @@ all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
 first two cyborg bodies (pp.128-133): the other eight cyborg bodies, the
 D-Bees and the classes (extraction plan steps 6-8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~393-sovietski-v8.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~394-sovietski-cyborgs-a.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          131 / 0
+  sovietski          133 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
