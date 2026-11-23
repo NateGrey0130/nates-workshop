@@ -1,6 +1,6 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) and the Cyborg Soldier O.C.C. (pp.95-98) shipped, and the held WB17 Police Officer reconciled with its WB36 block (pp.98-101); the held WB17 Infantry Soldier reconciled with its WB36 block (pp.101-106) and the Tanker O.C.C. (pp.106-108) shipped; the Vedmak Cyber-Doc O.C.C. (pp.108-115) shipped; the Spetsnaz Intel / KGB O.C.C. (pp.115-124) shipped with all sixteen of its M.O.S. bundles, and the Commissar (pp.124-127) and the Citizen (pp.127-128) shipped; every O.C.C. the book prints is held. (2026-11-22)
+**Status:** `imported` — the plan is done: 7 skills, 106 gear rows (weapons, armor, bionics and Cyberlink, bionic weapons, tank rounds), 29 vehicles (the eighteen combat vehicles and the ten cyborg bodies, the Bionic Birds of Prey as two rows), 4 D-Bee creatures and 11 classes citing this book, with the WB17 Police Officer and Infantry Soldier reconciled to their WB36 blocks under their WB17 citation. What was left out on purpose is under *Extraction plan*, filed as `BOOK-INGEST-AUDIT` F147. (2026-11-22)
 
 **Rows citing this book:** classes 11, gear 106, vehicles 29, skills 7, creatures 4
 
@@ -251,11 +251,12 @@ What is deliberately left, with the reason for each:
   79-86) — prose; no catalog table holds setting text.
 - The bunker tables (43-50), the Dead Zone Effect Table (56-60), the Small Talk
   Table (62) and the religious enclaves (53-56) — random tables and lore with no
-  table to land in; the plan's last row (58) files them as a gap in
-  `BOOK-INGEST-AUDIT.md`, not implemented.
-- The Mad Doctor Table (110) and the Soldier's Motivation/Origin Table (102) —
-  class-specific roll tables; left out and filed in the same gap by row 58, not
-  imported as rows.
+  table to land in; filed as a gap in `BOOK-INGEST-AUDIT` F147 by the
+  close-out, not implemented.
+- The Mad Doctor Table (110-111) and the Soldier's Motivation/Origin Table
+  (102) — class-specific roll tables; each rides as prose in its class (the
+  Vedmak's `Mad Doctor` ability, the Infantry Soldier's GM notes), not as rows,
+  and is named in the same finding.
 - The Experience Tables as their own rows — each ladder is stored on its class.
 
 ## Ledger
@@ -295,6 +296,7 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-vedmak` | 1 class row from pp.108-115 in `add-sovietski-vedmak-cyber-doc-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`): the Vedmak Cyber-Doc O.C.C., `sovietski-vedmak-cyber-doc` (ladder 8), new. Its Vedmak Light Machine chassis is the class's own body (main body 165 as `mdc_base`, the rest prose citing catalog slugs) and not a vehicles row; the Mad Doctor table is summarised in an ability, not stored as rows. Classes citing this book 7 to 8 |
 | 2026-11-22 | `pal/data/sovietski-spetsnaz-a` | 1 class row from pp.115-120 (the class cites that range) in `add-sovietski-spetsnaz-intel-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`), 0 catalog stubs: the Spetsnaz Intel / KGB O.C.C., `sovietski-spetsnaz-intel` (ladder 7), new, with its three branches (SVR, OVPUB, KGB) and the first five of its M.O.S. bundles (Airborne, Commando, Cyber-Humanoid, Electronic Intelligence, Guerilla Warfare); Immersion onward is a later row's. The five bundles are pinned on the `**MOS:**` line above (5, choose 1). Classes citing this book 8 to 9 |
 | 2026-11-22 | `pal/data/sovietski-spetsnaz-b` | 2 class rows new and 1 replaced whole, in three scripts. `~403-sovietski-spetsnaz-b.sql`: `sovietski-spetsnaz-intel` replaced whole from pp.115-124 with the other eleven of its M.O.S. bundles (Immersion/Deep Undercover through Psychic Special Forces, 16 in all, choose 1) and its fourteen Trainings, +0 rows; the magic and psychic Trainings pick from held spells and powers. `add-sovietski-commissar-class.sql`: the Commissar O.C.C. from pp.124-127, `sovietski-commissar` (ladder 9), new, its four Party Service Sectors as an M.O.S. of 4, choose 1. `add-sovietski-citizen-class.sql`: the Citizen O.C.C. from pp.127-128, `sovietski-citizen` (ladder 10), new, its four occupations as an M.O.S. of 4, choose 1. All three pinned on the `**MOS:**` line above. Classes citing this book 9 to 11 |
+| 2026-11-22 | `pal/docs/sovietski-close-out` | Close-out, no D1 write. Production counted first (`q.mjs --remote`, 2026-11-22): vehicles 29, gear 106, skills 7 and creatures 4 citing `Rifts World Book 36`, and 11 published `imported_classes` rows whose `source_book` is this book, as the ledger sums (vehicles 18 + 11, gear 34 + 9 + 9 + 22 + 21 + 11, skills 7, creatures 2 + 1 + 1, classes 2 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 2). Status to `imported`; *What remains* repasted from `source-coverage --remote`; the deliberate gaps filed as `BOOK-INGEST-AUDIT` F147 |
 
 ### What remains
 
@@ -305,13 +307,14 @@ Born (pp.90-95), the Cyborg Soldier (pp.95-98), the reconciled Police
 Officer (pp.98-101) and Infantry Soldier (pp.101-106), the Tanker
 (pp.106-108), the Vedmak Cyber-Doc (pp.108-115), the Spetsnaz Intel with
 all sixteen M.O.S. bundles (pp.115-124), the Commissar (pp.124-127) and the
-Citizen (pp.127-128): no row is left to extract. What is left is the close-out
-(the Status line and the tables the book has no catalog for, filed as a gap;
-see *What is deliberately left* above).
-`node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`~403-sovietski-spetsnaz-b.sql`, `add-sovietski-commissar-class.sql` and
-`add-sovietski-citizen-class.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
-prints the book's line under `BY BOOK` (traceable / other) as:
+Citizen (pp.127-128): nothing. The plan is done; what the book prints and the
+catalog does not hold is under *What is deliberately left* above and filed as
+`BOOK-INGEST-AUDIT` F147.
+`node scripts/source-coverage.mjs --remote` on 2026-11-22, at the close-out
+(branch `pal/docs/sovietski-close-out`, no D1 write since the Spetsnaz second
+half), with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books` (first
+line `50 of 52 registered books present`), prints the book's line under
+`BY BOOK` (traceable / other) as:
 
 ```
   sovietski          157 / 0
