@@ -304,11 +304,11 @@ Officer (pp.98-101) and Infantry Soldier (pp.101-106), the Tanker
 (pp.106-108) and the Vedmak Cyber-Doc (pp.108-115): the other three O.C.C.s
 (extraction plan step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-tanker-class.sql` and `~402-sovietski-soldier-wb36.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`add-sovietski-vedmak-cyber-doc-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          153 / 0
+  sovietski          154 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
