@@ -7192,3 +7192,77 @@ low on the reach of the proposal, until someone searches production's class
 markdown for a table that budgets another table. **Ongoing cost:** one more
 key the parser, the wizard and the sheet keep in step, for one class today,
 and one more shape the pool reader accepts.
+
+### F147 - low - Sovietski's random tables, enclaves and setting chapters have no catalog table, and two class roll tables ride as prose
+
+Rifts World Book 36: Sovietski closed out on 2026-11-22 (branch
+`pal/docs/sovietski-close-out`) with every stat block it prints held:
+production read that day with `q.mjs --remote` holds vehicles 29, gear 106,
+skills 7 and creatures 4 citing `Rifts World Book 36`, and 11 published
+classes, as the survey's ledger sums. Nate ruled on 2026-11-22, on the plan's
+recommendation, that what follows is left out and filed here, and that
+importing these tables is not taken. What the book prints and the catalog
+does not hold, each page confirmed against the text-layer cache
+(`.cache/books/sovietski/txt/`, cache page = printed folio for printed 38-177,
+read 2026-11-22):
+
+1. **The underground bunker tables (printed 43-50).** Seven random tables for
+   a found bunker: size, components, secondary function, accommodations,
+   vehicles, condition and occupants (the survey's *Inventory* row, counted
+   2026-11-22). A G.M. tool for generating a location, not a character or a
+   catalog item.
+2. **The seven religious enclaves (printed 53-56).** Setting lore, each a
+   described community; no stat block (the survey's *Zero, and checked* list,
+   2026-11-22).
+3. **The Dead Zone Effect Table (printed 56-60, heading at cache `p056` line
+   91).** A percentile table (roll or pick) for the nature of a Dead Zone, a
+   stretch of land where life will not grow, rolled when a patrol finds one;
+   an encounter-time table, not a creation-time one.
+4. **The Sovietski Small Talk Table (printed 62, heading at cache `p062` line
+   10).** A roll table of conversation topics for role-play.
+5. **The Mad Doctor Table (printed 110-111; the item at cache `p110` line
+   100, the bands on `p111`).** A percentile quirk the Vedmak Cyber-Doc rolls
+   at levels 3, 6, 8, 10 and 13. Held as prose: the `Mad Doctor` ability in
+   `apps/character-creator/db/add-sovietski-vedmak-cyber-doc-class.sql`
+   (lines 101-102) carries every band, and the class's GM notes (line 190)
+   the levels. Nothing rolls it.
+6. **The Soldier's Motivation/Origins (printed 102, cache `p102` line 56).**
+   An optional table of why a recruit serves beyond the draft, some results
+   carrying a bonus (+1 initiative and an extra W.P. for a born fighter).
+   Held as prose in the Infantry Soldier's GM notes,
+   `apps/character-creator/db/~402-sovietski-soldier-wb36.sql` lines 305-309
+   (the script's header says so at line 25). The bonuses are not applied.
+7. **The prose chapters**: history, government, foreign relations, cities and
+   towns, life in the Sovietski and the Army chapter (printed 8-43, 51-63 and
+   79-86; the survey's *Inventory*), with the ranks table at 86. No catalog
+   table holds setting text.
+
+The Experience Tables (printed 224) are not a gap: each of the twelve ladders
+is stored on its class.
+
+**Related decision, named so it is not re-proposed by accident:** items 5
+and 6 are creation- or level-time roll tables, the subject of this menu's
+`F78`, **declined by Nate on 2026-09-16** (its outcome note, read 2026-11-22
+from `git show c530a474799d9621ce1b9433dfa6ef1721d0b666:BOOK-INGEST-AUDIT.closed.md`
+under `### F78`). That note records that the app already carries roll tables
+of this shape (`BACKGROUND_TABLES` in `js/rules.js`, `PSIONIC_TABLE` in
+`js/psionics.js`) and that a table which grants can be an ability choice
+group. Neither item is proposed past that decision here.
+
+**Proposal:** none to build. Record the seven items so the book's gaps are
+numbered rather than left in a survey, and decline the finding unless a
+G.M.-side random-table feature is wanted for its own sake (items 1, 3 and 4
+are the only ones that would use one; 2 and 7 are lore). If item 6's bonuses
+are ever wanted on the sheet, the route is the one `F78`'s note names: a
+pick-one ability group on `sovietski-soldier`, a data change, not code.
+**Posture:** proposal only; documentation only; no schema, no data, no code,
+no new gate. **Evidence:** the pages and line numbers above were read off the
+cache and the two class scripts on this branch, 2026-11-22; the counts are
+`q.mjs --remote`, 2026-11-22. Whether any other book prints a bunker- or
+location-generator table is **not measured**.
+
+**Confidence:** high on the seven gaps, which are the survey's own inventory
+re-read against the cache; low on whether anything should be built, which is
+a product decision. **Ongoing cost:** none while declined; a random-table
+feature would be a new table, a roller and a G.M. page kept for tables most
+books do not print.
