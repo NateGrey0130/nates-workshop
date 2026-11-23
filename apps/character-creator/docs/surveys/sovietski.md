@@ -309,11 +309,12 @@ Citizen (pp.127-128): no row is left to extract. What is left is the close-out
 (the Status line and the tables the book has no catalog for, filed as a gap;
 see *What is deliberately left* above).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-spetsnaz-intel-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~403-sovietski-spetsnaz-b.sql`, `add-sovietski-commissar-class.sql` and
+`add-sovietski-citizen-class.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          155 / 0
+  sovietski          157 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
