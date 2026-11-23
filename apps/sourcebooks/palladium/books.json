@@ -1511,6 +1511,36 @@
    "total": 120
   },
   {
+   "slug": "sovietski",
+   "title": "Rifts World Book 36: Sovietski",
+   "code": "sovietski",
+   "status": "imported",
+   "date": "2026-11-22",
+   "added": [
+    [
+     "Classes",
+     11
+    ],
+    [
+     "Creatures",
+     4
+    ],
+    [
+     "Gear",
+     106
+    ],
+    [
+     "Skills",
+     7
+    ],
+    [
+     "Vehicles",
+     29
+    ]
+   ],
+   "total": 157
+  },
+  {
    "slug": "old-ones",
    "title": "The Palladium RPG Book II: Old Ones",
    "code": "old-ones",
