@@ -302,11 +302,11 @@ Born (pp.90-95), the Cyborg Soldier (pp.95-98), the reconciled Police
 Officer (pp.98-101) and Infantry Soldier (pp.101-106) and the Tanker
 (pp.106-108): the other four O.C.C.s (extraction plan step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-cyborg-soldier-class.sql` and `fix-sovietski-police-officer-wb36.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`add-sovietski-tanker-class.sql` and `~402-sovietski-soldier-wb36.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          152 / 0
+  sovietski          153 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
