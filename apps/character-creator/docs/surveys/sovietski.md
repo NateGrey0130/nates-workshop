@@ -307,11 +307,11 @@ first five M.O.S. bundles (pp.115-120): the Spetsnaz's remaining M.O.S.
 bundles (Immersion onward), the Commissar and the Citizen (extraction plan
 step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-vedmak-cyber-doc-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`add-sovietski-spetsnaz-intel-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          154 / 0
+  sovietski          155 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
