@@ -4,7 +4,7 @@
 -- One-off data script, run once per environment. NOT a migration - it changes
 -- rows, not schema.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/fix-sovietski-soldier-wb36.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~402-sovietski-soldier-wb36.sql
 --
 -- Written by scripts/class-fix-sql.mjs. Each UPDATE is guarded on a sentence
 -- of the text it replaces (or on the absence of a string only the new text
@@ -26,6 +26,9 @@
 -- rides in the GM notes. The XP ladder is the same in both books (printed 224).
 -- The class keeps its id and its WB17 citation; the extraction notes record the
 -- reconciliation item by item.
+-- Named ~402, not fix-: ~125-stale-notes-sweep-part-2.sql rewrites this row's
+-- kit note, production holds that edit (length 14717), and a fix- name sorts
+-- before ~125, so a rebuild reached this guard at another length and skipped it.
 
 -- == sovietski-soldier ==
 UPDATE imported_classes
@@ -347,4 +350,4 @@ SELECT 'no CR in any of them' AS assertion, count(*) AS got, 0 AS want
  WHERE class_id IN ('sovietski-soldier') AND instr(markdown, char(13)) > 0;
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('fix-sovietski-soldier-wb36.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~402-sovietski-soldier-wb36.sql');
