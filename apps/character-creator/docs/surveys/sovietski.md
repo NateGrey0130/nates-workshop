@@ -1,8 +1,8 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) and the Cyborg Soldier O.C.C. (pp.95-98) shipped, and the held WB17 Police Officer reconciled with its WB36 block (pp.98-101); the held WB17 Infantry Soldier reconciled with its WB36 block (pp.101-106) and the Tanker O.C.C. (pp.106-108) shipped; the other four O.C.C.s next. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) and the Cyborg Soldier O.C.C. (pp.95-98) shipped, and the held WB17 Police Officer reconciled with its WB36 block (pp.98-101); the held WB17 Infantry Soldier reconciled with its WB36 block (pp.101-106) and the Tanker O.C.C. (pp.106-108) shipped; the Vedmak Cyber-Doc O.C.C. (pp.108-115) shipped; the other three O.C.C.s next. (2026-11-22)
 
-**Rows citing this book:** classes 7, gear 106, vehicles 29, skills 7, creatures 4
+**Rows citing this book:** classes 8, gear 106, vehicles 29, skills 7, creatures 4
 
 **MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1, sovietski-cyborg-soldier 3 choose 1, sovietski-soldier 14 choose 1, sovietski-tanker 4 choose 1
 
@@ -292,6 +292,7 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-cold-born` | 1 class row from pp.90-95 in `add-sovietski-cold-born-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`): the Cold Born O.C.C., `sovietski-cold-born` (ladder 1), a Master Psychic whose nine exclusive cold powers are natural abilities, not `psionic_powers` rows, with its five M.O.S. packages as an M.O.S. of 5, choose 1 (pinned on the `**MOS:**` line above), and the matching Training bonuses as a pick-one group |
 | 2026-11-22 | `pal/data/sovietski-cyborg-police` | 2 class rows in two scripts (no `~NNN`: one class per `add-<id>-class.sql`, and a `fix-` that sorts after the file it corrects). `add-sovietski-cyborg-soldier-class.sql`: the Cyborg Soldier O.C.C. from pp.95-98, `sovietski-cyborg-soldier` (ladder 2, the Light Machine's, stored; ladders 3 and 4 in its notes), new, with its three corps (SPK, MPO, BDK) as an M.O.S. of 3, choose 1. `fix-sovietski-police-officer-wb36.sql`: the held WB17 `sovietski-police-officer` replaced whole with its WB36 block (pp.98-101) by the newest-printing ruling, keeping its id and its WB17 citation, with the OVB and KSSI branches as an M.O.S. of 2, choose 1 (the WB17 survey's `**MOS:**` line moves with it). Classes citing this book 5 to 6 |
 | 2026-11-22 | `pal/data/sovietski-infantry-tanker` | 1 class row new and 1 reconciled, in two scripts. `add-sovietski-tanker-class.sql`: the Tanker O.C.C. from pp.106-108, `sovietski-tanker` (ladder 6), new. `~402-sovietski-soldier-wb36.sql`: the held WB17 `sovietski-soldier` replaced whole with its WB36 Infantry Soldier block (pp.101-106) by the newest-printing ruling, keeping its id and its WB17 citation, +0 rows. It is a `~NNN` and not a `fix-` because `~125-stale-notes-sweep-part-2.sql` edits the same row and a `fix-` name sorted before it in a rebuild. The Soldier's fourteen M.O.S. bundles (14, choose 1) and the Tanker's four crew positions (4, choose 1) are pinned on the `**MOS:**` line above. Classes citing this book 6 to 7 |
+| 2026-11-22 | `pal/data/sovietski-vedmak` | 1 class row from pp.108-115 in `add-sovietski-vedmak-cyber-doc-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`): the Vedmak Cyber-Doc O.C.C., `sovietski-vedmak-cyber-doc` (ladder 8), new. Its Vedmak Light Machine chassis is the class's own body (main body 165 as `mdc_base`, the rest prose citing catalog slugs) and not a vehicles row; the Mad Doctor table is summarised in an ability, not stored as rows. Classes citing this book 7 to 8 |
 
 ### What remains
 
@@ -299,14 +300,15 @@ Everything but the skills, weapons, armor, the bionics chapter (pp.155-168),
 all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
 ten cyborg bodies (pp.128-155), the four D-Bees (pp.64-78), the Cold
 Born (pp.90-95), the Cyborg Soldier (pp.95-98), the reconciled Police
-Officer (pp.98-101) and Infantry Soldier (pp.101-106) and the Tanker
-(pp.106-108): the other four O.C.C.s (extraction plan step 8).
+Officer (pp.98-101) and Infantry Soldier (pp.101-106), the Tanker
+(pp.106-108) and the Vedmak Cyber-Doc (pp.108-115): the other three O.C.C.s
+(extraction plan step 8).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-tanker-class.sql` and `~402-sovietski-soldier-wb36.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`add-sovietski-vedmak-cyber-doc-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          153 / 0
+  sovietski          154 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
