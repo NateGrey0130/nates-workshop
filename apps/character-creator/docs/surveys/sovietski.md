@@ -1,10 +1,10 @@
 # Rifts World Book 36: Sovietski — survey
 
-**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) and the Cyborg Soldier O.C.C. (pp.95-98) shipped, and the held WB17 Police Officer reconciled with its WB36 block (pp.98-101); the held WB17 Infantry Soldier reconciled with its WB36 block (pp.101-106) and the Tanker O.C.C. (pp.106-108) shipped; the Vedmak Cyber-Doc O.C.C. (pp.108-115) shipped; the Spetsnaz Intel / KGB O.C.C. shipped with its first five M.O.S. bundles (Airborne through Guerilla Warfare), the rest of its bundles next, then the Commissar and the Citizen. (2026-11-22)
+**Status:** `importing` — skills, weapons and armor shipped, bionics, the Cyberlink section and the bionic weapons and tools shipped (pp.157-168); all eighteen vehicles (the Volkhov and Sadko ekranoplans, the Red Squall, the Stormbringer, the Firefang, the Snow Leopard, the Red Lightning, the Street Sickle, the Road Hammer, the Black Water, the Thunderspear, the Earthquake, the Shockwave, the Tunguska, the Iron Forge, the Torrent, the Storm Swell and the Typhoon II, pp.169-212) and the 11 tank rounds (pp.190-192) shipped; all ten cyborg bodies (the Proletariat Light Machine, the Sovietski Heavy Machine, the Firebird, the Whirlwind, the Rusalka, the Thunderfist, the Tsar "Big Ivan", the Bionic Birds of Prey and the Canine and Bear Cyborgs, pp.128-155) shipped; all four D-Bees, the Gridgitz and the Shu-Shuum (pp.64-68), the Wolverine People (pp.68-73) and the Yaganar (pp.73-78), shipped as creatures rows and R.C.C.s; the Cold Born O.C.C. (pp.90-95) and the Cyborg Soldier O.C.C. (pp.95-98) shipped, and the held WB17 Police Officer reconciled with its WB36 block (pp.98-101); the held WB17 Infantry Soldier reconciled with its WB36 block (pp.101-106) and the Tanker O.C.C. (pp.106-108) shipped; the Vedmak Cyber-Doc O.C.C. (pp.108-115) shipped; the Spetsnaz Intel / KGB O.C.C. (pp.115-124) shipped with all sixteen of its M.O.S. bundles, and the Commissar (pp.124-127) and the Citizen (pp.127-128) shipped; every O.C.C. the book prints is held. (2026-11-22)
 
-**Rows citing this book:** classes 9, gear 106, vehicles 29, skills 7, creatures 4
+**Rows citing this book:** classes 11, gear 106, vehicles 29, skills 7, creatures 4
 
-**MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1, sovietski-cyborg-soldier 3 choose 1, sovietski-soldier 14 choose 1, sovietski-tanker 4 choose 1, sovietski-spetsnaz-intel 5 choose 1
+**MOS:** sovietski-wolverine-people 3 choose 1, sovietski-cold-born 5 choose 1, sovietski-cyborg-soldier 3 choose 1, sovietski-soldier 14 choose 1, sovietski-tanker 4 choose 1, sovietski-spetsnaz-intel 16 choose 1, sovietski-commissar 4 choose 1, sovietski-citizen 4 choose 1
 
 Slug `sovietski`. Cached 2026-11-22 from
 `Rifts - World Book 36 - Sovietski.pdf`, 221 PDF pages, **text layer** (no OCR).
@@ -294,6 +294,7 @@ PR's **branch**, which exists before the PR does.
 | 2026-11-22 | `pal/data/sovietski-infantry-tanker` | 1 class row new and 1 reconciled, in two scripts. `add-sovietski-tanker-class.sql`: the Tanker O.C.C. from pp.106-108, `sovietski-tanker` (ladder 6), new. `~402-sovietski-soldier-wb36.sql`: the held WB17 `sovietski-soldier` replaced whole with its WB36 Infantry Soldier block (pp.101-106) by the newest-printing ruling, keeping its id and its WB17 citation, +0 rows. It is a `~NNN` and not a `fix-` because `~125-stale-notes-sweep-part-2.sql` edits the same row and a `fix-` name sorted before it in a rebuild. The Soldier's fourteen M.O.S. bundles (14, choose 1) and the Tanker's four crew positions (4, choose 1) are pinned on the `**MOS:**` line above. Classes citing this book 6 to 7 |
 | 2026-11-22 | `pal/data/sovietski-vedmak` | 1 class row from pp.108-115 in `add-sovietski-vedmak-cyber-doc-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`): the Vedmak Cyber-Doc O.C.C., `sovietski-vedmak-cyber-doc` (ladder 8), new. Its Vedmak Light Machine chassis is the class's own body (main body 165 as `mdc_base`, the rest prose citing catalog slugs) and not a vehicles row; the Mad Doctor table is summarised in an ability, not stored as rows. Classes citing this book 7 to 8 |
 | 2026-11-22 | `pal/data/sovietski-spetsnaz-a` | 1 class row from pp.115-120 (the class cites that range) in `add-sovietski-spetsnaz-intel-class.sql` (no `~NNN`: one class per `add-<id>-class.sql`), 0 catalog stubs: the Spetsnaz Intel / KGB O.C.C., `sovietski-spetsnaz-intel` (ladder 7), new, with its three branches (SVR, OVPUB, KGB) and the first five of its M.O.S. bundles (Airborne, Commando, Cyber-Humanoid, Electronic Intelligence, Guerilla Warfare); Immersion onward is a later row's. The five bundles are pinned on the `**MOS:**` line above (5, choose 1). Classes citing this book 8 to 9 |
+| 2026-11-22 | `pal/data/sovietski-spetsnaz-b` | 2 class rows new and 1 replaced whole, in three scripts. `~403-sovietski-spetsnaz-b.sql`: `sovietski-spetsnaz-intel` replaced whole from pp.115-124 with the other eleven of its M.O.S. bundles (Immersion/Deep Undercover through Psychic Special Forces, 16 in all, choose 1) and its fourteen Trainings, +0 rows; the magic and psychic Trainings pick from held spells and powers. `add-sovietski-commissar-class.sql`: the Commissar O.C.C. from pp.124-127, `sovietski-commissar` (ladder 9), new, its four Party Service Sectors as an M.O.S. of 4, choose 1. `add-sovietski-citizen-class.sql`: the Citizen O.C.C. from pp.127-128, `sovietski-citizen` (ladder 10), new, its four occupations as an M.O.S. of 4, choose 1. All three pinned on the `**MOS:**` line above. Classes citing this book 9 to 11 |
 
 ### What remains
 
@@ -302,16 +303,18 @@ all eighteen vehicles (pp.169-212), the tank rounds (pp.190-192) and the
 ten cyborg bodies (pp.128-155), the four D-Bees (pp.64-78), the Cold
 Born (pp.90-95), the Cyborg Soldier (pp.95-98), the reconciled Police
 Officer (pp.98-101) and Infantry Soldier (pp.101-106), the Tanker
-(pp.106-108), the Vedmak Cyber-Doc (pp.108-115) and the Spetsnaz Intel's
-first five M.O.S. bundles (pp.115-120): the Spetsnaz's remaining M.O.S.
-bundles (Immersion onward), the Commissar and the Citizen (extraction plan
-step 8).
+(pp.106-108), the Vedmak Cyber-Doc (pp.108-115), the Spetsnaz Intel with
+all sixteen M.O.S. bundles (pp.115-124), the Commissar (pp.124-127) and the
+Citizen (pp.127-128): no row is left to extract. What is left is the close-out
+(the Status line and the tables the book has no catalog for, filed as a gap;
+see *What is deliberately left* above).
 `node scripts/source-coverage.mjs --remote` on 2026-11-22, after
-`add-sovietski-spetsnaz-intel-class.sql` was applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
+`~403-sovietski-spetsnaz-b.sql`, `add-sovietski-commissar-class.sql` and
+`add-sovietski-citizen-class.sql` were applied to production, with `WORKSHOP_OCR_CACHE` at the main checkout's `.cache/books`,
 prints the book's line under `BY BOOK` (traceable / other) as:
 
 ```
-  sovietski          155 / 0
+  sovietski          157 / 0
 ```
 
 Its `BACKLOG` block is catalog-wide, not per book, and none of it is this
